@@ -34,9 +34,9 @@ function MyApp({ Component, pageProps }) {
       }
 
       const provider = new ethers.providers.Web3Provider(window.ethereum, {
-  name: 'hyve',
-  chainId: 9200
-})
+        name: 'hyve',
+        chainId: 9200
+      })
       const accounts = await provider.send('eth_requestAccounts', [])
       const signer = provider.getSigner()
       
@@ -60,8 +60,8 @@ function MyApp({ Component, pageProps }) {
                   symbol: 'HYVE',
                   decimals: 18
                 },
-                rpcUrls: ['https://rpc.hyveblockchain.com'],
-                blockExplorerUrls: ['https://explorer.hyveblockchain.com']
+                rpcUrls: ['https://rpc.hyvechain.com'],
+                blockExplorerUrls: ['https://explorer.hyvechain.com']
               }]
             })
           } catch (addError) {
