@@ -52,7 +52,7 @@ export default function Home({ account, provider, signer }) {
     
     try {
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider)
-      const postCount = await contract.postCount()
+      const postCount = await contract.postCount
       const loadedPosts = []
       const loadedProfiles = {}
 
