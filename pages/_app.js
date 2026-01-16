@@ -33,7 +33,10 @@ function MyApp({ Component, pageProps }) {
         return
       }
 
-      const provider = new ethers.providers.Web3Provider(window.ethereum)
+      const provider = new ethers.providers.Web3Provider(window.ethereum, {
+  name: 'hyve',
+  chainId: 9200
+})
       const accounts = await provider.send('eth_requestAccounts', [])
       const signer = provider.getSigner()
       
