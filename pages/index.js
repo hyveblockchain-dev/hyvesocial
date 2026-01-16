@@ -104,7 +104,7 @@ export default function Home({ account, provider, signer }) {
     setIsLoading(true)
     try {
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
-      const tx = await contract.createProfile(username, bio, '')
+    const tx = await contract.createProfile(username.trim(), (bio || '').trim(), '')
       await tx.wait()
       
       setShowCreateProfile(false)
