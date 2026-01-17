@@ -1,21 +1,19 @@
 import { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
-import CONTRACT_ABI from '../contract-abi.json'
 
 const CONTRACT_ADDRESS = '0x5F817E8f2512d3D6E7cEF427A5d0b023e30190b0'
+const CONTRACT_ABI = require('../contract-abi.json')
 
 export default function Home({ account, provider, signer }) {
   const [posts, setPosts] = useState([])
   const [profiles, setProfiles] = useState({})
   const [userProfile, setUserProfile] = useState(null)
-  const [showCreatePost, setShowCreatePost] = useState(false)
-  const [postContent, setPostContent] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  
-  // Profile creation state
   const [showCreateProfile, setShowCreateProfile] = useState(false)
   const [username, setUsername] = useState('')
   const [bio, setBio] = useState('')
+  const [profilePicture, setProfilePicture] = useState('')
+  const [postContent, setPostContent] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     if (account && signer) {
@@ -36,7 +34,7 @@ export default function Home({ account, provider, signer }) {
           username: profile.username,
           bio: profile.bio,
           avatar: profile.profilePicture || '',
-          postCount: 0
+          address: account
         })
         setShowCreateProfile(false)
       } else {
@@ -54,19 +52,16 @@ export default function Home({ account, provider, signer }) {
     try {
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider)
       
-      // Read postCount from storage slot 3 since the function call reverts
+      // Read postCount from storage slot 3
       const postCountHex = await provider.getStorageAt(CONTRACT_ADDRESS, 3)
       const postCount = parseInt(postCountHex, 16)
       
       const loadedPosts = []
       const loadedProfiles = {}
 
-      console.log('Total post count:', postCount)
-
-      for (let i = postCount; i > 0 && loadedPosts.length < 20; i--) {
+      for (let i = postCount; i > 0 && loadedPosts.length < 50; i--) {
         try {
           const post = await contract.getPost(i)
-          console.log('Loaded post:', i, post)
           if (post.content) {
             loadedPosts.push({
               id: i,
@@ -78,12 +73,12 @@ export default function Home({ account, provider, signer }) {
 
             if (!loadedProfiles[post.author]) {
               try {
-                const profile = await contract.getProfile(post.author)
+                const authorProfile = await contract.getProfile(post.author)
                 loadedProfiles[post.author] = {
-                  username: profile.username || 'Anonymous',
-                  avatar: profile.avatar
+                  username: authorProfile.username || 'Anonymous',
+                  avatar: authorProfile.profilePicture || ''
                 }
-              } catch (e) {
+              } catch (error) {
                 loadedProfiles[post.author] = {
                   username: 'Anonymous',
                   avatar: ''
@@ -112,22 +107,22 @@ export default function Home({ account, provider, signer }) {
     setIsLoading(true)
     try {
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
-      const tx = await contract.createProfile(username.trim(), bio.trim() || '', '')
+      const tx = await contract.createProfile(username.trim(), (bio || '').trim(), profilePicture.trim())
       await tx.wait()
       
       setShowCreateProfile(false)
-      loadUserProfile()
+      await loadUserProfile()
+      alert('Profile created successfully!')
     } catch (error) {
       console.error('Error creating profile:', error)
-      alert('Error creating profile: ' + (error.reason || error.message))
-    } finally {
-      setIsLoading(false)
+      alert('Failed to create profile')
     }
+    setIsLoading(false)
   }
 
   const createPost = async () => {
     if (!postContent.trim()) {
-      alert('Please enter post content')
+      alert('Please enter some content')
       return
     }
 
@@ -138,14 +133,13 @@ export default function Home({ account, provider, signer }) {
       await tx.wait()
       
       setPostContent('')
-      setShowCreatePost(false)
-      loadPosts()
+      await loadPosts()
+      alert('Post created successfully!')
     } catch (error) {
       console.error('Error creating post:', error)
-      alert('Error creating post: ' + (error.reason || error.message))
-    } finally {
-      setIsLoading(false)
+      alert('Failed to create post')
     }
+    setIsLoading(false)
   }
 
   const likePost = async (postId) => {
@@ -154,25 +148,24 @@ export default function Home({ account, provider, signer }) {
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
       const tx = await contract.likePost(postId)
       await tx.wait()
-      loadPosts()
+      
+      await loadPosts()
     } catch (error) {
       console.error('Error liking post:', error)
-    } finally {
-      setIsLoading(false)
+      alert('Failed to like post')
     }
+    setIsLoading(false)
   }
 
   if (!account) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        minHeight: '80vh',
-        color: '#fff',
-        fontSize: '1.5rem'
-      }}>
-        👆 Please connect your wallet to continue
+      <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
+        <h2 style={{ color: '#fff', fontSize: '2rem', marginBottom: '1rem' }}>
+          Welcome to Hyve Social
+        </h2>
+        <p style={{ color: '#888', fontSize: '1.25rem' }}>
+          Connect your wallet to get started
+        </p>
       </div>
     )
   }
@@ -180,124 +173,46 @@ export default function Home({ account, provider, signer }) {
   if (showCreateProfile) {
     return (
       <div style={{ 
-        maxWidth: '500px', 
-        margin: '4rem auto', 
-        padding: '2rem',
-        background: '#1a1a1a',
-        borderRadius: '12px',
-        border: '1px solid #333'
+        padding: '4rem 2rem', 
+        maxWidth: '600px', 
+        margin: '0 auto',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 'calc(100vh - 100px)'
       }}>
-        <h2 style={{ color: '#f59e0b', marginBottom: '1.5rem' }}>
-          Create Your Profile
-        </h2>
-        
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '0.75rem',
-            marginBottom: '1rem',
-            background: '#0a0a0a',
-            border: '1px solid #333',
-            borderRadius: '8px',
-            color: '#fff',
-            fontSize: '1rem'
-          }}
-        />
-        
-        <textarea
-          placeholder="Bio (optional)"
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-          rows={3}
-          style={{
-            width: '100%',
-            padding: '0.75rem',
-            marginBottom: '1.5rem',
-            background: '#0a0a0a',
-            border: '1px solid #333',
-            borderRadius: '8px',
-            color: '#fff',
-            fontSize: '1rem',
-            resize: 'vertical'
-          }}
-        />
-        
-        <button
-          onClick={createProfile}
-          disabled={isLoading}
-          style={{
-            width: '100%',
-            padding: '0.75rem',
-            background: '#f59e0b',
-            color: '#000',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '1rem',
-            fontWeight: 'bold',
-            cursor: isLoading ? 'not-allowed' : 'pointer',
-            opacity: isLoading ? 0.5 : 1
-          }}
-        >
-          {isLoading ? 'Creating...' : 'Create Profile'}
-        </button>
-      </div>
-    )
-  }
-
-  return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '2rem 1rem' }}>
-      {userProfile && (
-        <div style={{ 
-          background: '#1a1a1a', 
-          padding: '1.5rem', 
-          borderRadius: '12px',
-          border: '1px solid #333',
-          marginBottom: '2rem'
-        }}>
-          <h2 style={{ color: '#f59e0b', marginBottom: '0.5rem' }}>
-            {userProfile.username}
-          </h2>
-          <p style={{ color: '#888', marginBottom: '0.5rem' }}>{userProfile.bio}</p>
-          <p style={{ color: '#666', fontSize: '0.9rem' }}>
-            {userProfile.postCount} posts
-          </p>
-        </div>
-      )}
-
-      <button
-        onClick={() => setShowCreatePost(!showCreatePost)}
-        style={{
-          width: '100%',
-          padding: '1rem',
-          background: '#f59e0b',
-          color: '#000',
-          border: 'none',
-          borderRadius: '12px',
-          fontSize: '1rem',
-          fontWeight: 'bold',
-          cursor: 'pointer',
-          marginBottom: '2rem'
-        }}
-      >
-        {showCreatePost ? '✕ Cancel' : '✏️ Create Post'}
-      </button>
-
-      {showCreatePost && (
         <div style={{
           background: '#1a1a1a',
-          padding: '1.5rem',
+          padding: '2rem',
           borderRadius: '12px',
           border: '1px solid #333',
-          marginBottom: '2rem'
+          width: '100%'
         }}>
+          <h2 style={{ color: '#f59e0b', marginBottom: '2rem', textAlign: 'center' }}>
+            Create Your Profile
+          </h2>
+          
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              marginBottom: '1rem',
+              background: '#0a0a0a',
+              border: '1px solid #333',
+              borderRadius: '8px',
+              color: '#fff',
+              fontSize: '1rem'
+            }}
+          />
+          
           <textarea
-            placeholder="What's on your mind?"
-            value={postContent}
-            onChange={(e) => setPostContent(e.target.value)}
+            placeholder="Bio (optional)"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
             rows={4}
             style={{
               width: '100%',
@@ -311,84 +226,314 @@ export default function Home({ account, provider, signer }) {
               resize: 'vertical'
             }}
           />
-          
-          <button
-            onClick={createPost}
-            disabled={isLoading || !postContent.trim()}
+
+          <input
+            type="text"
+            placeholder="Profile Picture URL (optional)"
+            value={profilePicture}
+            onChange={(e) => setProfilePicture(e.target.value)}
             style={{
               width: '100%',
               padding: '0.75rem',
+              marginBottom: '1.5rem',
+              background: '#0a0a0a',
+              border: '1px solid #333',
+              borderRadius: '8px',
+              color: '#fff',
+              fontSize: '1rem'
+            }}
+          />
+          
+          <button
+            onClick={createProfile}
+            disabled={isLoading}
+            style={{
+              width: '100%',
+              padding: '1rem',
               background: '#f59e0b',
               color: '#000',
               border: 'none',
               borderRadius: '8px',
               fontSize: '1rem',
               fontWeight: 'bold',
-              cursor: (isLoading || !postContent.trim()) ? 'not-allowed' : 'pointer',
-              opacity: (isLoading || !postContent.trim()) ? 0.5 : 1
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              opacity: isLoading ? 0.5 : 1
             }}
           >
-            {isLoading ? 'Posting...' : 'Post'}
+            {isLoading ? 'Creating...' : 'Create Profile'}
           </button>
         </div>
-      )}
+      </div>
+    )
+  }
 
-      <div style={{ color: '#fff' }}>
-        <h3 style={{ marginBottom: '1.5rem', color: '#f59e0b' }}>Feed</h3>
-        
-        {posts.length === 0 ? (
-          <p style={{ color: '#888', textAlign: 'center', padding: '3rem 0' }}>
-            No posts yet. Be the first to post!
-          </p>
-        ) : (
-          posts.map(post => (
-            <div
-              key={post.id}
-              style={{
-                background: '#1a1a1a',
-                padding: '1.5rem',
-                borderRadius: '12px',
-                border: '1px solid #333',
-                marginBottom: '1rem'
-              }}
-            >
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between',
-                marginBottom: '1rem'
+  return (
+    <div style={{ display: 'flex', minHeight: 'calc(100vh - 80px)' }}>
+      {/* LEFT SIDEBAR */}
+      <div style={{
+        width: '280px',
+        background: '#1a1a1a',
+        borderRight: '1px solid #333',
+        padding: '1.5rem',
+        overflowY: 'auto',
+        position: 'sticky',
+        top: 0,
+        height: 'calc(100vh - 80px)'
+      }}>
+        {/* User Profile Section */}
+        {userProfile && (
+          <div style={{ marginBottom: '2rem' }}>
+            <div style={{
+              width: '100px',
+              height: '100px',
+              borderRadius: '50%',
+              background: userProfile.avatar ? `url(${userProfile.avatar})` : '#f59e0b',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              margin: '0 auto 1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '2.5rem',
+              color: '#000',
+              fontWeight: 'bold',
+              border: '3px solid #f59e0b'
+            }}>
+              {!userProfile.avatar && userProfile.username.charAt(0).toUpperCase()}
+            </div>
+            <h3 style={{ 
+              color: '#f59e0b', 
+              textAlign: 'center',
+              fontSize: '1.25rem',
+              marginBottom: '0.5rem',
+              fontWeight: 'bold'
+            }}>
+              {userProfile.username}
+            </h3>
+            {userProfile.bio && (
+              <p style={{
+                color: '#888',
+                textAlign: 'center',
+                fontSize: '0.875rem',
+                marginBottom: '0.5rem'
               }}>
-                <div>
-                  <div style={{ color: '#f59e0b', fontWeight: 'bold' }}>
-                    {profiles[post.author]?.username || 'Loading...'}
-                  </div>
-                  <div style={{ color: '#666', fontSize: '0.85rem' }}>
-                    {new Date(post.timestamp * 1000).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-              
-              <p style={{ color: '#fff', marginBottom: '1rem', lineHeight: 1.5 }}>
-                {post.content}
+                {userProfile.bio}
               </p>
+            )}
+            <p style={{ 
+              color: '#666', 
+              textAlign: 'center',
+              fontSize: '0.75rem'
+            }}>
+              {account.slice(0, 6)}...{account.slice(-4)}
+            </p>
+          </div>
+        )}
+
+        {/* Stats */}
+        <div style={{
+          background: '#0a0a0a',
+          padding: '1rem',
+          borderRadius: '8px',
+          marginBottom: '1.5rem'
+        }}>
+          <div style={{ marginBottom: '0.75rem' }}>
+            <span style={{ color: '#888', fontSize: '0.875rem' }}>Total Posts</span>
+            <div style={{ color: '#f59e0b', fontSize: '1.5rem', fontWeight: 'bold' }}>
+              {posts.filter(p => p.author.toLowerCase() === account.toLowerCase()).length}
+            </div>
+          </div>
+          <div>
+            <span style={{ color: '#888', fontSize: '0.875rem' }}>Community Posts</span>
+            <div style={{ color: '#fff', fontSize: '1.5rem', fontWeight: 'bold' }}>
+              {posts.length}
+            </div>
+          </div>
+        </div>
+
+        {/* Info */}
+        <div style={{
+          background: '#0a0a0a',
+          padding: '1rem',
+          borderRadius: '8px',
+          fontSize: '0.75rem',
+          color: '#666'
+        }}>
+          <p style={{ marginBottom: '0.5rem' }}>
+            🐝 <strong style={{ color: '#f59e0b' }}>Hyve Social</strong>
+          </p>
+          <p>
+            Decentralized social media on your own blockchain
+          </p>
+        </div>
+      </div>
+
+      {/* MAIN CONTENT AREA - MUCH LARGER */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '2rem 3rem',
+        maxWidth: '1000px',
+        margin: '0 auto',
+        width: '100%'
+      }}>
+        {/* Create Post Box */}
+        <div style={{
+          background: '#1a1a1a',
+          padding: '2rem',
+          borderRadius: '12px',
+          border: '1px solid #333',
+          marginBottom: '2rem'
+        }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              background: userProfile?.avatar ? `url(${userProfile.avatar})` : '#f59e0b',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.5rem',
+              color: '#000',
+              fontWeight: 'bold',
+              flexShrink: 0
+            }}>
+              {!userProfile?.avatar && userProfile?.username.charAt(0).toUpperCase()}
+            </div>
+            <div style={{ flex: 1 }}>
+              <textarea
+                placeholder="What's on your mind?"
+                value={postContent}
+                onChange={(e) => setPostContent(e.target.value)}
+                rows={3}
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  marginBottom: '1rem',
+                  background: '#0a0a0a',
+                  border: '1px solid #333',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  fontSize: '1.125rem',
+                  resize: 'vertical'
+                }}
+              />
               
               <button
-                onClick={() => likePost(post.id)}
+                onClick={createPost}
                 disabled={isLoading}
                 style={{
-                  background: 'transparent',
-                  border: '1px solid #333',
-                  color: '#f59e0b',
-                  padding: '0.5rem 1rem',
+                  padding: '0.75rem 2rem',
+                  background: '#f59e0b',
+                  color: '#000',
+                  border: 'none',
                   borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
                   cursor: isLoading ? 'not-allowed' : 'pointer',
-                  fontSize: '0.9rem'
+                  opacity: isLoading ? 0.5 : 1
                 }}
               >
-                ❤️ {post.likes} {post.likes === 1 ? 'Like' : 'Likes'}
+                {isLoading ? 'Posting...' : 'Post'}
               </button>
             </div>
-          ))
-        )}
+          </div>
+        </div>
+
+        {/* Posts Feed */}
+        <div>
+          {posts.length === 0 ? (
+            <div style={{
+              background: '#1a1a1a',
+              padding: '4rem 2rem',
+              borderRadius: '12px',
+              border: '1px solid #333',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🐝</div>
+              <p style={{ color: '#888', fontSize: '1.25rem' }}>
+                No posts yet. Be the first to post!
+              </p>
+            </div>
+          ) : (
+            posts.map((post) => (
+              <div
+                key={post.id}
+                style={{
+                  background: '#1a1a1a',
+                  padding: '2rem',
+                  borderRadius: '12px',
+                  border: '1px solid #333',
+                  marginBottom: '1.5rem'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '50%',
+                    background: profiles[post.author]?.avatar ? `url(${profiles[post.author].avatar})` : '#f59e0b',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#000',
+                    fontWeight: 'bold',
+                    fontSize: '1.5rem',
+                    flexShrink: 0
+                  }}>
+                    {!profiles[post.author]?.avatar && profiles[post.author]?.username.charAt(0).toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '1.125rem', marginBottom: '0.25rem' }}>
+                      {profiles[post.author]?.username || 'Anonymous'}
+                    </div>
+                    <div style={{ color: '#666', fontSize: '0.875rem' }}>
+                      {new Date(post.timestamp * 1000).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+                
+                <p style={{ 
+                  color: '#fff', 
+                  marginBottom: '1.5rem', 
+                  whiteSpace: 'pre-wrap', 
+                  fontSize: '1.125rem', 
+                  lineHeight: '1.7'
+                }}>
+                  {post.content}
+                </p>
+                
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <button
+                    onClick={() => likePost(post.id)}
+                    disabled={isLoading}
+                    style={{
+                      padding: '0.625rem 1.25rem',
+                      background: '#333',
+                      color: '#f59e0b',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
+                      fontSize: '0.9375rem',
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <span style={{ fontSize: '1.25rem' }}>❤️</span>
+                    <span>{post.likes}</span>
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   )
