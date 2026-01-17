@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 import CONTRACT_ABI from '../contract-abi.json'
 
-const CONTRACT_ADDRESS = '0xd9145CCE52D386f254917e481eB44e9943F39138'
+const CONTRACT_ADDRESS = '0x5F817E8f2512d3D6E7cEF427A5d0b023e30190b0'
 
 export default function Home({ account, provider, signer }) {
   const [posts, setPosts] = useState([])
@@ -104,7 +104,7 @@ export default function Home({ account, provider, signer }) {
     setIsLoading(true)
     try {
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
-    const tx = await contract.createProfile(username.trim(), (bio || '').trim(), '')
+      const tx = await contract.createProfile(username.trim(), bio.trim() || '', '')
       await tx.wait()
       
       setShowCreateProfile(false)
@@ -126,7 +126,7 @@ export default function Home({ account, provider, signer }) {
     setIsLoading(true)
     try {
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
-      const tx = await contract.createPost(postContent)
+      const tx = await contract.createPost(postContent.trim(), '')
       await tx.wait()
       
       setPostContent('')
