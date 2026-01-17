@@ -12,8 +12,11 @@ export default function Home({ account, provider, signer }) {
   const [username, setUsername] = useState('')
   const [bio, setBio] = useState('')
   const [profilePicture, setProfilePicture] = useState('')
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState('')
   const [postContent, setPostContent] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState('')
 
   useEffect(() => {
     if (account && signer) {
@@ -21,6 +24,33 @@ export default function Home({ account, provider, signer }) {
       loadPosts()
     }
   }, [account, signer])
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Recommend smaller images for on-chain storage
+      if (file.size > 500 * 1024) { // 500KB limit for reasonable gas costs
+        alert('For best results, please use an image smaller than 500KB. Larger images will cost more gas to store on-chain.')
+        // Still allow it, but warn user
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file')
+        return
+      }
+      
+      setSelectedFile(file)
+      
+      // Convert to base64 and show preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64String = reader.result
+        setImagePreview(base64String)
+        setProfilePicture(base64String) // Store base64 directly
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   const loadUserProfile = async () => {
     if (!signer) return
@@ -52,7 +82,6 @@ export default function Home({ account, provider, signer }) {
     try {
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider)
       
-      // Read postCount from storage slot 3
       const postCountHex = await provider.getStorageAt(CONTRACT_ADDRESS, 3)
       const postCount = parseInt(postCountHex, 16)
       
@@ -106,16 +135,26 @@ export default function Home({ account, provider, signer }) {
 
     setIsLoading(true)
     try {
+      setUploadProgress('Creating profile on blockchain...')
+      
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
-      const tx = await contract.createProfile(username.trim(), (bio || '').trim(), profilePicture.trim())
+      const tx = await contract.createProfile(
+        username.trim(), 
+        (bio || '').trim(), 
+        profilePicture.trim()
+      )
+      
+      setUploadProgress('Waiting for confirmation...')
       await tx.wait()
       
       setShowCreateProfile(false)
+      setUploadProgress('')
       await loadUserProfile()
       alert('Profile created successfully!')
     } catch (error) {
       console.error('Error creating profile:', error)
-      alert('Failed to create profile')
+      setUploadProgress('')
+      alert('Failed to create profile: ' + error.message)
     }
     setIsLoading(false)
   }
@@ -192,6 +231,49 @@ export default function Home({ account, provider, signer }) {
             Create Your Profile
           </h2>
           
+          {/* Image Upload Section */}
+          <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+            <div style={{
+              width: '120px',
+              height: '120px',
+              borderRadius: '50%',
+              background: imagePreview ? `url(${imagePreview})` : '#333',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              margin: '0 auto 1rem',
+              border: '3px solid #f59e0b',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#666',
+              fontSize: '3rem'
+            }}>
+              {!imagePreview && '📷'}
+            </div>
+            
+            <label style={{
+              display: 'inline-block',
+              padding: '0.75rem 1.5rem',
+              background: '#333',
+              color: '#f59e0b',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '0.9375rem'
+            }}>
+              {selectedFile ? 'Change Photo' : 'Upload Photo'}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
+              />
+            </label>
+            <p style={{ color: '#666', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+              Recommended: under 500KB for lower gas costs
+            </p>
+          </div>
+          
           <input
             type="text"
             placeholder="Username"
@@ -217,7 +299,7 @@ export default function Home({ account, provider, signer }) {
             style={{
               width: '100%',
               padding: '0.75rem',
-              marginBottom: '1rem',
+              marginBottom: '1.5rem',
               background: '#0a0a0a',
               border: '1px solid #333',
               borderRadius: '8px',
@@ -226,23 +308,21 @@ export default function Home({ account, provider, signer }) {
               resize: 'vertical'
             }}
           />
-
-          <input
-            type="text"
-            placeholder="Profile Picture URL (optional)"
-            value={profilePicture}
-            onChange={(e) => setProfilePicture(e.target.value)}
-            style={{
-              width: '100%',
+          
+          {uploadProgress && (
+            <div style={{
               padding: '0.75rem',
-              marginBottom: '1.5rem',
               background: '#0a0a0a',
-              border: '1px solid #333',
+              border: '1px solid #f59e0b',
               borderRadius: '8px',
-              color: '#fff',
-              fontSize: '1rem'
-            }}
-          />
+              color: '#f59e0b',
+              textAlign: 'center',
+              marginBottom: '1rem',
+              fontSize: '0.9375rem'
+            }}>
+              {uploadProgress}
+            </div>
+          )}
           
           <button
             onClick={createProfile}
@@ -262,6 +342,15 @@ export default function Home({ account, provider, signer }) {
           >
             {isLoading ? 'Creating...' : 'Create Profile'}
           </button>
+          
+          <p style={{ 
+            color: '#666', 
+            fontSize: '0.75rem', 
+            marginTop: '1rem',
+            textAlign: 'center'
+          }}>
+            Your image will be stored directly on the blockchain
+          </p>
         </div>
       </div>
     )
@@ -368,7 +457,7 @@ export default function Home({ account, provider, signer }) {
         </div>
       </div>
 
-      {/* MAIN CONTENT AREA - MUCH LARGER */}
+      {/* MAIN CONTENT AREA */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
