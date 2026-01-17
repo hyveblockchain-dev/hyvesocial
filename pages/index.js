@@ -70,10 +70,10 @@ export default function Home({ account, provider, signer }) {
         const canvas = document.createElement('canvas')
         const ctx = canvas.getContext('2d')
         
-        // Resize to max 400x400 (good for profile pics)
+        // Resize to max 200x200 (much smaller for lower gas costs)
         let width = img.width
         let height = img.height
-        const maxSize = 400
+        const maxSize = 200
         
         if (width > height) {
           if (width > maxSize) {
@@ -93,15 +93,15 @@ export default function Home({ account, provider, signer }) {
         // Draw and compress
         ctx.drawImage(img, 0, 0, width, height)
         
-        // Convert to base64 with compression (0.7 quality for JPEG)
-        const base64String = canvas.toDataURL('image/jpeg', 0.7)
+        // Convert to base64 with higher compression (0.5 quality for JPEG)
+        const base64String = canvas.toDataURL('image/jpeg', 0.5)
         
         // Check final size
         const sizeInKB = Math.round((base64String.length * 3) / 4 / 1024)
         console.log(`Compressed image size: ${sizeInKB}KB`)
         
-        if (sizeInKB > 200) {
-          alert(`Warning: Image is ${sizeInKB}KB. This will cost more gas. Consider using a smaller image.`)
+        if (sizeInKB > 100) {
+          alert(`Warning: Image is still ${sizeInKB}KB after compression. Transaction may fail due to high gas costs. Try a simpler image with less detail.`)
         }
         
         callback(base64String)
@@ -380,7 +380,7 @@ export default function Home({ account, provider, signer }) {
               />
             </label>
             <p style={{ color: '#666', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-              Images auto-compressed to 400x400 • Recommended: simple images
+              Images auto-compressed to 200x200 • Use simple images for best results
             </p>
           </div>
           
@@ -901,7 +901,7 @@ export default function Home({ account, provider, signer }) {
               </button>
 
               <p style={{ color: '#666', fontSize: '0.75rem', textAlign: 'center' }}>
-                Images auto-compressed to 400x400 • Recommended: simple images
+                Recommended: under 500KB for lower gas costs
               </p>
             </div>
 
