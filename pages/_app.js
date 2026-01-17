@@ -34,17 +34,17 @@ function MyApp({ Component, pageProps }) {
       }
 
       const provider = new ethers.providers.Web3Provider(window.ethereum, {
-        name: 'hyve',
-        chainId: 9200
+        name: 'hyve-local',
+        chainId: 713715
       })
       const accounts = await provider.send('eth_requestAccounts', [])
       const signer = provider.getSigner()
       
-      // Switch to Hyve network (chain ID 9200)
+      // Switch to Hyve Local network (chain ID 713715)
       try {
         await window.ethereum.request({
           method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0x23F0' }], // 9200 in hex
+          params: [{ chainId: '0xae3f3' }], // 713715 in hex
         })
       } catch (switchError) {
         // Chain not added, try to add it
@@ -53,15 +53,15 @@ function MyApp({ Component, pageProps }) {
             await window.ethereum.request({
               method: 'wallet_addEthereumChain',
               params: [{
-                chainId: '0x23F0',
-                chainName: 'Hyve Blockchain',
+                chainId: '0xae3f3',
+                chainName: 'Hyve Blockchain Local',
                 nativeCurrency: {
-                  name: 'HYVE',
-                  symbol: 'HYVE',
+                  name: 'SEI',
+                  symbol: 'SEI',
                   decimals: 18
                 },
-                rpcUrls: ['https://rpc.hyvechain.com'],
-                blockExplorerUrls: ['https://explorer.hyvechain.com']
+                rpcUrls: ['http://172.22.195.48:8545'],
+                blockExplorerUrls: []
               }]
             })
           } catch (addError) {
