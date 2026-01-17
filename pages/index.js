@@ -32,52 +32,83 @@ export default function Home({ account, provider, signer }) {
   const handleFileSelect = (e) => {
     const file = e.target.files[0]
     if (file) {
-      // Recommend smaller images for on-chain storage
-      if (file.size > 500 * 1024) { // 500KB limit for reasonable gas costs
-        alert('For best results, please use an image smaller than 500KB. Larger images will cost more gas to store on-chain.')
-        // Still allow it, but warn user
-      }
-      
       if (!file.type.startsWith('image/')) {
         alert('Please select an image file')
         return
       }
       
-      setSelectedFile(file)
-      
-      // Convert to base64 and show preview
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const base64String = reader.result
+      compressAndConvertImage(file, (base64String) => {
+        setSelectedFile(file)
         setImagePreview(base64String)
-        setProfilePicture(base64String) // Store base64 directly
-      }
-      reader.readAsDataURL(file)
+        setProfilePicture(base64String)
+      })
     }
   }
 
   const handleNewFileSelect = (e) => {
     const file = e.target.files[0]
     if (file) {
-      if (file.size > 500 * 1024) {
-        alert('For best results, please use an image smaller than 500KB. Larger images will cost more gas to store on-chain.')
-      }
-      
       if (!file.type.startsWith('image/')) {
         alert('Please select an image file')
         return
       }
       
-      setNewSelectedFile(file)
-      
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const base64String = reader.result
+      compressAndConvertImage(file, (base64String) => {
+        setNewSelectedFile(file)
         setNewImagePreview(base64String)
         setNewProfilePicture(base64String)
-      }
-      reader.readAsDataURL(file)
+      })
     }
+  }
+
+  const compressAndConvertImage = (file, callback) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        // Create canvas to resize image
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        
+        // Resize to max 400x400 (good for profile pics)
+        let width = img.width
+        let height = img.height
+        const maxSize = 400
+        
+        if (width > height) {
+          if (width > maxSize) {
+            height = (height * maxSize) / width
+            width = maxSize
+          }
+        } else {
+          if (height > maxSize) {
+            width = (width * maxSize) / height
+            height = maxSize
+          }
+        }
+        
+        canvas.width = width
+        canvas.height = height
+        
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, width, height)
+        
+        // Convert to base64 with compression (0.7 quality for JPEG)
+        const base64String = canvas.toDataURL('image/jpeg', 0.7)
+        
+        // Check final size
+        const sizeInKB = Math.round((base64String.length * 3) / 4 / 1024)
+        console.log(`Compressed image size: ${sizeInKB}KB`)
+        
+        if (sizeInKB > 200) {
+          alert(`Warning: Image is ${sizeInKB}KB. This will cost more gas. Consider using a smaller image.`)
+        }
+        
+        callback(base64String)
+      }
+      img.src = e.target.result
+    }
+    reader.readAsDataURL(file)
   }
 
   const updateProfilePicture = async () => {
@@ -90,13 +121,15 @@ export default function Home({ account, provider, signer }) {
     try {
       setUploadProgress('Updating profile picture on blockchain...')
       
-      // We need to create a new profile with the updated picture
-      // Since blockchain data is immutable, we "update" by creating a new entry
+      // Calculate appropriate gas limit based on image size
+      const estimatedGas = 3000000 + Math.floor(newProfilePicture.length / 10)
+      
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
       const tx = await contract.createProfile(
         userProfile.username,
         userProfile.bio,
-        newProfilePicture.trim()
+        newProfilePicture.trim(),
+        { gasLimit: estimatedGas }
       )
       
       setUploadProgress('Waiting for confirmation...')
@@ -112,7 +145,11 @@ export default function Home({ account, provider, signer }) {
     } catch (error) {
       console.error('Error updating profile picture:', error)
       setUploadProgress('')
-      alert('Failed to update profile picture: ' + error.message)
+      if (error.message.includes('gas')) {
+        alert('Gas error: The image is too large. Please try a smaller image (under 100KB recommended).')
+      } else {
+        alert('Failed to update profile picture: ' + error.message)
+      }
     }
     setIsLoading(false)
   }
@@ -202,11 +239,15 @@ export default function Home({ account, provider, signer }) {
     try {
       setUploadProgress('Creating profile on blockchain...')
       
+      // Calculate gas limit based on image size
+      const estimatedGas = 3000000 + Math.floor(profilePicture.length / 10)
+      
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
       const tx = await contract.createProfile(
         username.trim(), 
         (bio || '').trim(), 
-        profilePicture.trim()
+        profilePicture.trim(),
+        { gasLimit: estimatedGas }
       )
       
       setUploadProgress('Waiting for confirmation...')
@@ -219,7 +260,11 @@ export default function Home({ account, provider, signer }) {
     } catch (error) {
       console.error('Error creating profile:', error)
       setUploadProgress('')
-      alert('Failed to create profile: ' + error.message)
+      if (error.message.includes('gas')) {
+        alert('Gas error: The image is too large. Please try a smaller image (under 100KB recommended).')
+      } else {
+        alert('Failed to create profile: ' + error.message)
+      }
     }
     setIsLoading(false)
   }
@@ -335,7 +380,7 @@ export default function Home({ account, provider, signer }) {
               />
             </label>
             <p style={{ color: '#666', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-              Recommended: under 500KB for lower gas costs
+              Images auto-compressed to 400x400 • Recommended: simple images
             </p>
           </div>
           
@@ -856,7 +901,7 @@ export default function Home({ account, provider, signer }) {
               </button>
 
               <p style={{ color: '#666', fontSize: '0.75rem', textAlign: 'center' }}>
-                Recommended: under 500KB for lower gas costs
+                Images auto-compressed to 400x400 • Recommended: simple images
               </p>
             </div>
 
