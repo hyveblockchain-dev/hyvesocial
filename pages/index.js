@@ -17,6 +17,10 @@ export default function Home({ account, provider, signer }) {
   const [postContent, setPostContent] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState('')
+  const [showProfilePictureModal, setShowProfilePictureModal] = useState(false)
+  const [newProfilePicture, setNewProfilePicture] = useState('')
+  const [newImagePreview, setNewImagePreview] = useState('')
+  const [newSelectedFile, setNewSelectedFile] = useState(null)
 
   useEffect(() => {
     if (account && signer) {
@@ -50,6 +54,67 @@ export default function Home({ account, provider, signer }) {
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  const handleNewFileSelect = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      if (file.size > 500 * 1024) {
+        alert('For best results, please use an image smaller than 500KB. Larger images will cost more gas to store on-chain.')
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file')
+        return
+      }
+      
+      setNewSelectedFile(file)
+      
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64String = reader.result
+        setNewImagePreview(base64String)
+        setNewProfilePicture(base64String)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const updateProfilePicture = async () => {
+    if (!newProfilePicture) {
+      alert('Please select a new image')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      setUploadProgress('Updating profile picture on blockchain...')
+      
+      // We need to create a new profile with the updated picture
+      // Since blockchain data is immutable, we "update" by creating a new entry
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
+      const tx = await contract.createProfile(
+        userProfile.username,
+        userProfile.bio,
+        newProfilePicture.trim()
+      )
+      
+      setUploadProgress('Waiting for confirmation...')
+      await tx.wait()
+      
+      setShowProfilePictureModal(false)
+      setNewProfilePicture('')
+      setNewImagePreview('')
+      setNewSelectedFile(null)
+      setUploadProgress('')
+      await loadUserProfile()
+      alert('Profile picture updated successfully!')
+    } catch (error) {
+      console.error('Error updating profile picture:', error)
+      setUploadProgress('')
+      alert('Failed to update profile picture: ' + error.message)
+    }
+    setIsLoading(false)
   }
 
   const loadUserProfile = async () => {
@@ -372,23 +437,53 @@ export default function Home({ account, provider, signer }) {
         {/* User Profile Section */}
         {userProfile && (
           <div style={{ marginBottom: '2rem' }}>
-            <div style={{
-              width: '100px',
-              height: '100px',
-              borderRadius: '50%',
-              background: userProfile.avatar ? `url(${userProfile.avatar})` : '#f59e0b',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              margin: '0 auto 1rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '2.5rem',
-              color: '#000',
-              fontWeight: 'bold',
-              border: '3px solid #f59e0b'
-            }}>
+            <div 
+              onClick={() => setShowProfilePictureModal(true)}
+              style={{
+                width: '100px',
+                height: '100px',
+                borderRadius: '50%',
+                background: userProfile.avatar ? `url(${userProfile.avatar})` : '#f59e0b',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                margin: '0 auto 1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '2.5rem',
+                color: '#000',
+                fontWeight: 'bold',
+                border: '3px solid #f59e0b',
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'transform 0.2s, border-color 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.05)'
+                e.currentTarget.style.borderColor = '#fbbf24'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)'
+                e.currentTarget.style.borderColor = '#f59e0b'
+              }}
+            >
               {!userProfile.avatar && userProfile.username.charAt(0).toUpperCase()}
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                background: '#f59e0b',
+                borderRadius: '50%',
+                width: '30px',
+                height: '30px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1rem',
+                border: '2px solid #1a1a1a'
+              }}>
+                ✏️
+              </div>
             </div>
             <h3 style={{ 
               color: '#f59e0b', 
@@ -624,6 +719,170 @@ export default function Home({ account, provider, signer }) {
           )}
         </div>
       </div>
+
+      {/* Profile Picture Modal */}
+      {showProfilePictureModal && (
+        <div 
+          onClick={() => setShowProfilePictureModal(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#1a1a1a',
+              padding: '2rem',
+              borderRadius: '12px',
+              border: '1px solid #333',
+              maxWidth: '500px',
+              width: '90%',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}
+          >
+            <h2 style={{ color: '#f59e0b', marginBottom: '1.5rem', textAlign: 'center' }}>
+              Profile Picture
+            </h2>
+
+            {/* Current Picture Large View */}
+            <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+              <div style={{
+                width: '200px',
+                height: '200px',
+                borderRadius: '50%',
+                background: userProfile?.avatar ? `url(${userProfile.avatar})` : '#f59e0b',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                margin: '0 auto',
+                border: '3px solid #f59e0b',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '4rem',
+                color: '#000',
+                fontWeight: 'bold'
+              }}>
+                {!userProfile?.avatar && userProfile?.username.charAt(0).toUpperCase()}
+              </div>
+            </div>
+
+            <div style={{ borderTop: '1px solid #333', paddingTop: '1.5rem', marginBottom: '1.5rem' }}>
+              <h3 style={{ color: '#fff', marginBottom: '1rem', fontSize: '1.125rem' }}>
+                Change Profile Picture
+              </h3>
+
+              {/* New Image Preview */}
+              {newImagePreview && (
+                <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
+                  <div style={{
+                    width: '150px',
+                    height: '150px',
+                    borderRadius: '50%',
+                    background: `url(${newImagePreview})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    margin: '0 auto',
+                    border: '3px solid #f59e0b'
+                  }} />
+                  <p style={{ color: '#888', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                    New picture preview
+                  </p>
+                </div>
+              )}
+
+              <label style={{
+                display: 'block',
+                padding: '0.75rem',
+                background: '#333',
+                color: '#f59e0b',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                textAlign: 'center',
+                marginBottom: '1rem'
+              }}>
+                {newSelectedFile ? 'Choose Different Photo' : 'Select New Photo'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleNewFileSelect}
+                  style={{ display: 'none' }}
+                />
+              </label>
+
+              {uploadProgress && (
+                <div style={{
+                  padding: '0.75rem',
+                  background: '#0a0a0a',
+                  border: '1px solid #f59e0b',
+                  borderRadius: '8px',
+                  color: '#f59e0b',
+                  textAlign: 'center',
+                  marginBottom: '1rem',
+                  fontSize: '0.875rem'
+                }}>
+                  {uploadProgress}
+                </div>
+              )}
+
+              <button
+                onClick={updateProfilePicture}
+                disabled={isLoading || !newProfilePicture}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  background: newProfilePicture ? '#f59e0b' : '#333',
+                  color: newProfilePicture ? '#000' : '#666',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  cursor: isLoading || !newProfilePicture ? 'not-allowed' : 'pointer',
+                  opacity: isLoading ? 0.5 : 1,
+                  marginBottom: '0.5rem'
+                }}
+              >
+                {isLoading ? 'Updating...' : 'Update Profile Picture'}
+              </button>
+
+              <p style={{ color: '#666', fontSize: '0.75rem', textAlign: 'center' }}>
+                Recommended: under 500KB for lower gas costs
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                setShowProfilePictureModal(false)
+                setNewProfilePicture('')
+                setNewImagePreview('')
+                setNewSelectedFile(null)
+              }}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                background: '#333',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                cursor: 'pointer'
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
