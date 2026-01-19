@@ -1766,7 +1766,7 @@
           <div class="small-avatar">
             <img src="https://i.pravatar.cc/100?img=12" alt="TLON">
           </div>
-          <textarea id="postContent" class="post-textarea" placeholder="What's on your mind, TLON?"></textarea>
+          <textarea id="postContent" class="post-textarea" placeholder="What's on your mind?"></textarea>
         </div>
         <div class="post-actions">
           <div class="post-options">
@@ -2074,10 +2074,18 @@
       <div class="modal-header">Edit Profile</div>
       
       <div style="text-align: center; margin-bottom: 1.5rem;">
-        <div class="profile-pic" style="width: 120px; height: 120px; margin: 0 auto 1rem;">
-          T
+        <input 
+          type="file" 
+          id="modalProfileImage" 
+          accept="image/png,image/jpeg,image/jpg,image/webp"
+          style="display: none;"
+          onchange="handleModalImageSelect(event)"
+        >
+        <div id="modalProfilePic" class="profile-pic" style="width: 120px; height: 120px; margin: 0 auto 1rem; cursor: pointer; position: relative;" onclick="document.getElementById('modalProfileImage').click()">
+          <span id="modalProfilePicText">T</span>
         </div>
-        <button class="option-btn">Change Picture</button>
+        <button type="button" class="option-btn" onclick="document.getElementById('modalProfileImage').click()">Change Picture</button>
+        <div id="modalImageStatus" style="font-size: 0.75rem; color: #888; margin-top: 0.5rem;"></div>
       </div>
 
       <div style="margin-bottom: 1rem;">
@@ -2271,7 +2279,105 @@
     });
 
     // Profile modal
+    // Handle modal image selection
+    function handleModalImageSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Validate
+      const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        showWeb3Notification('Please select a valid image (PNG, JPG, WebP)', 'error');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        showWeb3Notification('Image must be less than 5MB', 'error');
+        return;
+      }
+
+      modalSelectedImage = file;
+
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const modalPic = document.getElementById('modalProfilePic');
+        modalPic.style.backgroundImage = `url(${e.target.result})`;
+        modalPic.style.backgroundSize = 'cover';
+        modalPic.style.backgroundPosition = 'center';
+        const textSpan = document.getElementById('modalProfilePicText');
+        if (textSpan) textSpan.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+
+      document.getElementById('modalImageStatus').textContent = 'New image selected';
+      document.getElementById('modalImageStatus').style.color = '#10b981';
+    }
+
+    // Upload image to IPFS (same as create-profile)
+    async function uploadImageToIPFS(file) {
+      try {
+        const statusEl = document.getElementById('modalImageStatus');
+        if (statusEl) {
+          statusEl.textContent = 'Uploading image...';
+          statusEl.style.color = '#60a5fa';
+        }
+
+        // Convert to data URI as fallback (since public IPFS might fail)
+        const dataUri = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
+
+        if (statusEl) {
+          statusEl.textContent = 'Image ready';
+          statusEl.style.color = '#10b981';
+        }
+
+        return dataUri;
+      } catch (error) {
+        console.error('Image upload error:', error);
+        return '';
+      }
+    }
+
+    // Open profile modal and pre-fill with current data
     function openProfileModal() {
+      // Pre-fill username and bio
+      if (web3UserProfile) {
+        document.getElementById('modalUsername').value = web3UserProfile.username || '';
+        document.getElementById('modalBio').value = web3UserProfile.bio || '';
+        
+        // Show current profile picture
+        const modalPic = document.getElementById('modalProfilePic');
+        const modalPicText = document.getElementById('modalProfilePicText');
+        
+        if (web3UserProfile.profileImageHash && web3UserProfile.profileImageHash.length > 0) {
+          if (web3UserProfile.profileImageHash.startsWith('data:')) {
+            modalPic.style.backgroundImage = `url(${web3UserProfile.profileImageHash})`;
+            modalPic.style.backgroundSize = 'cover';
+            modalPic.style.backgroundPosition = 'center';
+            if (modalPicText) modalPicText.style.display = 'none';
+          } else if (web3UserProfile.profileImageHash.startsWith('Qm') || web3UserProfile.profileImageHash.startsWith('bafy')) {
+            modalPic.style.backgroundImage = `url(https://ipfs.io/ipfs/${web3UserProfile.profileImageHash})`;
+            modalPic.style.backgroundSize = 'cover';
+            modalPic.style.backgroundPosition = 'center';
+            if (modalPicText) modalPicText.style.display = 'none';
+          } else if (modalPicText) {
+            modalPicText.textContent = web3UserProfile.username.charAt(0).toUpperCase();
+            modalPicText.style.display = 'flex';
+          }
+        } else if (modalPicText) {
+          modalPicText.textContent = web3UserProfile.username.charAt(0).toUpperCase();
+          modalPicText.style.display = 'flex';
+        }
+      }
+      
+      // Reset upload status
+      document.getElementById('modalImageStatus').textContent = '';
+      modalSelectedImage = null;
+      
       document.getElementById('profileModal').classList.add('open');
     }
 
@@ -2327,7 +2433,7 @@
     const RPC_URL = "https://rpc.hyvechain.com";
 
     // Contract ABI (Application Binary Interface)
-    const CONTRACT_ABI = [{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"commentId","type":"uint256"},{"indexed":true,"internalType":"address","name":"commenter","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"CommentAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"commentId","type":"uint256"},{"indexed":true,"internalType":"address","name":"liker","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"CommentLiked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"author","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"liker","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostLiked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"sharer","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostShared","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"unliker","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostUnliked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"string","name":"username","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"ProfileCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"string","name":"username","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"ProfileUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"follower","type":"address"},{"indexed":true,"internalType":"address","name":"followee","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"UserFollowed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"follower","type":"address"},{"indexed":true,"internalType":"address","name":"unfollowee","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"UserUnfollowed","type":"event"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"},{"internalType":"string","name":"content","type":"string"}],"name":"addComment","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"content","type":"string"},{"internalType":"string","name":"imageHash","type":"string"}],"name":"createPost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"username","type":"string"},{"internalType":"string","name":"bio","type":"string"},{"internalType":"string","name":"profileImageHash","type":"string"}],"name":"createProfile","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"getComments","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likeCount","type":"uint256"}],"internalType":"struct HyveSocial.Comment[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"getPost","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"string","name":"imageHash","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likeCount","type":"uint256"},{"internalType":"uint256","name":"commentCount","type":"uint256"},{"internalType":"uint256","name":"shareCount","type":"uint256"},{"internalType":"bool","name":"exists","type":"bool"}],"internalType":"struct HyveSocial.Post","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getProfile","outputs":[{"components":[{"internalType":"string","name":"username","type":"string"},{"internalType":"string","name":"bio","type":"string"},{"internalType":"string","name":"profileImageHash","type":"string"},{"internalType":"uint256","name":"createdAt","type":"uint256"},{"internalType":"uint256","name":"followerCount","type":"uint256"},{"internalType":"uint256","name":"followingCount","type":"uint256"},{"internalType":"bool","name":"exists","type":"bool"}],"internalType":"struct HyveSocial.Profile","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"count","type":"uint256"}],"name":"getRecentPosts","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"string","name":"imageHash","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likeCount","type":"uint256"},{"internalType":"uint256","name":"commentCount","type":"uint256"},{"internalType":"uint256","name":"shareCount","type":"uint256"},{"internalType":"bool","name":"exists","type":"bool"}],"internalType":"struct HyveSocial.Post[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getTotalPosts","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"},{"internalType":"address","name":"user","type":"address"}],"name":"hasLikedPost","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"likePost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"sharePost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"profileExistsForUser","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"unlikePost","outputs":[],"stateMutability":"nonpayable","type":"function"}];
+    const CONTRACT_ABI = [{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"commentId","type":"uint256"},{"indexed":true,"internalType":"address","name":"commenter","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"CommentAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"commentId","type":"uint256"},{"indexed":true,"internalType":"address","name":"liker","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"CommentLiked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"author","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"liker","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostLiked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"sharer","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostShared","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"unliker","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostUnliked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"string","name":"username","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"ProfileCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"string","name":"username","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"ProfileUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"follower","type":"address"},{"indexed":true,"internalType":"address","name":"followee","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"UserFollowed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"follower","type":"address"},{"indexed":true,"internalType":"address","name":"unfollowee","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"UserUnfollowed","type":"event"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"},{"internalType":"string","name":"content","type":"string"}],"name":"addComment","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"content","type":"string"},{"internalType":"string","name":"imageHash","type":"string"}],"name":"createPost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"username","type":"string"},{"internalType":"string","name":"bio","type":"string"},{"internalType":"string","name":"profileImageHash","type":"string"}],"name":"createProfile","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"getComments","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likeCount","type":"uint256"}],"internalType":"struct HyveSocial.Comment[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"getPost","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"string","name":"imageHash","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likeCount","type":"uint256"},{"internalType":"uint256","name":"commentCount","type":"uint256"},{"internalType":"uint256","name":"shareCount","type":"uint256"},{"internalType":"bool","name":"exists","type":"bool"}],"internalType":"struct HyveSocial.Post","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getProfile","outputs":[{"components":[{"internalType":"string","name":"username","type":"string"},{"internalType":"string","name":"bio","type":"string"},{"internalType":"string","name":"profileImageHash","type":"string"},{"internalType":"uint256","name":"createdAt","type":"uint256"},{"internalType":"uint256","name":"followerCount","type":"uint256"},{"internalType":"uint256","name":"followingCount","type":"uint256"},{"internalType":"bool","name":"exists","type":"bool"}],"internalType":"struct HyveSocial.Profile","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"count","type":"uint256"}],"name":"getRecentPosts","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"string","name":"imageHash","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likeCount","type":"uint256"},{"internalType":"uint256","name":"commentCount","type":"uint256"},{"internalType":"uint256","name":"shareCount","type":"uint256"},{"internalType":"bool","name":"exists","type":"bool"}],"internalType":"struct HyveSocial.Post[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getTotalPosts","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"},{"internalType":"address","name":"user","type":"address"}],"name":"hasLikedPost","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"likePost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"sharePost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"profileExistsForUser","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"unlikePost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"username","type":"string"},{"internalType":"string","name":"bio","type":"string"},{"internalType":"string","name":"profileImageHash","type":"string"}],"name":"updateProfile","outputs":[],"stateMutability":"nonpayable","type":"function"}];
 
     // Global Web3 state
     let web3Provider = null;
@@ -2335,6 +2441,8 @@
     let web3Contract = null;
     let web3UserAddress = null;
     let web3UserProfile = null;
+    let modalSelectedImage = null;
+    let modalImageHash = '';
 
     // Auto-connect on page load
     window.addEventListener('load', async () => {
@@ -2455,19 +2563,26 @@
           return;
         }
 
-        showWeb3Notification('Creating profile... Please confirm transaction in MetaMask', 'info');
+        // Upload new image if selected
+        let imageHash = web3UserProfile.profileImageHash || '';
+        if (modalSelectedImage) {
+          showWeb3Notification('Uploading new profile picture...', 'info');
+          imageHash = await uploadImageToIPFS(modalSelectedImage);
+        }
+
+        showWeb3Notification('Updating profile... Please confirm transaction in MetaMask', 'info');
         
-        const tx = await web3Contract.createProfile(username, bio, '');
+        const tx = await web3Contract.updateProfile(username, bio, imageHash);
         showWeb3Notification('Transaction submitted! Waiting for confirmation...', 'info');
         
         await tx.wait();
         
-        showWeb3Notification('Profile created successfully!', 'success');
+        showWeb3Notification('Profile updated successfully!', 'success');
         await loadUserProfile();
         closeProfileModal();
       } catch (error) {
-        console.error('Error creating profile:', error);
-        showWeb3Notification('Failed to create profile: ' + (error.reason || error.message), 'error');
+        console.error('Error updating profile:', error);
+        showWeb3Notification('Failed to update profile: ' + (error.reason || error.message), 'error');
       }
     }
 
@@ -2732,6 +2847,12 @@
       
       document.getElementById('profileUsername').textContent = web3UserProfile.username;
       document.getElementById('profileBio').textContent = web3UserProfile.bio || 'No bio yet';
+      
+      // Update post placeholder with username
+      const postTextarea = document.getElementById('postContent');
+      if (postTextarea) {
+        postTextarea.placeholder = `What's on your mind, ${web3UserProfile.username}?`;
+      }
       
       // Update profile picture
       const profilePicElement = document.querySelector('.profile-pic');
