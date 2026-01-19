@@ -1566,46 +1566,7 @@
         <!-- Notifications Panel -->
         <div class="notifications-panel" id="notificationsPanel">
           <div class="notifications-header">Notifications</div>
-          
-          <div class="notification-item unread">
-            <div class="notification-avatar">
-              <img src="https://i.pravatar.cc/100?img=5" alt="Sarah">
-            </div>
-            <div class="notification-content">
-              <div class="notification-text"><strong>Sarah</strong> liked your post</div>
-              <div class="notification-time">5 minutes ago</div>
-            </div>
-          </div>
-
-          <div class="notification-item unread">
-            <div class="notification-avatar">
-              <img src="https://i.pravatar.cc/100?img=13" alt="Mike">
-            </div>
-            <div class="notification-content">
-              <div class="notification-text"><strong>Mike</strong> commented on your post</div>
-              <div class="notification-time">1 hour ago</div>
-            </div>
-          </div>
-
-          <div class="notification-item unread">
-            <div class="notification-avatar">
-              <img src="https://i.pravatar.cc/100?img=8" alt="John">
-            </div>
-            <div class="notification-content">
-              <div class="notification-text"><strong>John</strong> sent you a friend request</div>
-              <div class="notification-time">2 hours ago</div>
-            </div>
-          </div>
-
-          <div class="notification-item">
-            <div class="notification-avatar">
-              <img src="https://i.pravatar.cc/100?img=5" alt="Sarah">
-            </div>
-            <div class="notification-content">
-              <div class="notification-text"><strong>Sarah</strong> shared your post</div>
-              <div class="notification-time">1 day ago</div>
-            </div>
-          </div>
+          <p style="text-align: center; color: var(--text-secondary); padding: 2rem; font-size: 0.875rem;">No notifications yet</p>
         </div>
       </div>
     </div>
@@ -1660,35 +1621,9 @@
 
       <!-- Friends List -->
       <div class="friends-list">
-        <div class="friends-header">ONLINE FRIENDS</div>
-        <div class="friend-item" onclick="openChat('Sarah')">
-          <div class="friend-avatar">
-            <img src="https://i.pravatar.cc/100?img=5" alt="Sarah">
-          </div>
-          <div class="online-indicator"></div>
-          <div class="friend-info">
-            <div class="friend-name">Sarah</div>
-            <div class="friend-status">Online</div>
-          </div>
-        </div>
-        <div class="friend-item" onclick="openChat('Mike')">
-          <div class="friend-avatar">
-            <img src="https://i.pravatar.cc/100?img=13" alt="Mike">
-          </div>
-          <div class="online-indicator"></div>
-          <div class="friend-info">
-            <div class="friend-name">Mike</div>
-            <div class="friend-status">Online</div>
-          </div>
-        </div>
-        <div class="friend-item">
-          <div class="friend-avatar">
-            <img src="https://i.pravatar.cc/100?img=8" alt="John">
-          </div>
-          <div class="friend-info">
-            <div class="friend-name">John</div>
-            <div class="friend-status">Offline 2h ago</div>
-          </div>
+        <div class="friends-header">FRIENDS</div>
+        <div id="friendsList">
+          <p style="text-align: center; color: var(--text-secondary); padding: 1rem; font-size: 0.875rem;">No friends yet. Start following users!</p>
         </div>
       </div>
     </div>
@@ -1696,7 +1631,7 @@
     <!-- Main Feed -->
     <div class="main-feed">
       <!-- Stories Section -->
-      <div class="stories-container">
+      <div class="stories-container" style="display: none;">
         <div class="stories-wrapper">
           <!-- Create Story -->
           <div class="story create-story">
@@ -1707,64 +1642,14 @@
               </div>
             </div>
           </div>
-
-          <!-- Story 1 -->
-          <div class="story">
-            <div class="story-avatar">
-              <img src="https://i.pravatar.cc/100?img=5" alt="Sarah">
-            </div>
-            <div class="story-image">🌅</div>
-            <div class="story-overlay"></div>
-            <div class="story-name">Sarah</div>
-          </div>
-
-          <!-- Story 2 -->
-          <div class="story">
-            <div class="story-avatar">
-              <img src="https://i.pravatar.cc/100?img=8" alt="John">
-            </div>
-            <div class="story-image">🎨</div>
-            <div class="story-overlay"></div>
-            <div class="story-name">John</div>
-          </div>
-
-          <!-- Story 3 -->
-          <div class="story">
-            <div class="story-avatar">
-              <img src="https://i.pravatar.cc/100?img=13" alt="Mike">
-            </div>
-            <div class="story-image">🚀</div>
-            <div class="story-overlay"></div>
-            <div class="story-name">Mike</div>
-          </div>
-
-          <!-- Story 4 -->
-          <div class="story">
-            <div class="story-avatar">
-              <img src="https://i.pravatar.cc/100?img=9" alt="Emma">
-            </div>
-            <div class="story-image">💻</div>
-            <div class="story-overlay"></div>
-            <div class="story-name">Emma</div>
-          </div>
-
-          <!-- Story 5 -->
-          <div class="story">
-            <div class="story-avatar">
-              <img src="https://i.pravatar.cc/100?img=33" alt="Alex">
-            </div>
-            <div class="story-image">🌟</div>
-            <div class="story-overlay"></div>
-            <div class="story-name">Alex</div>
-          </div>
         </div>
       </div>
 
       <!-- Create Post -->
       <div class="create-post-box">
         <div class="create-post-input">
-          <div class="small-avatar">
-            <img src="https://i.pravatar.cc/100?img=12" alt="TLON">
+          <div id="createPostAvatar" class="small-avatar" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0;">
+            <span id="createPostAvatarText">?</span>
           </div>
           <textarea id="postContent" class="post-textarea" placeholder="What's on your mind?"></textarea>
         </div>
@@ -2655,7 +2540,7 @@
         try {
           authorProfile = await web3Contract.getProfile(post.author);
         } catch (e) {
-          authorProfile = { username: post.author.substring(0, 8) + '...' };
+          authorProfile = { username: post.author.substring(0, 8) + '...', profileImageHash: '' };
         }
         
         let hasLiked = false;
@@ -2665,13 +2550,25 @@
           } catch (e) {}
         }
         
+        // Build author avatar HTML with profile picture support
+        let authorAvatarHTML = '';
+        if (authorProfile.profileImageHash && authorProfile.profileImageHash.length > 0) {
+          if (authorProfile.profileImageHash.startsWith('data:')) {
+            authorAvatarHTML = `<div style="width: 48px; height: 48px; border-radius: 50%; background-image: url(${authorProfile.profileImageHash}); background-size: cover; background-position: center;"></div>`;
+          } else if (authorProfile.profileImageHash.startsWith('Qm') || authorProfile.profileImageHash.startsWith('bafy')) {
+            authorAvatarHTML = `<div style="width: 48px; height: 48px; border-radius: 50%; background-image: url(https://ipfs.io/ipfs/${authorProfile.profileImageHash}); background-size: cover; background-position: center;"></div>`;
+          } else {
+            authorAvatarHTML = `<div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.25rem;">${authorProfile.username.charAt(0).toUpperCase()}</div>`;
+          }
+        } else {
+          authorAvatarHTML = `<div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.25rem;">${authorProfile.username.charAt(0).toUpperCase()}</div>`;
+        }
+        
         const postHTML = `
           <div class="post-card">
             <div class="post-header">
               <div class="post-avatar">
-                <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.25rem;">
-                  ${authorProfile.username.charAt(0).toUpperCase()}
-                </div>
+                ${authorAvatarHTML}
               </div>
               <div class="post-info">
                 <div class="post-author">${escapeHtml(authorProfile.username)}</div>
@@ -2854,7 +2751,29 @@
         postTextarea.placeholder = `What's on your mind, ${web3UserProfile.username}?`;
       }
       
-      // Update profile picture
+      // Update create post avatar
+      const createPostAvatar = document.getElementById('createPostAvatar');
+      const createPostAvatarText = document.getElementById('createPostAvatarText');
+      
+      if (web3UserProfile.profileImageHash && web3UserProfile.profileImageHash.length > 0) {
+        if (web3UserProfile.profileImageHash.startsWith('data:')) {
+          createPostAvatar.style.backgroundImage = `url(${web3UserProfile.profileImageHash})`;
+          createPostAvatar.style.backgroundSize = 'cover';
+          createPostAvatar.style.backgroundPosition = 'center';
+          if (createPostAvatarText) createPostAvatarText.style.display = 'none';
+        } else if (web3UserProfile.profileImageHash.startsWith('Qm') || web3UserProfile.profileImageHash.startsWith('bafy')) {
+          createPostAvatar.style.backgroundImage = `url(https://ipfs.io/ipfs/${web3UserProfile.profileImageHash})`;
+          createPostAvatar.style.backgroundSize = 'cover';
+          createPostAvatar.style.backgroundPosition = 'center';
+          if (createPostAvatarText) createPostAvatarText.style.display = 'none';
+        } else if (createPostAvatarText) {
+          createPostAvatarText.textContent = web3UserProfile.username.charAt(0).toUpperCase();
+        }
+      } else if (createPostAvatarText) {
+        createPostAvatarText.textContent = web3UserProfile.username.charAt(0).toUpperCase();
+      }
+      
+      // Update profile picture in sidebar
       const profilePicElement = document.querySelector('.profile-pic');
       const profilePicText = document.getElementById('profilePicText');
       
