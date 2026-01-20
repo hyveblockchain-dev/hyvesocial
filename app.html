@@ -1,0 +1,3036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HyveSocial - Decentralized Social Media</title>
+  
+  <!-- Ethers.js for Web3 Integration -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* Theme Variables */
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #1a1a1a;
+      --bg-tertiary: #2a2a2a;
+      --bg-hover: #333;
+      --text-primary: #fff;
+      --text-secondary: #888;
+      --text-tertiary: #666;
+      --border-color: #333;
+      --accent-color: #f59e0b;
+      --accent-hover: #d97706;
+      --online-color: #10b981;
+      --notification-color: #ef4444;
+    }
+
+    body.light-mode {
+      --bg-primary: #f0f2f5;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #e4e6eb;
+      --bg-hover: #d8dadf;
+      --text-primary: #050505;
+      --text-secondary: #65676b;
+      --text-tertiary: #8a8d91;
+      --border-color: #ced0d4;
+      --accent-color: var(--accent-color);
+      --accent-hover: #d97706;
+      --online-color: #31a24c;
+      --notification-color: #e41e3f;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* Header */
+    .header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+      width: 200px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: var(--text-primary)fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+      position: relative;
+    }
+
+    .logo-icon::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      right: 3px;
+      bottom: 3px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      pointer-events: none;
+    }
+
+    .logo-text {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    body.light-mode .logo-text {
+      background: linear-gradient(135deg, #d97706 0%, #f59e0b 50%, #b45309 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Light mode - change yellow text to blue for visibility */
+    body.light-mode .bio,
+    body.light-mode .wallet-address,
+    body.light-mode .friend-status,
+    body.light-mode .suggested-mutual,
+    body.light-mode .trending-category,
+    body.light-mode .trending-posts,
+    body.light-mode .footer-text {
+      color: #1e40af;
+    }
+
+    .header-center {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+      width: 200px;
+      justify-content: flex-end;
+    }
+
+    .theme-toggle {
+      background: var(--bg-tertiary);
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.25rem;
+      transition: background 0.2s;
+    }
+
+    .theme-toggle:hover {
+      background: var(--bg-hover);
+    }
+
+    .search-bar {
+      position: relative;
+      width: 100%;
+    }
+
+    .search-bar input {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 0.5rem 1rem 0.5rem 2.5rem;
+      color: var(--text-primary);
+      width: 100%;
+      font-size: 0.875rem;
+    }
+
+    .search-bar input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    .search-bar input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+    }
+
+    .notifications-btn {
+      position: relative;
+      background: var(--bg-tertiary);
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.25rem;
+    }
+
+    .notifications-btn:hover {
+      background: var(--bg-hover);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--notification-color);
+      color: var(--text-primary);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    /* Main Layout */
+    .main-layout {
+      max-width: 1400px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* Left Sidebar */
+    .left-sidebar {
+      width: 300px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      padding: 1.5rem;
+      overflow-y: auto;
+      position: fixed;
+      top: 65px;
+      bottom: 0;
+      left: calc(50% - 700px);
+      height: auto;
+      padding-bottom: 70px;
+    }
+
+    @media (max-width: 1400px) {
+      .left-sidebar {
+        left: 0;
+      }
+    }
+
+    .profile-section {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .profile-pic {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      border: 3px solid #f59e0b;
+      margin: 0 auto 1rem;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      color: #000;
+      font-weight: bold;
+      overflow: hidden;
+    }
+
+    .profile-pic img,
+    .post-avatar img,
+    .small-avatar img,
+    .comment-avatar img,
+    .friend-avatar img,
+    .suggested-avatar img,
+    .notification-avatar img,
+    .chat-avatar img,
+    .story-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .profile-pic:hover {
+      transform: scale(1.05);
+    }
+
+    .edit-icon {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: var(--accent-color);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--bg-secondary);
+    }
+
+    .username {
+      color: var(--accent-color);
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+
+    .bio {
+      color: #fbbf24;
+      font-size: 0.9375rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .wallet-address {
+      color: #3b82f6;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      font-weight: bold;
+    }
+
+    .disconnect-wallet-btn {
+      background: transparent;
+      border: 2px solid #ef4444;
+      color: #ef4444;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    .disconnect-wallet-btn:hover {
+      background: #ef4444;
+      color: #000;
+    }
+
+    .nav-menu {
+      margin-bottom: 2rem;
+    }
+
+    .nav-item {
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+      background: var(--bg-primary);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: background 0.2s;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .nav-item.active {
+      background: var(--accent-color);
+      color: #000;
+      font-weight: bold;
+    }
+
+    .stats-box {
+      background: var(--bg-primary);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-item {
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .stat-value {
+      color: var(--accent-color);
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .friends-list {
+      margin-top: 1rem;
+    }
+
+    .friends-header {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      font-weight: bold;
+    }
+
+    .friend-item {
+      padding: 0.75rem;
+      background: var(--bg-primary);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      position: relative;
+    }
+
+    .friend-item:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .friend-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .online-indicator {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: var(--online-color);
+      border-radius: 50%;
+      border: 2px solid var(--bg-primary);
+      bottom: 8px;
+      left: 36px;
+    }
+
+    .friend-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .friend-name {
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .friend-status {
+      color: #fbbf24;
+      font-size: 0.875rem;
+    }
+
+    /* Right Sidebar */
+    .right-sidebar {
+      width: 300px;
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border-color);
+      padding: 1.5rem;
+      overflow-y: auto;
+      position: fixed;
+      top: 65px;
+      bottom: 0;
+      right: calc(50% - 700px);
+      height: auto;
+      padding-bottom: 70px;
+    }
+
+    @media (max-width: 1400px) {
+      .right-sidebar {
+        right: 0;
+      }
+    }
+
+    .widget {
+      background: var(--bg-primary);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .widget-header {
+      color: var(--accent-color);
+      font-weight: bold;
+      font-size: 1.125rem;
+      margin-bottom: 1rem;
+    }
+
+    .suggested-user {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .suggested-user:hover {
+      background: var(--bg-secondary);
+    }
+
+    .suggested-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .suggested-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .suggested-name {
+      color: var(--text-primary);
+      font-size: 0.9375rem;
+      font-weight: bold;
+    }
+
+    .suggested-mutual {
+      color: #fbbf24;
+      font-size: 0.875rem;
+    }
+
+    .follow-btn {
+      background: var(--accent-color);
+      border: none;
+      padding: 0.375rem 0.875rem;
+      border-radius: 6px;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.8125rem;
+    }
+
+    .follow-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .trending-item {
+      padding: 0.75rem 0;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+    }
+
+    .trending-item:last-child {
+      border-bottom: none;
+    }
+
+    .trending-item:hover .trending-topic {
+      color: var(--accent-color);
+    }
+
+    .trending-category {
+      color: #fbbf24;
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .trending-topic {
+      color: var(--text-primary);
+      font-weight: bold;
+      font-size: 0.9375rem;
+      margin-bottom: 0.25rem;
+      transition: color 0.2s;
+    }
+
+    .trending-posts {
+      color: #fbbf24;
+      font-size: 0.875rem;
+    }
+
+    /* Main Feed */
+    .main-feed {
+      margin-left: 300px;
+      margin-right: 300px;
+      padding: 0.5rem 1.5rem 70px 1.5rem;
+      min-height: 100vh;
+    }
+
+    /* Stories Section - Facebook Style */
+    .stories-container {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .stories-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .stories-wrapper {
+      display: flex;
+      gap: 0.5rem;
+      min-width: min-content;
+    }
+
+    .story {
+      flex: 0 0 auto;
+      width: 112px;
+      height: 180px;
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .story:hover {
+      transform: scale(1.05);
+      border-color: var(--accent-color);
+    }
+
+    .story-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: linear-gradient(135deg, var(--accent-color) 0%, #d97706 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+    }
+
+    .create-story {
+      background: var(--bg-tertiary);
+      border: 2px dashed var(--border-color);
+    }
+
+    .create-story:hover {
+      background: var(--bg-hover);
+    }
+
+    .create-story-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .story-avatar {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-color) 0%, #d97706 100%);
+      border: 3px solid var(--bg-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: bold;
+      color: #fff;
+      z-index: 1;
+    }
+
+    .story-name {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      right: 8px;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+      z-index: 1;
+    }
+
+    .story-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    }
+
+    .create-post-box {
+      background: var(--bg-secondary);
+      padding: 2rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+    }
+
+    .create-post-input {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .small-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: #000;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .post-textarea {
+      flex: 1;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      color: var(--text-primary);
+      font-size: 1.125rem;
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .post-textarea:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    .post-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+      padding-left: 64px;
+    }
+
+    .post-options {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .option-btn {
+      background: var(--bg-tertiary);
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+
+    .option-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .post-btn {
+      background: var(--accent-color);
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .post-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    /* Post Card */
+    .post-card {
+      background: var(--bg-secondary);
+      padding: 2rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 1.5rem;
+    }
+
+    .post-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .post-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: #000;
+      font-weight: bold;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .post-info {
+      flex: 1;
+    }
+
+    .post-author {
+      color: var(--accent-color);
+      font-weight: bold;
+      font-size: 1.125rem;
+      margin-bottom: 0.25rem;
+      cursor: pointer;
+    }
+
+    .post-author:hover {
+      text-decoration: underline;
+    }
+
+    .post-time {
+      color: var(--text-tertiary);
+      font-size: 0.875rem;
+    }
+
+    .post-menu {
+      background: none;
+      border: none;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      font-size: 1.25rem;
+      padding: 0.5rem;
+    }
+
+    .post-menu:hover {
+      color: var(--text-primary);
+    }
+
+    .post-content {
+      color: var(--text-primary);
+      font-size: 1.125rem;
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+      white-space: pre-wrap;
+    }
+
+    .post-actions-bar {
+      display: flex;
+      gap: 0.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-color);
+      flex-wrap: wrap;
+    }
+
+    .reaction-dropdown {
+      position: relative;
+    }
+
+    .reaction-dropdown:hover .reaction-options {
+      display: flex;
+    }
+
+    .reaction-options {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 25px;
+      padding: 0.5rem;
+      display: none;
+      gap: 0.25rem;
+      margin-bottom: 0.5rem;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .reaction-option {
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 50%;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .reaction-option:hover {
+      transform: scale(1.3);
+      background: var(--bg-hover);
+    }
+
+    .action-btn {
+      background: var(--bg-tertiary);
+      border: none;
+      padding: 0.5rem 0.875rem;
+      border-radius: 8px;
+      color: var(--accent-color);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      transition: background 0.2s;
+    }
+
+    .action-btn:hover {
+      background: var(--bg-hover);
+    }
+
+    .action-btn.liked {
+      color: var(--notification-color);
+    }
+
+    .comments-section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .comment-input {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .comment-textarea {
+      flex: 1;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.75rem;
+      color: var(--text-primary);
+      font-size: 0.9375rem;
+      resize: none;
+      height: 60px;
+    }
+
+    .comment-textarea:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    .comment-btn {
+      background: var(--accent-color);
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      height: fit-content;
+    }
+
+    .comment {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: var(--bg-primary);
+      border-radius: 8px;
+    }
+
+    .comment-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      color: #000;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .comment-content {
+      flex: 1;
+    }
+
+    .comment-author {
+      color: var(--accent-color);
+      font-weight: bold;
+      font-size: 0.9375rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .comment-text {
+      color: var(--text-primary);
+      font-size: 0.9375rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .comment-actions {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.8125rem;
+    }
+
+    .comment-action {
+      color: var(--text-tertiary);
+      cursor: pointer;
+    }
+
+    .comment-action:hover {
+      color: var(--accent-color);
+    }
+
+    /* Messenger */
+    .messenger-container {
+      position: fixed;
+      bottom: 1rem;
+      right: calc(50% - 700px + 1rem);
+      z-index: 1000;
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+
+    @media (max-width: 1400px) {
+      .messenger-container {
+        right: 1rem;
+      }
+    }
+
+    .messenger-toggle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    .messenger-toggle:hover {
+      background: var(--accent-hover);
+    }
+
+    .messenger-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--notification-color);
+      color: var(--text-primary);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .messenger-popup {
+      width: 300px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px 12px 0 0;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.5);
+      display: none;
+      flex-direction: column;
+      max-height: 400px;
+    }
+
+    .messenger-popup.open {
+      display: flex;
+    }
+
+    .messenger-header {
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .messenger-title {
+      color: var(--accent-color);
+      font-weight: bold;
+    }
+
+    .messenger-close {
+      background: none;
+      border: none;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      font-size: 1.25rem;
+    }
+
+    .messenger-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+
+    .messenger-friend {
+      padding: 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.25rem;
+      position: relative;
+    }
+
+    .messenger-friend:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .messenger-friend .online-indicator {
+      left: 36px;
+      bottom: 4px;
+    }
+
+    .unread-badge {
+      background: var(--notification-color);
+      color: var(--text-primary);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: auto;
+    }
+
+    /* Chat Window */
+    .chat-window {
+      width: 350px;
+      height: 450px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px 12px 0 0;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+    }
+
+    .chat-header {
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-tertiary);
+      border-radius: 12px 12px 0 0;
+    }
+
+    .chat-user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .chat-user-name {
+      color: var(--text-primary);
+      font-weight: bold;
+    }
+
+    .chat-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .chat-control-btn {
+      background: none;
+      border: none;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .chat-control-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .message {
+      max-width: 70%;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      font-size: 0.9375rem;
+    }
+
+    .message.sent {
+      align-self: flex-end;
+      background: var(--accent-color);
+      color: #000;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.received {
+      align-self: flex-start;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border-bottom-left-radius: 4px;
+    }
+
+    .message-image {
+      max-width: 200px;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+      cursor: pointer;
+    }
+
+    .message-time {
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      opacity: 0.7;
+    }
+
+    .chat-input-area {
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .chat-input-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 0.5rem 1rem;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 0.9375rem;
+      outline: none;
+    }
+
+    .chat-image-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 1.25rem;
+      padding: 0.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+
+    .chat-image-btn:hover {
+      color: var(--accent-color);
+    }
+
+    .chat-send-btn {
+      background: var(--accent-color);
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.25rem;
+    }
+
+    .chat-send-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    /* Notifications Panel */
+    .notifications-panel {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 0.5rem;
+      width: 350px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      display: none;
+      max-height: 500px;
+      overflow-y: auto;
+      z-index: 200;
+    }
+
+    .notifications-panel.open {
+      display: block;
+    }
+
+    .notifications-header {
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+      font-weight: bold;
+      color: var(--accent-color);
+    }
+
+    .notification-item {
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .notification-item:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .notification-item.unread {
+      background: var(--bg-tertiary);
+    }
+
+    .notification-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .notification-content {
+      flex: 1;
+    }
+
+    .notification-text {
+      color: var(--text-primary);
+      font-size: 0.9375rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .notification-time {
+      color: var(--text-tertiary);
+      font-size: 0.8125rem;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      color: var(--accent-color);
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .modal-close {
+      background: var(--bg-tertiary);
+      border: none;
+      padding: 0.75rem;
+      border-radius: 8px;
+      color: var(--text-primary);
+      cursor: pointer;
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    .modal-close:hover {
+      background: var(--bg-hover);
+    }
+
+    /* Footer */
+    .footer {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-color);
+      padding: 1.5rem 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      z-index: 90;
+      min-height: 70px;
+    }
+
+    .footer-text {
+      color: #fbbf24;
+      font-size: 1rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 1400px) {
+      #chatWindows {
+        right: 20px !important;
+      }
+      
+      #messengerPopup {
+        right: 20px !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .left-sidebar {
+        display: none;
+      }
+      
+      .main-feed {
+        padding: 1rem;
+        margin-left: 0;
+        margin-right: 0;
+      }
+      
+      .search-bar input {
+        width: 200px;
+      }
+
+      #chatWindows {
+        right: 10px !important;
+      }
+      
+      #messengerPopup {
+        right: 10px !important;
+      }
+    }
+
+    /* Web3 Notification Animations */
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+    }
+
+    /* Liked button style */
+    .action-btn.liked {
+      color: #ef4444 !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">🐝</div>
+      <div class="logo-text">Hyve Social</div>
+    </div>
+    <div class="header-center">
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Search users..." id="searchInput">
+      </div>
+    </div>
+    <div class="header-right">
+      <button id="connectWalletBtn" onclick="connectWallet()" class="post-btn" style="padding: 0.5rem 1rem; margin-right: 0.5rem;">
+        Connect Wallet
+      </button>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">
+        <span id="themeIcon">☀️</span>
+      </button>
+      <div style="position: relative;">
+        <button class="notifications-btn" id="notificationsBtn">
+          🔔
+          <span class="notification-badge">3</span>
+        </button>
+        <!-- Notifications Panel -->
+        <div class="notifications-panel" id="notificationsPanel">
+          <div class="notifications-header">Notifications</div>
+          
+          <div class="notification-item unread">
+            <div class="notification-avatar">
+              <img src="https://i.pravatar.cc/100?img=5" alt="Sarah">
+            </div>
+            <div class="notification-content">
+              <div class="notification-text"><strong>Sarah</strong> liked your post</div>
+              <div class="notification-time">5 minutes ago</div>
+            </div>
+          </div>
+
+          <div class="notification-item unread">
+            <div class="notification-avatar">
+              <img src="https://i.pravatar.cc/100?img=13" alt="Mike">
+            </div>
+            <div class="notification-content">
+              <div class="notification-text"><strong>Mike</strong> commented on your post</div>
+              <div class="notification-time">1 hour ago</div>
+            </div>
+          </div>
+
+          <div class="notification-item unread">
+            <div class="notification-avatar">
+              <img src="https://i.pravatar.cc/100?img=8" alt="John">
+            </div>
+            <div class="notification-content">
+              <div class="notification-text"><strong>John</strong> sent you a friend request</div>
+              <div class="notification-time">2 hours ago</div>
+            </div>
+          </div>
+
+          <div class="notification-item">
+            <div class="notification-avatar">
+              <img src="https://i.pravatar.cc/100?img=5" alt="Sarah">
+            </div>
+            <div class="notification-content">
+              <div class="notification-text"><strong>Sarah</strong> shared your post</div>
+              <div class="notification-time">1 day ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="main-layout">
+    <!-- Left Sidebar -->
+    <div class="left-sidebar">
+      <!-- Profile Section -->
+      <div class="profile-section">
+        <div class="profile-pic" onclick="openProfileModal()">
+          <span id="profilePicText">T</span>
+          <div class="edit-icon">✏️</div>
+        </div>
+        <div class="username profile-name" id="profileUsername">Connect Wallet</div>
+        <div class="bio" id="profileBio">Connect your wallet to get started</div>
+        <div class="wallet-address" id="profileWallet">Not connected</div>
+        <button class="disconnect-wallet-btn" id="disconnectBtn" style="display: none;">🔌 Disconnect Wallet</button>
+      </div>
+
+      <!-- Navigation -->
+      <div class="nav-menu">
+        <div class="nav-item active">
+          🏠 Feed
+        </div>
+        <div class="nav-item">
+          🎥 Videos
+        </div>
+        <div class="nav-item">
+          👤 My Profile
+        </div>
+        <div class="nav-item">
+          👥 Friends <span style="margin-left: auto; background: var(--bg-tertiary); padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem;">12</span>
+        </div>
+        <div class="nav-item">
+          🔍 Discover
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-box">
+        <div class="stat-item">
+          <div class="stat-label">Your Posts</div>
+          <div class="stat-value">8</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Friends</div>
+          <div class="stat-value" style="color: var(--text-primary);">12</div>
+        </div>
+      </div>
+
+      <!-- Friends List -->
+      <div class="friends-list">
+        <div class="friends-header">ONLINE FRIENDS</div>
+        <div class="friend-item" onclick="openChat('Sarah')">
+          <div class="friend-avatar">
+            <img src="https://i.pravatar.cc/100?img=5" alt="Sarah">
+          </div>
+          <div class="online-indicator"></div>
+          <div class="friend-info">
+            <div class="friend-name">Sarah</div>
+            <div class="friend-status">Online</div>
+          </div>
+        </div>
+        <div class="friend-item" onclick="openChat('Mike')">
+          <div class="friend-avatar">
+            <img src="https://i.pravatar.cc/100?img=13" alt="Mike">
+          </div>
+          <div class="online-indicator"></div>
+          <div class="friend-info">
+            <div class="friend-name">Mike</div>
+            <div class="friend-status">Online</div>
+          </div>
+        </div>
+        <div class="friend-item">
+          <div class="friend-avatar">
+            <img src="https://i.pravatar.cc/100?img=8" alt="John">
+          </div>
+          <div class="friend-info">
+            <div class="friend-name">John</div>
+            <div class="friend-status">Offline 2h ago</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Feed -->
+    <div class="main-feed">
+      <!-- Stories Section -->
+      <div class="stories-container">
+        <div class="stories-wrapper">
+          <!-- Create Story -->
+          <div class="story create-story">
+            <div class="story-image">
+              <div>
+                <div class="create-story-icon">➕</div>
+                <div style="font-size: 0.75rem; color: var(--text-primary);">Create Story</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Story 1 -->
+          <div class="story">
+            <div class="story-avatar">
+              <img src="https://i.pravatar.cc/100?img=5" alt="Sarah">
+            </div>
+            <div class="story-image">🌅</div>
+            <div class="story-overlay"></div>
+            <div class="story-name">Sarah</div>
+          </div>
+
+          <!-- Story 2 -->
+          <div class="story">
+            <div class="story-avatar">
+              <img src="https://i.pravatar.cc/100?img=8" alt="John">
+            </div>
+            <div class="story-image">🎨</div>
+            <div class="story-overlay"></div>
+            <div class="story-name">John</div>
+          </div>
+
+          <!-- Story 3 -->
+          <div class="story">
+            <div class="story-avatar">
+              <img src="https://i.pravatar.cc/100?img=13" alt="Mike">
+            </div>
+            <div class="story-image">🚀</div>
+            <div class="story-overlay"></div>
+            <div class="story-name">Mike</div>
+          </div>
+
+          <!-- Story 4 -->
+          <div class="story">
+            <div class="story-avatar">
+              <img src="https://i.pravatar.cc/100?img=9" alt="Emma">
+            </div>
+            <div class="story-image">💻</div>
+            <div class="story-overlay"></div>
+            <div class="story-name">Emma</div>
+          </div>
+
+          <!-- Story 5 -->
+          <div class="story">
+            <div class="story-avatar">
+              <img src="https://i.pravatar.cc/100?img=33" alt="Alex">
+            </div>
+            <div class="story-image">🌟</div>
+            <div class="story-overlay"></div>
+            <div class="story-name">Alex</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Create Post -->
+      <div class="create-post-box">
+        <div class="create-post-input">
+          <div class="small-avatar">
+            <img src="https://i.pravatar.cc/100?img=12" alt="TLON">
+          </div>
+          <textarea id="postContent" class="post-textarea" placeholder="What's on your mind, TLON?"></textarea>
+        </div>
+        <div class="post-actions">
+          <div class="post-options">
+            <button class="option-btn">📷 Photo</button>
+            <button class="option-btn">🎥 Video</button>
+            <button class="option-btn">😊 Emoji</button>
+          </div>
+          <button class="post-btn" onclick="handleCreatePost()">Post</button>
+        </div>
+      </div>
+
+      <!-- Feed Posts Container -->
+      <div id="feedPosts">
+        <!-- Posts will load from blockchain here -->
+        <p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Loading posts from blockchain...</p>
+      </div>
+
+      <!-- Example posts (will be replaced by blockchain data) -->
+      <div id="examplePosts" style="display: none;">
+      <!-- Post with Comments -->
+      <div class="post-card">
+        <div class="post-header">
+          <div class="post-avatar">
+            <img src="https://i.pravatar.cc/100?img=5" alt="Sarah">
+          </div>
+          <div class="post-info">
+            <div class="post-author">Sarah</div>
+            <div class="post-time">2 hours ago</div>
+          </div>
+          <button class="post-menu">⋮</button>
+        </div>
+        <div class="post-content">Just deployed my first smart contract on Hyve! This platform is amazing 🚀</div>
+        <div class="post-actions-bar">
+          <div class="reaction-dropdown">
+            <button class="action-btn">
+              <span style="font-size: 1.25rem;">👍</span>
+              <span>Like</span>
+            </button>
+            <div class="reaction-options">
+              <button class="reaction-option">👍</button>
+              <button class="reaction-option">👎</button>
+              <button class="reaction-option">😊</button>
+              <button class="reaction-option">😂</button>
+              <button class="reaction-option">🔥</button>
+            </div>
+          </div>
+          <button class="action-btn" onclick="toggleComments('post-1')">
+            <span style="font-size: 1.25rem;">💬</span>
+            <span>Comment (5)</span>
+          </button>
+          <button class="action-btn">
+            <span style="font-size: 1.25rem;">🔄</span>
+            <span>Share</span>
+          </button>
+        </div>
+
+        <!-- Comments Section (Hidden by default) -->
+        <div class="comments-section" id="comments-post-1" style="display: none;">
+          <div class="comment-input">
+            <textarea class="comment-textarea" placeholder="Write a comment..."></textarea>
+            <button class="comment-btn">Post</button>
+          </div>
+
+          <div class="comment">
+            <div class="comment-avatar">
+              <img src="https://i.pravatar.cc/100?img=13" alt="Mike">
+            </div>
+            <div class="comment-content">
+              <div class="comment-author">Mike</div>
+              <div class="comment-text">Congrats! What's the contract for?</div>
+              <div class="comment-actions">
+                <span class="comment-action">Like</span>
+                <span class="comment-action">Reply</span>
+                <span class="comment-action">1h ago</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="comment">
+            <div class="comment-avatar">
+              <img src="https://i.pravatar.cc/100?img=5" alt="Sarah">
+            </div>
+            <div class="comment-content">
+              <div class="comment-author">Sarah</div>
+              <div class="comment-text">It's an NFT marketplace! Still testing but looking good 😊</div>
+              <div class="comment-actions">
+                <span class="comment-action">Like</span>
+                <span class="comment-action">Reply</span>
+                <span class="comment-action">45m ago</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Another Post -->
+      <div class="post-card">
+        <div class="post-header">
+          <div class="post-avatar">
+            <img src="https://i.pravatar.cc/100?img=12" alt="TLON">
+          </div>
+          <div class="post-info">
+            <div class="post-author">TLON</div>
+            <div class="post-time">5 hours ago</div>
+          </div>
+          <button class="post-menu">⋮</button>
+        </div>
+        <div class="post-content">Who else is excited about decentralized social media? No more corporate control! 🐝</div>
+        <div class="post-actions-bar">
+          <div class="reaction-dropdown">
+            <button class="action-btn">
+              <span style="font-size: 1.25rem;">👍</span>
+              <span>Like</span>
+            </button>
+            <div class="reaction-options">
+              <button class="reaction-option">👍</button>
+              <button class="reaction-option">👎</button>
+              <button class="reaction-option">😊</button>
+              <button class="reaction-option">😂</button>
+              <button class="reaction-option">🔥</button>
+            </div>
+          </div>
+          <button class="action-btn" onclick="toggleComments('post-2')">
+            <span style="font-size: 1.25rem;">💬</span>
+            <span>Comment (8)</span>
+          </button>
+          <button class="action-btn">
+            <span style="font-size: 1.25rem;">🔄</span>
+            <span>Share</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Shared Post -->
+      <div class="post-card">
+        <div class="post-header">
+          <div class="post-avatar">
+            <img src="https://i.pravatar.cc/100?img=13" alt="Mike">
+          </div>
+          <div class="post-info">
+            <div class="post-author">Mike</div>
+            <div class="post-time">1 day ago</div>
+          </div>
+          <button class="post-menu">⋮</button>
+        </div>
+        <div class="post-content">This is so true! 🔥</div>
+        
+        <!-- Shared content -->
+        <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-primary); border-left: 3px solid #f59e0b; border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--accent-color); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: #000; font-weight: bold; overflow: hidden;">
+              <img src="https://i.pravatar.cc/100?img=12" alt="TLON" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <span style="color: var(--accent-color); font-weight: bold; font-size: 0.875rem;">TLON</span>
+            <span style="color: var(--text-tertiary); font-size: 0.75rem;">• 5 hours ago</span>
+          </div>
+          <div style="color: var(--text-primary); font-size: 0.9375rem;">Who else is excited about decentralized social media? No more corporate control! 🐝</div>
+        </div>
+
+        <div class="post-actions-bar">
+          <div class="reaction-dropdown">
+            <button class="action-btn">
+              <span style="font-size: 1.25rem;">👍</span>
+              <span>Like</span>
+            </button>
+            <div class="reaction-options">
+              <button class="reaction-option">👍</button>
+              <button class="reaction-option">👎</button>
+              <button class="reaction-option">😊</button>
+              <button class="reaction-option">😂</button>
+              <button class="reaction-option">🔥</button>
+            </div>
+          </div>
+          <button class="action-btn" onclick="toggleComments('post-3')">
+            <span style="font-size: 1.25rem;">💬</span>
+            <span>Comment (12)</span>
+          </button>
+          <button class="action-btn">
+            <span style="font-size: 1.25rem;">🔄</span>
+            <span>Share</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="right-sidebar">
+      <!-- Suggested Friends -->
+      <div class="widget">
+        <div class="widget-header">Suggested Friends</div>
+        
+        <div class="suggested-user">
+          <div class="suggested-avatar">
+            <img src="https://i.pravatar.cc/100?img=33" alt="Alex">
+          </div>
+          <div class="suggested-info">
+            <div class="suggested-name">Alex</div>
+            <div class="suggested-mutual">3 mutual friends</div>
+          </div>
+          <button class="follow-btn">Add</button>
+        </div>
+
+        <div class="suggested-user">
+          <div class="suggested-avatar">
+            <img src="https://i.pravatar.cc/100?img=9" alt="Emma">
+          </div>
+          <div class="suggested-info">
+            <div class="suggested-name">Emma</div>
+            <div class="suggested-mutual">5 mutual friends</div>
+          </div>
+          <button class="follow-btn">Add</button>
+        </div>
+
+        <div class="suggested-user">
+          <div class="suggested-avatar">
+            <img src="https://i.pravatar.cc/100?img=14" alt="David">
+          </div>
+          <div class="suggested-info">
+            <div class="suggested-name">David</div>
+            <div class="suggested-mutual">2 mutual friends</div>
+          </div>
+          <button class="follow-btn">Add</button>
+        </div>
+      </div>
+
+      <!-- Trending Topics -->
+      <div class="widget">
+        <div class="widget-header">Trending on Hyve</div>
+        
+        <div class="trending-item">
+          <div class="trending-category">Blockchain · Trending</div>
+          <div class="trending-topic">#DeFi</div>
+          <div class="trending-posts">127 posts</div>
+        </div>
+
+        <div class="trending-item">
+          <div class="trending-category">Technology · Trending</div>
+          <div class="trending-topic">#Web3</div>
+          <div class="trending-posts">89 posts</div>
+        </div>
+
+        <div class="trending-item">
+          <div class="trending-category">Crypto · Trending</div>
+          <div class="trending-topic">#SmartContracts</div>
+          <div class="trending-posts">64 posts</div>
+        </div>
+      </div>
+
+      <!-- Messenger Toggle in Sidebar - Fixed at Bottom -->
+      <div style="position: absolute; bottom: 80px; left: 0; right: 0; text-align: center;">
+        <button class="messenger-toggle" onclick="toggleMessenger()" style="position: relative; margin: 0 auto;">
+          💬
+          <span class="messenger-badge">2</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Windows Container - starts where messenger ends, stacks RIGHTWARD -->
+  <div id="chatWindows" style="position: fixed; bottom: 150px; right: calc(50% - 370px); z-index: 1002; display: flex; gap: 1rem; align-items: flex-end; flex-direction: row-reverse;"></div>
+
+  <!-- Messenger Popup - positioned near messenger button in right sidebar -->
+  <div class="messenger-popup" id="messengerPopup" style="position: fixed; bottom: 160px; right: calc(50% - 680px); z-index: 1001;">
+    <div class="messenger-header">
+      <div class="messenger-title">Messages</div>
+      <button class="messenger-close" onclick="toggleMessenger()">✕</button>
+    </div>
+    <div class="messenger-list">
+      <div class="messenger-friend" onclick="openChat('Sarah')">
+        <div class="friend-avatar">
+          <img src="https://i.pravatar.cc/100?img=5" alt="Sarah">
+        </div>
+        <div class="online-indicator"></div>
+        <div class="friend-info">
+          <div class="friend-name">Sarah</div>
+          <div class="friend-status">Hey! Did you see my contract?</div>
+        </div>
+        <div class="unread-badge">2</div>
+      </div>
+      <div class="messenger-friend" onclick="openChat('Mike')">
+        <div class="friend-avatar">
+          <img src="https://i.pravatar.cc/100?img=13" alt="Mike">
+        </div>
+        <div class="online-indicator"></div>
+        <div class="friend-info">
+          <div class="friend-name">Mike</div>
+          <div class="friend-status">Online</div>
+        </div>
+      </div>
+      <div class="messenger-friend">
+        <div class="friend-avatar">
+          <img src="https://i.pravatar.cc/100?img=8" alt="John">
+        </div>
+        <div class="friend-info">
+          <div class="friend-name">John</div>
+          <div class="friend-status">Offline 2h ago</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div class="modal-overlay" id="profileModal">
+    <div class="modal">
+      <div class="modal-header">Edit Profile</div>
+      
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <div class="profile-pic" id="modalProfilePic" style="width: 120px; height: 120px; margin: 0 auto 1rem;">T</div>
+        <input type="file" id="modalProfileImage" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none;" />
+        <button class="option-btn" onclick="document.getElementById('modalProfileImage').click()">Change Picture</button>
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; color: var(--text-secondary); margin-bottom: 0.5rem; font-size: 0.875rem;">Username</label>
+        <input type="text" id="modalUsername" placeholder="Enter username" style="width: 100%; padding: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 1rem;">
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; color: var(--text-secondary); margin-bottom: 0.5rem; font-size: 0.875rem;">Bio</label>
+        <textarea id="modalBio" placeholder="Tell us about yourself" style="width: 100%; padding: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 1rem; resize: vertical; min-height: 100px;"></textarea>
+      </div>
+
+      <button class="post-btn" onclick="handleSaveProfile()" style="width: 100%; margin-bottom: 0.5rem;">Save Changes</button>
+      <button class="modal-close" onclick="closeProfileModal()">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // AUTHENTICATION CHECK
+    // ============================================
+    
+    // Check if user is authenticated
+    const authenticatedUser = sessionStorage.getItem('userAddress');
+    if (!authenticatedUser) {
+      // Not logged in, redirect to login page
+      window.location.href = '/';
+    }
+
+    let openChats = {};
+
+    // Toggle notifications
+    // Toggle comments
+    function toggleComments(postId) {
+      const commentsSection = document.getElementById(`comments-${postId}`);
+      if (commentsSection) {
+        commentsSection.style.display = commentsSection.style.display === 'none' ? 'block' : 'none';
+      }
+    }
+
+    // Toggle messenger
+    function toggleMessenger() {
+      const popup = document.getElementById('messengerPopup');
+      popup.classList.toggle('open');
+    }
+
+    // Open chat window
+    function openChat(name) {
+      if (openChats[name]) {
+        // Chat already open, just focus it
+        return;
+      }
+
+      openChats[name] = true;
+
+      const chatWindow = document.createElement('div');
+      chatWindow.className = 'chat-window';
+      chatWindow.id = `chat-${name}`;
+      chatWindow.innerHTML = `
+        <div class="chat-header">
+          <div class="chat-user-info">
+            <div class="friend-avatar" style="width: 32px; height: 32px; font-size: 1rem;">${name[0]}</div>
+            <div>
+              <div class="chat-user-name">${name}</div>
+              <div style="font-size: 0.75rem; color: var(--online-color);">Online</div>
+            </div>
+          </div>
+          <div class="chat-controls">
+            <button class="chat-control-btn" onclick="minimizeChat('${name}')">−</button>
+            <button class="chat-control-btn" onclick="closeChat('${name}')">✕</button>
+          </div>
+        </div>
+        <div class="chat-messages" id="messages-${name}">
+          ${name === 'Sarah' ? `
+            <div class="message received">
+              <div>Hey! Did you see my contract?</div>
+              <div class="message-time">10:30 AM</div>
+            </div>
+            <div class="message received">
+              <div>It's live on the blockchain now! 🎉</div>
+              <div class="message-time">10:31 AM</div>
+            </div>
+            <div class="message received">
+              <div>
+                <img src="https://picsum.photos/300/200?random=10" alt="Contract screenshot" class="message-image">
+              </div>
+              <div class="message-time">10:32 AM</div>
+            </div>
+            <div class="message sent">
+              <div>That's awesome! I'll check it out</div>
+              <div class="message-time">10:35 AM</div>
+            </div>
+          ` : `
+            <div class="message received">
+              <div>Hey TLON! How's it going?</div>
+              <div class="message-time">11:15 AM</div>
+            </div>
+          `}
+        </div>
+        <div class="chat-input-area">
+          <div class="chat-input-wrapper">
+            <input type="text" class="chat-input" id="chat-input-${name}" placeholder="Type a message..." onkeypress="sendMessage(event, '${name}')">
+            <button class="chat-image-btn" onclick="sendImage('${name}')" title="Send image">📷</button>
+          </div>
+          <button class="chat-send-btn" onclick="sendMessageClick('${name}')">➤</button>
+        </div>
+      `;
+
+      document.getElementById('chatWindows').prepend(chatWindow);
+    }
+
+    function closeChat(name) {
+      const chatWindow = document.getElementById(`chat-${name}`);
+      if (chatWindow) {
+        chatWindow.remove();
+        delete openChats[name];
+      }
+    }
+
+    function minimizeChat(name) {
+      const chatWindow = document.getElementById(`chat-${name}`);
+      if (chatWindow) {
+        chatWindow.style.height = chatWindow.style.height === '60px' ? '450px' : '60px';
+      }
+    }
+
+    function sendMessage(event, name) {
+      if (event.key === 'Enter') {
+        sendMessageClick(name);
+      }
+    }
+
+    function sendMessageClick(name) {
+      const input = document.querySelector(`#chat-input-${name}`);
+      const message = input.value.trim();
+      if (!message) return;
+
+      const messagesContainer = document.getElementById(`messages-${name}`);
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message sent';
+      messageDiv.innerHTML = `
+        <div>${message}</div>
+        <div class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+      `;
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      input.value = '';
+    }
+
+    function sendImage(name) {
+      // Demo: Send a random placeholder image
+      const images = [
+        'https://picsum.photos/300/200?random=1',
+        'https://picsum.photos/300/200?random=2',
+        'https://picsum.photos/300/200?random=3',
+        'https://picsum.photos/300/200?random=4',
+        'https://picsum.photos/300/200?random=5'
+      ];
+      const randomImage = images[Math.floor(Math.random() * images.length)];
+      
+      const messagesContainer = document.getElementById(`messages-${name}`);
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message sent';
+      messageDiv.innerHTML = `
+        <div>
+          <img src="${randomImage}" alt="Shared image" class="message-image">
+        </div>
+        <div class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+      `;
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      
+      // In real app: Open file picker, upload to IPFS/blockchain, send image URL
+      console.log('Image sent to', name);
+    }
+
+    // Notifications toggle
+    document.getElementById('notificationsBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const panel = document.getElementById('notificationsPanel');
+      panel.classList.toggle('open');
+    });
+
+    // Close notifications when clicking outside
+    document.addEventListener('click', (e) => {
+      const panel = document.getElementById('notificationsPanel');
+      const btn = document.getElementById('notificationsBtn');
+      if (!panel.contains(e.target) && !btn.contains(e.target)) {
+        panel.classList.remove('open');
+      }
+    });
+
+    // Profile modal
+    function openProfileModal() {
+      const modal = document.getElementById('profileModal');
+      modal.classList.add('open');
+
+      // Prefill fields from loaded profile (on-chain)
+      try {
+        const u = document.getElementById('modalUsername');
+        const b = document.getElementById('modalBio');
+        if (u) u.value = (web3UserProfile && web3UserProfile.username) ? web3UserProfile.username : (sessionStorage.getItem('username') || '');
+        if (b) b.value = (web3UserProfile && web3UserProfile.bio) ? web3UserProfile.bio : (sessionStorage.getItem('bio') || '');
+
+        // Set avatar preview
+        const pic = document.getElementById('modalProfilePic');
+        if (pic) {
+          const hash = (web3UserProfile && web3UserProfile.profileImageHash) ? web3UserProfile.profileImageHash : (sessionStorage.getItem('profileImageHash') || '');
+          const name = (u && u.value) ? u.value : 'U';
+          if (hash) {
+            pic.textContent = '';
+            pic.style.backgroundImage = `url(https://ipfs.io/ipfs/${hash})`;
+            pic.style.backgroundSize = 'cover';
+            pic.style.backgroundPosition = 'center';
+          } else {
+            pic.style.backgroundImage = '';
+            pic.textContent = (name || 'U')[0].toUpperCase();
+          }
+        }
+      } catch (e) {
+        console.warn('Prefill modal failed:', e);
+      }
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profileModal').classList.remove('open');
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('profileModal').addEventListener('click', (e) => {
+      if (e.target.id === 'profileModal') {
+        closeProfileModal();
+      }
+    });
+
+    // Search functionality (demo)
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      if (query.length > 2) {
+        console.log('Searching for:', query);
+        // This would trigger user search in the real app
+      }
+    });
+
+    // Theme Toggle Function
+    function toggleTheme() {
+      document.body.classList.toggle('light-mode');
+      const icon = document.getElementById('themeIcon');
+      const isLight = document.body.classList.contains('light-mode');
+      
+      icon.textContent = isLight ? '🌙' : '☀️';
+      
+      // Save theme preference
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+
+    // Load saved theme on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+        document.getElementById('themeIcon').textContent = '🌙';
+      }
+    });
+
+    // ============================================
+    // WEB3 INTEGRATION - BLOCKCHAIN FUNCTIONALITY
+    // ============================================
+
+    // ============================================
+    // HYVESOCIAL_PROFILE_EDIT_V1 (safe edit: updates off-chain when profile exists)
+    // ============================================
+    let modalSelectedImageFile = null;
+    let modalUploadedImageHash = '';
+
+    function ipfsToUrl(hash) {
+      let h = (hash || '').toString().trim();
+      if (!h) return '';
+      if (h.startsWith('http://') || h.startsWith('https://')) return h;
+      if (h.startsWith('ipfs://')) {
+        h = h.replace('ipfs://', '');
+        if (h.startsWith('ipfs/')) h = h.slice('ipfs/'.length);
+      }
+      return `https://ipfs.io/ipfs/${h}`;
+    }
+
+    async function uploadFileToIPFS_Web3Storage(file) {
+      // Uses web3.storage upload endpoint (works for small files).
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('https://api.web3.storage/upload', {
+        method: 'POST',
+        body: formData
+      });
+      if (!res.ok) {
+        const t = await res.text().catch(()=> '');
+        throw new Error('IPFS upload failed: ' + res.status + (t ? (' ' + t.slice(0,120)) : ''));
+      }
+      const j = await res.json();
+      // Response usually {cid: '...'}
+      return j.cid || j.value || '';
+    }
+
+    async function upsertProfileToSupabase(row) {
+      // Minimal REST upsert (no SDK).
+      const SUPABASE_URL = 'https://oimrofgrpcojmbhhmvvh.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_e-wzq1e-dHMbWdUKosotSg_hFJH6u7B';
+
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          Prefer: 'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify([row])
+      });
+      if (!res.ok) {
+        const t = await res.text().catch(()=> '');
+        throw new Error('Supabase upsert failed: ' + res.status + (t ? (' ' + t.slice(0,140)) : ''));
+      }
+    }
+
+    async function fetchSupabaseProfileByAddress(address) {
+      try {
+        const SUPABASE_URL = 'https://oimrofgrpcojmbhhmvvh.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_e-wzq1e-dHMbWdUKosotSg_hFJH6u7B';
+        const url = `${SUPABASE_URL}/rest/v1/profiles?select=username,bio,profile_image_hash,profile_image_url&address=eq.${address}&limit=1`;
+        const res = await fetch(url, {
+          headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+        });
+        if (!res.ok) return null;
+        const rows = await res.json();
+        return (rows && rows[0]) ? rows[0] : null;
+      } catch (e) {
+        console.warn('Supabase profile fetch failed', e);
+        return null;
+      }
+    }
+
+    // Hook modal image input
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('modalProfileImage');
+      if (!input) return;
+
+      input.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        const validTypes = ['image/png','image/jpeg','image/jpg','image/webp'];
+        if (!validTypes.includes(file.type)) {
+          showWeb3Notification('Please choose PNG/JPG/WebP', 'error');
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          showWeb3Notification('Image must be under 5MB', 'error');
+          return;
+        }
+
+        modalSelectedImageFile = file;
+        modalUploadedImageHash = '';
+
+        // Instant preview
+        const pic = document.getElementById('modalProfilePic');
+        try {
+          const reader = new FileReader();
+          reader.onload = () => {
+            if (pic) {
+              pic.textContent = '';
+              pic.style.backgroundImage = `url(${reader.result})`;
+              pic.style.backgroundSize = 'cover';
+              pic.style.backgroundPosition = 'center';
+            }
+          };
+          reader.readAsDataURL(file);
+        } catch (_) {}
+
+        // Upload to IPFS
+        try {
+          showWeb3Notification('Uploading new profile picture...', 'info');
+          const cid = await uploadFileToIPFS_Web3Storage(file);
+          modalUploadedImageHash = cid;
+          showWeb3Notification('Picture uploaded!', 'success');
+        } catch (err) {
+          console.warn(err);
+          showWeb3Notification('Picture upload failed — you can still save username/bio.', 'error');
+        }
+      });
+    });
+
+
+    // Contract configuration
+    const CONTRACT_ADDRESS = "0x270B4265f15361E2A04a78A8E00443aB73668202";
+    const CHAIN_ID = 9200;
+    const CHAIN_NAME = "Hyve Blockchain";
+    const RPC_URL = "https://rpc.hyvechain.com";
+
+    // Contract ABI (Application Binary Interface)
+    const CONTRACT_ABI = [{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"commentId","type":"uint256"},{"indexed":true,"internalType":"address","name":"commenter","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"CommentAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"commentId","type":"uint256"},{"indexed":true,"internalType":"address","name":"liker","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"CommentLiked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"author","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"liker","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostLiked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"sharer","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostShared","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"unliker","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostUnliked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"string","name":"username","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"ProfileCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"string","name":"username","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"ProfileUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"follower","type":"address"},{"indexed":true,"internalType":"address","name":"followee","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"UserFollowed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"follower","type":"address"},{"indexed":true,"internalType":"address","name":"unfollowee","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"UserUnfollowed","type":"event"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"},{"internalType":"string","name":"content","type":"string"}],"name":"addComment","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"content","type":"string"},{"internalType":"string","name":"imageHash","type":"string"}],"name":"createPost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"username","type":"string"},{"internalType":"string","name":"bio","type":"string"},{"internalType":"string","name":"profileImageHash","type":"string"}],"name":"createProfile","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"getComments","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likeCount","type":"uint256"}],"internalType":"struct HyveSocial.Comment[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"getPost","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"string","name":"imageHash","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likeCount","type":"uint256"},{"internalType":"uint256","name":"commentCount","type":"uint256"},{"internalType":"uint256","name":"shareCount","type":"uint256"},{"internalType":"bool","name":"exists","type":"bool"}],"internalType":"struct HyveSocial.Post","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getProfile","outputs":[{"components":[{"internalType":"string","name":"username","type":"string"},{"internalType":"string","name":"bio","type":"string"},{"internalType":"string","name":"profileImageHash","type":"string"},{"internalType":"uint256","name":"createdAt","type":"uint256"},{"internalType":"uint256","name":"followerCount","type":"uint256"},{"internalType":"uint256","name":"followingCount","type":"uint256"},{"internalType":"bool","name":"exists","type":"bool"}],"internalType":"struct HyveSocial.Profile","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"count","type":"uint256"}],"name":"getRecentPosts","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"string","name":"imageHash","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likeCount","type":"uint256"},{"internalType":"uint256","name":"commentCount","type":"uint256"},{"internalType":"uint256","name":"shareCount","type":"uint256"},{"internalType":"bool","name":"exists","type":"bool"}],"internalType":"struct HyveSocial.Post[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getTotalPosts","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"},{"internalType":"address","name":"user","type":"address"}],"name":"hasLikedPost","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"likePost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"sharePost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"profileExistsForUser","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"unlikePost","outputs":[],"stateMutability":"nonpayable","type":"function"}];
+
+    // Global Web3 state
+    let web3Provider = null;
+    let web3Signer = null;
+    let web3Contract = null;
+    let web3UserAddress = null;
+    let web3UserProfile = null;
+
+    // Auto-connect on page load
+    window.addEventListener('load', async () => {
+      if (typeof window.ethereum !== 'undefined') {
+        console.log('MetaMask detected');
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length > 0) {
+          await connectWallet();
+        }
+        
+        window.ethereum.on('accountsChanged', handleAccountsChanged);
+        window.ethereum.on('chainChanged', () => window.location.reload());
+      }
+    });
+
+    // Connect MetaMask wallet
+    async function connectWallet() {
+      try {
+        if (typeof window.ethereum === 'undefined') {
+          alert('Please install MetaMask to use Hyve Social!');
+          window.open('https://metamask.io/download/', '_blank');
+          return;
+        }
+
+        showWeb3Notification('Connecting to wallet...', 'info');
+        
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        web3UserAddress = accounts[0];
+        
+        web3Provider = new ethers.providers.Web3Provider(window.ethereum);
+        web3Signer = web3Provider.getSigner();
+
+        const network = await web3Provider.getNetwork();
+        if (network.chainId !== CHAIN_ID) {
+          await switchToHyveChain();
+        }
+
+        web3Contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, web3Signer);
+
+        await loadUserProfile();
+        await loadRecentPosts();
+        
+        updateConnectionUI();
+        showWeb3Notification('Connected to Hyve Blockchain!', 'success');
+      } catch (error) {
+        console.error('Connection error:', error);
+        showWeb3Notification('Failed to connect: ' + error.message, 'error');
+      }
+    }
+
+    // Switch to Hyve Chain
+    async function switchToHyveChain() {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x23F0' }], // 9200 in hex
+        });
+      } catch (switchError) {
+        if (switchError.code === 4902) {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0x23F0',
+                chainName: CHAIN_NAME,
+                nativeCurrency: { name: 'HYVE', symbol: 'HYVE', decimals: 18 },
+                rpcUrls: [RPC_URL],
+                blockExplorerUrls: ['https://explorer.hyvechain.com']
+              }]
+            });
+          } catch (addError) {
+            throw new Error('Failed to add Hyve Chain');
+          }
+        } else {
+          throw switchError;
+        }
+      }
+    }
+
+    // Handle account changes
+    function handleAccountsChanged(accounts) {
+      if (accounts.length === 0) {
+        web3UserAddress = null;
+        web3UserProfile = null;
+        updateConnectionUI();
+        document.getElementById('feedPosts').innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Please connect your wallet to view posts</p>';
+      } else {
+        window.location.reload();
+      }
+    }
+
+    // Load user profile from blockchain
+    async function loadUserProfile() {
+      try {
+        const profileExists = await web3Contract.profileExistsForUser(web3UserAddress);
+
+        if (profileExists) {
+          // Load the canonical on-chain profile
+          web3UserProfile = await web3Contract.getProfile(web3UserAddress);
+          console.log('Profile loaded (on-chain):', web3UserProfile);
+
+          // Merge any newer off-chain edits (username/bio/picture) for privacy + no update function on this contract
+          const supa = await fetchSupabaseProfileByAddress(web3UserAddress);
+          if (supa) {
+            if (!web3UserProfile) web3UserProfile = {};
+            if (supa.username) web3UserProfile.username = supa.username;
+            if (typeof supa.bio === 'string') web3UserProfile.bio = supa.bio;
+            if (supa.profile_image_hash) web3UserProfile.profileImageHash = supa.profile_image_hash;
+
+            // Persist locally so UI stays consistent
+            sessionStorage.setItem('username', web3UserProfile.username || '');
+            sessionStorage.setItem('bio', web3UserProfile.bio || '');
+            if (web3UserProfile.profileImageHash) sessionStorage.setItem('profileImageHash', web3UserProfile.profileImageHash);
+          }
+
+          updateProfileUI();
+        } else {
+          showWeb3Notification('Welcome! Please create your profile', 'info');
+          setTimeout(() => openProfileModal(), 1000);
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    }
+
+    // Create profile on blockchain
+    async function handleSaveProfile() {
+      try {
+        const username = document.getElementById('modalUsername').value.trim();
+        const bio = document.getElementById('modalBio').value.trim();
+
+        if (!username) {
+          showWeb3Notification('Please enter a username', 'error');
+          return;
+        }
+
+        if (!web3UserAddress) {
+          showWeb3Notification('Please connect your wallet first!', 'error');
+          return;
+        }
+
+        const profileExists = await web3Contract.profileExistsForUser(web3UserAddress);
+
+        // If profile does NOT exist yet → create on-chain
+        if (!profileExists) {
+          showWeb3Notification('Creating profile... Please confirm transaction in MetaMask', 'info');
+          const imageHash = (modalUploadedImageHash || '').toString();
+          const tx = await web3Contract.createProfile(username, bio, imageHash);
+          showWeb3Notification('Transaction submitted! Waiting for confirmation...', 'info');
+          await tx.wait();
+          showWeb3Notification('Profile created successfully!', 'success');
+          await loadUserProfile();
+          closeProfileModal();
+          return;
+        }
+
+        // Profile already exists → we cannot update on-chain with this contract
+        // So we update OFF-CHAIN (Supabase) for edit fields (privacy + no contract changes).
+        showWeb3Notification('Saving changes...', 'info');
+
+        const newHash = (modalUploadedImageHash || (web3UserProfile && web3UserProfile.profileImageHash) || sessionStorage.getItem('profileImageHash') || '').toString();
+        const row = {
+          address: web3UserAddress,
+          username,
+          bio,
+          profile_image_hash: newHash,
+          profile_image_url: newHash ? ipfsToUrl(newHash) : null,
+          updated_at: new Date().toISOString()
+        };
+
+        try {
+          await upsertProfileToSupabase(row);
+        } catch (e) {
+          console.warn(e);
+          // Still update local UI even if Supabase fails
+        }
+
+        // Update local state/UI
+        if (!web3UserProfile) web3UserProfile = {};
+        web3UserProfile.username = username;
+        web3UserProfile.bio = bio;
+        if (newHash) web3UserProfile.profileImageHash = newHash;
+
+        sessionStorage.setItem('username', username);
+        sessionStorage.setItem('bio', bio);
+        if (newHash) sessionStorage.setItem('profileImageHash', newHash);
+
+        updateProfileUI();
+        showWeb3Notification('Saved (off-chain).', 'success');
+        closeProfileModal();
+      } catch (error) {
+        console.error('Error saving profile:', error);
+        showWeb3Notification('Failed to save profile: ' + (error.reason || error.message), 'error');
+      }
+    }
+
+    // Create post on blockchain
+    async function handleCreatePost() {
+      try {
+        if (!web3UserAddress) {
+          showWeb3Notification('Please connect your wallet first!', 'error');
+          return;
+        }
+
+        if (!web3UserProfile) {
+          showWeb3Notification('Please create a profile first!', 'error');
+          openProfileModal();
+          return;
+        }
+
+        const content = document.getElementById('postContent').value.trim();
+        
+        if (!content) {
+          showWeb3Notification('Post content cannot be empty!', 'error');
+          return;
+        }
+
+        showWeb3Notification('Creating post... Please confirm transaction in MetaMask', 'info');
+        
+        const tx = await web3Contract.createPost(content, '');
+        showWeb3Notification('Transaction submitted! Waiting for confirmation...', 'info');
+        
+        await tx.wait();
+        
+        showWeb3Notification('Post created successfully!', 'success');
+        document.getElementById('postContent').value = '';
+        
+        await loadRecentPosts();
+      } catch (error) {
+        console.error('Error creating post:', error);
+        showWeb3Notification('Failed to create post: ' + (error.reason || error.message), 'error');
+      }
+    }
+
+    // Load recent posts from blockchain
+    async function loadRecentPosts() {
+      try {
+        const totalPosts = await web3Contract.getTotalPosts();
+        console.log('Total posts:', totalPosts.toString());
+        
+        if (totalPosts.toNumber() > 0) {
+          const count = totalPosts.toNumber() > 20 ? 20 : totalPosts.toNumber();
+          const posts = await web3Contract.getRecentPosts(count);
+          displayBlockchainPosts(posts);
+        } else {
+          document.getElementById('feedPosts').innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">No posts yet. Be the first to post!</p>';
+        }
+      } catch (error) {
+        console.error('Error loading posts:', error);
+        document.getElementById('feedPosts').innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Error loading posts. Please refresh the page.</p>';
+      }
+    }
+
+    // Display posts from blockchain
+    async function displayBlockchainPosts(posts) {
+      const feedContainer = document.getElementById('feedPosts');
+      feedContainer.innerHTML = '';
+      
+      for (let post of posts) {
+        if (!post.exists) continue;
+        
+        let authorProfile;
+        try {
+          authorProfile = await web3Contract.getProfile(post.author);
+        } catch (e) {
+          authorProfile = { username: post.author.substring(0, 8) + '...' };
+        }
+        
+        let hasLiked = false;
+        if (web3UserAddress) {
+          try {
+            hasLiked = await web3Contract.hasLikedPost(post.id, web3UserAddress);
+          } catch (e) {}
+        }
+        
+        const postHTML = `
+          <div class="post-card">
+            <div class="post-header">
+              <div class="post-avatar">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.25rem;">
+                  ${authorProfile.username.charAt(0).toUpperCase()}
+                </div>
+              </div>
+              <div class="post-info">
+                <div class="post-author">${escapeHtml(authorProfile.username)}</div>
+                <div class="post-time">${formatTimestamp(post.timestamp)}</div>
+              </div>
+            </div>
+            <div class="post-content">${escapeHtml(post.content)}</div>
+            <div class="post-actions-bar">
+              <button class="action-btn ${hasLiked ? 'liked' : ''}" onclick="toggleLikePost(${post.id})">
+                <span style="font-size: 1.25rem;">❤️</span>
+                <span>${post.likeCount.toString()}</span>
+              </button>
+              <button class="action-btn" onclick="togglePostComments(${post.id})">
+                <span style="font-size: 1.25rem;">💬</span>
+                <span>${post.commentCount.toString()}</span>
+              </button>
+              <button class="action-btn" onclick="shareBlockchainPost(${post.id})">
+                <span style="font-size: 1.25rem;">🔄</span>
+                <span>${post.shareCount.toString()}</span>
+              </button>
+            </div>
+            <div class="comments-section" id="comments-${post.id}" style="display: none;"></div>
+          </div>
+        `;
+        
+        feedContainer.innerHTML += postHTML;
+      }
+    }
+
+    // Toggle like on post
+    async function toggleLikePost(postId) {
+      try {
+        if (!web3UserAddress) {
+          showWeb3Notification('Please connect your wallet first!', 'error');
+          return;
+        }
+        
+        const hasLiked = await web3Contract.hasLikedPost(postId, web3UserAddress);
+        
+        let tx;
+        if (hasLiked) {
+          showWeb3Notification('Unliking post...', 'info');
+          tx = await web3Contract.unlikePost(postId);
+        } else {
+          showWeb3Notification('Liking post...', 'info');
+          tx = await web3Contract.likePost(postId);
+        }
+        
+        await tx.wait();
+        showWeb3Notification(hasLiked ? 'Post unliked!' : 'Post liked!', 'success');
+        
+        await loadRecentPosts();
+      } catch (error) {
+        console.error('Error toggling like:', error);
+        showWeb3Notification('Failed: ' + (error.reason || error.message), 'error');
+      }
+    }
+
+    // Toggle comments section
+    async function togglePostComments(postId) {
+      const commentsSection = document.getElementById(`comments-${postId}`);
+      
+      if (commentsSection.style.display === 'none') {
+        try {
+          const comments = await web3Contract.getComments(postId);
+          
+          let commentsHTML = `
+            <div class="comment-input" style="padding: 1rem; border-top: 1px solid var(--border-color);">
+              <textarea id="comment-input-${postId}" placeholder="Write a comment..." style="width: 100%; padding: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); resize: vertical; min-height: 60px;"></textarea>
+              <button onclick="addBlockchainComment(${postId})" class="post-btn" style="margin-top: 0.5rem;">Post Comment</button>
+            </div>
+          `;
+          
+          for (let comment of comments) {
+            let commentAuthor;
+            try {
+              commentAuthor = await web3Contract.getProfile(comment.author);
+            } catch (e) {
+              commentAuthor = { username: comment.author.substring(0, 8) + '...' };
+            }
+            
+            commentsHTML += `
+              <div class="comment" style="padding: 1rem; border-top: 1px solid var(--border-color);">
+                <div style="display: flex; gap: 0.75rem;">
+                  <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0;">
+                    ${commentAuthor.username.charAt(0).toUpperCase()}
+                  </div>
+                  <div style="flex: 1;">
+                    <div style="font-weight: 600; color: var(--text-primary);">${escapeHtml(commentAuthor.username)}</div>
+                    <div style="color: var(--text-primary); margin: 0.25rem 0;">${escapeHtml(comment.content)}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                      ${formatTimestamp(comment.timestamp)} · ❤️ ${comment.likeCount.toString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          
+          commentsSection.innerHTML = commentsHTML;
+          commentsSection.style.display = 'block';
+        } catch (error) {
+          console.error('Error loading comments:', error);
+        }
+      } else {
+        commentsSection.style.display = 'none';
+      }
+    }
+
+    // Add comment to post
+    async function addBlockchainComment(postId) {
+      try {
+        const commentInput = document.getElementById(`comment-input-${postId}`);
+        const content = commentInput.value.trim();
+        
+        if (!content) {
+          showWeb3Notification('Comment cannot be empty!', 'error');
+          return;
+        }
+        
+        showWeb3Notification('Adding comment...', 'info');
+        const tx = await web3Contract.addComment(postId, content);
+        await tx.wait();
+        
+        showWeb3Notification('Comment added!', 'success');
+        commentInput.value = '';
+        
+        // Reload comments
+        document.getElementById(`comments-${postId}`).style.display = 'none';
+        await togglePostComments(postId);
+      } catch (error) {
+        console.error('Error adding comment:', error);
+        showWeb3Notification('Failed: ' + (error.reason || error.message), 'error');
+      }
+    }
+
+    // Share post
+    async function shareBlockchainPost(postId) {
+      try {
+        showWeb3Notification('Sharing post...', 'info');
+        const tx = await web3Contract.sharePost(postId);
+        await tx.wait();
+        
+        showWeb3Notification('Post shared!', 'success');
+        await loadRecentPosts();
+      } catch (error) {
+        console.error('Error sharing post:', error);
+        showWeb3Notification('Failed: ' + (error.reason || error.message), 'error');
+      }
+    }
+
+    // Update UI after connection
+    function updateConnectionUI() {
+      const connectBtn = document.getElementById('connectWalletBtn');
+      if (web3UserAddress) {
+        connectBtn.textContent = web3UserAddress.substring(0, 6) + '...' + web3UserAddress.substring(38);
+        connectBtn.style.background = 'var(--accent-color)';
+        
+        document.getElementById('profileWallet').textContent = web3UserAddress.substring(0, 6) + '...' + web3UserAddress.substring(38);
+      } else {
+        connectBtn.textContent = 'Connect Wallet';
+        connectBtn.style.background = '';
+        
+        document.getElementById('profileUsername').textContent = 'Connect Wallet';
+        document.getElementById('profileBio').textContent = 'Connect your wallet to get started';
+        document.getElementById('profileWallet').textContent = 'Not connected';
+      }
+    }
+
+    // Update profile UI
+    function updateProfileUI() {
+      if (!web3UserProfile) return;
+      
+      document.getElementById('profileUsername').textContent = web3UserProfile.username;
+      document.getElementById('profileBio').textContent = web3UserProfile.bio || 'No bio yet';
+      
+      // Update profile picture
+      const profilePicElement = document.querySelector('.profile-pic');
+      const profilePicText = document.getElementById('profilePicText');
+      
+      if (web3UserProfile.profileImageHash && web3UserProfile.profileImageHash.length > 0) {
+        // Check if it's an IPFS hash or data URI
+        if (web3UserProfile.profileImageHash.startsWith('data:')) {
+          // Data URI
+          profilePicElement.style.backgroundImage = `url(${web3UserProfile.profileImageHash})`;
+          profilePicElement.style.backgroundSize = 'cover';
+          profilePicElement.style.backgroundPosition = 'center';
+          if (profilePicText) profilePicText.style.display = 'none';
+        } else if (web3UserProfile.profileImageHash.startsWith('Qm') || web3UserProfile.profileImageHash.startsWith('bafy')) {
+          // IPFS hash
+          profilePicElement.style.backgroundImage = `url(https://ipfs.io/ipfs/${web3UserProfile.profileImageHash})`;
+          profilePicElement.style.backgroundSize = 'cover';
+          profilePicElement.style.backgroundPosition = 'center';
+          if (profilePicText) profilePicText.style.display = 'none';
+        } else {
+          // Fallback to initial
+          if (profilePicText) {
+            profilePicText.textContent = web3UserProfile.username.charAt(0).toUpperCase();
+          }
+        }
+      } else {
+        // No profile image, show initial
+        if (profilePicText) {
+          profilePicText.textContent = web3UserProfile.username.charAt(0).toUpperCase();
+        }
+      }
+    }
+
+    // Show notification
+    function showWeb3Notification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#f59e0b'};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        max-width: 350px;
+        animation: slideIn 0.3s ease-out;
+      `;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+      }, 5000);
+    }
+
+    // Format timestamp
+    function formatTimestamp(timestamp) {
+      const date = new Date(timestamp * 1000);
+      const now = new Date();
+      const diff = now - date;
+      
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+      
+      if (minutes < 1) return 'Just now';
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days < 7) return `${days}d ago`;
+      
+      return date.toLocaleDateString();
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+  </script>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-text">© 2026 Hyve Social - Decentralized • Privacy • Yours</div>
+  </footer>
+
+</body>
+</html>
