@@ -1536,75 +1536,6 @@
     .action-btn.liked {
       color: #ef4444 !important;
     }
-  
-
-    /* Search results dropdown */
-    .search-bar { position: relative; }
-
-    #searchResults{
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      right: 0;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.45);
-      overflow: hidden;
-      max-height: 360px;
-      overflow-y: auto;
-      z-index: 9999;
-    }
-
-    .search-result-item{
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.75rem;
-      cursor: pointer;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .search-result-item:last-child{ border-bottom: none; }
-    .search-result-item:hover{ background: var(--bg-tertiary); }
-
-    .search-result-avatar{
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      flex-shrink: 0;
-      color: white;
-      font-weight: 800;
-    }
-
-    .search-result-avatar img{
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-    }
-
-    .search-result-name{
-      font-weight: 700;
-      color: var(--text-primary);
-      line-height: 1.1;
-    }
-
-    .search-result-sub{
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      margin-top: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 420px;
-    }
-
   </style>
 </head>
 <body>
@@ -1618,7 +1549,6 @@
       <div class="search-bar">
         <span class="search-icon">🔍</span>
         <input type="text" placeholder="Search users..." id="searchInput">
-        <div id="searchResults" style="display:none;"></div>
       </div>
     </div>
     <div class="header-right">
@@ -1636,46 +1566,7 @@
         <!-- Notifications Panel -->
         <div class="notifications-panel" id="notificationsPanel">
           <div class="notifications-header">Notifications</div>
-          
-          <div class="notification-item unread">
-            <div class="notification-avatar">
-              <img src="https://i.pravatar.cc/100?img=5" alt="Sarah">
-            </div>
-            <div class="notification-content">
-              <div class="notification-text"><strong>Sarah</strong> liked your post</div>
-              <div class="notification-time">5 minutes ago</div>
-            </div>
-          </div>
-
-          <div class="notification-item unread">
-            <div class="notification-avatar">
-              <img src="https://i.pravatar.cc/100?img=13" alt="Mike">
-            </div>
-            <div class="notification-content">
-              <div class="notification-text"><strong>Mike</strong> commented on your post</div>
-              <div class="notification-time">1 hour ago</div>
-            </div>
-          </div>
-
-          <div class="notification-item unread">
-            <div class="notification-avatar">
-              <img src="https://i.pravatar.cc/100?img=8" alt="John">
-            </div>
-            <div class="notification-content">
-              <div class="notification-text"><strong>John</strong> sent you a friend request</div>
-              <div class="notification-time">2 hours ago</div>
-            </div>
-          </div>
-
-          <div class="notification-item">
-            <div class="notification-avatar">
-              <img src="https://i.pravatar.cc/100?img=5" alt="Sarah">
-            </div>
-            <div class="notification-content">
-              <div class="notification-text"><strong>Sarah</strong> shared your post</div>
-              <div class="notification-time">1 day ago</div>
-            </div>
-          </div>
+          <p style="text-align: center; color: var(--text-secondary); padding: 2rem; font-size: 0.875rem;">No notifications yet</p>
         </div>
       </div>
     </div>
@@ -1730,35 +1621,9 @@
 
       <!-- Friends List -->
       <div class="friends-list">
-        <div class="friends-header">ONLINE FRIENDS</div>
-        <div class="friend-item" onclick="openChat('Sarah')">
-          <div class="friend-avatar">
-            <img src="https://i.pravatar.cc/100?img=5" alt="Sarah">
-          </div>
-          <div class="online-indicator"></div>
-          <div class="friend-info">
-            <div class="friend-name">Sarah</div>
-            <div class="friend-status">Online</div>
-          </div>
-        </div>
-        <div class="friend-item" onclick="openChat('Mike')">
-          <div class="friend-avatar">
-            <img src="https://i.pravatar.cc/100?img=13" alt="Mike">
-          </div>
-          <div class="online-indicator"></div>
-          <div class="friend-info">
-            <div class="friend-name">Mike</div>
-            <div class="friend-status">Online</div>
-          </div>
-        </div>
-        <div class="friend-item">
-          <div class="friend-avatar">
-            <img src="https://i.pravatar.cc/100?img=8" alt="John">
-          </div>
-          <div class="friend-info">
-            <div class="friend-name">John</div>
-            <div class="friend-status">Offline 2h ago</div>
-          </div>
+        <div class="friends-header">FRIENDS</div>
+        <div id="friendsList">
+          <p style="text-align: center; color: var(--text-secondary); padding: 1rem; font-size: 0.875rem;">No friends yet. Start following users!</p>
         </div>
       </div>
     </div>
@@ -1766,7 +1631,7 @@
     <!-- Main Feed -->
     <div class="main-feed">
       <!-- Stories Section -->
-      <div class="stories-container">
+      <div class="stories-container" style="display: none;">
         <div class="stories-wrapper">
           <!-- Create Story -->
           <div class="story create-story">
@@ -1777,66 +1642,16 @@
               </div>
             </div>
           </div>
-
-          <!-- Story 1 -->
-          <div class="story">
-            <div class="story-avatar">
-              <img src="https://i.pravatar.cc/100?img=5" alt="Sarah">
-            </div>
-            <div class="story-image">🌅</div>
-            <div class="story-overlay"></div>
-            <div class="story-name">Sarah</div>
-          </div>
-
-          <!-- Story 2 -->
-          <div class="story">
-            <div class="story-avatar">
-              <img src="https://i.pravatar.cc/100?img=8" alt="John">
-            </div>
-            <div class="story-image">🎨</div>
-            <div class="story-overlay"></div>
-            <div class="story-name">John</div>
-          </div>
-
-          <!-- Story 3 -->
-          <div class="story">
-            <div class="story-avatar">
-              <img src="https://i.pravatar.cc/100?img=13" alt="Mike">
-            </div>
-            <div class="story-image">🚀</div>
-            <div class="story-overlay"></div>
-            <div class="story-name">Mike</div>
-          </div>
-
-          <!-- Story 4 -->
-          <div class="story">
-            <div class="story-avatar">
-              <img src="https://i.pravatar.cc/100?img=9" alt="Emma">
-            </div>
-            <div class="story-image">💻</div>
-            <div class="story-overlay"></div>
-            <div class="story-name">Emma</div>
-          </div>
-
-          <!-- Story 5 -->
-          <div class="story">
-            <div class="story-avatar">
-              <img src="https://i.pravatar.cc/100?img=33" alt="Alex">
-            </div>
-            <div class="story-image">🌟</div>
-            <div class="story-overlay"></div>
-            <div class="story-name">Alex</div>
-          </div>
         </div>
       </div>
 
       <!-- Create Post -->
       <div class="create-post-box">
         <div class="create-post-input">
-          <div class="small-avatar">
-            <img src="https://i.pravatar.cc/100?img=12" alt="TLON">
+          <div id="createPostAvatar" class="small-avatar" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0;">
+            <span id="createPostAvatarText">?</span>
           </div>
-          <textarea id="postContent" class="post-textarea" placeholder="What's on your mind, TLON?"></textarea>
+          <textarea id="postContent" class="post-textarea" placeholder="What's on your mind?"></textarea>
         </div>
         <div class="post-actions">
           <div class="post-options">
@@ -2144,10 +1959,18 @@
       <div class="modal-header">Edit Profile</div>
       
       <div style="text-align: center; margin-bottom: 1.5rem;">
-        <div class="profile-pic" style="width: 120px; height: 120px; margin: 0 auto 1rem;">
-          T
+        <input 
+          type="file" 
+          id="modalProfileImage" 
+          accept="image/png,image/jpeg,image/jpg,image/webp"
+          style="display: none;"
+          onchange="handleModalImageSelect(event)"
+        >
+        <div id="modalProfilePic" class="profile-pic" style="width: 120px; height: 120px; margin: 0 auto 1rem; cursor: pointer; position: relative;" onclick="document.getElementById('modalProfileImage').click()">
+          <span id="modalProfilePicText">T</span>
         </div>
-        <button class="option-btn">Change Picture</button>
+        <button type="button" class="option-btn" onclick="document.getElementById('modalProfileImage').click()">Change Picture</button>
+        <div id="modalImageStatus" style="font-size: 0.75rem; color: #888; margin-top: 0.5rem;"></div>
       </div>
 
       <div style="margin-bottom: 1rem;">
@@ -2341,7 +2164,105 @@
     });
 
     // Profile modal
+    // Handle modal image selection
+    function handleModalImageSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Validate
+      const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        showWeb3Notification('Please select a valid image (PNG, JPG, WebP)', 'error');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        showWeb3Notification('Image must be less than 5MB', 'error');
+        return;
+      }
+
+      modalSelectedImage = file;
+
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const modalPic = document.getElementById('modalProfilePic');
+        modalPic.style.backgroundImage = `url(${e.target.result})`;
+        modalPic.style.backgroundSize = 'cover';
+        modalPic.style.backgroundPosition = 'center';
+        const textSpan = document.getElementById('modalProfilePicText');
+        if (textSpan) textSpan.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+
+      document.getElementById('modalImageStatus').textContent = 'New image selected';
+      document.getElementById('modalImageStatus').style.color = '#10b981';
+    }
+
+    // Upload image to IPFS (same as create-profile)
+    async function uploadImageToIPFS(file) {
+      try {
+        const statusEl = document.getElementById('modalImageStatus');
+        if (statusEl) {
+          statusEl.textContent = 'Uploading image...';
+          statusEl.style.color = '#60a5fa';
+        }
+
+        // Convert to data URI as fallback (since public IPFS might fail)
+        const dataUri = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
+
+        if (statusEl) {
+          statusEl.textContent = 'Image ready';
+          statusEl.style.color = '#10b981';
+        }
+
+        return dataUri;
+      } catch (error) {
+        console.error('Image upload error:', error);
+        return '';
+      }
+    }
+
+    // Open profile modal and pre-fill with current data
     function openProfileModal() {
+      // Pre-fill username and bio
+      if (web3UserProfile) {
+        document.getElementById('modalUsername').value = web3UserProfile.username || '';
+        document.getElementById('modalBio').value = web3UserProfile.bio || '';
+        
+        // Show current profile picture
+        const modalPic = document.getElementById('modalProfilePic');
+        const modalPicText = document.getElementById('modalProfilePicText');
+        
+        if (web3UserProfile.profileImageHash && web3UserProfile.profileImageHash.length > 0) {
+          if (web3UserProfile.profileImageHash.startsWith('data:')) {
+            modalPic.style.backgroundImage = `url(${web3UserProfile.profileImageHash})`;
+            modalPic.style.backgroundSize = 'cover';
+            modalPic.style.backgroundPosition = 'center';
+            if (modalPicText) modalPicText.style.display = 'none';
+          } else if (web3UserProfile.profileImageHash.startsWith('Qm') || web3UserProfile.profileImageHash.startsWith('bafy')) {
+            modalPic.style.backgroundImage = `url(https://ipfs.io/ipfs/${web3UserProfile.profileImageHash})`;
+            modalPic.style.backgroundSize = 'cover';
+            modalPic.style.backgroundPosition = 'center';
+            if (modalPicText) modalPicText.style.display = 'none';
+          } else if (modalPicText) {
+            modalPicText.textContent = web3UserProfile.username.charAt(0).toUpperCase();
+            modalPicText.style.display = 'flex';
+          }
+        } else if (modalPicText) {
+          modalPicText.textContent = web3UserProfile.username.charAt(0).toUpperCase();
+          modalPicText.style.display = 'flex';
+        }
+      }
+      
+      // Reset upload status
+      document.getElementById('modalImageStatus').textContent = '';
+      modalSelectedImage = null;
+      
       document.getElementById('profileModal').classList.add('open');
     }
 
@@ -2356,199 +2277,14 @@
       }
     });
 
-    // ===================================================
-    // SEARCH USERS (NO GAS) - reads profile events + getProfile
-    // Shows username + profile picture ONLY (no wallet)
-    // ===================================================
-    const searchInputEl = document.getElementById('searchInput');
-    const searchResultsEl = document.getElementById('searchResults');
-
-    let profilesCache = null;
-    let profilesLoading = false;
-    let searchDebounce = null;
-
-    function hideSearchResults() {
-      if (!searchResultsEl) return;
-      searchResultsEl.style.display = 'none';
-      searchResultsEl.innerHTML = '';
-    }
-
-    function showSearchBox(html) {
-      if (!searchResultsEl) return;
-      searchResultsEl.style.display = 'block';
-      searchResultsEl.innerHTML = html;
-    }
-
-    // Close dropdown on outside click
-    document.addEventListener('click', (e) => {
-      if (!searchResultsEl || !searchInputEl) return;
-      if (searchResultsEl.contains(e.target)) return;
-      if (searchInputEl.contains(e.target)) return;
-      hideSearchResults();
+    // Search functionality (demo)
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      if (query.length > 2) {
+        console.log('Searching for:', query);
+        // This would trigger user search in the real app
+      }
     });
-
-    searchInputEl.addEventListener('input', () => {
-      clearTimeout(searchDebounce);
-      searchDebounce = setTimeout(runUserSearch, 250);
-    });
-
-    async function runUserSearch() {
-      const q = (searchInputEl.value || '').trim().toLowerCase();
-      if (!q) { hideSearchResults(); return; }
-
-      if (!profilesCache && !profilesLoading) {
-        profilesLoading = true;
-        showSearchBox(`<div class="search-result-item" style="cursor:default;"><div><div class="search-result-name">Loading users…</div><div class="search-result-sub">One time load</div></div></div>`);
-        try {
-          profilesCache = await loadAllProfilesFromChain();
-        } catch (e) {
-          console.error(e);
-          const msg = (e && e.message) ? e.message : 'Search unavailable';
-          showSearchBox(`<div class="search-result-item" style="cursor:default;"><div class="search-result-name">${escapeHtml(msg)}</div></div>`);
-          profilesLoading = false;
-          return;
-        }
-        profilesLoading = false;
-      }
-
-      if (!profilesCache) {
-        showSearchBox(`<div class="search-result-item" style="cursor:default;"><div class="search-result-name">Loading…</div></div>`);
-        return;
-      }
-
-      const results = profilesCache
-        .filter(p => (p.username || '').toLowerCase().includes(q))
-        .slice(0, 12);
-
-      renderSearchResults(results);
-    }
-
-    function resolveProfileImageUrl(hash) {
-      if (!hash) return '';
-      if (hash.startsWith('data:')) return hash;
-      if (hash.startsWith('Qm') || hash.startsWith('bafy')) return `https://ipfs.io/ipfs/${hash}`;
-      return '';
-    }
-
-    function buildAvatarHtml(username, profileImageHash) {
-      const initial = (username || '?').charAt(0).toUpperCase();
-      const imgUrl = resolveProfileImageUrl(profileImageHash);
-      if (imgUrl) {
-        return `<div class="search-result-avatar"><img src="${imgUrl}" alt="${escapeHtml(username)}"></div>`;
-      }
-      return `<div class="search-result-avatar">${initial}</div>`;
-    }
-
-    function onSearchUserClick(username) {
-      searchInputEl.value = username;
-      hideSearchResults();
-    }
-
-    function renderSearchResults(items) {
-      if (!items || items.length === 0) {
-        showSearchBox(`<div class="search-result-item" style="cursor:default;"><div><div class="search-result-name">No users found</div><div class="search-result-sub">Try a different name</div></div></div>`);
-        return;
-      }
-
-      const html = items.map((p) => {
-        const avatarHtml = buildAvatarHtml(p.username, p.profileImageHash);
-        const safeName = escapeHtml(p.username || '');
-        const sub = p.bio ? escapeHtml(p.bio) : 'Profile';
-        const u = encodeURIComponent(p.username || '');
-        return `
-          <div class="search-result-item" data-u="${u}">
-            ${avatarHtml}
-            <div style="min-width:0;">
-              <div class="search-result-name">${safeName}</div>
-              <div class="search-result-sub">${sub}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      showSearchBox(html);
-
-      // click handlers (no inline JS, avoids escaping issues)
-      const itemsEls = searchResultsEl.querySelectorAll('.search-result-item[data-u]');
-      itemsEls.forEach((el) => {
-        el.addEventListener('click', () => {
-          const username = decodeURIComponent(el.getAttribute('data-u') || '');
-          if (username) onSearchUserClick(username);
-        });
-      });
-    }
-
-    // Reads ProfileCreated/ProfileUpdated/ProfileUpdated logs and then calls getProfile(address)
-    async function loadAllProfilesFromChain() {
-      // IMPORTANT: Browsers often block direct calls to a public RPC due to CORS.
-      // Using the injected wallet provider (MetaMask) avoids CORS issues and is read-only here.
-      // If no wallet provider exists, we fall back to RPC_URL (may fail in some hosting setups).
-      const readProvider = (typeof window.ethereum !== 'undefined')
-        ? new ethers.providers.Web3Provider(window.ethereum, 'any')
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
-
-      // Ensure we're querying the Hyve chain when using the wallet provider.
-      // If the user isn't on Hyve yet, ask them to connect/switch first.
-      try {
-        const net = await readProvider.getNetwork();
-        if (net && net.chainId && Number(net.chainId) !== Number(CHAIN_ID)) {
-          throw new Error('Connect your wallet and switch to Hyve chain to search');
-        }
-      } catch (e) {
-        // If network call fails (some RPCs), we continue; getLogs will error if unsupported.
-        if (e && e.message) throw e;
-      }
-
-      const readContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, readProvider);
-      const iface = new ethers.utils.Interface(CONTRACT_ABI);
-
-      const topicCreated = iface.getEventTopic('ProfileCreated');
-      const topicUpdated = iface.getEventTopic('ProfileUpdated');
-
-      const latest = await readProvider.getBlockNumber();
-
-      const CHUNK = 200000;
-      const addresses = new Set();
-
-      for (let from = 0; from <= latest; from += CHUNK) {
-        const to = Math.min(latest, from + CHUNK - 1);
-
-        const logs1 = await readProvider.getLogs({ address: CONTRACT_ADDRESS, fromBlock: from, toBlock: to, topics: [topicCreated] });
-        const logs2 = await readProvider.getLogs({ address: CONTRACT_ADDRESS, fromBlock: from, toBlock: to, topics: [topicUpdated] });
-
-        for (const lg of [...logs1, ...logs2]) {
-          try {
-            const parsed = iface.parseLog(lg);
-            const user = (parsed.args.user || '').toLowerCase();
-            if (user) addresses.add(user);
-          } catch (e) {}
-        }
-      }
-
-      const addrList = Array.from(addresses);
-      const out = [];
-
-      const BATCH = 10;
-      for (let i = 0; i < addrList.length; i += BATCH) {
-        const slice = addrList.slice(i, i + BATCH);
-        const batch = await Promise.all(slice.map(async (addr) => {
-          try {
-            const p = await readContract.getProfile(addr);
-            if (!p || !p.exists) return null;
-            const username = (p.username || '').trim();
-            if (!username) return null;
-            return { username, bio: (p.bio || '').trim(), profileImageHash: (p.profileImageHash || '').trim() };
-          } catch (e) {
-            return null;
-          }
-        }));
-        for (const item of batch) if (item) out.push(item)
-
-      }
-
-      out.sort((a,b) => (a.username || '').localeCompare(b.username || ''));
-      return out;
-    }
 
     // Theme Toggle Function
     function toggleTheme() {
@@ -2582,7 +2318,7 @@
     const RPC_URL = "https://rpc.hyvechain.com";
 
     // Contract ABI (Application Binary Interface)
-    const CONTRACT_ABI = [{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"commentId","type":"uint256"},{"indexed":true,"internalType":"address","name":"commenter","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"CommentAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"commentId","type":"uint256"},{"indexed":true,"internalType":"address","name":"liker","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"CommentLiked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"author","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"liker","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostLiked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"sharer","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostShared","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"unliker","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostUnliked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"string","name":"username","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"ProfileCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"string","name":"username","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"ProfileUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"follower","type":"address"},{"indexed":true,"internalType":"address","name":"followee","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"UserFollowed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"follower","type":"address"},{"indexed":true,"internalType":"address","name":"unfollowee","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"UserUnfollowed","type":"event"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"},{"internalType":"string","name":"content","type":"string"}],"name":"addComment","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"content","type":"string"},{"internalType":"string","name":"imageHash","type":"string"}],"name":"createPost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"username","type":"string"},{"internalType":"string","name":"bio","type":"string"},{"internalType":"string","name":"profileImageHash","type":"string"}],"name":"createProfile","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"getComments","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likeCount","type":"uint256"}],"internalType":"struct HyveSocial.Comment[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"getPost","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"string","name":"imageHash","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likeCount","type":"uint256"},{"internalType":"uint256","name":"commentCount","type":"uint256"},{"internalType":"uint256","name":"shareCount","type":"uint256"},{"internalType":"bool","name":"exists","type":"bool"}],"internalType":"struct HyveSocial.Post","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getProfile","outputs":[{"components":[{"internalType":"string","name":"username","type":"string"},{"internalType":"string","name":"bio","type":"string"},{"internalType":"string","name":"profileImageHash","type":"string"},{"internalType":"uint256","name":"createdAt","type":"uint256"},{"internalType":"uint256","name":"followerCount","type":"uint256"},{"internalType":"uint256","name":"followingCount","type":"uint256"},{"internalType":"bool","name":"exists","type":"bool"}],"internalType":"struct HyveSocial.Profile","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"count","type":"uint256"}],"name":"getRecentPosts","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"string","name":"imageHash","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likeCount","type":"uint256"},{"internalType":"uint256","name":"commentCount","type":"uint256"},{"internalType":"uint256","name":"shareCount","type":"uint256"},{"internalType":"bool","name":"exists","type":"bool"}],"internalType":"struct HyveSocial.Post[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getTotalPosts","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"},{"internalType":"address","name":"user","type":"address"}],"name":"hasLikedPost","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"likePost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"sharePost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"profileExistsForUser","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"unlikePost","outputs":[],"stateMutability":"nonpayable","type":"function"}];
+    const CONTRACT_ABI = [{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"commentId","type":"uint256"},{"indexed":true,"internalType":"address","name":"commenter","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"CommentAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"commentId","type":"uint256"},{"indexed":true,"internalType":"address","name":"liker","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"CommentLiked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"author","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"liker","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostLiked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"sharer","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostShared","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"unliker","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"PostUnliked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"string","name":"username","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"ProfileCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"string","name":"username","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"ProfileUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"follower","type":"address"},{"indexed":true,"internalType":"address","name":"followee","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"UserFollowed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"follower","type":"address"},{"indexed":true,"internalType":"address","name":"unfollowee","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"UserUnfollowed","type":"event"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"},{"internalType":"string","name":"content","type":"string"}],"name":"addComment","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"content","type":"string"},{"internalType":"string","name":"imageHash","type":"string"}],"name":"createPost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"username","type":"string"},{"internalType":"string","name":"bio","type":"string"},{"internalType":"string","name":"profileImageHash","type":"string"}],"name":"createProfile","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"getComments","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likeCount","type":"uint256"}],"internalType":"struct HyveSocial.Comment[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"getPost","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"string","name":"imageHash","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likeCount","type":"uint256"},{"internalType":"uint256","name":"commentCount","type":"uint256"},{"internalType":"uint256","name":"shareCount","type":"uint256"},{"internalType":"bool","name":"exists","type":"bool"}],"internalType":"struct HyveSocial.Post","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getProfile","outputs":[{"components":[{"internalType":"string","name":"username","type":"string"},{"internalType":"string","name":"bio","type":"string"},{"internalType":"string","name":"profileImageHash","type":"string"},{"internalType":"uint256","name":"createdAt","type":"uint256"},{"internalType":"uint256","name":"followerCount","type":"uint256"},{"internalType":"uint256","name":"followingCount","type":"uint256"},{"internalType":"bool","name":"exists","type":"bool"}],"internalType":"struct HyveSocial.Profile","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"count","type":"uint256"}],"name":"getRecentPosts","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"string","name":"imageHash","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likeCount","type":"uint256"},{"internalType":"uint256","name":"commentCount","type":"uint256"},{"internalType":"uint256","name":"shareCount","type":"uint256"},{"internalType":"bool","name":"exists","type":"bool"}],"internalType":"struct HyveSocial.Post[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getTotalPosts","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"},{"internalType":"address","name":"user","type":"address"}],"name":"hasLikedPost","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"likePost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"sharePost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"profileExistsForUser","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"postId","type":"uint256"}],"name":"unlikePost","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"username","type":"string"},{"internalType":"string","name":"bio","type":"string"},{"internalType":"string","name":"profileImageHash","type":"string"}],"name":"updateProfile","outputs":[],"stateMutability":"nonpayable","type":"function"}];
 
     // Global Web3 state
     let web3Provider = null;
@@ -2590,6 +2326,8 @@
     let web3Contract = null;
     let web3UserAddress = null;
     let web3UserProfile = null;
+    let modalSelectedImage = null;
+    let modalImageHash = '';
 
     // Auto-connect on page load
     window.addEventListener('load', async () => {
@@ -2710,19 +2448,26 @@
           return;
         }
 
-        showWeb3Notification('Creating profile... Please confirm transaction in MetaMask', 'info');
+        // Upload new image if selected
+        let imageHash = web3UserProfile.profileImageHash || '';
+        if (modalSelectedImage) {
+          showWeb3Notification('Uploading new profile picture...', 'info');
+          imageHash = await uploadImageToIPFS(modalSelectedImage);
+        }
+
+        showWeb3Notification('Updating profile... Please confirm transaction in MetaMask', 'info');
         
-        const tx = await web3Contract.createProfile(username, bio, '');
+        const tx = await web3Contract.updateProfile(username, bio, imageHash);
         showWeb3Notification('Transaction submitted! Waiting for confirmation...', 'info');
         
         await tx.wait();
         
-        showWeb3Notification('Profile created successfully!', 'success');
+        showWeb3Notification('Profile updated successfully!', 'success');
         await loadUserProfile();
         closeProfileModal();
       } catch (error) {
-        console.error('Error creating profile:', error);
-        showWeb3Notification('Failed to create profile: ' + (error.reason || error.message), 'error');
+        console.error('Error updating profile:', error);
+        showWeb3Notification('Failed to update profile: ' + (error.reason || error.message), 'error');
       }
     }
 
@@ -2795,7 +2540,7 @@
         try {
           authorProfile = await web3Contract.getProfile(post.author);
         } catch (e) {
-          authorProfile = { username: post.author.substring(0, 8) + '...' };
+          authorProfile = { username: post.author.substring(0, 8) + '...', profileImageHash: '' };
         }
         
         let hasLiked = false;
@@ -2805,13 +2550,25 @@
           } catch (e) {}
         }
         
+        // Build author avatar HTML with profile picture support
+        let authorAvatarHTML = '';
+        if (authorProfile.profileImageHash && authorProfile.profileImageHash.length > 0) {
+          if (authorProfile.profileImageHash.startsWith('data:')) {
+            authorAvatarHTML = `<div style="width: 48px; height: 48px; border-radius: 50%; background-image: url(${authorProfile.profileImageHash}); background-size: cover; background-position: center;"></div>`;
+          } else if (authorProfile.profileImageHash.startsWith('Qm') || authorProfile.profileImageHash.startsWith('bafy')) {
+            authorAvatarHTML = `<div style="width: 48px; height: 48px; border-radius: 50%; background-image: url(https://ipfs.io/ipfs/${authorProfile.profileImageHash}); background-size: cover; background-position: center;"></div>`;
+          } else {
+            authorAvatarHTML = `<div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.25rem;">${authorProfile.username.charAt(0).toUpperCase()}</div>`;
+          }
+        } else {
+          authorAvatarHTML = `<div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.25rem;">${authorProfile.username.charAt(0).toUpperCase()}</div>`;
+        }
+        
         const postHTML = `
           <div class="post-card">
             <div class="post-header">
               <div class="post-avatar">
-                <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.25rem;">
-                  ${authorProfile.username.charAt(0).toUpperCase()}
-                </div>
+                ${authorAvatarHTML}
               </div>
               <div class="post-info">
                 <div class="post-author">${escapeHtml(authorProfile.username)}</div>
@@ -2988,7 +2745,35 @@
       document.getElementById('profileUsername').textContent = web3UserProfile.username;
       document.getElementById('profileBio').textContent = web3UserProfile.bio || 'No bio yet';
       
-      // Update profile picture
+      // Update post placeholder with username
+      const postTextarea = document.getElementById('postContent');
+      if (postTextarea) {
+        postTextarea.placeholder = `What's on your mind, ${web3UserProfile.username}?`;
+      }
+      
+      // Update create post avatar
+      const createPostAvatar = document.getElementById('createPostAvatar');
+      const createPostAvatarText = document.getElementById('createPostAvatarText');
+      
+      if (web3UserProfile.profileImageHash && web3UserProfile.profileImageHash.length > 0) {
+        if (web3UserProfile.profileImageHash.startsWith('data:')) {
+          createPostAvatar.style.backgroundImage = `url(${web3UserProfile.profileImageHash})`;
+          createPostAvatar.style.backgroundSize = 'cover';
+          createPostAvatar.style.backgroundPosition = 'center';
+          if (createPostAvatarText) createPostAvatarText.style.display = 'none';
+        } else if (web3UserProfile.profileImageHash.startsWith('Qm') || web3UserProfile.profileImageHash.startsWith('bafy')) {
+          createPostAvatar.style.backgroundImage = `url(https://ipfs.io/ipfs/${web3UserProfile.profileImageHash})`;
+          createPostAvatar.style.backgroundSize = 'cover';
+          createPostAvatar.style.backgroundPosition = 'center';
+          if (createPostAvatarText) createPostAvatarText.style.display = 'none';
+        } else if (createPostAvatarText) {
+          createPostAvatarText.textContent = web3UserProfile.username.charAt(0).toUpperCase();
+        }
+      } else if (createPostAvatarText) {
+        createPostAvatarText.textContent = web3UserProfile.username.charAt(0).toUpperCase();
+      }
+      
+      // Update profile picture in sidebar
       const profilePicElement = document.querySelector('.profile-pic');
       const profilePicText = document.getElementById('profilePicText');
       
