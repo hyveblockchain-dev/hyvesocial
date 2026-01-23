@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hyve Social - Decentralized Social Network</title>
+  
+  <!-- Ethers.js -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  
+  <!-- WalletConnect for Mobile -->
+  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      padding: 3rem;
+      background: rgba(26, 26, 26, 0.8);
+      border-radius: 24px;
+      border: 1px solid #333;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .logo-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .logo-text {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    .tagline {
+      font-size: 1.125rem;
+      color: #888;
+      margin-bottom: 3rem;
+    }
+
+    .connect-btn {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      color: #000;
+      border: none;
+      padding: 1rem 2.5rem;
+      border-radius: 50px;
+      font-size: 1.125rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .connect-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .status-message {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      display: none;
+    }
+
+    .status-message.show {
+      display: block;
+    }
+
+    .status-message.info {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #60a5fa;
+    }
+
+    .status-message.success {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+    }
+
+    .status-message.error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(0, 0, 0, 0.3);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Wallet Modal */
+    .wallet-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .wallet-modal.show {
+      display: flex;
+    }
+
+    .wallet-modal-content {
+      background: #1a1a1a;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      border: 1px solid #333;
+    }
+
+    .wallet-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .wallet-modal-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 2rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .wallet-option {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.25rem;
+      background: #2a2a2a;
+      border: 2px solid #333;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .wallet-option:hover {
+      border-color: #f59e0b;
+    }
+
+    .wallet-icon {
+      font-size: 2.5rem;
+    }
+
+    .wallet-info {
+      text-align: left;
+      flex: 1;
+    }
+
+    .wallet-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .wallet-desc {
+      font-size: 0.875rem;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <div class="logo-icon">🌐</div>
+      <h1 class="logo-text">Hyve Social</h1>
+    </div>
+    
+    <p class="tagline">
+      Decentralized social network on Hyve Blockchain
+    </p>
+    
+    <button id="connectBtn" class="connect-btn" onclick="connectWallet()">
+      Connect Wallet
+    </button>
+    
+    <div id="statusMessage" class="status-message"></div>
+  </div>
+
+  <!-- Wallet Modal -->
+  <div id="walletModal" class="wallet-modal">
+    <div class="wallet-modal-content">
+      <div class="wallet-modal-header">
+        <h2>Connect Wallet</h2>
+        <button class="close-btn" onclick="closeWalletModal()">&times;</button>
+      </div>
+      
+      <button class="wallet-option" onclick="connectMobileWallet('MetaMask')">
+        <span class="wallet-icon">🦊</span>
+        <div class="wallet-info">
+          <div class="wallet-name">MetaMask</div>
+          <div class="wallet-desc">Connect to MetaMask</div>
+        </div>
+      </button>
+      
+      <button class="wallet-option" onclick="connectMobileWallet('Trust Wallet')">
+        <span class="wallet-icon">🛡️</span>
+        <div class="wallet-info">
+          <div class="wallet-name">Trust Wallet</div>
+          <div class="wallet-desc">Connect to Trust Wallet</div>
+        </div>
+      </button>
+      
+      <button class="wallet-option" onclick="connectMobileWallet('Rainbow')">
+        <span class="wallet-icon">🌈</span>
+        <div class="wallet-info">
+          <div class="wallet-name">Rainbow</div>
+          <div class="wallet-desc">Connect to Rainbow</div>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const CONTRACT_ADDRESS = '0x64B40383cE6718CFc3FAD2eeb612F191304D2E39';
+    const CHAIN_ID = 9200;
+    const CHAIN_NAME = 'Hyve Blockchain';
+    const RPC_URL = 'https://rpc.hyvechain.com';
+
+    const CONTRACT_ABI = [
+      "function getProfile(address user) view returns (tuple(string username, string bio, string profileImageHash, bool exists))",
+    ];
+
+    async function connectWallet() {
+      const btn = document.getElementById('connectBtn');
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+      try {
+        // Check if window.ethereum exists (MetaMask extension or wallet browser)
+        if (typeof window.ethereum !== 'undefined') {
+          // Desktop or wallet browser - use injected provider
+          btn.disabled = true;
+          btn.innerHTML = '<span class="spinner"></span>Connecting...';
+          showStatus('Connecting to wallet...', 'info');
+
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          const userAddress = accounts[0];
+
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          const network = await provider.getNetwork();
+
+          if (network.chainId !== CHAIN_ID) {
+            showStatus('Switching to Hyve Blockchain...', 'info');
+            await switchToHyveChain();
+          }
+
+          await checkProfileAndRedirect(provider, userAddress);
+        }
+        // Mobile browser without wallet extension
+        else if (isMobile) {
+          showWalletModal();
+        }
+        // Desktop without MetaMask
+        else {
+          showStatus('Please install MetaMask!', 'error');
+          setTimeout(() => {
+            window.open('https://metamask.io/download/', '_blank');
+          }, 2000);
+        }
+        
+      } catch (error) {
+        console.error('Connection error:', error);
+        btn.disabled = false;
+        btn.innerHTML = 'Connect Wallet';
+        showStatus('Connection failed: ' + (error.message || 'Unknown error'), 'error');
+      }
+    }
+
+    function showWalletModal() {
+      document.getElementById('walletModal').classList.add('show');
+    }
+
+    function closeWalletModal() {
+      document.getElementById('walletModal').classList.remove('show');
+    }
+
+    async function connectMobileWallet(walletName) {
+      const btn = document.getElementById('connectBtn');
+      closeWalletModal();
+      
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Opening wallet...';
+      showStatus(`Opening ${walletName}...`, 'info');
+
+      try {
+        // Create WalletConnect provider
+        const wcProvider = new WalletConnectProvider.default({
+          rpc: { [CHAIN_ID]: RPC_URL },
+          chainId: CHAIN_ID,
+          qrcode: false, // NO QR CODE
+        });
+
+        // Create connection session
+        await wcProvider.connector.createSession();
+        
+        // Get the connection URI
+        const uri = wcProvider.connector.uri;
+        
+        // Build deep link based on wallet
+        let deepLink;
+        switch(walletName) {
+          case 'MetaMask':
+            deepLink = `https://metamask.app.link/wc?uri=${encodeURIComponent(uri)}`;
+            break;
+          case 'Trust Wallet':
+            deepLink = `https://link.trustwallet.com/wc?uri=${encodeURIComponent(uri)}`;
+            break;
+          case 'Rainbow':
+            deepLink = `https://rnbwapp.com/wc?uri=${encodeURIComponent(uri)}`;
+            break;
+        }
+        
+        // Save the provider to window so we can access it after approval
+        window.wcProvider = wcProvider;
+        
+        // Listen for connection
+        wcProvider.connector.on("connect", async (error, payload) => {
+          if (error) {
+            throw error;
+          }
+          
+          console.log("WalletConnect connected!", payload);
+          showStatus('Wallet connected! Loading profile...', 'success');
+          
+          const provider = new ethers.providers.Web3Provider(wcProvider);
+          const signer = provider.getSigner();
+          const userAddress = await signer.getAddress();
+
+          await checkProfileAndRedirect(provider, userAddress);
+        });
+        
+        // Use window.location.href for mobile - Safari handles this better
+        showStatus('Opening wallet app...', 'info');
+        window.location.href = deepLink;
+        
+      } catch (error) {
+        console.error('Connection error:', error);
+        btn.disabled = false;
+        btn.innerHTML = 'Connect Wallet';
+        
+        if (error.message && error.message.includes('User closed modal')) {
+          showStatus('Connection cancelled', 'error');
+        } else {
+          showStatus('Connection failed: ' + (error.message || 'Unknown error'), 'error');
+        }
+      }
+    }
+
+    async function checkProfileAndRedirect(provider, userAddress) {
+      const btn = document.getElementById('connectBtn');
+      
+      try {
+        showStatus('Checking your profile...', 'info');
+        
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+        const profile = await contract.getProfile(userAddress);
+        
+        if (profile.exists) {
+          // Save profile data
+          sessionStorage.setItem('userAddress', userAddress);
+          sessionStorage.setItem('username', profile.username);
+          sessionStorage.setItem('bio', profile.bio);
+          sessionStorage.setItem('profileImageHash', profile.profileImageHash);
+          
+          showStatus('Profile found! Redirecting...', 'success');
+          
+          setTimeout(() => {
+            window.location.href = '/app.html';
+          }, 1500);
+        } else {
+          // No profile, go to creation
+          sessionStorage.setItem('userAddress', userAddress);
+          
+          showStatus('No profile found. Creating your profile...', 'info');
+          
+          setTimeout(() => {
+            window.location.href = '/create-profile.html';
+          }, 1500);
+        }
+
+      } catch (error) {
+        console.error('Profile check error:', error);
+        btn.disabled = false;
+        btn.innerHTML = 'Connect Wallet';
+        showStatus('Failed to check profile: ' + error.message, 'error');
+      }
+    }
+
+    async function switchToHyveChain() {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x23F0' }],
+        });
+      } catch (switchError) {
+        if (switchError.code === 4902) {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x23F0',
+              chainName: CHAIN_NAME,
+              nativeCurrency: {
+                name: 'HYVE',
+                symbol: 'HYVE',
+                decimals: 18
+              },
+              rpcUrls: [RPC_URL],
+              blockExplorerUrls: ['https://explorer.hyvechain.com']
+            }]
+          });
+        } else {
+          throw switchError;
+        }
+      }
+    }
+
+    function showStatus(message, type) {
+      const statusMsg = document.getElementById('statusMessage');
+      statusMsg.textContent = message;
+      statusMsg.className = `status-message show ${type}`;
+    }
+
+    // On page load, check if we're returning from wallet app
+    window.addEventListener('load', async () => {
+      // Check if WalletConnect session exists in localStorage
+      const wcSession = localStorage.getItem('walletconnect');
+      
+      if (wcSession) {
+        const btn = document.getElementById('connectBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span>Connecting...';
+        showStatus('Connecting to wallet...', 'info');
+        
+        try {
+          // Restore WalletConnect provider
+          const wcProvider = new WalletConnectProvider.default({
+            rpc: { [CHAIN_ID]: RPC_URL },
+            chainId: CHAIN_ID,
+            qrcode: false,
+          });
+
+          // Enable will restore the existing session
+          await wcProvider.enable();
+          
+          const provider = new ethers.providers.Web3Provider(wcProvider);
+          const signer = provider.getSigner();
+          const userAddress = await signer.getAddress();
+
+          showStatus('Wallet connected! Loading profile...', 'success');
+          await checkProfileAndRedirect(provider, userAddress);
+          
+        } catch (error) {
+          console.error('Session restore error:', error);
+          btn.disabled = false;
+          btn.innerHTML = 'Connect Wallet';
+          // Clear bad session
+          localStorage.removeItem('walletconnect');
+        }
+      }
+    });
+  </script>
+</body>
+</html>
