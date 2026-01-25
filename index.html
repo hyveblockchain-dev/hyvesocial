@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hyve Social - Decentralized Social Network</title>
+  
+  <!-- Ethers.js -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  
+  <!-- WalletConnect for Mobile -->
+  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      padding: 3rem;
+      background: rgba(26, 26, 26, 0.8);
+      border-radius: 24px;
+      border: 1px solid #333;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .logo-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .logo-text {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    .tagline {
+      font-size: 1.125rem;
+      color: #888;
+      margin-bottom: 3rem;
+    }
+
+    .connect-btn {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      color: #000;
+      border: none;
+      padding: 1rem 2.5rem;
+      border-radius: 50px;
+      font-size: 1.125rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .connect-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .status-message {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      display: none;
+    }
+
+    .status-message.show {
+      display: block;
+    }
+
+    .status-message.info {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #60a5fa;
+    }
+
+    .status-message.success {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+    }
+
+    .status-message.error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(0, 0, 0, 0.3);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Wallet Modal */
+    .wallet-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .wallet-modal.show {
+      display: flex;
+    }
+
+    .wallet-modal-content {
+      background: #1a1a1a;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      border: 1px solid #333;
+    }
+
+    .wallet-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .wallet-modal-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 2rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .wallet-option {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.25rem;
+      background: #2a2a2a;
+      border: 2px solid #333;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .wallet-option:hover {
+      border-color: #f59e0b;
+    }
+
+    .wallet-icon {
+      font-size: 2.5rem;
+    }
+
+    .wallet-info {
+      text-align: left;
+      flex: 1;
+    }
+
+    .wallet-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .wallet-desc {
+      font-size: 0.875rem;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <div class="logo-icon">🌐</div>
+      <h1 class="logo-text">Hyve Social</h1>
+    </div>
+    
+    <p class="tagline">
+      Decentralized social network on Hyve Blockchain
+    </p>
+    
+    <button id="connectBtn" class="connect-btn" onclick="connectWallet()">
+      Connect Wallet
+    </button>
+    
+    <div id="statusMessage" class="status-message"></div>
+  </div>
+
+  <!-- Wallet Modal -->
+  <div id="walletModal" class="wallet-modal">
+    <div class="wallet-modal-content">
+      <div class="wallet-modal-header">
+        <h2>Connect Wallet</h2>
+        <button class="close-btn" onclick="closeWalletModal()">&times;</button>
+      </div>
+      
+      <button class="wallet-option" onclick="connectMobileWallet('MetaMask')">
+        <span class="wallet-icon">🦊</span>
+        <div class="wallet-info">
+          <div class="wallet-name">MetaMask</div>
+          <div class="wallet-desc">Connect to MetaMask</div>
+        </div>
+      </button>
+      
+      <button class="wallet-option" onclick="connectMobileWallet('Trust Wallet')">
+        <span class="wallet-icon">🛡️</span>
+        <div class="wallet-info">
+          <div class="wallet-name">Trust Wallet</div>
+          <div class="wallet-desc">Connect to Trust Wallet</div>
+        </div>
+      </button>
+      
+      <button class="wallet-option" onclick="connectMobileWallet('Rainbow')">
+        <span class="wallet-icon">🌈</span>
+        <div class="wallet-info">
+          <div class="wallet-name">Rainbow</div>
+          <div class="wallet-desc">Connect to Rainbow</div>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = 'https://social-api.hyvechain.com/api';
+    const CHAIN_ID = 9200;
+    const CHAIN_NAME = 'Hyve Blockchain';
+    const RPC_URL = 'https://rpc.hyvechain.com';
+
+    async function connectWallet() {
+      const btn = document.getElementById('connectBtn');
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+      console.log('Connect wallet clicked. Is mobile:', isMobile);
+      console.log('window.ethereum exists:', typeof window.ethereum !== 'undefined');
+
+      try {
+        // Check if window.ethereum exists (MetaMask extension or wallet browser)
+        if (typeof window.ethereum !== 'undefined') {
+          // Desktop or wallet browser - use injected provider
+          btn.disabled = true;
+          btn.innerHTML = '<span class="spinner"></span>Connecting...';
+          showStatus('Connecting to wallet...', 'info');
+
+          console.log('Requesting accounts...');
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          const userAddress = accounts[0];
+          console.log('Got address:', userAddress);
+
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          const network = await provider.getNetwork();
+          console.log('Current network:', network.chainId);
+
+          if (network.chainId !== CHAIN_ID) {
+            showStatus('Switching to Hyve Blockchain...', 'info');
+            await switchToHyveChain();
+          }
+
+          await authenticateAndRedirect(provider, userAddress);
+        }
+        // Mobile browser without wallet extension
+        else if (isMobile) {
+          showWalletModal();
+        }
+        // Desktop without MetaMask
+        else {
+          showStatus('Please install MetaMask!', 'error');
+          setTimeout(() => {
+            window.open('https://metamask.io/download/', '_blank');
+          }, 2000);
+        }
+        
+      } catch (error) {
+        console.error('Connection error:', error);
+        btn.disabled = false;
+        btn.innerHTML = 'Connect Wallet';
+        showStatus('Connection failed: ' + (error.message || 'Unknown error'), 'error');
+      }
+    }
+
+    function showWalletModal() {
+      document.getElementById('walletModal').classList.add('show');
+    }
+
+    function closeWalletModal() {
+      document.getElementById('walletModal').classList.remove('show');
+    }
+
+    async function connectMobileWallet(walletName) {
+      const btn = document.getElementById('connectBtn');
+      closeWalletModal();
+      
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Connecting...';
+      showStatus(`Connecting to ${walletName}...`, 'info');
+
+      try {
+        const wcProvider = new WalletConnectProvider.default({
+          rpc: { [CHAIN_ID]: RPC_URL },
+          chainId: CHAIN_ID,
+          qrcode: false,
+          clientMeta: {
+            description: "Hyve Social - Decentralized Social Network",
+            url: window.location.origin,
+            icons: ["https://social.hyvechain.com/icon.png"],
+            name: "Hyve Social"
+          }
+        });
+
+        await wcProvider.enable();
+        
+        const provider = new ethers.providers.Web3Provider(wcProvider);
+        const signer = provider.getSigner();
+        const userAddress = await signer.getAddress();
+
+        showStatus('Wallet connected!', 'success');
+        await authenticateAndRedirect(provider, userAddress);
+        
+      } catch (error) {
+        console.error('Connection error:', error);
+        btn.disabled = false;
+        btn.innerHTML = 'Connect Wallet';
+        
+        if (error && error.message && error.message.includes('User closed modal')) {
+          showStatus('Connection cancelled', 'error');
+        } else {
+          showStatus('Connection failed. Please try again.', 'error');
+        }
+      }
+    }
+
+    async function authenticateAndRedirect(provider, userAddress) {
+      const btn = document.getElementById('connectBtn');
+      
+      try {
+        showStatus('Authenticating...', 'info');
+        console.log('=== Starting authentication ===');
+        console.log('Address:', userAddress);
+        console.log('API Base URL:', API_BASE_URL);
+        
+        // Request authentication message from server
+        const nonceUrl = `${API_BASE_URL}/auth/nonce/${userAddress}`;
+        console.log('Requesting nonce from:', nonceUrl);
+        
+        const nonceResponse = await fetch(nonceUrl);
+        console.log('Nonce response status:', nonceResponse.status);
+        console.log('Nonce response headers:', Object.fromEntries(nonceResponse.headers.entries()));
+        
+        if (!nonceResponse.ok) {
+          const errorText = await nonceResponse.text();
+          console.error('Nonce error response body:', errorText);
+          throw new Error('Failed to get nonce (status ' + nonceResponse.status + '): ' + errorText);
+        }
+        
+        const nonceData = await nonceResponse.json();
+        console.log('Nonce response data:', nonceData);
+        const nonce = nonceData.nonce;
+        
+        if (!nonce) {
+          throw new Error('No nonce in server response');
+        }
+        
+        // Sign the message with wallet
+        showStatus('Please sign the message in your wallet...', 'info');
+        const signer = provider.getSigner();
+        const message = `Sign this message to authenticate with Hyve Social.\n\nNonce: ${nonce}`;
+        console.log('Message to sign:', message);
+        
+        const signature = await signer.signMessage(message);
+        console.log('Signature received (length ' + signature.length + '):', signature.substring(0, 30) + '...');
+        
+        // Verify signature and get JWT token
+        showStatus('Verifying signature...', 'info');
+        const verifyUrl = `${API_BASE_URL}/auth/verify`;
+        console.log('Verifying signature at:', verifyUrl);
+        
+        const authPayload = {
+          walletAddress: userAddress,
+          signature: signature,
+          nonce: nonce
+        };
+        console.log('Auth payload:', {
+          walletAddress: authPayload.walletAddress,
+          signature: authPayload.signature.substring(0, 30) + '...',
+          nonce: authPayload.nonce
+        });
+        
+        const authResponse = await fetch(verifyUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(authPayload)
+        });
+        
+        console.log('Auth response status:', authResponse.status);
+        console.log('Auth response headers:', Object.fromEntries(authResponse.headers.entries()));
+        
+        if (!authResponse.ok) {
+          const errorText = await authResponse.text();
+          console.error('Auth verification failed. Response body:', errorText);
+          throw new Error('Verification failed (status ' + authResponse.status + '): ' + errorText);
+        }
+        
+        const authData = await authResponse.json();
+        console.log('Authentication successful! Token received.');
+        
+        // Store authentication data
+        localStorage.setItem('authToken', authData.token);
+        localStorage.setItem('userAddress', userAddress);
+        console.log('Saved to localStorage');
+        
+        // Redirect to app
+        showStatus('Success! Redirecting to app...', 'success');
+        setTimeout(() => {
+          window.location.href = '/app.html';
+        }, 1000);
+
+      } catch (error) {
+        console.error('=== Authentication error ===');
+        console.error('Error:', error);
+        console.error('Message:', error.message);
+        console.error('Stack:', error.stack);
+        
+        btn.disabled = false;
+        btn.innerHTML = 'Connect Wallet';
+        
+        // Show user-friendly error
+        let errorMsg = 'Authentication failed';
+        if (error.message) {
+          if (error.message.toLowerCase().includes('user rejected') || 
+              error.message.toLowerCase().includes('user denied')) {
+            errorMsg = 'Signature rejected. Please approve the signature request.';
+          } else if (error.message.includes('nonce')) {
+            errorMsg = 'Failed to get authentication nonce from server.';
+          } else if (error.message.includes('Verification failed')) {
+            errorMsg = 'Signature verification failed. Please try again.';
+          } else {
+            errorMsg = error.message;
+          }
+        }
+        
+        showStatus(errorMsg, 'error');
+      }
+    }
+
+    async function switchToHyveChain() {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x23F0' }],
+        });
+      } catch (switchError) {
+        if (switchError.code === 4902) {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x23F0',
+              chainName: CHAIN_NAME,
+              nativeCurrency: {
+                name: 'HYVE',
+                symbol: 'HYVE',
+                decimals: 18
+              },
+              rpcUrls: [RPC_URL],
+              blockExplorerUrls: ['https://explorer.hyvechain.com']
+            }]
+          });
+        } else {
+          throw switchError;
+        }
+      }
+    }
+
+    function showStatus(message, type) {
+      const statusMsg = document.getElementById('statusMessage');
+      statusMsg.textContent = message;
+      statusMsg.className = `status-message show ${type}`;
+    }
+
+    // Check if already authenticated on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log('Page loaded. Checking for existing auth...');
+      const authToken = localStorage.getItem('authToken');
+      const userAddress = localStorage.getItem('userAddress');
+      
+      console.log('Existing token:', authToken ? 'Yes' : 'No');
+      console.log('Existing address:', userAddress ? userAddress : 'No');
+      
+      if (authToken && userAddress) {
+        showStatus('Already authenticated. Redirecting...', 'success');
+        setTimeout(() => {
+          window.location.href = '/app.html';
+        }, 1000);
+      }
+    });
+  </script>
+</body>
+</html>
