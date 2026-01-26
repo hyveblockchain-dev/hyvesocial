@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Hyve Social - Decentralized Social Network</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-tertiary: #1a1a24;
+      --accent-color: #fbbf24;
+      --text-primary: #ffffff;
+      --text-secondary: #888;
+      --border-color: #333;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: radial-gradient(circle, rgba(251, 191, 36, 0.8) 0%, rgba(251, 191, 36, 0) 70%);
+      border-radius: 50%;
+      animation: float linear infinite;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(100vh) translateX(0);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-100vh) translateX(100px);
+        opacity: 0;
+      }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 500px;
+      width: 90%;
+      padding: 3rem 2rem;
+      background: rgba(18, 18, 26, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #000;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      font-size: 1.125rem;
+    }
+
+    .connect-btn {
+      padding: 1rem 2.5rem;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      border: none;
+      border-radius: 12px;
+      color: #000;
+      font-size: 1.125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 16px rgba(251, 191, 36, 0.3);
+    }
+
+    .connect-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(251, 191, 36, 0.4);
+    }
+
+    .connect-btn:active {
+      transform: translateY(0);
+    }
+
+    .features {
+      margin-top: 3rem;
+      display: grid;
+      gap: 1rem;
+      text-align: left;
+    }
+
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--bg-tertiary);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .feature-icon {
+      font-size: 1.5rem;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      border-radius: 8px;
+    }
+
+    .feature-text {
+      flex: 1;
+    }
+
+    .feature-title {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      font-size: 1rem;
+    }
+
+    .feature-desc {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-secondary);
+      padding: 2rem;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 500px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .modal-header h2 {
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .modal-header p {
+      color: var(--text-secondary);
+      font-size: 0.9375rem;
+      margin: 0;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+      font-weight: 500;
+      font-size: 0.9375rem;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.875rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .profile-image-upload {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .profile-preview {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      color: #000;
+      font-weight: bold;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .upload-btn {
+      padding: 0.75rem 1.5rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .upload-btn:hover {
+      background: var(--border-color);
+    }
+
+    .save-btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      border: none;
+      border-radius: 8px;
+      color: #000;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .save-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .save-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 10000;
+      animation: slideIn 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .notification.success {
+      background: #10b981;
+    }
+
+    .notification.error {
+      background: #ef4444;
+    }
+
+    .notification.info {
+      background: #3b82f6;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .container {
+        padding: 2rem 1.5rem;
+      }
+      
+      .modal-content {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="particles" id="particles"></div>
+
+  <div class="container">
+    <div class="logo">H</div>
+    <h1>Hyve Social</h1>
+    <p>The decentralized social network for the future</p>
+    
+    <button class="connect-btn" onclick="connectWallet()">
+      Connect Wallet
+    </button>
+
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-text">
+          <div class="feature-title">Own Your Data</div>
+          <div class="feature-desc">Your content, your control</div>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">💬</div>
+        <div class="feature-text">
+          <div class="feature-title">Connect & Share</div>
+          <div class="feature-desc">Posts, stories, messages</div>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🌐</div>
+        <div class="feature-text">
+          <div class="feature-title">Decentralized</div>
+          <div class="feature-desc">Built on blockchain technology</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="profileModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Create Your Profile</h2>
+        <p>Let's set up your Hyve Social profile</p>
+      </div>
+
+      <form id="profileForm" onsubmit="saveProfile(event)">
+        <div class="form-group">
+          <div class="profile-image-upload">
+            <div class="profile-preview" id="profilePreview">?</div>
+            <button type="button" class="upload-btn" onclick="uploadProfileImage()">
+              Upload Photo
+            </button>
+            <input type="file" id="profileImageInput" accept="image/*" style="display: none;">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="username">Username *</label>
+          <input type="text" id="username" required maxlength="30" placeholder="Enter your username">
+        </div>
+
+        <div class="form-group">
+          <label for="bio">Bio</label>
+          <textarea id="bio" maxlength="200" placeholder="Tell us about yourself..."></textarea>
+        </div>
+
+        <button type="submit" class="save-btn" id="saveBtn">
+          Create Profile
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://social-api.hyvechain.com/api';
+    let authToken = null;
+    let userAddress = null;
+    let profileImageBase64 = null;
+
+    function createParticles() {
+      const container = document.getElementById('particles');
+      for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+        particle.style.animationDelay = Math.random() * 5 + 's';
+        container.appendChild(particle);
+      }
+    }
+
+    createParticles();
+
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transition = 'opacity 0.3s';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    async function connectWallet() {
+      try {
+        console.log('Connect wallet clicked');
+        console.log('ethers available:', typeof ethers !== 'undefined');
+        
+        if (typeof window.ethereum === 'undefined') {
+          showNotification('Please install MetaMask!', 'error');
+          window.open('https://metamask.io/download/', '_blank');
+          return;
+        }
+
+        if (typeof ethers === 'undefined') {
+          showNotification('Loading Web3 library...', 'info');
+          setTimeout(() => {
+            showNotification('Please refresh the page and try again', 'error');
+          }, 2000);
+          return;
+        }
+
+        showNotification('Connecting wallet...', 'info');
+
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        userAddress = accounts[0].toLowerCase();
+        console.log('Connected address:', userAddress);
+
+        const nonceResponse = await fetch(`${API_URL}/auth/nonce/${userAddress}`);
+        const { nonce } = await nonceResponse.json();
+        console.log('Received nonce');
+
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const signature = await signer.signMessage(nonce);
+        console.log('Message signed');
+
+        const loginResponse = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: userAddress, signature })
+        });
+
+        const loginData = await loginResponse.json();
+        console.log('Login response:', loginData);
+
+        authToken = loginData.token;
+        localStorage.setItem('authToken', authToken);
+        localStorage.setItem('userAddress', userAddress);
+
+        if (!loginData.userExists) {
+          showNotification('Welcome! Please create your profile', 'info');
+          document.getElementById('profileModal').classList.add('active');
+        } else {
+          showNotification('Connected successfully!', 'success');
+          setTimeout(() => {
+            window.location.href = 'app.html';
+          }, 1000);
+        }
+
+      } catch (error) {
+        console.error('Connection error:', error);
+        showNotification('Failed to connect: ' + error.message, 'error');
+      }
+    }
+
+    function uploadProfileImage() {
+      document.getElementById('profileImageInput').click();
+    }
+
+    document.getElementById('profileImageInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (file.size > 5 * 1024 * 1024) {
+        showNotification('Image must be less than 5MB', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        profileImageBase64 = event.target.result;
+        document.getElementById('profilePreview').style.backgroundImage = `url(${profileImageBase64})`;
+        document.getElementById('profilePreview').textContent = '';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('username').addEventListener('input', function(e) {
+      if (!profileImageBase64 && e.target.value) {
+        document.getElementById('profilePreview').textContent = e.target.value.charAt(0).toUpperCase();
+      }
+    });
+
+    async function saveProfile(e) {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value.trim();
+      const bio = document.getElementById('bio').value.trim();
+
+      if (!username) {
+        showNotification('Username is required', 'error');
+        return;
+      }
+
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Creating...';
+
+      try {
+        const response = await fetch(`${API_URL}/profile`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            username,
+            bio,
+            profileImage: profileImageBase64
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to create profile');
+        }
+
+        showNotification('Profile created successfully!', 'success');
+        
+        setTimeout(() => {
+          window.location.href = 'app.html';
+        }, 1000);
+
+      } catch (error) {
+        console.error('Profile creation error:', error);
+        showNotification(error.message, 'error');
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Create Profile';
+      }
+    }
+
+    window.addEventListener('load', () => {
+      const savedToken = localStorage.getItem('authToken');
+      const savedAddress = localStorage.getItem('userAddress');
+      
+      if (savedToken && savedAddress) {
+        fetch(`${API_URL}/profile/${savedAddress}`, {
+          headers: { 'Authorization': `Bearer ${savedToken}` }
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.user) {
+            window.location.href = 'app.html';
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userAddress');
+        });
+      }
+    });
+  </script>
+</body>
+</html>
