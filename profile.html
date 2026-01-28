@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - Hyve Social</title>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* Hide scrollbar but keep functionality */
+    body::-webkit-scrollbar {
+      display: none;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #18191a;
+      color: #e4e6eb;
+      overflow-x: hidden;
+      overflow-y: auto;
+      margin: 0;
+      padding: 0;
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+    }
+
+    /* Colorful Cover Photo */
+    .cover-photo {
+      width: 100%;
+      height: 400px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover-photo::before {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+      background-size: 30px 30px;
+      animation: movePattern 20s linear infinite;
+    }
+
+    @keyframes movePattern {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(30px, 30px); }
+    }
+
+    .cover-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Profile Container */
+    .profile-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #242526;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Profile Header */
+    .profile-header {
+      padding: 0 32px;
+      position: relative;
+    }
+
+    .profile-header-content {
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #3a3b3c;
+    }
+
+    /* Profile Picture with Gradient Border */
+    .profile-picture-wrapper {
+      margin-top: -50px;
+      position: relative;
+    }
+
+    .profile-picture {
+      width: 168px;
+      height: 168px;
+      border-radius: 50%;
+      border: 5px solid #242526;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+      position: relative;
+    }
+
+    .profile-picture img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-picture-initial {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      font-weight: 700;
+      color: #000;
+    }
+
+    /* Online Status Badge */
+    .online-badge {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
+      background: #31a24c;
+      border: 4px solid #242526;
+      border-radius: 50%;
+      box-shadow: 0 0 12px rgba(49, 162, 76, 0.6);
+    }
+
+    /* Profile Info */
+    .profile-info {
+      flex: 1;
+      padding-bottom: 8px;
+    }
+
+    .profile-name {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .profile-stats {
+      display: flex;
+      gap: 20px;
+      color: #b0b3b8;
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+
+    .stat-item strong {
+      color: #e4e6eb;
+      font-weight: 600;
+    }
+
+    .profile-bio {
+      color: #e4e6eb;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    .profile-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      color: #b0b3b8;
+      font-size: 14px;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Action Buttons */
+    .profile-actions {
+      display: flex;
+      gap: 6px;
+      padding-bottom: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: none;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      white-space: nowrap;
+      max-width: fit-content;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      color: #000;
+      box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #3a3b3c;
+      color: #e4e6eb;
+    }
+
+    .btn-secondary:hover {
+      background: #4e4f50;
+    }
+
+    .btn-danger {
+      background: #e74c3c;
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+
+    .btn-success {
+      background: #31a24c;
+      color: #fff;
+    }
+
+    .btn-success:hover {
+      background: #2d8a43;
+    }
+
+    /* Tabs */
+    .profile-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 0 32px;
+      background: #242526;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .tab {
+      padding: 16px 20px;
+      background: transparent;
+      border: none;
+      color: #b0b3b8;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .tab:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px 8px 0 0;
+    }
+
+    .tab.active {
+      color: #f59e0b;
+      border-bottom-color: #f59e0b;
+    }
+
+    /* Tab Content */
+    .tab-content {
+      display: none;
+      padding: 20px 32px;
+      min-height: calc(100vh - 550px);
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* About Section with Colorful Cards */
+    .about-section {
+      display: grid;
+      gap: 16px;
+    }
+
+    .info-card {
+      background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+      border: 1px solid #3a3b3c;
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.3s;
+    }
+
+    .info-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+      border-color: #667eea50;
+    }
+
+    .info-card-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #e4e6eb;
+    }
+
+    .info-card-icon {
+      font-size: 24px;
+    }
+
+    .info-item {
+      display: flex;
+      align-items: start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #3a3b3c;
+    }
+
+    .info-item:last-child {
+      border-bottom: none;
+    }
+
+    .info-item-icon {
+      font-size: 20px;
+      margin-top: 2px;
+    }
+
+    .info-item-content {
+      flex: 1;
+    }
+
+    .info-item-label {
+      color: #b0b3b8;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .info-item-value {
+      color: #e4e6eb;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    /* Photos Grid with Hover Effects */
+    .photos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
+      min-height: 400px;
+    }
+
+    .album-card {
+      background: #3a3b3c;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      aspect-ratio: 1;
+    }
+
+    .album-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, #667eea00 0%, #764ba280 100%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 1;
+    }
+
+    .album-card:hover::before {
+      opacity: 1;
+    }
+
+    .album-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 24px rgba(102, 126, 234, 0.3);
+    }
+
+    .album-cover {
+      width: 100%;
+      height: 200px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      position: relative;
+    }
+
+    .album-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .album-info {
+      padding: 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .album-title {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 4px;
+      color: #e4e6eb;
+    }
+
+    .album-count {
+      font-size: 13px;
+      color: #b0b3b8;
+    }
+
+    /* Create Album Card */
+    .create-album-card {
+      background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+      border: 2px dashed #667eea;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 260px;
+      aspect-ratio: 1;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .create-album-card:hover {
+      background: linear-gradient(135deg, #667eea25 0%, #764ba225 100%);
+      border-color: #764ba2;
+      transform: scale(1.02);
+    }
+
+    .create-album-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .create-album-text {
+      font-weight: 600;
+      color: #e4e6eb;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #b0b3b8;
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    /* Loading Animation */
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      color: #b0b3b8;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #3a3b3c;
+      border-top-color: #f59e0b;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .cover-photo {
+        height: 200px;
+      }
+
+      .profile-header {
+        padding: 0 16px;
+      }
+
+      .profile-header-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .profile-picture-wrapper {
+        margin-top: -60px;
+      }
+
+      .profile-picture {
+        width: 140px;
+        height: 140px;
+      }
+
+      .profile-name {
+        font-size: 1.5rem;
+      }
+
+      .profile-stats {
+        justify-content: center;
+      }
+
+      .profile-actions {
+        width: 100%;
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .profile-tabs {
+        padding: 0 16px;
+        overflow-x: auto;
+      }
+
+      .tab-content {
+        padding: 16px;
+      }
+
+      .photos-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 4px;
+      }
+
+      .album-cover {
+        height: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Cover Photo -->
+  <div class="cover-photo" id="coverPhoto">
+    <img id="coverPhotoImg" style="display: none;">
+  </div>
+
+  <!-- Profile Container -->
+  <div class="profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="profile-header-content">
+        <div class="profile-picture-wrapper">
+          <div class="profile-picture" id="profilePicture">
+            <img id="profilePictureImg" style="display: none;">
+            <div class="profile-picture-initial" id="profileInitial">U</div>
+          </div>
+          <div class="online-badge"></div>
+        </div>
+
+        <div class="profile-info">
+          <h1 class="profile-name" id="profileName">Username</h1>
+          
+          <div class="profile-stats">
+            <div class="stat-item">
+              <strong id="followerCount">0</strong> followers
+            </div>
+            <div class="stat-item">
+              <strong id="followingCount">0</strong> following
+            </div>
+          </div>
+
+          <div class="profile-bio" id="profileBio"></div>
+
+          <div class="profile-meta" id="profileMeta">
+            <!-- Meta items will be added here -->
+          </div>
+        </div>
+
+        <div class="profile-actions" id="profileActions">
+          <!-- Action buttons will be added here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="profile-tabs">
+      <button class="tab active" onclick="switchTab('about')">📋 About</button>
+      <button class="tab" id="photosTabBtn" onclick="switchTab('photos')" style="display: none;">📸 Photos</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content active" id="aboutTab">
+      <div class="about-section">
+        <div class="info-card">
+          <div class="info-card-title">
+            <span class="info-card-icon">👤</span>
+            Basic Information
+          </div>
+          <div class="info-item">
+            <div class="info-item-icon">🏷️</div>
+            <div class="info-item-content">
+              <div class="info-item-label">Username</div>
+              <div class="info-item-value" id="aboutUsername">-</div>
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-icon">📝</div>
+            <div class="info-item-content">
+              <div class="info-item-label">Bio</div>
+              <div class="info-item-value" id="aboutBio">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-title">
+            <span class="info-card-icon">📍</span>
+            Contact & Location
+          </div>
+          <div class="info-item">
+            <div class="info-item-icon">🌍</div>
+            <div class="info-item-content">
+              <div class="info-item-label">Location</div>
+              <div class="info-item-value" id="aboutLocation">-</div>
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-icon">🔗</div>
+            <div class="info-item-content">
+              <div class="info-item-label">Website</div>
+              <div class="info-item-value" id="aboutWebsite">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-title">
+            <span class="info-card-icon">📅</span>
+            Activity
+          </div>
+          <div class="info-item">
+            <div class="info-item-icon">⭐</div>
+            <div class="info-item-content">
+              <div class="info-item-label">Joined</div>
+              <div class="info-item-value" id="aboutJoined">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="photosTab">
+      <div class="photos-grid" id="photosGrid">
+        <div class="loading">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://social-api.hyvechain.com/api';
+    const authToken = localStorage.getItem('authToken');
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const profileAddress = urlParams.get('address');
+    const currentUserAddress = urlParams.get('current'); // Current logged-in user's address
+    
+    console.log('URL params:', { profileAddress, currentUserAddress });
+    
+    // Create currentUser object with the address
+    let currentUser = { walletAddress: currentUserAddress };
+    
+    // Try to get full user data from localStorage if available
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      if (storedUser && Object.keys(storedUser).length > 0) {
+        currentUser = storedUser;
+        console.log('Enhanced currentUser from localStorage:', currentUser);
+      }
+    } catch (e) {
+      console.log('Could not read localStorage:', e);
+    }
+    
+    // Ensure walletAddress is set
+    if (!currentUser.walletAddress) {
+      currentUser.walletAddress = currentUserAddress;
+    }
+    
+    console.log('Final currentUser:', currentUser);
+    console.log('Current user address:', currentUser.walletAddress);
+
+    if (!profileAddress || !authToken) {
+      document.body.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>Invalid profile</p></div>';
+    }
+
+    async function apiRequest(endpoint, options = {}) {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+          ...options.headers
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Request failed');
+      }
+
+      return response.json();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    async function loadProfile() {
+      try {
+        const data = await apiRequest(`/profile/${profileAddress}`);
+        const user = data.user;
+
+        // Profile picture
+        document.getElementById('profileName').textContent = user.username;
+        document.getElementById('profileInitial').textContent = user.username.charAt(0).toUpperCase();
+        
+        if (user.profileImage) {
+          document.getElementById('profilePictureImg').src = user.profileImage;
+          document.getElementById('profilePictureImg').style.display = 'block';
+          document.getElementById('profileInitial').style.display = 'none';
+        }
+
+        // Cover photo
+        if (user.coverImage) {
+          document.getElementById('coverPhotoImg').src = user.coverImage;
+          document.getElementById('coverPhotoImg').style.display = 'block';
+        }
+
+        // Stats
+        document.getElementById('followerCount').textContent = user.followerCount || 0;
+        document.getElementById('followingCount').textContent = user.followingCount || 0;
+
+        // Bio
+        if (user.bio) {
+          document.getElementById('profileBio').textContent = user.bio;
+        } else {
+          document.getElementById('profileBio').style.display = 'none';
+        }
+
+        // Meta info
+        const meta = document.getElementById('profileMeta');
+        if (user.location) {
+          meta.innerHTML += `<div class="meta-item">📍 ${escapeHtml(user.location)}</div>`;
+        }
+        if (user.website) {
+          meta.innerHTML += `<div class="meta-item">🔗 <a href="${escapeHtml(user.website)}" target="_blank" style="color: #667eea;">${escapeHtml(user.website)}</a></div>`;
+        }
+
+        // About tab
+        document.getElementById('aboutUsername').textContent = user.username;
+        document.getElementById('aboutBio').textContent = user.bio || 'No bio';
+        document.getElementById('aboutLocation').textContent = user.location || 'Not specified';
+        document.getElementById('aboutWebsite').textContent = user.website || 'Not specified';
+        document.getElementById('aboutJoined').textContent = new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        // Action buttons
+        const currentAddress = (currentUser.walletAddress || currentUser.wallet_address || '').toLowerCase();
+        const profileAddr = (profileAddress || '').toLowerCase();
+        const isOwnProfile = currentAddress === profileAddr;
+        
+        console.log('Profile check:', { currentAddress, profileAddr, isOwnProfile });
+        
+        const actions = document.getElementById('profileActions');
+        
+        if (isOwnProfile) {
+          actions.innerHTML = `
+            <button class="btn btn-primary" onclick="editProfile()">✏️ Edit Profile</button>
+          `;
+        } else {
+          // Check friend status
+          let isFriend = false;
+          let isFollowing = false;
+          let isFollower = false;
+          
+          try {
+            const followingData = await apiRequest(`/following/${currentAddress}`);
+            const followersData = await apiRequest(`/followers/${currentAddress}`);
+            
+            const following = followingData.following || [];
+            const followers = followersData.followers || [];
+            
+            isFollowing = following.some(u => u.wallet_address.toLowerCase() === profileAddr);
+            isFollower = followers.some(u => u.wallet_address.toLowerCase() === profileAddr);
+            isFriend = isFollowing && isFollower;
+          } catch (error) {
+            console.error('Error checking friend status:', error);
+          }
+
+          if (isFriend) {
+            actions.innerHTML = `
+              <button class="btn btn-primary" onclick="sendMessage()">💬 Message</button>
+              <button class="btn btn-success" disabled style="cursor: default;">✓ Friends</button>
+              <button class="btn btn-danger" onclick="blockUser()">🚫 Block</button>
+            `;
+          } else {
+            actions.innerHTML = `
+              <button class="btn btn-primary" onclick="sendMessage()">💬 Message</button>
+              <button class="btn btn-secondary" onclick="addFriend()">➕ Add Friend</button>
+              <button class="btn btn-danger" onclick="blockUser()">🚫 Block</button>
+            `;
+          }
+        }
+
+        // Check if user can see photos
+        const photosTab = document.getElementById('photosTabBtn');
+        if (isOwnProfile) {
+          console.log('Own profile detected - showing Photos tab');
+          photosTab.style.display = 'block';
+          loadAlbums();
+        } else {
+          await checkPhotoAccess();
+        }
+
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    }
+
+    async function checkPhotoAccess() {
+      try {
+        const currentAddress = (currentUser.walletAddress || currentUser.wallet_address || '').toLowerCase();
+        const profileAddr = (profileAddress || '').toLowerCase();
+        
+        // Check if friends
+        const followingData = await apiRequest(`/following/${currentAddress}`);
+        const followersData = await apiRequest(`/followers/${currentAddress}`);
+        
+        const following = followingData.following || [];
+        const followers = followersData.followers || [];
+        
+        const isFollowing = following.some(u => u.wallet_address.toLowerCase() === profileAddr);
+        const isFollower = followers.some(u => u.wallet_address.toLowerCase() === profileAddr);
+        const isFriend = isFollowing && isFollower;
+
+        if (isFriend) {
+          console.log('Friend detected - showing Photos tab');
+          document.getElementById('photosTabBtn').style.display = 'block';
+          loadAlbums();
+        }
+      } catch (error) {
+        console.error('Error checking photo access:', error);
+      }
+    }
+
+    async function loadAlbums() {
+      try {
+        const data = await apiRequest(`/albums/user/${profileAddress}`);
+        const albums = data.albums || [];
+        const grid = document.getElementById('photosGrid');
+        
+        const currentAddress = (currentUser.walletAddress || '').toLowerCase();
+        const profileAddr = (profileAddress || '').toLowerCase();
+        const isOwnProfile = currentAddress === profileAddr;
+        
+        console.log('loadAlbums check:', { currentAddress, profileAddr, isOwnProfile });
+
+        if (albums.length === 0 && !isOwnProfile) {
+          grid.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📷</div>
+              <p>No albums yet</p>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+
+        if (isOwnProfile) {
+          html += `
+            <div class="create-album-card" onclick="createAlbum()">
+              <div class="create-album-icon">➕</div>
+              <div class="create-album-text">Create Album</div>
+            </div>
+          `;
+        }
+
+        albums.forEach(album => {
+          const photoCount = album.photo_count || 0;
+          html += `
+            <div class="album-card" onclick="viewAlbum(${album.id})">
+              <div class="album-cover">
+                ${album.cover_photo ? `<img src="${album.cover_photo}">` : '📷'}
+              </div>
+              <div class="album-info">
+                <div class="album-title">${escapeHtml(album.title)}</div>
+                <div class="album-count">${photoCount} photo${photoCount !== 1 ? 's' : ''}</div>
+              </div>
+            </div>
+          `;
+        });
+
+        grid.innerHTML = html;
+      } catch (error) {
+        console.error('Error loading albums:', error);
+      }
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById(`${tabName}Tab`).classList.add('active');
+    }
+
+    function createAlbum() {
+      const title = prompt('Album Title:');
+      if (!title || title.trim() === '') return;
+      
+      const description = prompt('Description (optional):') || '';
+      
+      // Create album via API
+      fetch(`${API_URL}/albums`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          title: title.trim(),
+          description: description.trim()
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Album created:', data);
+        alert('Album created successfully!');
+        // Reload albums
+        loadAlbums();
+      })
+      .catch(error => {
+        console.error('Error creating album:', error);
+        alert('Failed to create album');
+      });
+    }
+
+    function viewAlbum(id) {
+      window.parent.postMessage({ action: 'viewAlbum', albumId: id }, '*');
+    }
+
+    function editProfile() {
+      window.parent.postMessage({ action: 'editProfile' }, '*');
+    }
+
+    function editProfile() {
+      // Make profile editable
+      const bioEl = document.getElementById('profileBio');
+      const locationEl = document.getElementById('aboutLocation');
+      const websiteEl = document.getElementById('aboutWebsite');
+      
+      const currentBio = bioEl.textContent;
+      const currentLocation = locationEl.textContent === 'Not specified' ? '' : locationEl.textContent;
+      const currentWebsite = websiteEl.textContent === 'Not specified' ? '' : websiteEl.textContent;
+      
+      // Create edit modal
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+      modal.innerHTML = `
+        <div style="background: #242526; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%;">
+          <h2 style="margin-bottom: 20px; color: #e4e6eb;">Edit Profile</h2>
+          
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; color: #b0b3b8; font-size: 14px;">Bio</label>
+            <textarea id="editBio" style="width: 100%; padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb; font-family: inherit; resize: vertical;" rows="4">${currentBio}</textarea>
+          </div>
+          
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; color: #b0b3b8; font-size: 14px;">Location</label>
+            <input type="text" id="editLocation" value="${currentLocation}" style="width: 100%; padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb; font-family: inherit;">
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; color: #b0b3b8; font-size: 14px;">Website</label>
+            <input type="text" id="editWebsite" value="${currentWebsite}" style="width: 100%; padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb; font-family: inherit;">
+          </div>
+          
+          <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button onclick="this.closest('div[style*=fixed]').remove()" style="padding: 8px 16px; background: #3a3b3c; color: #e4e6eb; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Cancel</button>
+            <button onclick="saveProfileChanges()" style="padding: 8px 16px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Save Changes</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    async function saveProfileChanges() {
+      const bio = document.getElementById('editBio').value;
+      const location = document.getElementById('editLocation').value;
+      const website = document.getElementById('editWebsite').value;
+      
+      try {
+        const currentUserData = JSON.parse(localStorage.getItem('currentUser'));
+        
+        await apiRequest('/profile', {
+          method: 'PUT',
+          body: JSON.stringify({
+            username: currentUserData.username,
+            bio: bio,
+            profileImage: currentUserData.profileImage || '',
+            coverImage: currentUserData.coverImage || '',
+            location: location,
+            website: website
+          })
+        });
+        
+        // Close modal
+        document.querySelector('div[style*="position: fixed"]').remove();
+        
+        // Reload profile
+        window.location.reload();
+        
+      } catch (error) {
+        console.error('Error saving profile:', error);
+        alert('Failed to save changes');
+      }
+    }
+
+    function sendMessage() {
+      window.parent.postMessage({ action: 'sendMessage', address: profileAddress }, '*');
+    }
+
+    function addFriend() {
+      window.parent.postMessage({ action: 'addFriend', address: profileAddress }, '*');
+    }
+
+    function blockUser() {
+      if (confirm('Are you sure you want to block this user? They will no longer be able to see your profile or contact you.')) {
+        window.parent.postMessage({ action: 'blockUser', address: profileAddress }, '*');
+      }
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>
