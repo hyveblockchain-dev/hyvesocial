@@ -1,0 +1,25 @@
+/* src/styles/App.css */
+
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1;
+  padding-top: 70px; /* Account for fixed header */
+}
+
+.content-container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .content-container {
+    padding: 1rem;
+    max-width: 100%;
+  }
+}
