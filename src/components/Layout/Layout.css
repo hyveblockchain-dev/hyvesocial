@@ -1,6 +1,6 @@
 /* src/components/Layout/Layout.css */
 
-/* Fixed Header - Top */
+/* Fixed Header - Full Width */
 .top-header {
   position: fixed;
   top: 0;
@@ -13,6 +13,8 @@
 }
 
 .header-container {
+  max-width: 1400px;
+  margin: 0 auto;
   height: 100%;
   padding: 0 24px;
   display: flex;
@@ -39,7 +41,7 @@
 
 .search-box {
   flex: 1;
-  max-width: 500px;
+  max-width: 400px;
 }
 
 .search-box input {
@@ -133,27 +135,20 @@
   color: var(--gold-primary);
 }
 
-/* Main Body - Between Header and Footer */
+/* Main Body Layout */
 .layout-body {
-  display: grid;
-  grid-template-columns: 280px 1fr 320px;
-  gap: 0;
-  padding-top: 60px; /* Header height */
-  padding-bottom: 60px; /* Footer height */
-  min-height: calc(100vh - 120px);
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 80px 20px 80px;
+  min-height: 100vh;
+  display: flex;
+  gap: 20px;
 }
 
-/* Left Sidebar - Fixed */
+/* Left Sidebar */
 .sidebar-left {
-  position: fixed;
-  left: 0;
-  top: 60px;
-  bottom: 60px;
   width: 280px;
-  background: var(--bg-secondary);
-  border-right: 1px solid var(--border-color);
-  overflow-y: auto;
-  padding: 20px;
+  flex-shrink: 0;
 }
 
 .wallet-card {
@@ -177,6 +172,7 @@
   justify-content: center;
   font-weight: 700;
   font-size: 20px;
+  flex-shrink: 0;
 }
 
 .wallet-info h3 {
@@ -255,6 +251,7 @@
   font-size: 11px;
   color: #888;
   margin-bottom: 6px;
+  letter-spacing: 0.5px;
 }
 
 .stat-num {
@@ -267,6 +264,7 @@
   font-size: 11px;
   color: #888;
   margin-bottom: 12px;
+  letter-spacing: 0.5px;
 }
 
 .empty-msg {
@@ -274,28 +272,20 @@
   color: #666;
   text-align: center;
   padding: 12px;
+  line-height: 1.4;
 }
 
-/* Main Content - Scrollable */
+/* Main Content Area */
 .content-area {
-  padding: 20px;
-  overflow-y: auto;
+  flex: 1;
   max-width: 680px;
-  margin: 0 auto;
-  width: 100%;
+  min-width: 0;
 }
 
-/* Right Sidebar - Fixed */
+/* Right Sidebar */
 .sidebar-right {
-  position: fixed;
-  right: 0;
-  top: 60px;
-  bottom: 60px;
   width: 320px;
-  background: var(--bg-secondary);
-  border-left: 1px solid var(--border-color);
-  overflow-y: auto;
-  padding: 20px;
+  flex-shrink: 0;
 }
 
 .widget {
@@ -303,6 +293,8 @@
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 20px;
+  position: sticky;
+  top: 80px;
 }
 
 .widget h3 {
@@ -318,7 +310,7 @@
   padding: 20px;
 }
 
-/* Fixed Footer - Bottom */
+/* Fixed Footer */
 .bottom-footer {
   position: fixed;
   bottom: 0;
@@ -331,12 +323,15 @@
 }
 
 .footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  padding: 0 20px;
 }
 
 .footer-links {
@@ -348,6 +343,7 @@
   color: #888;
   text-decoration: none;
   font-size: 13px;
+  transition: color 0.2s;
 }
 
 .footer-links a:hover {
@@ -361,22 +357,22 @@
 
 /* Responsive */
 @media (max-width: 1200px) {
-  .layout-body {
-    grid-template-columns: 280px 1fr;
-  }
-  
   .sidebar-right {
     display: none;
+  }
+  
+  .content-area {
+    max-width: 100%;
   }
 }
 
 @media (max-width: 768px) {
-  .layout-body {
-    grid-template-columns: 1fr;
-  }
-  
   .sidebar-left {
     display: none;
+  }
+  
+  .layout-body {
+    padding: 80px 10px 80px;
   }
   
   .search-box {
