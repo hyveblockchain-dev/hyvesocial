@@ -2,6 +2,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import Chat from '../Chat/Chat';
 import './Layout.css';
 
 export default function Layout({ children }) {
@@ -9,12 +10,25 @@ export default function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showChat, setShowChat] = useState(false);
 
   function handleLogout() {
     if (confirm('Are you sure you want to logout?')) {
       logout();
       navigate('/login');
     }
+  }
+
+  // Helper function to get avatar
+  function getAvatar(imageUrl, username, className) {
+    if (imageUrl) {
+      return <img src={imageUrl} alt={username} className={className} />;
+    }
+    return (
+      <div className={className}>
+        {username?.charAt(0).toUpperCase() || '?'}
+      </div>
+    );
   }
 
   return (
@@ -35,9 +49,7 @@ export default function Layout({ children }) {
           
           <div className="user-menu">
             <button className="user-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
-              <div className="avatar-mini">
-                {user?.username?.charAt(0).toUpperCase() || '?'}
-              </div>
+              {getAvatar(user?.profileImage, user?.username, 'avatar-mini')}
             </button>
 
             {showUserMenu && (
@@ -58,9 +70,7 @@ export default function Layout({ children }) {
         <aside className="left-column">
           {/* User Profile Card */}
           <div className="profile-card">
-            <div className="profile-avatar">
-              {user?.username?.charAt(0).toUpperCase() || '?'}
-            </div>
+            {getAvatar(user?.profileImage, user?.username, 'profile-avatar')}
             <div className="profile-details">
               <h3>{user?.username || 'User'}</h3>
               <p className="profile-address">
@@ -125,13 +135,29 @@ export default function Layout({ children }) {
             <p className="loading">Loading users...</p>
           </div>
 
-          {/* Chat Section */}
-          <Link to="/chat" className="chat-link">
-            <button className="chat-button">
-              <span className="chat-icon">💬</span>
-              <span>Chat</span>
-            </button>
-          </Link>
+          {/* Chat Popup - Positioned relative to sidebar */}
+          {showChat && (
+            <div className="chat-popup-overlay">
+              <div className="chat-popup">
+                <div className="chat-popup-header">
+                  <h3>💬 Messages</h3>
+                  <button className="close-chat" onClick={() => setShowChat(false)}>✕</button>
+                </div>
+                <div className="chat-popup-body">
+                  <Chat />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Circular Chat Button - At Bottom */}
+          <button 
+            className="chat-fab" 
+            onClick={() => setShowChat(!showChat)}
+            title="Open Chat"
+          >
+            💬
+          </button>
         </aside>
       </div>
 
