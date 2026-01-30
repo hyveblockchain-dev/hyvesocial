@@ -149,6 +149,44 @@
   background: rgba(239, 68, 68, 0.1);
 }
 
+.friend-request-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-accept {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-size: 14px;
+  background: #4CAF50;
+  color: #fff;
+  transition: all 0.2s;
+}
+
+.btn-accept:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+}
+
+.btn-decline {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  transition: all 0.2s;
+}
+
+.btn-decline:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
 .profile-stats {
   display: flex;
   gap: 24px;
@@ -297,5 +335,15 @@
 
   .friends-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .friend-request-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-accept,
+  .btn-decline {
+    width: 100%;
   }
 }
