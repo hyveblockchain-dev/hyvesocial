@@ -1,11 +1,12 @@
 /* src/components/Layout/Layout.css */
 
-/* === HEADER === */
+/* === FIXED HEADER - 1400px CENTERED === */
 .page-header {
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1400px;
   height: 60px;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
@@ -20,7 +21,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 200px;
 }
 
 .logo-icon {
@@ -112,8 +112,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 100px;
-  justify-content: flex-end;
 }
 
 .icon-btn {
@@ -194,19 +192,24 @@
   color: var(--gold-primary);
 }
 
-/* === BODY === */
+/* === PAGE BODY - For spacing only === */
 .page-body {
-  display: flex;
-  gap: 20px;
-  max-width: 1400px;
-  margin: 80px auto 20px;
-  padding: 0 20px;
+  padding-top: 60px;
+  padding-bottom: 60px;
 }
 
-/* === LEFT SIDEBAR === */
+/* === LEFT SIDEBAR - FIXED === */
 .left-column {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-700px);
+  top: 60px;
+  bottom: 60px;
   width: 280px;
-  flex-shrink: 0;
+  background: var(--bg-secondary);
+  padding: 20px;
+  overflow-y: auto;
+  z-index: 50;
 }
 
 .profile-card {
@@ -347,16 +350,27 @@
   padding: 12px;
 }
 
-/* === CENTER COLUMN === */
+/* === CENTER COLUMN - Scrollable === */
 .center-column {
-  flex: 1;
   max-width: 760px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-/* === RIGHT SIDEBAR === */
+/* === RIGHT SIDEBAR - FIXED === */
 .right-column {
+  position: fixed;
+  right: 50%;
+  transform: translateX(700px);
+  top: 60px;
+  bottom: 60px;
   width: 280px;
-  flex-shrink: 0;
+  background: var(--bg-secondary);
+  padding: 20px;
+  overflow-y: auto;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
 }
 
 .widget {
@@ -365,6 +379,7 @@
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 20px;
+  flex: 1;
 }
 
 .widget h3 {
@@ -424,6 +439,7 @@
   font-size: 14px;
 }
 
+/* === CHAT BUTTON - On right sidebar === */
 .chat-fab-bottom {
   width: 60px;
   height: 60px;
@@ -436,7 +452,9 @@
   align-items: center;
   justify-content: center;
   margin: 0 auto;
+  margin-top: auto;
   box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+  flex-shrink: 0;
 }
 
 .chat-fab-bottom:hover {
@@ -448,8 +466,7 @@
 .chat-list-popup,
 .chat-window-popup {
   position: fixed;
-  bottom: 100px;
-  right: 100px;
+  bottom: 150px;
   width: 360px;
   height: 500px;
   background: var(--bg-card);
@@ -457,10 +474,16 @@
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.5);
   z-index: 200;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-list-popup {
+  right: calc(50% - 580px);
 }
 
 .chat-window-popup {
-  right: 480px;
+  right: calc(50% - 960px);
 }
 
 .chat-list-header,
@@ -496,7 +519,7 @@
 
 .chat-list-body,
 .chat-window-body {
-  height: calc(100% - 60px);
+  flex: 1;
   overflow-y: auto;
 }
 
@@ -510,19 +533,28 @@
   padding: 40px 20px;
 }
 
-/* === FOOTER === */
+/* === FIXED FOOTER - 1400px CENTERED === */
 .page-footer {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1400px;
+  height: 60px;
   background: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
-  padding: 24px;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px;
+  z-index: 100;
 }
 
 .footer-links {
   display: flex;
-  justify-content: center;
   gap: 20px;
-  margin-bottom: 12px;
 }
 
 .footer-links a {
@@ -540,7 +572,38 @@
   font-size: 12px;
 }
 
+/* Scrollbar */
+.left-column::-webkit-scrollbar,
+.right-column::-webkit-scrollbar {
+  width: 6px;
+}
+
+.left-column::-webkit-scrollbar-thumb,
+.right-column::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
 /* === RESPONSIVE === */
+@media (max-width: 1400px) {
+  .page-header,
+  .page-footer {
+    width: 100%;
+    left: 0;
+    transform: none;
+  }
+  
+  .left-column {
+    left: 0;
+    transform: none;
+  }
+  
+  .right-column {
+    right: 0;
+    transform: none;
+  }
+}
+
 @media (max-width: 1200px) {
   .right-column {
     display: none;
