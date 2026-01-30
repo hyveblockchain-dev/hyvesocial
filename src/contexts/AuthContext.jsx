@@ -49,13 +49,10 @@ export function AuthProvider({ children }) {
       // Get nonce
       const { nonce } = await api.getNonce(address);
 
-      // Create message
-      const message = `Welcome to Hyve Social!\n\nSign this message to prove you own this wallet.\n\nNonce: ${nonce}`;
-
-      // Sign message
+      // Sign JUST the raw nonce (backend expects this!)
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
-      const signature = await signer.signMessage(message);
+      const signature = await signer.signMessage(nonce);
 
       // Login
       const loginData = await api.login(address, signature);
