@@ -18,35 +18,95 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div className="app-container">
-      {/* Top Header */}
-      <header className="top-header">
-        <div className="header-content">
-          <div className="logo">
-            <span className="logo-icon">⚡</span>
-            <span className="logo-text">Hyve Social</span>
+    <div className="app-wrapper">
+      {/* Left Sidebar */}
+      <aside className="left-sidebar">
+        <div className="sidebar-content">
+          <div className="wallet-card">
+            <div className="wallet-avatar">
+              {user?.username?.charAt(0).toUpperCase() || '?'}
+            </div>
+            <div className="wallet-info">
+              <h3>Connect Wallet</h3>
+              <p>Connect your wallet to get started<br/>Now connected!</p>
+            </div>
           </div>
 
-          <div className="header-search">
-            <input type="text" placeholder="Search users..." />
+          <nav className="sidebar-nav">
+            <Link to="/" className={location.pathname === '/' ? 'nav-link active' : 'nav-link'}>
+              <span className="nav-icon">📰</span>
+              <span>Feed</span>
+            </Link>
+
+            <Link to="/videos" className="nav-link">
+              <span className="nav-icon">🎥</span>
+              <span>Videos</span>
+            </Link>
+
+            <Link to={`/profile/${user?.walletAddress}`} className="nav-link">
+              <span className="nav-icon">👤</span>
+              <span>My Profile</span>
+            </Link>
+
+            <Link to="/friends" className="nav-link">
+              <span className="nav-icon">👥</span>
+              <span>Friends</span>
+              <span className="badge">0</span>
+            </Link>
+
+            <Link to="/discover" className="nav-link">
+              <span className="nav-icon">🔍</span>
+              <span>Discover</span>
+            </Link>
+          </nav>
+
+          <div className="sidebar-stats">
+            <div className="stat-group">
+              <h4>YOUR POSTS</h4>
+              <div className="stat-value">0</div>
+            </div>
+            
+            <div className="stat-group">
+              <h4>FRIENDS</h4>
+              <div className="stat-value">0</div>
+            </div>
+          </div>
+
+          <div className="sidebar-friends">
+            <h4>FRIENDS</h4>
+            <p className="empty-text">No friends yet. Start following users!</p>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="main-area">
+        {/* Header */}
+        <header className="app-header">
+          <div className="header-left">
+            <div className="logo">
+              <span className="logo-icon">⚡</span>
+              <span className="logo-text">Hyve Social</span>
+            </div>
+          </div>
+
+          <div className="header-center">
+            <input type="text" placeholder="Search users..." className="search-input" />
           </div>
 
           <div className="header-right">
-            <button className="icon-button">🔔</button>
-            <button className="icon-button">💬</button>
+            <button className="icon-btn">🔔</button>
+            <button className="icon-btn">💬</button>
             
-            <div className="user-menu">
-              <button 
-                className="user-button"
-                onClick={() => setShowUserMenu(!showUserMenu)}
-              >
+            <div className="user-menu-wrapper">
+              <button className="user-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
                 <div className="user-avatar-small">
                   {user?.username?.charAt(0).toUpperCase() || '?'}
                 </div>
               </button>
 
               {showUserMenu && (
-                <div className="user-dropdown">
+                <div className="dropdown-menu">
                   <Link to={`/profile/${user?.walletAddress}`} onClick={() => setShowUserMenu(false)}>
                     My Profile
                   </Link>
@@ -57,93 +117,32 @@ export default function Layout({ children }) {
               )}
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="main-container">
-        {/* Left Sidebar */}
-        <aside className="left-sidebar">
-          <div className="sidebar-section">
-            <div className="wallet-info">
-              <div className="wallet-avatar">
-                {user?.username?.charAt(0).toUpperCase() || '?'}
-              </div>
-              <div className="wallet-details">
-                <h3>Connect Wallet</h3>
-                <p>Connect your wallet to get started<br />Now connected!</p>
-              </div>
+        {/* Content with Right Sidebar */}
+        <div className="content-wrapper">
+          <main className="main-content">
+            {children}
+          </main>
+
+          <aside className="right-sidebar">
+            <div className="suggestions-widget">
+              <h3>Suggested Users</h3>
+              <p className="loading-text">Loading users...</p>
             </div>
+          </aside>
+        </div>
+
+        {/* Footer */}
+        <footer className="app-footer">
+          <div className="footer-links">
+            <a href="#">About</a>
+            <a href="#">Help</a>
+            <a href="#">Terms</a>
+            <a href="#">Privacy</a>
           </div>
-
-          <nav className="sidebar-nav">
-            <Link 
-              to="/" 
-              className={location.pathname === '/' ? 'nav-item active' : 'nav-item'}
-            >
-              <span className="nav-icon">📰</span>
-              <span>Feed</span>
-            </Link>
-
-            <Link 
-              to="/videos" 
-              className={location.pathname === '/videos' ? 'nav-item active' : 'nav-item'}
-            >
-              <span className="nav-icon">🎥</span>
-              <span>Videos</span>
-            </Link>
-
-            <Link 
-              to={`/profile/${user?.walletAddress}`}
-              className={location.pathname.includes('/profile') ? 'nav-item active' : 'nav-item'}
-            >
-              <span className="nav-icon">👤</span>
-              <span>My Profile</span>
-            </Link>
-
-            <Link 
-              to="/friends" 
-              className={location.pathname === '/friends' ? 'nav-item active' : 'nav-item'}
-            >
-              <span className="nav-icon">👥</span>
-              <span>Friends</span>
-              <span className="badge">0</span>
-            </Link>
-
-            <Link 
-              to="/discover" 
-              className={location.pathname === '/discover' ? 'nav-item active' : 'nav-item'}
-            >
-              <span className="nav-icon">🔍</span>
-              <span>Discover</span>
-            </Link>
-          </nav>
-
-          <div className="sidebar-stats">
-            <h4>Your Posts</h4>
-            <div className="stat-number">0</div>
-
-            <h4>Friends</h4>
-            <div className="stat-number">0</div>
-          </div>
-
-          <div className="sidebar-section">
-            <h4>FRIENDS</h4>
-            <p className="empty-state">No friends yet. Start following users!</p>
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <main className="main-content">
-          {children}
-        </main>
-
-        {/* Right Sidebar */}
-        <aside className="right-sidebar">
-          <div className="sidebar-widget">
-            <h3>Suggested Users</h3>
-            <p className="loading-text">Loading users...</p>
-          </div>
-        </aside>
+          <p className="copyright">© 2026 Hyve Social</p>
+        </footer>
       </div>
     </div>
   );
