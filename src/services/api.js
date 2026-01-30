@@ -1,9 +1,8 @@
 // src/services/api.js
 import axios from 'axios';
 
-const API_URL = 'https://api.hyvechain.com';
+const API_URL = 'https://api.hyvechain.com/api';
 
-// Create axios instance
 const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
@@ -11,7 +10,6 @@ const apiClient = axios.create({
   },
 });
 
-// Add auth token to requests
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token');
   if (token) {
@@ -24,47 +22,66 @@ const api = {
   // Auth
   login: async (walletAddress, signature) => {
     const response = await apiClient.post('/auth/login', {
-      wallet_address: walletAddress,
+      address: walletAddress,
       signature,
     });
     return response.data;
   },
 
   register: async (walletAddress, username) => {
-    const response = await apiClient.post('/auth/register', {
-      wallet_address: walletAddress,
-      username,
+    // First login to get token
+    const loginResponse = await apiClient.post('/auth/login', {
+      address: walletAddress,
     });
-    return response.data;
+    
+    // Then create profile
+    const token = loginResponse.data.token;
+    const profileResponse = await axios.post(
+      `${API_URL}/profile`,
+      { username },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    
+    return {
+      token,
+      user: profileResponse.data.user
+    };
   },
 
   getCurrentUser: async () => {
-    const response = await apiClient.get('/auth/me');
+    const token = localStorage.getItem('auth_token');
+    if (!token) throw new Error('No token');
+    
+    // Decode JWT to get wallet address
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const address = payload.walletAddress;
+    
+    const response = await apiClient.get(`/profile/${address}`);
     return response.data;
   },
 
   // Users
   getUsers: async () => {
-    const response = await apiClient.get('/users');
+    const response = await apiClient.get('/search/users?q=');
     return response.data;
   },
 
   getUserByAddress: async (address) => {
-    const response = await apiClient.get(`/users/${address}`);
+    const response = await apiClient.get(`/profile/${address}`);
     return response.data;
   },
 
   updateProfile: async (username, bio, profileImage) => {
-    const response = await apiClient.put('/users/profile', {
+    const response = await apiClient.put('/profile', {
       username,
       bio,
-      profile_image: profileImage,
+      profileImage,
     });
     return response.data;
   },
 
   searchUsers: async (query) => {
-    const response = await apiClient.get(`/users/search?q=${encodeURIComponent(query)}`);
+    const response = await apiClient.get(`/search/users?q=${encodeURIComponent(query)}`);
     return response.data;
   },
 
@@ -72,7 +89,7 @@ const api = {
   createPost: async (content, imageUrl = null) => {
     const response = await apiClient.post('/posts', {
       content,
-      image_url: imageUrl,
+      imageUrl,
     });
     return response.data;
   },
@@ -94,14 +111,14 @@ const api = {
 
   // Reactions
   reactToPost: async (postId, reactionType) => {
-    const response = await apiClient.post(`/posts/${postId}/reactions`, {
-      reaction_type: reactionType,
+    const response = await apiClient.post(`/posts/${postId}/react`, {
+      reactionType,
     });
     return response.data;
   },
 
   removeReaction: async (postId) => {
-    const response = await apiClient.delete(`/posts/${postId}/reactions`);
+    const response = await apiClient.delete(`/posts/${postId}/react`);
     return response.data;
   },
 
@@ -119,30 +136,28 @@ const api = {
   },
 
   deleteComment: async (postId, commentId) => {
-    const response = await apiClient.delete(`/posts/${postId}/comments/${commentId}`);
+    const response = await apiClient.delete(`/comments/${commentId}`);
     return response.data;
   },
 
   // Following
   followUser: async (address) => {
-    const response = await apiClient.post('/users/follow', {
-      followed_address: address,
-    });
+    const response = await apiClient.post(`/follow/${address}`);
     return response.data;
   },
 
   unfollowUser: async (address) => {
-    const response = await apiClient.delete(`/users/follow/${address}`);
+    const response = await apiClient.delete(`/follow/${address}`);
     return response.data;
   },
 
-  getFollowers: async () => {
-    const response = await apiClient.get('/users/followers');
+  getFollowers: async (address) => {
+    const response = await apiClient.get(`/followers/${address}`);
     return response.data;
   },
 
-  getFollowing: async () => {
-    const response = await apiClient.get('/users/following');
+  getFollowing: async (address) => {
+    const response = await apiClient.get(`/following/${address}`);
     return response.data;
   },
 };

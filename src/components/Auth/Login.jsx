@@ -9,8 +9,9 @@ export default function Login() {
   const { login, register, connectWallet } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isNewUser, setIsNewUser] = useState(false);
+  const [needsRegistration, setNeedsRegistration] = useState(false);
   const [username, setUsername] = useState('');
+  const [walletAddress, setWalletAddress] = useState('');
 
   async function handleConnect() {
     try {
@@ -19,23 +20,17 @@ export default function Login() {
 
       console.log('Connecting wallet...');
       const { address, signature } = await connectWallet();
-      console.log('Wallet connected:', address);
-
-      // Try to login first
-      try {
-        console.log('Attempting login...');
-        await login(address, signature);
+      setWalletAddress(address);
+      
+      console.log('Attempting login...');
+      const result = await login(address, signature);
+      
+      if (result.needsRegistration) {
+        console.log('User needs to register');
+        setNeedsRegistration(true);
+      } else {
         console.log('Login successful!');
         navigate('/');
-      } catch (loginError) {
-        console.log('Login failed, checking if new user...');
-        // If login fails, user might be new
-        if (loginError.response && loginError.response.status === 404) {
-          setIsNewUser(true);
-          setError('');
-        } else {
-          throw loginError;
-        }
       }
     } catch (err) {
       console.error('Connection error:', err);
@@ -57,17 +52,14 @@ export default function Login() {
       setLoading(true);
       setError('');
 
-      console.log('Connecting wallet for registration...');
-      const { address, signature } = await connectWallet();
-      
       console.log('Registering user...');
-      await register(address, username);
+      await register(walletAddress, username);
       
       console.log('Registration successful!');
       navigate('/');
     } catch (err) {
       console.error('Registration error:', err);
-      setError(err.message || 'Failed to register');
+      setError(err.response?.data?.error || err.message || 'Failed to register');
     } finally {
       setLoading(false);
     }
@@ -87,7 +79,7 @@ export default function Login() {
           </div>
         )}
 
-        {!isNewUser ? (
+        {!needsRegistration ? (
           <div className="login-box">
             <button 
               className="connect-button" 
@@ -114,7 +106,7 @@ export default function Login() {
             </button>
             <button 
               type="button" 
-              onClick={() => setIsNewUser(false)}
+              onClick={() => setNeedsRegistration(false)}
               disabled={loading}
               className="back-button"
             >
