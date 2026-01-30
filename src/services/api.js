@@ -191,6 +191,30 @@ const api = {
     return response.data;
   },
 
+  // Messages
+  sendMessage: async (toAddress, content) => {
+    const response = await apiClient.post('/messages', {
+      toAddress,
+      content,
+    });
+    return response.data;
+  },
+
+  getMessages: async (address) => {
+    const response = await apiClient.get(`/messages/${address}`);
+    return response.data;
+  },
+
+  getConversations: async () => {
+    const response = await apiClient.get('/conversations');
+    return response.data;
+  },
+
+  markMessagesAsRead: async (address) => {
+    const response = await apiClient.put(`/messages/read/${address}`);
+    return response.data;
+  },
+
   // Legacy follow endpoints (kept for compatibility)
   followUser: async (address) => {
     const response = await apiClient.post(`/follow/${address}`);
