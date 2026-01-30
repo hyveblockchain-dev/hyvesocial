@@ -2,9 +2,11 @@
 import { createContext, useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import api from '../services/api';
-import socket from '../services/socket';
+import io from 'socket.io-client';
 
 export const AuthContext = createContext();
+
+let socket = null;
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -15,112 +17,119 @@ export function AuthProvider({ children }) {
   }, []);
 
   async function checkAuth() {
-    const token = localStorage.getItem('authToken');
-    const address = localStorage.getItem('userAddress');
-    
-    if (token && address) {
-      api.setToken(token);
-      try {
-        const data = await api.getProfile(address);
-        setUser(data.user);
-        socket.connect(address);
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        logout();
-      }
-    }
-    setLoading(false);
-  }
-
-  async function connectWallet() {
-    if (!window.ethereum) {
-      throw new Error('Please install MetaMask!');
-    }
-
     try {
-      setLoading(true);
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
-      // Request accounts
-      const accounts = await window.ethereum.request({ 
-        method: 'eth_requestAccounts' 
-      });
-      const address = accounts[0].toLowerCase();
-
-      // Get nonce
-      const { nonce } = await api.getNonce(address);
-
-      // Sign JUST the raw nonce (backend expects this!)
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const signature = await signer.signMessage(nonce);
-
-      // Login
-      const loginData = await api.login(address, signature);
+      const data = await api.getCurrentUser();
+      setUser(data.user);
       
-      // Store auth
-      localStorage.setItem('authToken', loginData.token);
-      localStorage.setItem('userAddress', address);
-      api.setToken(loginData.token);
-      
-      if (loginData.userExists) {
-        setUser(loginData.user);
-        socket.connect(address);
-        return { success: true, userExists: true };
-      } else {
-        return { success: true, userExists: false, address };
+      // Connect socket with auth token
+      if (!socket) {
+        connectSocket(token);
       }
     } catch (error) {
-      console.error('Connect wallet error:', error);
-      throw error;
+      console.error('Auth check failed:', error);
+      localStorage.removeItem('auth_token');
     } finally {
       setLoading(false);
     }
   }
 
-  async function createProfile(profileData) {
+  function connectSocket(token) {
     try {
-      const data = await api.createProfile(profileData);
+      socket = io('https://api.hyvechain.com', {
+        auth: {
+          token: token
+        },
+        transports: ['websocket', 'polling']
+      });
+
+      socket.on('connect', () => {
+        console.log('✅ Socket connected');
+      });
+
+      socket.on('disconnect', () => {
+        console.log('❌ Socket disconnected');
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
+      });
+    } catch (error) {
+      console.error('Socket setup error:', error);
+    }
+  }
+
+  async function login(walletAddress, signature) {
+    try {
+      const data = await api.login(walletAddress, signature);
+      localStorage.setItem('auth_token', data.token);
       setUser(data.user);
-      const address = localStorage.getItem('userAddress');
-      if (address) {
-        socket.connect(address);
-      }
+      
+      // Connect socket with new token
+      connectSocket(data.token);
+      
       return data;
     } catch (error) {
-      console.error('Create profile error:', error);
+      console.error('Login error:', error);
       throw error;
     }
   }
 
-  async function updateProfile(profileData) {
+  async function register(walletAddress, username) {
     try {
-      const data = await api.updateProfile(profileData);
+      const data = await api.register(walletAddress, username);
+      localStorage.setItem('auth_token', data.token);
       setUser(data.user);
+      
+      // Connect socket with new token
+      connectSocket(data.token);
+      
       return data;
     } catch (error) {
-      console.error('Update profile error:', error);
+      console.error('Register error:', error);
       throw error;
     }
   }
 
   function logout() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userAddress');
-    api.clearToken();
-    socket.disconnect();
+    localStorage.removeItem('auth_token');
     setUser(null);
+    
+    // Disconnect socket
+    if (socket) {
+      socket.disconnect();
+      socket = null;
+    }
+  }
+
+  async function connectWallet() {
+    try {
+      if (!window.ethereum) {
+        throw new Error('Please install MetaMask');
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const accounts = await provider.send('eth_requestAccounts', []);
+      const address = accounts[0];
+
+      const signer = await provider.getSigner();
+      const message = `Sign this message to login to Hyve Social: ${Date.now()}`;
+      const signature = await signer.signMessage(message);
+
+      return { address, signature };
+    } catch (error) {
+      console.error('Wallet connection error:', error);
+      throw error;
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      connectWallet, 
-      createProfile,
-      updateProfile,
-      logout,
-      setUser 
-    }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, connectWallet, socket }}>
       {children}
     </AuthContext.Provider>
   );
