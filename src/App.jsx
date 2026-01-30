@@ -6,6 +6,7 @@ import Login from './components/Auth/Login';
 import Layout from './components/Layout/Layout';
 import Feed from './components/Feed/Feed';
 import Profile from './components/Profile/Profile';
+import Friends from './components/Friends/Friends';
 import './styles/App.css';
 
 function ProtectedRoute({ children }) {
@@ -42,21 +43,21 @@ function App() {
             </ProtectedRoute>
           } />
 
-          <Route path="/videos" element={
+          <Route path="/friends" element={
             <ProtectedRoute>
-              <Layout><div>Videos - Coming Soon</div></Layout>
+              <Layout><Friends /></Layout>
             </ProtectedRoute>
           } />
 
-          <Route path="/friends" element={
+          <Route path="/videos" element={
             <ProtectedRoute>
-              <Layout><div>Friends - Coming Soon</div></Layout>
+              <Layout><div className="coming-soon">Videos - Coming Soon</div></Layout>
             </ProtectedRoute>
           } />
 
           <Route path="/discover" element={
             <ProtectedRoute>
-              <Layout><div>Discover - Coming Soon</div></Layout>
+              <Layout><div className="coming-soon">Discover - Coming Soon</div></Layout>
             </ProtectedRoute>
           } />
 
