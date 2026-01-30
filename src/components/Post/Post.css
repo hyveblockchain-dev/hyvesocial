@@ -1,8 +1,10 @@
+/* src/components/Post/Post.css */
+
 .post-card {
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 20px;
   animation: fadeIn 0.3s ease-out;
 }
 
@@ -10,12 +12,12 @@
   display: flex;
   justify-content: space-between;
   align-items: start;
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
 }
 
 .post-author {
   display: flex;
-  gap: 0.75rem;
+  gap: 12px;
   text-decoration: none;
   color: inherit;
 }
@@ -41,21 +43,23 @@
 .author-name {
   font-weight: 600;
   color: var(--text-primary);
+  font-size: 15px;
 }
 
 .post-time {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
+  font-size: 13px;
+  color: var(--text-tertiary);
 }
 
 .delete-button {
   background: transparent;
   border: none;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
   cursor: pointer;
-  padding: 0.25rem 0.5rem;
+  padding: 4px 8px;
   border-radius: 4px;
   transition: all 0.2s;
+  font-size: 18px;
 }
 
 .delete-button:hover {
@@ -65,48 +69,50 @@
 
 .post-content {
   color: var(--text-primary);
-  line-height: 1.6;
-  margin-bottom: 1rem;
+  line-height: 1.5;
+  margin-bottom: 16px;
   white-space: pre-wrap;
   word-wrap: break-word;
+  font-size: 15px;
 }
 
 .post-image img {
   width: 100%;
   border-radius: 8px;
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
 }
 
 .post-stats {
   display: flex;
-  gap: 1rem;
-  padding: 0.75rem 0;
+  gap: 16px;
+  padding: 12px 0;
   border-top: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  margin-bottom: 0.5rem;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  margin-bottom: 8px;
 }
 
 .post-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .action-button {
   flex: 1;
-  padding: 0.75rem;
+  padding: 10px;
   background: transparent;
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 6px;
   transition: all 0.2s;
-  font-size: 0.875rem;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .action-button:hover {
-  background: var(--surface-hover);
+  background: var(--bg-hover);
   color: var(--text-primary);
 }
 
@@ -115,15 +121,15 @@
 }
 
 .comments-section {
-  margin-top: 1rem;
-  padding-top: 1rem;
+  margin-top: 16px;
+  padding-top: 16px;
   border-top: 1px solid var(--border-color);
 }
 
 .comment {
   display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .comment-avatar {
@@ -136,7 +142,7 @@
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 13px;
   flex-shrink: 0;
 }
 
@@ -146,43 +152,45 @@
 
 .comment-header {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
   align-items: center;
-  margin-bottom: 0.25rem;
+  margin-bottom: 4px;
 }
 
 .comment-author {
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 14px;
 }
 
 .comment-time {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+  font-size: 12px;
+  color: var(--text-tertiary);
 }
 
 .comment-content p {
-  font-size: 0.875rem;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text-primary);
 }
 
 .add-comment {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
+  gap: 8px;
+  margin-top: 16px;
 }
 
 .add-comment input {
   flex: 1;
-  padding: 0.5rem 1rem;
+  padding: 10px 16px;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: 20px;
   color: var(--text-primary);
+  font-size: 14px;
 }
 
 .add-comment button {
-  padding: 0.5rem 1rem;
+  padding: 10px 20px;
   background: var(--gold-primary);
   color: #000;
   border: none;
@@ -190,6 +198,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  font-size: 14px;
 }
 
 .add-comment button:hover:not(:disabled) {
@@ -203,7 +212,13 @@
 
 .no-comments {
   text-align: center;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  padding: 1rem;
+  color: var(--text-tertiary);
+  font-size: 14px;
+  padding: 16px;
+}
+
+.loading-comments {
+  text-align: center;
+  color: var(--text-tertiary);
+  padding: 16px;
 }

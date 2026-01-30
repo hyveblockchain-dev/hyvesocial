@@ -1,16 +1,18 @@
+/* src/components/Feed/CreatePost.css */
+
 .create-post-box {
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 20px;
+  margin-bottom: 20px;
 }
 
 .create-post-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .create-post-header .user-avatar {
@@ -23,11 +25,12 @@
   align-items: center;
   justify-content: center;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .create-post-header h3 {
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 400;
   color: var(--text-secondary);
 }
 
@@ -37,12 +40,16 @@
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  padding: 1rem;
+  padding: 12px 16px;
   border-radius: 8px;
   font-family: inherit;
-  font-size: 1rem;
+  font-size: 15px;
   resize: vertical;
-  margin-bottom: 1rem;
+  margin-bottom: 12px;
+}
+
+.create-post-box textarea::placeholder {
+  color: #666;
 }
 
 .create-post-actions {
@@ -53,42 +60,48 @@
 
 .post-options {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .option-button {
-  padding: 0.5rem 1rem;
+  padding: 8px 16px;
   background: transparent;
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 0.875rem;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .option-button:hover {
-  background: var(--surface-hover);
+  background: var(--bg-hover);
   color: var(--gold-primary);
   border-color: var(--gold-primary);
 }
 
 .post-button {
-  padding: 0.75rem 2rem;
+  padding: 10px 24px;
   background: var(--gold-primary);
   color: #000;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  font-size: 14px;
 }
 
 .post-button:hover:not(:disabled) {
   background: var(--gold-light);
+  transform: translateY(-1px);
 }
 
 .post-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
