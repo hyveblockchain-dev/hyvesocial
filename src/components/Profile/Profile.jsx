@@ -15,6 +15,7 @@ export default function Profile() {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('posts');
   const [friendshipStatus, setFriendshipStatus] = useState('none');
+  const [requestId, setRequestId] = useState(null);
   const [friends, setFriends] = useState([]);
 
   const isOwnProfile = address?.toLowerCase() === currentUser?.walletAddress?.toLowerCase();
@@ -58,6 +59,7 @@ export default function Profile() {
     try {
       const data = await api.getFriendshipStatus(address);
       setFriendshipStatus(data.status);
+      setRequestId(data.requestId || null);
     } catch (error) {
       console.error('Check friendship error:', error);
     }
@@ -79,6 +81,34 @@ export default function Profile() {
     } catch (error) {
       console.error('Send friend request error:', error);
       alert(error.response?.data?.error || 'Failed to send friend request');
+    }
+  }
+
+  async function handleAcceptRequest() {
+    if (!requestId) return;
+    
+    try {
+      await api.acceptFriendRequest(requestId);
+      setFriendshipStatus('friends');
+      setRequestId(null);
+    } catch (error) {
+      console.error('Accept friend request error:', error);
+      alert('Failed to accept friend request');
+    }
+  }
+
+  async function handleDeclineRequest() {
+    if (!requestId) return;
+    
+    if (!confirm('Decline this friend request?')) return;
+    
+    try {
+      await api.declineFriendRequest(requestId);
+      setFriendshipStatus('none');
+      setRequestId(null);
+    } catch (error) {
+      console.error('Decline friend request error:', error);
+      alert('Failed to decline friend request');
     }
   }
 
@@ -174,16 +204,24 @@ export default function Profile() {
                   ➕ Add Friend
                 </button>
               )}
+              
               {friendshipStatus === 'request_sent' && (
                 <button className="btn-pending" disabled>
                   ⏳ Request Sent
                 </button>
               )}
+              
               {friendshipStatus === 'request_received' && (
-                <button className="btn-respond" onClick={() => window.location.href = '/'}>
-                  👀 Respond to Request
-                </button>
+                <div className="friend-request-actions">
+                  <button className="btn-accept" onClick={handleAcceptRequest}>
+                    ✓ Accept
+                  </button>
+                  <button className="btn-decline" onClick={handleDeclineRequest}>
+                    ✕ Decline
+                  </button>
+                </div>
               )}
+              
               {friendshipStatus === 'friends' && (
                 <button className="btn-remove-friend" onClick={handleRemoveFriend}>
                   ❌ Remove Friend
