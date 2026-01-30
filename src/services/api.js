@@ -66,16 +66,24 @@ const api = {
     return response.data;
   },
 
+  getProfile: async (address) => {
+    const response = await apiClient.get(`/profile/${address}`);
+    return response.data;
+  },
+
   getUserByAddress: async (address) => {
     const response = await apiClient.get(`/profile/${address}`);
     return response.data;
   },
 
-  updateProfile: async (username, bio, profileImage) => {
+  updateProfile: async (username, bio, profileImage, coverImage, location, website) => {
     const response = await apiClient.put('/profile', {
       username,
       bio,
       profileImage,
+      coverImage,
+      location,
+      website
     });
     return response.data;
   },
