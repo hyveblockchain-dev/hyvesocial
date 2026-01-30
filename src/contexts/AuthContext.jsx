@@ -1,6 +1,5 @@
 // src/contexts/AuthContext.jsx
 import { createContext, useState, useEffect } from 'react';
-import { ethers } from 'ethers';
 import api from '../services/api';
 import io from 'socket.io-client';
 
@@ -113,17 +112,37 @@ export function AuthProvider({ children }) {
         throw new Error('Please install MetaMask');
       }
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const accounts = await provider.send('eth_requestAccounts', []);
+      // Request account access
+      const accounts = await window.ethereum.request({ 
+        method: 'eth_requestAccounts' 
+      });
+      
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No accounts found');
+      }
+
       const address = accounts[0];
+      console.log('Connected address:', address);
 
-      const signer = await provider.getSigner();
+      // Create message to sign
       const message = `Sign this message to login to Hyve Social: ${Date.now()}`;
-      const signature = await signer.signMessage(message);
+      
+      // Request signature
+      const signature = await window.ethereum.request({
+        method: 'personal_sign',
+        params: [message, address]
+      });
 
+      console.log('Signature obtained');
       return { address, signature };
     } catch (error) {
       console.error('Wallet connection error:', error);
+      
+      // Handle user rejection
+      if (error.code === 4001) {
+        throw new Error('You rejected the connection request');
+      }
+      
       throw error;
     }
   }

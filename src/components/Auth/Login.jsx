@@ -5,161 +5,125 @@ import { useAuth } from '../../hooks/useAuth';
 import './Login.css';
 
 export default function Login() {
-  const [connecting, setConnecting] = useState(false);
-  const [showProfileSetup, setShowProfileSetup] = useState(false);
-  const [profileData, setProfileData] = useState({
-    username: '',
-    bio: '',
-    profileImage: '',
-    coverImage: '',
-    location: '',
-    website: ''
-  });
-  const [creating, setCreating] = useState(false);
-  const [error, setError] = useState('');
-
-  const { connectWallet, createProfile } = useAuth();
   const navigate = useNavigate();
+  const { login, register, connectWallet } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [username, setUsername] = useState('');
 
   async function handleConnect() {
-    setConnecting(true);
-    setError('');
-    
     try {
-      const result = await connectWallet();
-      
-      if (result.userExists) {
+      setLoading(true);
+      setError('');
+
+      console.log('Connecting wallet...');
+      const { address, signature } = await connectWallet();
+      console.log('Wallet connected:', address);
+
+      // Try to login first
+      try {
+        console.log('Attempting login...');
+        await login(address, signature);
+        console.log('Login successful!');
         navigate('/');
-      } else {
-        setShowProfileSetup(true);
+      } catch (loginError) {
+        console.log('Login failed, checking if new user...');
+        // If login fails, user might be new
+        if (loginError.response && loginError.response.status === 404) {
+          setIsNewUser(true);
+          setError('');
+        } else {
+          throw loginError;
+        }
       }
-    } catch (error) {
-      setError(error.message || 'Failed to connect wallet');
+    } catch (err) {
+      console.error('Connection error:', err);
+      setError(err.message || 'Failed to connect wallet');
     } finally {
-      setConnecting(false);
+      setLoading(false);
     }
   }
 
-  async function handleCreateProfile(e) {
+  async function handleRegister(e) {
     e.preventDefault();
     
-    if (!profileData.username.trim()) {
-      setError('Username is required');
+    if (!username.trim()) {
+      setError('Please enter a username');
       return;
     }
 
-    setCreating(true);
-    setError('');
-
     try {
-      await createProfile(profileData);
+      setLoading(true);
+      setError('');
+
+      console.log('Connecting wallet for registration...');
+      const { address, signature } = await connectWallet();
+      
+      console.log('Registering user...');
+      await register(address, username);
+      
+      console.log('Registration successful!');
       navigate('/');
-    } catch (error) {
-      setError(error.message || 'Failed to create profile');
+    } catch (err) {
+      console.error('Registration error:', err);
+      setError(err.message || 'Failed to register');
     } finally {
-      setCreating(false);
+      setLoading(false);
     }
-  }
-
-  if (showProfileSetup) {
-    return (
-      <div className="login-page">
-        <div className="login-card profile-setup">
-          <h2>Create Your Profile</h2>
-          <p>Set up your Hyve Social profile</p>
-
-          {error && <div className="error-message">{error}</div>}
-
-          <form onSubmit={handleCreateProfile}>
-            <div className="form-group">
-              <label>Username *</label>
-              <input
-                type="text"
-                value={profileData.username}
-                onChange={(e) => setProfileData({...profileData, username: e.target.value})}
-                placeholder="Enter your username"
-                required
-                disabled={creating}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Bio</label>
-              <textarea
-                value={profileData.bio}
-                onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
-                placeholder="Tell us about yourself..."
-                rows="3"
-                disabled={creating}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Location</label>
-              <input
-                type="text"
-                value={profileData.location}
-                onChange={(e) => setProfileData({...profileData, location: e.target.value})}
-                placeholder="City, Country"
-                disabled={creating}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Website</label>
-              <input
-                type="url"
-                value={profileData.website}
-                onChange={(e) => setProfileData({...profileData, website: e.target.value})}
-                placeholder="https://yourwebsite.com"
-                disabled={creating}
-              />
-            </div>
-
-            <button type="submit" className="btn-primary" disabled={creating}>
-              {creating ? 'Creating Profile...' : 'Create Profile'}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
   }
 
   return (
     <div className="login-page">
-      <div className="login-background"></div>
-      
-      <div className="login-card">
-        <div className="logo-section">
-          <h1 className="logo-text">HyveSocial</h1>
-          <p className="tagline">Decentralized Social Media</p>
+      <div className="login-container">
+        <div className="login-header">
+          <h1>HyveSocial</h1>
+          <p>Decentralized Social Media</p>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
 
-        <button 
-          onClick={handleConnect} 
-          className="connect-button"
-          disabled={connecting}
-        >
-          {connecting ? (
-            <>
-              <span className="spinner"></span>
-              Connecting...
-            </>
-          ) : (
-            <>
-              <span className="wallet-icon">🦊</span>
-              Connect with MetaMask
-            </>
-          )}
-        </button>
+        {!isNewUser ? (
+          <div className="login-box">
+            <button 
+              className="connect-button" 
+              onClick={handleConnect}
+              disabled={loading}
+            >
+              {loading ? '⏳ Connecting...' : '🦊 Connect with MetaMask'}
+            </button>
+            <p className="login-subtitle">Connect your wallet to get started on Hyve Social</p>
+          </div>
+        ) : (
+          <form className="register-form" onSubmit={handleRegister}>
+            <h2>Create Your Profile</h2>
+            <input
+              type="text"
+              placeholder="Choose a username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={loading}
+              maxLength={20}
+            />
+            <button type="submit" disabled={loading}>
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setIsNewUser(false)}
+              disabled={loading}
+              className="back-button"
+            >
+              Back
+            </button>
+          </form>
+        )}
 
-        <p className="connect-info">
-          Connect your wallet to get started on Hyve Social
-        </p>
-
-        <div className="features">
+        <div className="login-features">
           <div className="feature">
             <span className="feature-icon">⚡</span>
             <span>Gas-Free</span>
