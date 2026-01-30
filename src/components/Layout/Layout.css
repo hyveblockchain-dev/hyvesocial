@@ -192,7 +192,7 @@
   color: var(--gold-primary);
 }
 
-/* === PAGE BODY - For spacing only === */
+/* === PAGE BODY === */
 .page-body {
   padding-top: 60px;
   padding-bottom: 60px;
@@ -350,9 +350,10 @@
   padding: 12px;
 }
 
-/* === CENTER COLUMN - Scrollable === */
+/* === CENTER COLUMN - WIDER === */
 .center-column {
-  max-width: 760px;
+  width: 100%;
+  max-width: 840px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -439,7 +440,7 @@
   font-size: 14px;
 }
 
-/* === CHAT BUTTON - On right sidebar === */
+/* === CHAT BUTTON === */
 .chat-fab-bottom {
   width: 60px;
   height: 60px;
@@ -476,6 +477,8 @@
   z-index: 200;
   display: flex;
   flex-direction: column;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .chat-list-popup {
@@ -533,7 +536,7 @@
   padding: 40px 20px;
 }
 
-/* === FIXED FOOTER - 1400px CENTERED === */
+/* === FIXED FOOTER === */
 .page-footer {
   position: fixed;
   bottom: 0;

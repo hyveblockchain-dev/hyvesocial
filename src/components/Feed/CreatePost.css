@@ -6,6 +6,8 @@
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .create-post-header {
@@ -26,6 +28,13 @@
   justify-content: center;
   font-weight: 600;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.create-post-header .user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .create-post-header h3 {
@@ -36,7 +45,7 @@
 
 .create-post-box textarea {
   width: 100%;
-  min-height: 80px;
+  min-height: 100px;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
@@ -50,6 +59,11 @@
 
 .create-post-box textarea::placeholder {
   color: #666;
+}
+
+.create-post-box textarea:focus {
+  outline: none;
+  border-color: var(--gold-primary);
 }
 
 .create-post-actions {
@@ -84,7 +98,7 @@
 }
 
 .post-button {
-  padding: 10px 24px;
+  padding: 10px 32px;
   background: var(--gold-primary);
   color: #000;
   border: none;
