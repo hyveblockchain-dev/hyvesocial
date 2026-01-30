@@ -19,18 +19,6 @@ export default function Layout({ children }) {
     }
   }
 
-  // Helper function to get avatar
-  function getAvatar(imageUrl, username, className) {
-    if (imageUrl) {
-      return <img src={imageUrl} alt={username} className={className} />;
-    }
-    return (
-      <div className={className}>
-        {username?.charAt(0).toUpperCase() || '?'}
-      </div>
-    );
-  }
-
   return (
     <div className="page-container">
       {/* Header */}
@@ -49,7 +37,13 @@ export default function Layout({ children }) {
           
           <div className="user-menu">
             <button className="user-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
-              {getAvatar(user?.profileImage, user?.username, 'avatar-mini')}
+              {user?.profileImage ? (
+                <img src={user.profileImage} alt={user.username} className="avatar-mini" />
+              ) : (
+                <div className="avatar-mini">
+                  {user?.username?.charAt(0).toUpperCase() || '?'}
+                </div>
+              )}
             </button>
 
             {showUserMenu && (
@@ -68,9 +62,14 @@ export default function Layout({ children }) {
       <div className="page-body">
         {/* Left Sidebar */}
         <aside className="left-column">
-          {/* User Profile Card */}
           <div className="profile-card">
-            {getAvatar(user?.profileImage, user?.username, 'profile-avatar')}
+            {user?.profileImage ? (
+              <img src={user.profileImage} alt={user.username} className="profile-avatar" />
+            ) : (
+              <div className="profile-avatar">
+                {user?.username?.charAt(0).toUpperCase() || '?'}
+              </div>
+            )}
             <div className="profile-details">
               <h3>{user?.username || 'User'}</h3>
               <p className="profile-address">
@@ -135,9 +134,9 @@ export default function Layout({ children }) {
             <p className="loading">Loading users...</p>
           </div>
 
-          {/* Chat Popup - Positioned relative to sidebar */}
+          {/* Chat Popup */}
           {showChat && (
-            <div className="chat-popup-overlay">
+            <div className="chat-popup-container">
               <div className="chat-popup">
                 <div className="chat-popup-header">
                   <h3>💬 Messages</h3>
@@ -150,12 +149,8 @@ export default function Layout({ children }) {
             </div>
           )}
 
-          {/* Circular Chat Button - At Bottom */}
-          <button 
-            className="chat-fab" 
-            onClick={() => setShowChat(!showChat)}
-            title="Open Chat"
-          >
+          {/* Chat Button */}
+          <button className="chat-fab" onClick={() => setShowChat(!showChat)}>
             💬
           </button>
         </aside>
