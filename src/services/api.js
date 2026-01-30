@@ -112,6 +112,11 @@ const api = {
     return response.data;
   },
 
+  getUserPosts: async (address) => {
+    const response = await apiClient.get(`/posts/user/${address}`);
+    return response.data;
+  },
+
   deletePost: async (postId) => {
     const response = await apiClient.delete(`/posts/${postId}`);
     return response.data;
@@ -127,6 +132,11 @@ const api = {
 
   removeReaction: async (postId) => {
     const response = await apiClient.delete(`/posts/${postId}/react`);
+    return response.data;
+  },
+
+  getReactions: async (postId) => {
+    const response = await apiClient.get(`/posts/${postId}/reactions`);
     return response.data;
   },
 
@@ -167,6 +177,16 @@ const api = {
   getFollowing: async (address) => {
     const response = await apiClient.get(`/following/${address}`);
     return response.data;
+  },
+
+  // Check if following
+  isFollowing: async (address) => {
+    try {
+      const response = await apiClient.get(`/following/${address}`);
+      return response.data;
+    } catch (error) {
+      return { following: [] };
+    }
   },
 };
 
