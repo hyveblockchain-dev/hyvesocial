@@ -1,6 +1,6 @@
 /* src/components/Layout/Layout.css */
 
-/* Main Container - 1400px centered */
+/* Main Container - Full viewport */
 .page-container {
   width: 1400px;
   margin: 0 auto;
@@ -10,8 +10,13 @@
   background: var(--bg-primary);
 }
 
-/* Header - Fixed at top, 1400px wide */
+/* Header - Fixed at top */
 .page-header {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1400px;
   height: 60px;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
@@ -20,8 +25,6 @@
   justify-content: space-between;
   padding: 0 20px;
   gap: 20px;
-  position: sticky;
-  top: 0;
   z-index: 100;
 }
 
@@ -137,16 +140,17 @@
   color: var(--gold-primary);
 }
 
-/* Body - 3 Column Layout */
+/* Body - Fixed height between header and footer */
 .page-body {
-  flex: 1;
+  margin-top: 60px;
+  margin-bottom: 60px;
   display: flex;
   gap: 20px;
   padding: 20px;
-  min-height: 0;
+  min-height: calc(100vh - 120px);
 }
 
-/* Left Sidebar - Fixed height */
+/* Left Sidebar - Full height */
 .left-column {
   width: 280px;
   flex-shrink: 0;
@@ -154,10 +158,9 @@
   border-radius: 12px;
   padding: 20px;
   overflow-y: auto;
-  height: fit-content;
-  max-height: calc(100vh - 140px);
+  height: calc(100vh - 120px);
   position: sticky;
-  top: 80px;
+  top: 60px;
 }
 
 .wallet-card {
@@ -284,17 +287,21 @@
   line-height: 1.4;
 }
 
-/* Center Content */
+/* Center Content - Scrollable */
 .center-column {
   flex: 1;
   max-width: 680px;
   min-width: 0;
+  overflow-y: visible;
 }
 
-/* Right Sidebar - Fixed height */
+/* Right Sidebar - Full height */
 .right-column {
   width: 320px;
   flex-shrink: 0;
+  height: calc(100vh - 120px);
+  position: sticky;
+  top: 60px;
 }
 
 .widget {
@@ -302,8 +309,8 @@
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 20px;
-  position: sticky;
-  top: 80px;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .widget h3 {
@@ -319,8 +326,13 @@
   padding: 20px;
 }
 
-/* Footer - 1400px wide */
+/* Footer - Fixed at bottom */
 .page-footer {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1400px;
   height: 60px;
   background: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
@@ -330,6 +342,7 @@
   justify-content: center;
   gap: 8px;
   padding: 0 20px;
+  z-index: 100;
 }
 
 .footer-links {
@@ -353,11 +366,37 @@
   font-size: 12px;
 }
 
+/* Scrollbar styling for sidebars */
+.left-column::-webkit-scrollbar,
+.right-column::-webkit-scrollbar,
+.widget::-webkit-scrollbar {
+  width: 6px;
+}
+
+.left-column::-webkit-scrollbar-thumb,
+.right-column::-webkit-scrollbar-thumb,
+.widget::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+.left-column::-webkit-scrollbar-thumb:hover,
+.right-column::-webkit-scrollbar-thumb:hover,
+.widget::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-dark);
+}
+
 /* Responsive */
 @media (max-width: 1400px) {
   .page-container {
     width: 100%;
-    max-width: 1400px;
+  }
+  
+  .page-header,
+  .page-footer {
+    width: 100%;
+    left: 0;
+    transform: none;
   }
 }
 
