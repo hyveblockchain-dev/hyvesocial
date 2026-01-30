@@ -8,56 +8,89 @@ import './Profile.css';
 
 export default function Profile() {
   const { address } = useParams();
-  const { user } = useAuth();
-  const [profileUser, setProfileUser] = useState(null);
+  const { user: currentUser } = useAuth();
+  const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [following, setFollowing] = useState(false);
+  const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('posts');
+  const [friendshipStatus, setFriendshipStatus] = useState('none');
+  const [friends, setFriends] = useState([]);
 
-  const isOwnProfile = user?.walletAddress === address;
+  const isOwnProfile = address?.toLowerCase() === currentUser?.walletAddress?.toLowerCase();
 
   useEffect(() => {
-    loadProfile();
-  }, [address]);
+    if (address) {
+      loadProfile();
+      loadPosts();
+      if (!isOwnProfile) {
+        checkFriendshipStatus();
+      }
+      if (activeTab === 'friends') {
+        loadFriends();
+      }
+    }
+  }, [address, activeTab]);
 
   async function loadProfile() {
     try {
       setLoading(true);
-      const [profileData, postsData] = await Promise.all([
-        api.getProfile(address),
-        api.getUserPosts(address)
-      ]);
-      
-      setProfileUser(profileData.user);
-      setPosts(postsData.posts || []);
+      const data = await api.getProfile(address);
+      setProfile(data.user);
     } catch (error) {
       console.error('Load profile error:', error);
+      setError('Profile not found');
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleFollow() {
+  async function loadPosts() {
     try {
-      if (following) {
-        await api.unfollowUser(address);
-        setFollowing(false);
-        setProfileUser({
-          ...profileUser,
-          followerCount: profileUser.followerCount - 1
-        });
-      } else {
-        await api.followUser(address);
-        setFollowing(true);
-        setProfileUser({
-          ...profileUser,
-          followerCount: profileUser.followerCount + 1
-        });
-      }
+      const data = await api.getUserPosts(address);
+      setPosts(data.posts || []);
     } catch (error) {
-      console.error('Follow error:', error);
-      alert('Failed to follow/unfollow user');
+      console.error('Load posts error:', error);
+    }
+  }
+
+  async function checkFriendshipStatus() {
+    try {
+      const data = await api.getFriendshipStatus(address);
+      setFriendshipStatus(data.status);
+    } catch (error) {
+      console.error('Check friendship error:', error);
+    }
+  }
+
+  async function loadFriends() {
+    try {
+      const data = await api.getFriends();
+      setFriends(data.friends || []);
+    } catch (error) {
+      console.error('Load friends error:', error);
+    }
+  }
+
+  async function handleAddFriend() {
+    try {
+      await api.sendFriendRequest(address);
+      setFriendshipStatus('request_sent');
+    } catch (error) {
+      console.error('Send friend request error:', error);
+      alert(error.response?.data?.error || 'Failed to send friend request');
+    }
+  }
+
+  async function handleRemoveFriend() {
+    if (!confirm('Remove this friend?')) return;
+    
+    try {
+      await api.removeFriend(address);
+      setFriendshipStatus('none');
+    } catch (error) {
+      console.error('Remove friend error:', error);
+      alert('Failed to remove friend');
     }
   }
 
@@ -65,107 +98,149 @@ export default function Profile() {
     setPosts(posts.filter(p => p.id !== postId));
   }
 
+  function handlePostUpdated(updatedPost) {
+    setPosts(posts.map(p => p.id === updatedPost.id ? updatedPost : p));
+  }
+
   if (loading) {
     return (
-      <div className="profile-page">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Loading profile...</p>
-        </div>
+      <div className="profile-container">
+        <div className="profile-loading">Loading profile...</div>
       </div>
     );
   }
 
-  if (!profileUser) {
+  if (error) {
     return (
-      <div className="profile-page">
-        <div className="error-container">
-          <p>Profile not found</p>
-        </div>
+      <div className="profile-container">
+        <div className="profile-error">{error}</div>
       </div>
     );
   }
+
+  if (!profile) {
+    return (
+      <div className="profile-container">
+        <div className="profile-error">Profile not found</div>
+      </div>
+    );
+  }
+
+  const friendCount = friends.length;
 
   return (
-    <div className="profile-page">
+    <div className="profile-container">
+      {/* Cover Image */}
       <div className="profile-cover">
-        <div className="cover-image"></div>
-      </div>
-
-      <div className="profile-header">
-        <div className="profile-avatar-large">
-          {profileUser.username?.charAt(0).toUpperCase() || '?'}
-        </div>
-
-        <div className="profile-info">
-          <h1>{profileUser.username}</h1>
-          <p className="profile-address">
-            {address?.slice(0, 6)}...{address?.slice(-4)}
-          </p>
-          {profileUser.bio && <p className="profile-bio">{profileUser.bio}</p>}
-          
-          {profileUser.location && (
-            <p className="profile-detail">📍 {profileUser.location}</p>
-          )}
-          {profileUser.website && (
-            <p className="profile-detail">
-              🔗 <a href={profileUser.website} target="_blank" rel="noopener noreferrer">
-                {profileUser.website}
-              </a>
-            </p>
-          )}
-        </div>
-
-        {!isOwnProfile && (
-          <button onClick={handleFollow} className="follow-button">
-            {following ? 'Unfollow' : 'Follow'}
-          </button>
+        {profile.coverImage && (
+          <img src={profile.coverImage} alt="Cover" />
         )}
       </div>
 
-      <div className="profile-stats">
-        <div className="stat">
-          <span className="stat-number">{posts.length}</span>
-          <span className="stat-label">Posts</span>
+      {/* Profile Header */}
+      <div className="profile-header">
+        <div className="profile-avatar-large">
+          {profile.profileImage ? (
+            <img src={profile.profileImage} alt={profile.username} />
+          ) : (
+            <div className="avatar-placeholder">
+              {profile.username?.charAt(0).toUpperCase() || '?'}
+            </div>
+          )}
         </div>
-        <div className="stat">
-          <span className="stat-number">{profileUser.followerCount || 0}</span>
-          <span className="stat-label">Followers</span>
+
+        <div className="profile-info">
+          <h1>{profile.username}</h1>
+          <p className="profile-address">
+            {profile.walletAddress?.slice(0, 6)}...{profile.walletAddress?.slice(-4)}
+          </p>
+          {profile.bio && <p className="profile-bio">{profile.bio}</p>}
+          
+          <div className="profile-meta">
+            {profile.location && <span>📍 {profile.location}</span>}
+            {profile.website && (
+              <a href={profile.website} target="_blank" rel="noopener noreferrer">
+                🔗 {profile.website}
+              </a>
+            )}
+          </div>
         </div>
-        <div className="stat">
-          <span className="stat-number">{profileUser.followingCount || 0}</span>
-          <span className="stat-label">Following</span>
+
+        <div className="profile-actions">
+          {!isOwnProfile && (
+            <>
+              {friendshipStatus === 'none' && (
+                <button className="btn-add-friend" onClick={handleAddFriend}>
+                  ➕ Add Friend
+                </button>
+              )}
+              {friendshipStatus === 'request_sent' && (
+                <button className="btn-pending" disabled>
+                  ⏳ Request Sent
+                </button>
+              )}
+              {friendshipStatus === 'request_received' && (
+                <button className="btn-respond" onClick={() => window.location.href = '/'}>
+                  👀 Respond to Request
+                </button>
+              )}
+              {friendshipStatus === 'friends' && (
+                <button className="btn-remove-friend" onClick={handleRemoveFriend}>
+                  ❌ Remove Friend
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
 
+      {/* Stats */}
+      <div className="profile-stats">
+        <div className="stat-box">
+          <div className="stat-number">{posts.length}</div>
+          <div className="stat-label">Posts</div>
+        </div>
+        <div className="stat-box">
+          <div className="stat-number">{friendCount}</div>
+          <div className="stat-label">Friends</div>
+        </div>
+      </div>
+
+      {/* Tabs */}
       <div className="profile-tabs">
-        <button 
-          className={activeTab === 'posts' ? 'tab active' : 'tab'}
+        <button
+          className={activeTab === 'posts' ? 'tab-active' : ''}
           onClick={() => setActiveTab('posts')}
         >
           Posts
         </button>
-        <button 
-          className={activeTab === 'albums' ? 'tab active' : 'tab'}
+        <button
+          className={activeTab === 'albums' ? 'tab-active' : ''}
           onClick={() => setActiveTab('albums')}
         >
           Albums
         </button>
+        <button
+          className={activeTab === 'friends' ? 'tab-active' : ''}
+          onClick={() => setActiveTab('friends')}
+        >
+          Friends
+        </button>
       </div>
 
+      {/* Content */}
       <div className="profile-content">
         {activeTab === 'posts' && (
-          <div className="profile-posts">
+          <div className="posts-list">
             {posts.length === 0 ? (
-              <div className="empty-state">
-                <p>No posts yet</p>
-              </div>
+              <div className="no-posts">No posts yet</div>
             ) : (
               posts.map(post => (
-                <Post 
-                  key={post.id} 
+                <Post
+                  key={post.id}
                   post={post}
                   onDelete={handlePostDeleted}
+                  onUpdate={handlePostUpdated}
                 />
               ))
             )}
@@ -173,8 +248,30 @@ export default function Profile() {
         )}
 
         {activeTab === 'albums' && (
-          <div className="profile-albums">
-            <p>Albums coming soon...</p>
+          <div className="coming-soon">
+            📸 Albums coming soon
+          </div>
+        )}
+
+        {activeTab === 'friends' && (
+          <div className="friends-grid">
+            {friends.length === 0 ? (
+              <div className="no-friends">No friends yet</div>
+            ) : (
+              friends.map(friend => (
+                <div key={friend.wallet_address} className="friend-card">
+                  {friend.profile_image ? (
+                    <img src={friend.profile_image} alt={friend.username} />
+                  ) : (
+                    <div className="friend-avatar">
+                      {friend.username?.charAt(0).toUpperCase() || '?'}
+                    </div>
+                  )}
+                  <h3>{friend.username}</h3>
+                  <a href={`/profile/${friend.wallet_address}`}>View Profile</a>
+                </div>
+              ))
+            )}
           </div>
         )}
       </div>
