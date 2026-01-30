@@ -26,7 +26,6 @@ export function AuthProvider({ children }) {
       const data = await api.getCurrentUser();
       setUser(data.user);
       
-      // Connect socket with auth token
       if (!socket) {
         connectSocket(token);
       }
@@ -40,24 +39,14 @@ export function AuthProvider({ children }) {
 
   function connectSocket(token) {
     try {
-      socket = io('https://api.hyvechain.com', {
-        auth: {
-          token: token
-        },
+      socket = io('https://social-api.hyvechain.com', {
+        auth: { token },
         transports: ['websocket', 'polling']
       });
 
-      socket.on('connect', () => {
-        console.log('✅ Socket connected');
-      });
-
-      socket.on('disconnect', () => {
-        console.log('❌ Socket disconnected');
-      });
-
-      socket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error);
-      });
+      socket.on('connect', () => console.log('✅ Socket connected'));
+      socket.on('disconnect', () => console.log('❌ Socket disconnected'));
+      socket.on('connect_error', (error) => console.error('Socket error:', error));
     } catch (error) {
       console.error('Socket setup error:', error);
     }
@@ -66,13 +55,16 @@ export function AuthProvider({ children }) {
   async function login(walletAddress, signature) {
     try {
       const data = await api.login(walletAddress, signature);
+      
+      if (!data.userExists) {
+        return { needsRegistration: true };
+      }
+      
       localStorage.setItem('auth_token', data.token);
       setUser(data.user);
-      
-      // Connect socket with new token
       connectSocket(data.token);
       
-      return data;
+      return { success: true };
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -84,10 +76,7 @@ export function AuthProvider({ children }) {
       const data = await api.register(walletAddress, username);
       localStorage.setItem('auth_token', data.token);
       setUser(data.user);
-      
-      // Connect socket with new token
       connectSocket(data.token);
-      
       return data;
     } catch (error) {
       console.error('Register error:', error);
@@ -98,8 +87,6 @@ export function AuthProvider({ children }) {
   function logout() {
     localStorage.removeItem('auth_token');
     setUser(null);
-    
-    // Disconnect socket
     if (socket) {
       socket.disconnect();
       socket = null;
@@ -112,7 +99,6 @@ export function AuthProvider({ children }) {
         throw new Error('Please install MetaMask');
       }
 
-      // Request account access
       const accounts = await window.ethereum.request({ 
         method: 'eth_requestAccounts' 
       });
@@ -124,13 +110,15 @@ export function AuthProvider({ children }) {
       const address = accounts[0];
       console.log('Connected address:', address);
 
-      // Create message to sign
-      const message = `Sign this message to login to Hyve Social: ${Date.now()}`;
-      
-      // Request signature
+      // Get nonce from backend
+      const nonceResponse = await fetch(`https://social-api.hyvechain.com/api/auth/nonce/${address}`);
+      const { nonce } = await nonceResponse.json();
+      console.log('Got nonce:', nonce);
+
+      // Sign the nonce
       const signature = await window.ethereum.request({
         method: 'personal_sign',
-        params: [message, address]
+        params: [nonce, address]
       });
 
       console.log('Signature obtained');
@@ -138,7 +126,6 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error('Wallet connection error:', error);
       
-      // Handle user rejection
       if (error.code === 4001) {
         throw new Error('You rejected the connection request');
       }

@@ -1,7 +1,7 @@
 // src/services/api.js
 import axios from 'axios';
 
-const API_URL = 'https://api.hyvechain.com/api';
+const API_URL = 'https://social-api.hyvechain.com/api';
 
 const apiClient = axios.create({
   baseURL: API_URL,
