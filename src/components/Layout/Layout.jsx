@@ -9,7 +9,6 @@ export default function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
 
   function handleLogout() {
     if (confirm('Are you sure you want to logout?')) {
@@ -18,57 +17,32 @@ export default function Layout({ children }) {
     }
   }
 
-  function handleSearch(e) {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      // TODO: Implement search
-      console.log('Searching for:', searchQuery);
-    }
-  }
-
   return (
-    <div className="app-layout">
-      {/* Header */}
-      <header className="app-header">
+    <div className="app-container">
+      {/* Top Header */}
+      <header className="top-header">
         <div className="header-content">
-          <Link to="/" className="logo">
+          <div className="logo">
             <span className="logo-icon">⚡</span>
-            <span className="logo-text">HyveSocial</span>
-          </Link>
+            <span className="logo-text">Hyve Social</span>
+          </div>
 
-          <form className="search-bar" onSubmit={handleSearch}>
-            <input
-              type="text"
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <button type="submit">
-              🔍
-            </button>
-          </form>
+          <div className="header-search">
+            <input type="text" placeholder="Search users..." />
+          </div>
 
-          <div className="header-actions">
-            <Link to="/" className={location.pathname === '/' ? 'active' : ''}>
-              🏠 Home
-            </Link>
-            <Link to={`/profile/${user?.walletAddress}`} 
-                  className={location.pathname.includes('/profile') ? 'active' : ''}>
-              👤 Profile
-            </Link>
-            <Link to="/chat" className={location.pathname === '/chat' ? 'active' : ''}>
-              💬 Chat
-            </Link>
-
+          <div className="header-right">
+            <button className="icon-button">🔔</button>
+            <button className="icon-button">💬</button>
+            
             <div className="user-menu">
               <button 
                 className="user-button"
                 onClick={() => setShowUserMenu(!showUserMenu)}
               >
-                <span className="user-avatar">
+                <div className="user-avatar-small">
                   {user?.username?.charAt(0).toUpperCase() || '?'}
-                </span>
-                <span className="user-name">{user?.username}</span>
+                </div>
               </button>
 
               {showUserMenu && (
@@ -77,7 +51,7 @@ export default function Layout({ children }) {
                     My Profile
                   </Link>
                   <button onClick={handleLogout}>
-                    Logout
+                    Disconnect Wallet
                   </button>
                 </div>
               )}
@@ -86,12 +60,91 @@ export default function Layout({ children }) {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="app-main">
-        <div className="content-container">
+      <div className="main-container">
+        {/* Left Sidebar */}
+        <aside className="left-sidebar">
+          <div className="sidebar-section">
+            <div className="wallet-info">
+              <div className="wallet-avatar">
+                {user?.username?.charAt(0).toUpperCase() || '?'}
+              </div>
+              <div className="wallet-details">
+                <h3>Connect Wallet</h3>
+                <p>Connect your wallet to get started<br />Now connected!</p>
+              </div>
+            </div>
+          </div>
+
+          <nav className="sidebar-nav">
+            <Link 
+              to="/" 
+              className={location.pathname === '/' ? 'nav-item active' : 'nav-item'}
+            >
+              <span className="nav-icon">📰</span>
+              <span>Feed</span>
+            </Link>
+
+            <Link 
+              to="/videos" 
+              className={location.pathname === '/videos' ? 'nav-item active' : 'nav-item'}
+            >
+              <span className="nav-icon">🎥</span>
+              <span>Videos</span>
+            </Link>
+
+            <Link 
+              to={`/profile/${user?.walletAddress}`}
+              className={location.pathname.includes('/profile') ? 'nav-item active' : 'nav-item'}
+            >
+              <span className="nav-icon">👤</span>
+              <span>My Profile</span>
+            </Link>
+
+            <Link 
+              to="/friends" 
+              className={location.pathname === '/friends' ? 'nav-item active' : 'nav-item'}
+            >
+              <span className="nav-icon">👥</span>
+              <span>Friends</span>
+              <span className="badge">0</span>
+            </Link>
+
+            <Link 
+              to="/discover" 
+              className={location.pathname === '/discover' ? 'nav-item active' : 'nav-item'}
+            >
+              <span className="nav-icon">🔍</span>
+              <span>Discover</span>
+            </Link>
+          </nav>
+
+          <div className="sidebar-stats">
+            <h4>Your Posts</h4>
+            <div className="stat-number">0</div>
+
+            <h4>Friends</h4>
+            <div className="stat-number">0</div>
+          </div>
+
+          <div className="sidebar-section">
+            <h4>FRIENDS</h4>
+            <p className="empty-state">No friends yet. Start following users!</p>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className="main-content">
           {children}
-        </div>
-      </main>
+        </main>
+
+        {/* Right Sidebar */}
+        <aside className="right-sidebar">
+          <div className="sidebar-widget">
+            <h3>Suggested Users</h3>
+            <p className="loading-text">Loading users...</p>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }
