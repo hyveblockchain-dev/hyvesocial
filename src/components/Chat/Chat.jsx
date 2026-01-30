@@ -8,6 +8,7 @@ export default function Chat({ onSelectChat }) {
   const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadConversations();
@@ -16,14 +17,24 @@ export default function Chat({ onSelectChat }) {
   async function loadConversations() {
     try {
       setLoading(true);
+      setError(null);
+      
+      // Check if API method exists
+      if (!api.getUsers) {
+        console.error('getUsers method not available on api');
+        setError('Chat feature not available');
+        setLoading(false);
+        return;
+      }
+      
       console.log('Loading users...');
-      
       const data = await api.getUsers();
-      console.log('API Response:', data);
+      console.log('Users data:', data);
       
-      if (!data.users || !Array.isArray(data.users)) {
+      if (!data || !data.users || !Array.isArray(data.users)) {
         console.error('Invalid response format:', data);
         setConversations([]);
+        setLoading(false);
         return;
       }
       
@@ -38,6 +49,7 @@ export default function Chat({ onSelectChat }) {
       setConversations(otherUsers);
     } catch (error) {
       console.error('Load conversations error:', error);
+      setError('Failed to load users');
       setConversations([]);
     } finally {
       setLoading(false);
@@ -53,7 +65,15 @@ export default function Chat({ onSelectChat }) {
   if (loading) {
     return (
       <div className="chat-container">
-        <div className="chat-loading">Loading conversations...</div>
+        <div className="chat-loading">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="chat-container">
+        <div className="chat-empty">{error}</div>
       </div>
     );
   }

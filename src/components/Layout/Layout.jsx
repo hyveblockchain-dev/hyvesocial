@@ -24,13 +24,25 @@ export default function Layout({ children }) {
 
   async function loadSuggestedUsers() {
     try {
+      // Check if getUsers function exists
+      if (!api.getUsers) {
+        console.log('getUsers not available');
+        return;
+      }
+      
       const data = await api.getUsers();
+      
+      if (!data || !data.users) {
+        return;
+      }
+      
       // Filter out current user and get random 5
       const others = data.users.filter(u => u.wallet_address !== user?.walletAddress);
       const random = others.sort(() => 0.5 - Math.random()).slice(0, 5);
       setSuggestedUsers(random);
     } catch (error) {
       console.error('Load suggested users error:', error);
+      // Don't block the app if this fails
     }
   }
 
@@ -42,11 +54,17 @@ export default function Layout({ children }) {
     }
 
     try {
+      if (!api.searchUsers) {
+        console.log('searchUsers not available');
+        return;
+      }
+      
       const data = await api.searchUsers(query);
       setSearchResults(data.users || []);
       setShowSearchResults(true);
     } catch (error) {
       console.error('Search error:', error);
+      setSearchResults([]);
     }
   }
 
@@ -230,7 +248,7 @@ export default function Layout({ children }) {
             )}
           </div>
 
-          {/* Chat Button - Centered at bottom */}
+          {/* Chat Button */}
           <button className="chat-fab-bottom" onClick={() => setShowChat(!showChat)}>
             💬
           </button>
@@ -258,7 +276,6 @@ export default function Layout({ children }) {
             <button className="close-chat" onClick={() => setSelectedChat(null)}>✕</button>
           </div>
           <div className="chat-window-body">
-            {/* Chat messages would go here */}
             <p className="chat-placeholder">Chat with {selectedChat.username}</p>
           </div>
         </div>
