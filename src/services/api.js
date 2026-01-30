@@ -29,12 +29,10 @@ const api = {
   },
 
   register: async (walletAddress, username) => {
-    // First login to get token
     const loginResponse = await apiClient.post('/auth/login', {
       address: walletAddress,
     });
     
-    // Then create profile
     const token = loginResponse.data.token;
     const profileResponse = await axios.post(
       `${API_URL}/profile`,
@@ -52,7 +50,6 @@ const api = {
     const token = localStorage.getItem('auth_token');
     if (!token) throw new Error('No token');
     
-    // Decode JWT to get wallet address
     const payload = JSON.parse(atob(token.split('.')[1]));
     const address = payload.walletAddress;
     
@@ -158,7 +155,43 @@ const api = {
     return response.data;
   },
 
-  // Following
+  // Friend Requests
+  sendFriendRequest: async (address) => {
+    const response = await apiClient.post(`/friend-request/${address}`);
+    return response.data;
+  },
+
+  acceptFriendRequest: async (requestId) => {
+    const response = await apiClient.post(`/friend-request/${requestId}/accept`);
+    return response.data;
+  },
+
+  declineFriendRequest: async (requestId) => {
+    const response = await apiClient.post(`/friend-request/${requestId}/decline`);
+    return response.data;
+  },
+
+  getFriendRequests: async () => {
+    const response = await apiClient.get('/friend-requests');
+    return response.data;
+  },
+
+  getFriends: async () => {
+    const response = await apiClient.get('/friends');
+    return response.data;
+  },
+
+  getFriendshipStatus: async (address) => {
+    const response = await apiClient.get(`/friendship-status/${address}`);
+    return response.data;
+  },
+
+  removeFriend: async (address) => {
+    const response = await apiClient.delete(`/friend/${address}`);
+    return response.data;
+  },
+
+  // Legacy follow endpoints (kept for compatibility)
   followUser: async (address) => {
     const response = await apiClient.post(`/follow/${address}`);
     return response.data;
@@ -179,7 +212,6 @@ const api = {
     return response.data;
   },
 
-  // Check if following
   isFollowing: async (address) => {
     try {
       const response = await apiClient.get(`/following/${address}`);
