@@ -1,8 +1,9 @@
 // src/components/Layout/Layout.jsx
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import Chat from '../Chat/Chat';
+import api from '../../services/api';
 import './Layout.css';
 
 export default function Layout({ children }) {
@@ -11,12 +12,54 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [selectedChat, setSelectedChat] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
+
+  useEffect(() => {
+    loadSuggestedUsers();
+  }, []);
+
+  async function loadSuggestedUsers() {
+    try {
+      const data = await api.getUsers();
+      // Filter out current user and get random 5
+      const others = data.users.filter(u => u.wallet_address !== user?.walletAddress);
+      const random = others.sort(() => 0.5 - Math.random()).slice(0, 5);
+      setSuggestedUsers(random);
+    } catch (error) {
+      console.error('Load suggested users error:', error);
+    }
+  }
+
+  async function handleSearch(query) {
+    setSearchQuery(query);
+    if (query.trim().length < 2) {
+      setShowSearchResults(false);
+      return;
+    }
+
+    try {
+      const data = await api.searchUsers(query);
+      setSearchResults(data.users || []);
+      setShowSearchResults(true);
+    } catch (error) {
+      console.error('Search error:', error);
+    }
+  }
 
   function handleLogout() {
     if (confirm('Are you sure you want to logout?')) {
       logout();
       navigate('/login');
     }
+  }
+
+  function handleChatSelect(conversation) {
+    setSelectedChat(conversation);
+    setShowChat(false);
   }
 
   return (
@@ -29,7 +72,39 @@ export default function Layout({ children }) {
         </div>
 
         <div className="search-box">
-          <input type="text" placeholder="Search users..." />
+          <input 
+            type="text" 
+            placeholder="Search users..." 
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            onFocus={() => searchQuery && setShowSearchResults(true)}
+          />
+          
+          {showSearchResults && (
+            <div className="search-dropdown">
+              {searchResults.length === 0 ? (
+                <div className="search-empty">No users found</div>
+              ) : (
+                searchResults.map(user => (
+                  <Link 
+                    key={user.wallet_address}
+                    to={`/profile/${user.wallet_address}`}
+                    className="search-result"
+                    onClick={() => setShowSearchResults(false)}
+                  >
+                    {user.profile_image ? (
+                      <img src={user.profile_image} alt={user.username} className="search-avatar" />
+                    ) : (
+                      <div className="search-avatar">
+                        {user.username?.charAt(0).toUpperCase() || '?'}
+                      </div>
+                    )}
+                    <span>{user.username}</span>
+                  </Link>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
         <div className="header-actions">
@@ -131,30 +206,63 @@ export default function Layout({ children }) {
         <aside className="right-column">
           <div className="widget suggestions">
             <h3>Suggested Users</h3>
-            <p className="loading">Loading users...</p>
+            {suggestedUsers.length === 0 ? (
+              <p className="loading">No suggestions</p>
+            ) : (
+              <div className="suggested-list">
+                {suggestedUsers.map(suggestedUser => (
+                  <Link 
+                    key={suggestedUser.wallet_address}
+                    to={`/profile/${suggestedUser.wallet_address}`}
+                    className="suggested-user"
+                  >
+                    {suggestedUser.profile_image ? (
+                      <img src={suggestedUser.profile_image} alt={suggestedUser.username} className="suggested-avatar" />
+                    ) : (
+                      <div className="suggested-avatar">
+                        {suggestedUser.username?.charAt(0).toUpperCase() || '?'}
+                      </div>
+                    )}
+                    <span className="suggested-name">{suggestedUser.username}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Chat Popup */}
-          {showChat && (
-            <div className="chat-popup-container">
-              <div className="chat-popup">
-                <div className="chat-popup-header">
-                  <h3>💬 Messages</h3>
-                  <button className="close-chat" onClick={() => setShowChat(false)}>✕</button>
-                </div>
-                <div className="chat-popup-body">
-                  <Chat />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Chat Button */}
-          <button className="chat-fab" onClick={() => setShowChat(!showChat)}>
+          {/* Chat Button - Centered at bottom */}
+          <button className="chat-fab-bottom" onClick={() => setShowChat(!showChat)}>
             💬
           </button>
         </aside>
       </div>
+
+      {/* Chat List Popup */}
+      {showChat && (
+        <div className="chat-list-popup">
+          <div className="chat-list-header">
+            <h3>💬 Messages</h3>
+            <button className="close-chat" onClick={() => setShowChat(false)}>✕</button>
+          </div>
+          <div className="chat-list-body">
+            <Chat onSelectChat={handleChatSelect} />
+          </div>
+        </div>
+      )}
+
+      {/* Individual Chat Window */}
+      {selectedChat && (
+        <div className="chat-window-popup">
+          <div className="chat-window-header">
+            <h3>💬 {selectedChat.username}</h3>
+            <button className="close-chat" onClick={() => setSelectedChat(null)}>✕</button>
+          </div>
+          <div className="chat-window-body">
+            {/* Chat messages would go here */}
+            <p className="chat-placeholder">Chat with {selectedChat.username}</p>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="page-footer">
