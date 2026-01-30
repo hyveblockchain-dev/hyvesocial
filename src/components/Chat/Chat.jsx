@@ -16,20 +16,29 @@ export default function Chat({ onSelectChat }) {
   async function loadConversations() {
     try {
       setLoading(true);
-      const data = await api.getUsers();
-      console.log('Users from API:', data); // Debug log
+      console.log('Loading users...');
       
-      // Filter out current user - handle both snake_case and camelCase
+      const data = await api.getUsers();
+      console.log('API Response:', data);
+      
+      if (!data.users || !Array.isArray(data.users)) {
+        console.error('Invalid response format:', data);
+        setConversations([]);
+        return;
+      }
+      
+      // Filter out current user
       const otherUsers = data.users.filter(u => {
         const userAddress = u.wallet_address || u.walletAddress;
         const currentAddress = user?.walletAddress || user?.wallet_address;
         return userAddress !== currentAddress;
       });
       
-      console.log('Filtered users:', otherUsers); // Debug log
+      console.log('Filtered users:', otherUsers);
       setConversations(otherUsers);
     } catch (error) {
       console.error('Load conversations error:', error);
+      setConversations([]);
     } finally {
       setLoading(false);
     }
@@ -52,7 +61,7 @@ export default function Chat({ onSelectChat }) {
   return (
     <div className="chat-container">
       {conversations.length === 0 ? (
-        <div className="chat-empty">No users to chat with</div>
+        <div className="chat-empty">No users available</div>
       ) : (
         <div className="conversation-list">
           {conversations.map(conversation => {

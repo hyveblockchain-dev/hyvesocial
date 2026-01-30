@@ -1,201 +1,150 @@
 // src/services/api.js
-const API_URL = 'https://social-api.hyvechain.com/api';
+import axios from 'axios';
 
-class ApiService {
-  constructor() {
-    this.token = localStorage.getItem('authToken');
+const API_URL = 'https://api.hyvechain.com';
+
+// Create axios instance
+const apiClient = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add auth token to requests
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
+  return config;
+});
 
-  setToken(token) {
-    this.token = token;
-    localStorage.setItem('authToken', token);
-  }
-
-  clearToken() {
-    this.token = null;
-    localStorage.removeItem('authToken');
-  }
-
-  async request(endpoint, options = {}) {
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(this.token && { 'Authorization': `Bearer ${this.token}` }),
-      ...options.headers
-    };
-
-    try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        ...options,
-        headers
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || `HTTP ${response.status}`);
-      }
-
-      return data;
-    } catch (error) {
-      console.error('API Error:', error);
-      if (error.message.includes('401')) {
-        this.clearToken();
-        window.location.href = '/login';
-      }
-      throw error;
-    }
-  }
-
+const api = {
   // Auth
-  async getNonce(address) {
-    return this.request(`/auth/nonce/${address}`);
-  }
-
-  async login(address, signature) {
-    return this.request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ address, signature })
+  login: async (walletAddress, signature) => {
+    const response = await apiClient.post('/auth/login', {
+      wallet_address: walletAddress,
+      signature,
     });
-  }
+    return response.data;
+  },
 
-  // Profile
-  async createProfile(profileData) {
-    return this.request('/profile', {
-      method: 'POST',
-      body: JSON.stringify(profileData)
+  register: async (walletAddress, username) => {
+    const response = await apiClient.post('/auth/register', {
+      wallet_address: walletAddress,
+      username,
     });
-  }
+    return response.data;
+  },
 
-  async updateProfile(profileData) {
-    return this.request('/profile', {
-      method: 'PUT',
-      body: JSON.stringify(profileData)
+  getCurrentUser: async () => {
+    const response = await apiClient.get('/auth/me');
+    return response.data;
+  },
+
+  // Users
+  getUsers: async () => {
+    const response = await apiClient.get('/users');
+    return response.data;
+  },
+
+  getUserByAddress: async (address) => {
+    const response = await apiClient.get(`/users/${address}`);
+    return response.data;
+  },
+
+  updateProfile: async (username, bio, profileImage) => {
+    const response = await apiClient.put('/users/profile', {
+      username,
+      bio,
+      profile_image: profileImage,
     });
-  }
+    return response.data;
+  },
 
-  async getProfile(address) {
-    return this.request(`/profile/${address}`);
-  }
+  searchUsers: async (query) => {
+    const response = await apiClient.get(`/users/search?q=${encodeURIComponent(query)}`);
+    return response.data;
+  },
 
   // Posts
-  async createPost(postData) {
-    return this.request('/posts', {
-      method: 'POST',
-      body: JSON.stringify(postData)
+  createPost: async (content, imageUrl = null) => {
+    const response = await apiClient.post('/posts', {
+      content,
+      image_url: imageUrl,
     });
-  }
+    return response.data;
+  },
 
-  async getPosts(limit = 50, offset = 0) {
-    return this.request(`/posts?limit=${limit}&offset=${offset}`);
-  }
+  getPosts: async () => {
+    const response = await apiClient.get('/posts');
+    return response.data;
+  },
 
-  async getUserPosts(address) {
-    return this.request(`/posts/user/${address}`);
-  }
+  getPostsByUser: async (address) => {
+    const response = await apiClient.get(`/posts/user/${address}`);
+    return response.data;
+  },
 
-  async deletePost(postId) {
-    return this.request(`/posts/${postId}`, {
-      method: 'DELETE'
-    });
-  }
+  deletePost: async (postId) => {
+    const response = await apiClient.delete(`/posts/${postId}`);
+    return response.data;
+  },
 
   // Reactions
-  async reactToPost(postId, reactionType) {
-    return this.request(`/posts/${postId}/react`, {
-      method: 'POST',
-      body: JSON.stringify({ reactionType })
+  reactToPost: async (postId, reactionType) => {
+    const response = await apiClient.post(`/posts/${postId}/reactions`, {
+      reaction_type: reactionType,
     });
-  }
+    return response.data;
+  },
 
-  async removeReaction(postId) {
-    return this.request(`/posts/${postId}/react`, {
-      method: 'DELETE'
-    });
-  }
+  removeReaction: async (postId) => {
+    const response = await apiClient.delete(`/posts/${postId}/reactions`);
+    return response.data;
+  },
 
   // Comments
-  async addComment(postId, content) {
-    return this.request(`/posts/${postId}/comments`, {
-      method: 'POST',
-      body: JSON.stringify({ content })
+  addComment: async (postId, content) => {
+    const response = await apiClient.post(`/posts/${postId}/comments`, {
+      content,
     });
-  }
+    return response.data;
+  },
 
-  async getComments(postId) {
-    return this.request(`/posts/${postId}/comments`);
-  }
+  getComments: async (postId) => {
+    const response = await apiClient.get(`/posts/${postId}/comments`);
+    return response.data;
+  },
 
-  async deleteComment(commentId) {
-    return this.request(`/comments/${commentId}`, {
-      method: 'DELETE'
+  deleteComment: async (postId, commentId) => {
+    const response = await apiClient.delete(`/posts/${postId}/comments/${commentId}`);
+    return response.data;
+  },
+
+  // Following
+  followUser: async (address) => {
+    const response = await apiClient.post('/users/follow', {
+      followed_address: address,
     });
-  }
+    return response.data;
+  },
 
-  // Follow
-  async followUser(address) {
-    return this.request(`/follow/${address}`, {
-      method: 'POST'
-    });
-  }
+  unfollowUser: async (address) => {
+    const response = await apiClient.delete(`/users/follow/${address}`);
+    return response.data;
+  },
 
-  async unfollowUser(address) {
-    return this.request(`/follow/${address}`, {
-      method: 'DELETE'
-    });
-  }
+  getFollowers: async () => {
+    const response = await apiClient.get('/users/followers');
+    return response.data;
+  },
 
-  async getFollowers(address) {
-    return this.request(`/followers/${address}`);
-  }
+  getFollowing: async () => {
+    const response = await apiClient.get('/users/following');
+    return response.data;
+  },
+};
 
-  async getFollowing(address) {
-    return this.request(`/following/${address}`);
-  }
-
-  // Messages
-  async sendMessage(messageData) {
-    return this.request('/messages', {
-      method: 'POST',
-      body: JSON.stringify(messageData)
-    });
-  }
-
-  async getConversation(address) {
-    return this.request(`/messages/${address}`);
-  }
-
-  async getConversations() {
-    return this.request('/conversations');
-  }
-
-  // Search
-  async searchUsers(query) {
-    return this.request(`/search/users?q=${encodeURIComponent(query)}`);
-  }
-
-  // Albums
-  async createAlbum(albumData) {
-    return this.request('/albums', {
-      method: 'POST',
-      body: JSON.stringify(albumData)
-    });
-  }
-
-  async getUserAlbums(address) {
-    return this.request(`/albums/user/${address}`);
-  }
-
-  // Stories
-  async createStory(storyData) {
-    return this.request('/stories', {
-      method: 'POST',
-      body: JSON.stringify(storyData)
-    });
-  }
-
-  async getStories() {
-    return this.request('/stories');
-  }
-}
-
-export default new ApiService();
+export default api;
