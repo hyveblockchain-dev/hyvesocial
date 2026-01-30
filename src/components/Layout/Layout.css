@@ -1,16 +1,6 @@
 /* src/components/Layout/Layout.css */
 
-/* Main Container - Full viewport */
-.page-container {
-  width: 1400px;
-  margin: 0 auto;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-primary);
-}
-
-/* Header - Fixed at top */
+/* Fixed Header - 1400px centered */
 .page-header {
   position: fixed;
   top: 0;
@@ -140,27 +130,27 @@
   color: var(--gold-primary);
 }
 
-/* Body - Fixed height between header and footer */
+/* Body Container - For positioning only */
 .page-body {
-  margin-top: 60px;
-  margin-bottom: 60px;
-  display: flex;
-  gap: 20px;
-  padding: 20px;
+  position: relative;
+  width: 1400px;
+  margin: 60px auto;
   min-height: calc(100vh - 120px);
 }
 
-/* Left Sidebar - Full height */
+/* Left Sidebar - FIXED */
 .left-column {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-700px); /* Half of 1400px */
+  top: 60px;
+  bottom: 60px;
   width: 280px;
-  flex-shrink: 0;
   background: var(--bg-secondary);
   border-radius: 12px;
   padding: 20px;
   overflow-y: auto;
-  height: calc(100vh - 120px);
-  position: sticky;
-  top: 60px;
+  z-index: 50;
 }
 
 .wallet-card {
@@ -289,19 +279,20 @@
 
 /* Center Content - Scrollable */
 .center-column {
-  flex: 1;
-  max-width: 680px;
-  min-width: 0;
-  overflow-y: visible;
+  width: 680px;
+  margin: 0 auto;
+  padding: 20px 0;
 }
 
-/* Right Sidebar - Full height */
+/* Right Sidebar - FIXED, same width as left */
 .right-column {
-  width: 320px;
-  flex-shrink: 0;
-  height: calc(100vh - 120px);
-  position: sticky;
+  position: fixed;
+  right: 50%;
+  transform: translateX(700px); /* Half of 1400px */
   top: 60px;
+  bottom: 60px;
+  width: 280px;
+  z-index: 50;
 }
 
 .widget {
@@ -326,7 +317,7 @@
   padding: 20px;
 }
 
-/* Footer - Fixed at bottom */
+/* Fixed Footer - 1400px centered */
 .page-footer {
   position: fixed;
   bottom: 0;
@@ -366,47 +357,51 @@
   font-size: 12px;
 }
 
-/* Scrollbar styling for sidebars */
+/* Scrollbar styling */
 .left-column::-webkit-scrollbar,
-.right-column::-webkit-scrollbar,
 .widget::-webkit-scrollbar {
   width: 6px;
 }
 
 .left-column::-webkit-scrollbar-thumb,
-.right-column::-webkit-scrollbar-thumb,
 .widget::-webkit-scrollbar-thumb {
   background: #333;
   border-radius: 3px;
 }
 
 .left-column::-webkit-scrollbar-thumb:hover,
-.right-column::-webkit-scrollbar-thumb:hover,
 .widget::-webkit-scrollbar-thumb:hover {
   background: var(--gold-dark);
 }
 
 /* Responsive */
 @media (max-width: 1400px) {
-  .page-container {
-    width: 100%;
-  }
-  
   .page-header,
   .page-footer {
     width: 100%;
     left: 0;
     transform: none;
   }
+  
+  .left-column {
+    left: 0;
+    transform: none;
+  }
+  
+  .right-column {
+    right: 0;
+    transform: none;
+  }
+  
+  .page-body {
+    width: 100%;
+    padding: 0 20px;
+  }
 }
 
 @media (max-width: 1200px) {
   .right-column {
     display: none;
-  }
-  
-  .center-column {
-    max-width: 100%;
   }
 }
 
@@ -415,11 +410,11 @@
     display: none;
   }
   
-  .page-body {
-    padding: 10px;
-  }
-  
   .search-box {
     display: none;
+  }
+  
+  .center-column {
+    width: 100%;
   }
 }
