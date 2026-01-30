@@ -19,7 +19,7 @@ export default function Layout({ children }) {
 
   return (
     <div className="page-container">
-      {/* Header - 1400px centered */}
+      {/* Header */}
       <header className="page-header">
         <div className="logo">
           <span className="logo-icon">⚡</span>
@@ -32,7 +32,6 @@ export default function Layout({ children }) {
 
         <div className="header-actions">
           <button className="icon-btn">🔔</button>
-          <button className="icon-btn">💬</button>
           
           <div className="user-menu">
             <button className="user-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
@@ -53,18 +52,24 @@ export default function Layout({ children }) {
         </div>
       </header>
 
-      {/* Body - 3 columns */}
+      {/* Body */}
       <div className="page-body">
         {/* Left Sidebar */}
         <aside className="left-column">
-          <div className="wallet-card">
-            <div className="wallet-avatar">
+          {/* User Profile Card */}
+          <div className="profile-card">
+            <div className="profile-avatar">
               {user?.username?.charAt(0).toUpperCase() || '?'}
             </div>
-            <div className="wallet-info">
-              <h3>Connect Wallet</h3>
-              <p>Connect your wallet to get started<br/>Now connected!</p>
+            <div className="profile-details">
+              <h3>{user?.username || 'User'}</h3>
+              <p className="profile-address">
+                {user?.walletAddress?.slice(0, 6)}...{user?.walletAddress?.slice(-4)}
+              </p>
             </div>
+            <button className="disconnect-btn" onClick={handleLogout}>
+              Disconnect Wallet
+            </button>
           </div>
 
           <nav className="nav-menu">
@@ -115,14 +120,22 @@ export default function Layout({ children }) {
 
         {/* Right Sidebar */}
         <aside className="right-column">
-          <div className="widget">
+          <div className="widget suggestions">
             <h3>Suggested Users</h3>
             <p className="loading">Loading users...</p>
           </div>
+
+          {/* Chat Section */}
+          <Link to="/chat" className="chat-link">
+            <button className="chat-button">
+              <span className="chat-icon">💬</span>
+              <span>Chat</span>
+            </button>
+          </Link>
         </aside>
       </div>
 
-      {/* Footer - 1400px centered */}
+      {/* Footer */}
       <footer className="page-footer">
         <div className="footer-links">
           <a href="#">About</a>

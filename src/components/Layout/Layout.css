@@ -1,6 +1,6 @@
 /* src/components/Layout/Layout.css */
 
-/* Fixed Header - 1400px centered */
+/* Fixed Header */
 .page-header {
   position: fixed;
   top: 0;
@@ -12,9 +12,9 @@
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   padding: 0 20px;
-  gap: 20px;
+  gap: 40px;
   z-index: 100;
 }
 
@@ -36,7 +36,7 @@
 
 .search-box {
   flex: 1;
-  max-width: 400px;
+  max-width: 500px;
 }
 
 .search-box input {
@@ -130,7 +130,7 @@
   color: var(--gold-primary);
 }
 
-/* Body Container - For positioning only */
+/* Body */
 .page-body {
   position: relative;
   width: 1400px;
@@ -138,34 +138,31 @@
   min-height: calc(100vh - 120px);
 }
 
-/* Left Sidebar - FIXED */
+/* Left Sidebar - SQUARE CORNERS */
 .left-column {
   position: fixed;
   left: 50%;
-  transform: translateX(-700px); /* Half of 1400px */
+  transform: translateX(-700px);
   top: 60px;
   bottom: 60px;
   width: 280px;
   background: var(--bg-secondary);
-  border-radius: 12px;
   padding: 20px;
   overflow-y: auto;
   z-index: 50;
 }
 
-.wallet-card {
+/* Profile Card */
+.profile-card {
   background: #2a2a2a;
-  border-radius: 12px;
   padding: 16px;
   margin-bottom: 20px;
-  display: flex;
-  gap: 12px;
-  align-items: center;
+  text-align: center;
 }
 
-.wallet-avatar {
-  width: 48px;
-  height: 48px;
+.profile-avatar {
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   background: var(--gold-primary);
   color: #000;
@@ -173,20 +170,36 @@
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 20px;
-  flex-shrink: 0;
+  font-size: 28px;
+  margin: 0 auto 12px;
 }
 
-.wallet-info h3 {
-  font-size: 14px;
-  color: var(--gold-primary);
+.profile-details h3 {
+  font-size: 16px;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
-.wallet-info p {
-  font-size: 11px;
+.profile-address {
+  font-size: 12px;
   color: #888;
-  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.disconnect-btn {
+  width: 100%;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.disconnect-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .nav-menu {
@@ -277,31 +290,36 @@
   line-height: 1.4;
 }
 
-/* Center Content - Scrollable */
+/* Center Content - WIDER */
 .center-column {
-  width: 680px;
+  width: 760px;
   margin: 0 auto;
   padding: 20px 0;
 }
 
-/* Right Sidebar - FIXED, same width as left */
+/* Right Sidebar - SQUARE CORNERS */
 .right-column {
   position: fixed;
   right: 50%;
-  transform: translateX(700px); /* Half of 1400px */
+  transform: translateX(700px);
   top: 60px;
   bottom: 60px;
   width: 280px;
   z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .widget {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
   padding: 20px;
-  height: 100%;
   overflow-y: auto;
+}
+
+.widget.suggestions {
+  flex: 1;
 }
 
 .widget h3 {
@@ -317,7 +335,36 @@
   padding: 20px;
 }
 
-/* Fixed Footer - 1400px centered */
+/* Chat Button at Bottom */
+.chat-link {
+  text-decoration: none;
+}
+
+.chat-button {
+  width: 100%;
+  padding: 16px;
+  background: var(--gold-primary);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #000;
+  transition: all 0.2s;
+}
+
+.chat-button:hover {
+  background: var(--gold-light);
+}
+
+.chat-icon {
+  font-size: 24px;
+}
+
+/* Fixed Footer */
 .page-footer {
   position: fixed;
   bottom: 0;
@@ -357,7 +404,7 @@
   font-size: 12px;
 }
 
-/* Scrollbar styling */
+/* Scrollbar */
 .left-column::-webkit-scrollbar,
 .widget::-webkit-scrollbar {
   width: 6px;
