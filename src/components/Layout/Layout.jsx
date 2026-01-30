@@ -18,49 +18,45 @@ export default function Layout({ children }) {
   }
 
   return (
-    <>
-      {/* Fixed Header - Full Width */}
-      <header className="top-header">
-        <div className="header-container">
-          <div className="logo">
-            <span className="logo-icon">⚡</span>
-            <span className="logo-text">Hyve Social</span>
-          </div>
+    <div className="page-container">
+      {/* Header - 1400px centered */}
+      <header className="page-header">
+        <div className="logo">
+          <span className="logo-icon">⚡</span>
+          <span className="logo-text">Hyve Social</span>
+        </div>
 
-          <div className="search-box">
-            <input type="text" placeholder="Search users..." />
-          </div>
+        <div className="search-box">
+          <input type="text" placeholder="Search users..." />
+        </div>
 
-          <div className="header-actions">
-            <button className="icon-btn">🔔</button>
-            <button className="icon-btn">💬</button>
-            
-            <div className="user-menu">
-              <button className="user-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
-                <div className="avatar-mini">
-                  {user?.username?.charAt(0).toUpperCase() || '?'}
-                </div>
-              </button>
+        <div className="header-actions">
+          <button className="icon-btn">🔔</button>
+          <button className="icon-btn">💬</button>
+          
+          <div className="user-menu">
+            <button className="user-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
+              <div className="avatar-mini">
+                {user?.username?.charAt(0).toUpperCase() || '?'}
+              </div>
+            </button>
 
-              {showUserMenu && (
-                <div className="user-dropdown">
-                  <Link to={`/profile/${user?.walletAddress}`} onClick={() => setShowUserMenu(false)}>
-                    My Profile
-                  </Link>
-                  <button onClick={handleLogout}>
-                    Disconnect Wallet
-                  </button>
-                </div>
-              )}
-            </div>
+            {showUserMenu && (
+              <div className="user-dropdown">
+                <Link to={`/profile/${user?.walletAddress}`} onClick={() => setShowUserMenu(false)}>
+                  My Profile
+                </Link>
+                <button onClick={handleLogout}>Disconnect Wallet</button>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Main Layout - Between Header and Footer */}
-      <div className="layout-body">
+      {/* Body - 3 columns */}
+      <div className="page-body">
         {/* Left Sidebar */}
-        <aside className="sidebar-left">
+        <aside className="left-column">
           <div className="wallet-card">
             <div className="wallet-avatar">
               {user?.username?.charAt(0).toUpperCase() || '?'}
@@ -76,23 +72,19 @@ export default function Layout({ children }) {
               <span className="nav-icon">📰</span>
               <span>Feed</span>
             </Link>
-
             <Link to="/videos" className="nav-item">
               <span className="nav-icon">🎥</span>
               <span>Videos</span>
             </Link>
-
             <Link to={`/profile/${user?.walletAddress}`} className="nav-item">
               <span className="nav-icon">👤</span>
               <span>My Profile</span>
             </Link>
-
             <Link to="/friends" className="nav-item">
               <span className="nav-icon">👥</span>
               <span>Friends</span>
               <span className="badge">0</span>
             </Link>
-
             <Link to="/discover" className="nav-item">
               <span className="nav-icon">🔍</span>
               <span>Discover</span>
@@ -104,7 +96,6 @@ export default function Layout({ children }) {
               <h4>YOUR POSTS</h4>
               <div className="stat-num">0</div>
             </div>
-            
             <div className="stat-item">
               <h4>FRIENDS</h4>
               <div className="stat-num">0</div>
@@ -117,13 +108,13 @@ export default function Layout({ children }) {
           </div>
         </aside>
 
-        {/* Main Content - Scrollable */}
-        <main className="content-area">
+        {/* Center Content */}
+        <main className="center-column">
           {children}
         </main>
 
         {/* Right Sidebar */}
-        <aside className="sidebar-right">
+        <aside className="right-column">
           <div className="widget">
             <h3>Suggested Users</h3>
             <p className="loading">Loading users...</p>
@@ -131,18 +122,16 @@ export default function Layout({ children }) {
         </aside>
       </div>
 
-      {/* Fixed Footer - Full Width */}
-      <footer className="bottom-footer">
-        <div className="footer-content">
-          <div className="footer-links">
-            <a href="#">About</a>
-            <a href="#">Help</a>
-            <a href="#">Terms</a>
-            <a href="#">Privacy</a>
-          </div>
-          <p className="copyright">© 2026 Hyve Social</p>
+      {/* Footer - 1400px centered */}
+      <footer className="page-footer">
+        <div className="footer-links">
+          <a href="#">About</a>
+          <a href="#">Help</a>
+          <a href="#">Terms</a>
+          <a href="#">Privacy</a>
         </div>
+        <p className="copyright">© 2026 Hyve Social</p>
       </footer>
-    </>
+    </div>
   );
 }
