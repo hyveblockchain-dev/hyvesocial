@@ -4,17 +4,58 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--bg-primary);
+  position: relative;
 }
 
-/* Header */
+/* Animated Background */
+.app-layout::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+  z-index: -2;
+}
+
+/* Particle Animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  25% { transform: translateY(-20px) translateX(10px); }
+  50% { transform: translateY(-10px) translateX(-10px); }
+  75% { transform: translateY(-30px) translateX(5px); }
+}
+
+.app-layout::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(2px 2px at 20% 30%, rgba(255, 215, 0, 0.3), transparent),
+    radial-gradient(2px 2px at 60% 70%, rgba(255, 215, 0, 0.2), transparent),
+    radial-gradient(1px 1px at 50% 50%, rgba(255, 215, 0, 0.3), transparent),
+    radial-gradient(1px 1px at 80% 10%, rgba(255, 215, 0, 0.2), transparent),
+    radial-gradient(2px 2px at 90% 60%, rgba(255, 215, 0, 0.3), transparent),
+    radial-gradient(1px 1px at 33% 80%, rgba(255, 215, 0, 0.2), transparent),
+    radial-gradient(2px 2px at 10% 90%, rgba(255, 215, 0, 0.3), transparent);
+  background-size: 200% 200%;
+  animation: float 20s ease-in-out infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Header - Fixed at top */
 .app-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   height: 70px;
-  background: var(--bg-card);
+  background: rgba(0, 0, 0, 0.8);
   border-bottom: 1px solid var(--border-color);
   z-index: 100;
   backdrop-filter: blur(10px);
@@ -122,7 +163,7 @@
   border-radius: 12px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   z-index: 1000;
   overflow: hidden;
 }
@@ -253,20 +294,22 @@
   background: rgba(239, 68, 68, 0.1);
 }
 
-/* Body */
+/* Body - 3 column layout */
 .app-body {
   margin-top: 70px;
-  display: flex;
+  margin-bottom: 70px;
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
   max-width: 1400px;
   width: 100%;
   margin-left: auto;
   margin-right: auto;
   min-height: calc(100vh - 140px);
+  gap: 0;
 }
 
-/* Sidebar */
+/* Left Sidebar */
 .app-sidebar {
-  width: 280px;
   padding: 20px;
   border-right: 1px solid var(--border-color);
   display: flex;
@@ -276,6 +319,9 @@
   top: 70px;
   height: calc(100vh - 70px);
   overflow-y: auto;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .user-profile {
@@ -377,28 +423,29 @@
   margin-top: 4px;
 }
 
-/* Main Content */
+/* Main Content - Center */
 .app-main {
-  flex: 1;
   padding: 20px;
-  max-width: 100%;
+  overflow-y: auto;
 }
 
 .center-column {
   width: 100%;
   max-width: 840px;
   margin: 0 auto;
-  padding: 20px;
 }
 
 /* Right Sidebar */
 .app-right-sidebar {
-  width: 320px;
   padding: 20px;
   position: sticky;
   top: 70px;
   height: calc(100vh - 70px);
   overflow-y: auto;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-left: 1px solid var(--border-color);
 }
 
 .suggested-users {
@@ -452,15 +499,24 @@
   font-weight: 600;
 }
 
-/* Footer */
+/* Footer - Fixed at bottom */
 .app-footer {
-  background: var(--bg-card);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.8);
   border-top: 1px solid var(--border-color);
   padding: 20px;
   text-align: center;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
   display: flex;
   justify-content: center;
   gap: 20px;
@@ -480,7 +536,7 @@
 /* Chat Button */
 .chat-button {
   position: fixed;
-  bottom: 30px;
+  bottom: 100px;
   right: 30px;
   width: 60px;
   height: 60px;
@@ -502,14 +558,14 @@
 /* Chat Popups */
 .chat-list-popup {
   position: fixed;
-  bottom: 150px;
-  right: calc(50% - 580px);
+  bottom: 170px;
+  right: 30px;
   width: 360px;
   height: 500px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   z-index: 80;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -517,14 +573,14 @@
 
 .chat-window-popup {
   position: fixed;
-  bottom: 150px;
-  right: calc(50% - 960px);
+  bottom: 170px;
+  right: 410px;
   width: 360px;
   height: 500px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   z-index: 80;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -532,12 +588,20 @@
 
 /* Responsive */
 @media (max-width: 1200px) {
+  .app-body {
+    grid-template-columns: 280px 1fr;
+  }
+  
   .app-right-sidebar {
     display: none;
   }
 }
 
 @media (max-width: 900px) {
+  .app-body {
+    grid-template-columns: 80px 1fr;
+  }
+
   .app-sidebar {
     width: 80px;
     padding: 20px 10px;
@@ -567,7 +631,6 @@
   }
 
   .center-column {
-    max-width: 100%;
     padding: 10px;
   }
 }
@@ -590,7 +653,6 @@
   .chat-list-popup,
   .chat-window-popup {
     right: 10px;
-    left: 10px;
-    width: auto;
+    width: calc(100vw - 20px);
   }
 }
