@@ -19,231 +19,164 @@ apiClient.interceptors.request.use((config) => {
 });
 
 const api = {
+  // =====================
   // Auth
+  // =====================
   login: async (walletAddress, signature) => {
     const response = await apiClient.post('/auth/login', {
       address: walletAddress,
       signature,
     });
+    localStorage.setItem('auth_token', response.data.token);
     return response.data;
   },
 
-  register: async (walletAddress, username) => {
+  register: async (walletAddress, signature, username) => {
     const loginResponse = await apiClient.post('/auth/login', {
       address: walletAddress,
+      signature,
     });
-    
+
     const token = loginResponse.data.token;
-    const profileResponse = await axios.post(
-      `${API_URL}/profile`,
-      { username },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    
+    localStorage.setItem('auth_token', token);
+
+    const profileResponse = await apiClient.post('/profile', { username });
+
     return {
       token,
-      user: profileResponse.data.user
+      user: profileResponse.data.user,
     };
   },
 
   getCurrentUser: async () => {
     const token = localStorage.getItem('auth_token');
     if (!token) throw new Error('No token');
-    
+
     const payload = JSON.parse(atob(token.split('.')[1]));
     const address = payload.walletAddress;
-    
+
     const response = await apiClient.get(`/profile/${address}`);
     return response.data;
   },
 
+  // =====================
   // Users
-  getUsers: async () => {
-    const response = await apiClient.get('/search/users?q=');
-    return response.data;
-  },
+  // =====================
+  getUsers: async () => (await apiClient.get('/search/users?q=')).data,
 
-  getProfile: async (address) => {
-    const response = await apiClient.get(`/profile/${address}`);
-    return response.data;
-  },
+  getProfile: async (address) =>
+    (await apiClient.get(`/profile/${address}`)).data,
 
-  getUserByAddress: async (address) => {
-    const response = await apiClient.get(`/profile/${address}`);
-    return response.data;
-  },
-
-  updateProfile: async (username, bio, profileImage, coverImage, location, website) => {
-    const response = await apiClient.put('/profile', {
-      username,
-      bio,
-      profileImage,
-      coverImage,
-      location,
-      website
+  updateProfile: async (formData) => {
+    const response = await apiClient.put('/users/profile', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
   },
 
-  searchUsers: async (query) => {
-    const response = await apiClient.get(`/search/users?q=${encodeURIComponent(query)}`);
-    return response.data;
-  },
+  searchUsers: async (query) =>
+    (await apiClient.get(`/search/users?q=${encodeURIComponent(query)}`)).data,
 
+  // =====================
   // Posts
-  createPost: async (content, imageUrl = null) => {
-    const response = await apiClient.post('/posts', {
-      content,
-      imageUrl,
-    });
-    return response.data;
-  },
+  // =====================
+  createPost: async (content, imageUrl = null) =>
+    (await apiClient.post('/posts', { content, imageUrl })).data,
 
-  getPosts: async () => {
-    const response = await apiClient.get('/posts');
-    return response.data;
-  },
+  getPosts: async () => (await apiClient.get('/posts')).data,
 
-  getPostsByUser: async (address) => {
-    const response = await apiClient.get(`/posts/user/${address}`);
-    return response.data;
-  },
+  getPostsByUser: async (address) =>
+    (await apiClient.get(`/posts/user/${address}`)).data,
 
-  getUserPosts: async (address) => {
-    const response = await apiClient.get(`/posts/user/${address}`);
-    return response.data;
-  },
+  deletePost: async (postId) =>
+    (await apiClient.delete(`/posts/${postId}`)).data,
 
-  deletePost: async (postId) => {
-    const response = await apiClient.delete(`/posts/${postId}`);
-    return response.data;
-  },
-
+  // =====================
   // Reactions
-  reactToPost: async (postId, reactionType) => {
-    const response = await apiClient.post(`/posts/${postId}/react`, {
-      reactionType,
-    });
-    return response.data;
-  },
+  // =====================
+  reactToPost: async (postId, reactionType) =>
+    (await apiClient.post(`/posts/${postId}/react`, { reactionType })).data,
 
-  removeReaction: async (postId) => {
-    const response = await apiClient.delete(`/posts/${postId}/react`);
-    return response.data;
-  },
+  removeReaction: async (postId) =>
+    (await apiClient.delete(`/posts/${postId}/react`)).data,
 
-  getReactions: async (postId) => {
-    const response = await apiClient.get(`/posts/${postId}/reactions`);
-    return response.data;
-  },
+  getReactions: async (postId) =>
+    (await apiClient.get(`/posts/${postId}/reactions`)).data,
 
+  // =====================
   // Comments
-  addComment: async (postId, content) => {
-    const response = await apiClient.post(`/posts/${postId}/comments`, {
-      content,
-    });
-    return response.data;
-  },
+  // =====================
+  addComment: async (postId, content) =>
+    (await apiClient.post(`/posts/${postId}/comments`, { content })).data,
 
-  getComments: async (postId) => {
-    const response = await apiClient.get(`/posts/${postId}/comments`);
-    return response.data;
-  },
+  getComments: async (postId) =>
+    (await apiClient.get(`/posts/${postId}/comments`)).data,
 
-  deleteComment: async (postId, commentId) => {
-    const response = await apiClient.delete(`/comments/${commentId}`);
-    return response.data;
-  },
+  deleteComment: async (commentId) =>
+    (await apiClient.delete(`/comments/${commentId}`)).data,
 
-  // Friend Requests
-  sendFriendRequest: async (address) => {
-    const response = await apiClient.post(`/friend-request/${address}`);
-    return response.data;
-  },
+  // =====================
+  // Friends
+  // =====================
+  sendFriendRequest: async (address) =>
+    (await apiClient.post(`/friend-request/${address}`)).data,
 
-  acceptFriendRequest: async (requestId) => {
-    const response = await apiClient.post(`/friend-request/${requestId}/accept`);
-    return response.data;
-  },
+  acceptFriendRequest: async (requestId) =>
+    (await apiClient.post(`/friend-request/${requestId}/accept`)).data,
 
-  declineFriendRequest: async (requestId) => {
-    const response = await apiClient.post(`/friend-request/${requestId}/decline`);
-    return response.data;
-  },
+  declineFriendRequest: async (requestId) =>
+    (await apiClient.post(`/friend-request/${requestId}/decline`)).data,
 
-  getFriendRequests: async () => {
-    const response = await apiClient.get('/friend-requests');
-    return response.data;
-  },
+  getFriendRequests: async () =>
+    (await apiClient.get('/friend-requests')).data,
 
-  getFriends: async () => {
-    const response = await apiClient.get('/friends');
-    return response.data;
-  },
+  getFriends: async () => (await apiClient.get('/friends')).data,
 
-  getFriendshipStatus: async (address) => {
-    const response = await apiClient.get(`/friendship-status/${address}`);
-    return response.data;
-  },
+  getFriendshipStatus: async (address) =>
+    (await apiClient.get(`/friendship-status/${address}`)).data,
 
-  removeFriend: async (address) => {
-    const response = await apiClient.delete(`/friend/${address}`);
-    return response.data;
-  },
+  removeFriend: async (address) =>
+    (await apiClient.delete(`/friend/${address}`)).data,
 
+  // =====================
   // Messages
-  sendMessage: async (toAddress, content) => {
-    const response = await apiClient.post('/messages', {
-      toAddress,
-      content,
+  // =====================
+  sendMessage: async (toAddress, content) =>
+    (await apiClient.post('/messages', { toAddress, content })).data,
+
+  getMessages: async (address) =>
+    (await apiClient.get(`/messages/${address}`)).data,
+
+  getConversations: async () =>
+    (await apiClient.get('/conversations')).data,
+
+  markMessagesAsRead: async (address) =>
+    (await apiClient.put(`/messages/read/${address}`)).data,
+
+  // =====================
+  // Albums (NEW)
+  // =====================
+  getAlbums: async (walletAddress) =>
+    (await apiClient.get(`/albums/${walletAddress}`)).data,
+
+  createAlbum: async (name) =>
+    (await apiClient.post('/albums', { name })).data,
+
+  getAlbumPhotos: async (albumId) =>
+    (await apiClient.get(`/albums/${albumId}/photos`)).data,
+
+  uploadToAlbum: async (formData) => {
+    const response = await apiClient.post('/albums/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
   },
 
-  getMessages: async (address) => {
-    const response = await apiClient.get(`/messages/${address}`);
-    return response.data;
-  },
+  deleteAlbumPhoto: async (photoId) =>
+    (await apiClient.delete(`/albums/photos/${photoId}`)).data,
 
-  getConversations: async () => {
-    const response = await apiClient.get('/conversations');
-    return response.data;
-  },
-
-  markMessagesAsRead: async (address) => {
-    const response = await apiClient.put(`/messages/read/${address}`);
-    return response.data;
-  },
-
-  // Legacy follow endpoints (kept for compatibility)
-  followUser: async (address) => {
-    const response = await apiClient.post(`/follow/${address}`);
-    return response.data;
-  },
-
-  unfollowUser: async (address) => {
-    const response = await apiClient.delete(`/follow/${address}`);
-    return response.data;
-  },
-
-  getFollowers: async (address) => {
-    const response = await apiClient.get(`/followers/${address}`);
-    return response.data;
-  },
-
-  getFollowing: async (address) => {
-    const response = await apiClient.get(`/following/${address}`);
-    return response.data;
-  },
-
-  isFollowing: async (address) => {
-    try {
-      const response = await apiClient.get(`/following/${address}`);
-      return response.data;
-    } catch (error) {
-      return { following: [] };
-    }
-  },
+  deleteAlbum: async (albumId) =>
+    (await apiClient.delete(`/albums/${albumId}`)).data,
 };
 
 export default api;

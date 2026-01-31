@@ -17,13 +17,10 @@ export default function Layout({ children }) {
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [suggestedUsers, setSuggestedUsers] = useState([]);
-  const [postCount, setPostCount] = useState(0);
-  const [friendCount, setFriendCount] = useState(0);
 
   useEffect(() => {
     loadSuggestedUsers();
-    loadUserStats();
-  }, [user]);
+  }, []);
 
   async function loadSuggestedUsers() {
     try {
@@ -46,26 +43,6 @@ export default function Layout({ children }) {
     } catch (error) {
       console.error('Load suggested users error:', error);
       // Don't block the app if this fails
-    }
-  }
-
-  async function loadUserStats() {
-    if (!user?.walletAddress) return;
-    
-    try {
-      // Load post count
-      if (api.getUserPosts) {
-        const postsData = await api.getUserPosts(user.walletAddress);
-        setPostCount(postsData.posts?.length || 0);
-      }
-      
-      // Load friend count
-      if (api.getFollowing) {
-        const friendsData = await api.getFollowing();
-        setFriendCount(friendsData.following?.length || 0);
-      }
-    } catch (error) {
-      console.error('Load user stats error:', error);
     }
   }
 
@@ -213,6 +190,7 @@ export default function Layout({ children }) {
             <Link to="/friends" className="nav-item">
               <span className="nav-icon">👥</span>
               <span>Friends</span>
+              <span className="badge">0</span>
             </Link>
             <Link to="/discover" className="nav-item">
               <span className="nav-icon">🔍</span>
@@ -223,11 +201,11 @@ export default function Layout({ children }) {
           <div className="stats-section">
             <div className="stat-item">
               <h4>YOUR POSTS</h4>
-              <div className="stat-num">{postCount}</div>
+              <div className="stat-num">0</div>
             </div>
             <div className="stat-item">
               <h4>FRIENDS</h4>
-              <div className="stat-num">{friendCount}</div>
+              <div className="stat-num">0</div>
             </div>
           </div>
 

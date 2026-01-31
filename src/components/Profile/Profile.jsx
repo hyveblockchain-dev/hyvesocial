@@ -8,39 +8,35 @@ import './Profile.css';
 
 export default function Profile() {
   const { address } = useParams();
-  const { user: currentUser } = useAuth();
+  const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [albums, setAlbums] = useState([]);
+  const [selectedAlbum, setSelectedAlbum] = useState(null);
   const [activeTab, setActiveTab] = useState('posts');
-  const [friendshipStatus, setFriendshipStatus] = useState('none');
-  const [requestId, setRequestId] = useState(null);
-  const [friends, setFriends] = useState([]);
-
-  const isOwnProfile = address?.toLowerCase() === currentUser?.walletAddress?.toLowerCase();
+  const [loading, setLoading] = useState(true);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [showCreateAlbum, setShowCreateAlbum] = useState(false);
+  const [newAlbumName, setNewAlbumName] = useState('');
+  const [showUploadToAlbum, setShowUploadToAlbum] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  
+  const isOwnProfile = user?.walletAddress === address;
 
   useEffect(() => {
-    if (address) {
-      loadProfile();
-      loadPosts();
-      if (!isOwnProfile) {
-        checkFriendshipStatus();
-      }
-      if (activeTab === 'friends') {
-        loadFriends();
-      }
-    }
-  }, [address, activeTab]);
+    loadProfile();
+    loadPosts();
+    loadAlbums();
+    checkFollowing();
+  }, [address]);
 
   async function loadProfile() {
     try {
       setLoading(true);
-      const data = await api.getProfile(address);
+      const data = await api.getUserProfile(address);
       setProfile(data.user);
     } catch (error) {
       console.error('Load profile error:', error);
-      setError('Profile not found');
     } finally {
       setLoading(false);
     }
@@ -55,214 +51,224 @@ export default function Profile() {
     }
   }
 
-  async function checkFriendshipStatus() {
+  async function loadAlbums() {
     try {
-      const data = await api.getFriendshipStatus(address);
-      setFriendshipStatus(data.status);
-      setRequestId(data.requestId || null);
+      const data = await api.getAlbums(address);
+      setAlbums(data.albums || []);
     } catch (error) {
-      console.error('Check friendship error:', error);
+      console.error('Load albums error:', error);
     }
   }
 
-  async function loadFriends() {
-    try {
-      const data = await api.getFriends();
-      setFriends(data.friends || []);
-    } catch (error) {
-      console.error('Load friends error:', error);
+  async function checkFollowing() {
+    if (!isOwnProfile && user) {
+      try {
+        const data = await api.getFollowing();
+        setIsFollowing(data.following?.some(f => f.address === address));
+      } catch (error) {
+        console.error('Check following error:', error);
+      }
     }
   }
 
-  async function handleAddFriend() {
+  async function handleFollow() {
     try {
-      await api.sendFriendRequest(address);
-      setFriendshipStatus('request_sent');
+      if (isFollowing) {
+        await api.unfollowUser(address);
+        setIsFollowing(false);
+      } else {
+        await api.followUser(address);
+        setIsFollowing(true);
+      }
     } catch (error) {
-      console.error('Send friend request error:', error);
-      alert(error.response?.data?.error || 'Failed to send friend request');
+      console.error('Follow error:', error);
     }
   }
 
-  async function handleAcceptRequest() {
-    if (!requestId) return;
-    
+  async function handleCreateAlbum(e) {
+    e.preventDefault();
+    if (!newAlbumName.trim()) return;
+
     try {
-      await api.acceptFriendRequest(requestId);
-      setFriendshipStatus('friends');
-      setRequestId(null);
+      await api.createAlbum(newAlbumName);
+      setNewAlbumName('');
+      setShowCreateAlbum(false);
+      loadAlbums();
     } catch (error) {
-      console.error('Accept friend request error:', error);
-      alert('Failed to accept friend request');
+      console.error('Create album error:', error);
     }
   }
 
-  async function handleDeclineRequest() {
-    if (!requestId) return;
-    
-    if (!confirm('Decline this friend request?')) return;
-    
+  async function handleUploadToAlbum(albumId) {
+    if (!selectedFile) return;
+
     try {
-      await api.declineFriendRequest(requestId);
-      setFriendshipStatus('none');
-      setRequestId(null);
+      const formData = new FormData();
+      formData.append('image', selectedFile);
+      formData.append('albumId', albumId);
+
+      await api.uploadToAlbum(formData);
+      setSelectedFile(null);
+      setShowUploadToAlbum(false);
+      
+      // Reload album to show new photo
+      const data = await api.getAlbumPhotos(albumId);
+      setSelectedAlbum({ ...selectedAlbum, photos: data.photos });
     } catch (error) {
-      console.error('Decline friend request error:', error);
-      alert('Failed to decline friend request');
+      console.error('Upload to album error:', error);
     }
   }
 
-  async function handleRemoveFriend() {
-    if (!confirm('Remove this friend?')) return;
-    
+  async function handleDeletePhoto(photoId) {
+    if (!confirm('Delete this photo?')) return;
+
     try {
-      await api.removeFriend(address);
-      setFriendshipStatus('none');
+      await api.deleteAlbumPhoto(photoId);
+      // Reload album photos
+      const data = await api.getAlbumPhotos(selectedAlbum.id);
+      setSelectedAlbum({ ...selectedAlbum, photos: data.photos });
     } catch (error) {
-      console.error('Remove friend error:', error);
-      alert('Failed to remove friend');
+      console.error('Delete photo error:', error);
     }
   }
 
-  function handlePostDeleted(postId) {
-    setPosts(posts.filter(p => p.id !== postId));
+  async function handleDeleteAlbum(albumId) {
+    if (!confirm('Delete this album and all its photos?')) return;
+
+    try {
+      await api.deleteAlbum(albumId);
+      setSelectedAlbum(null);
+      loadAlbums();
+    } catch (error) {
+      console.error('Delete album error:', error);
+    }
   }
 
-  function handlePostUpdated(updatedPost) {
-    setPosts(posts.map(p => p.id === updatedPost.id ? updatedPost : p));
+  async function handleViewAlbum(album) {
+    try {
+      const data = await api.getAlbumPhotos(album.id);
+      setSelectedAlbum({ ...album, photos: data.photos });
+    } catch (error) {
+      console.error('Load album photos error:', error);
+    }
+  }
+
+  async function handleUpdateProfilePicture(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('profileImage', file);
+
+      await api.updateProfile(formData);
+      loadProfile();
+      loadAlbums(); // Reload to show new photo in Profile Photos album
+    } catch (error) {
+      console.error('Update profile picture error:', error);
+    }
+  }
+
+  async function handleUpdateCoverPhoto(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('coverImage', file);
+
+      await api.updateProfile(formData);
+      loadProfile();
+      loadAlbums(); // Reload to show new photo in Cover Photos album
+    } catch (error) {
+      console.error('Update cover photo error:', error);
+    }
   }
 
   if (loading) {
-    return (
-      <div className="profile-container">
-        <div className="profile-loading">Loading profile...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="profile-container">
-        <div className="profile-error">{error}</div>
-      </div>
-    );
+    return <div className="loading-container"><div className="spinner"></div></div>;
   }
 
   if (!profile) {
-    return (
-      <div className="profile-container">
-        <div className="profile-error">Profile not found</div>
-      </div>
-    );
+    return <div className="error-container">Profile not found</div>;
   }
 
-  const friendCount = friends.length;
-
   return (
-    <div className="profile-container">
-      {/* Cover Image */}
-      <div className="profile-cover">
-        {profile.coverImage && (
-          <img src={profile.coverImage} alt="Cover" />
+    <div className="profile-page">
+      {/* Cover Photo */}
+      <div className="cover-photo">
+        {profile.cover_image ? (
+          <img src={profile.cover_image} alt="Cover" />
+        ) : (
+          <div className="cover-placeholder"></div>
+        )}
+        {isOwnProfile && (
+          <label className="edit-cover-btn">
+            📷 Change Cover
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleUpdateCoverPhoto}
+              style={{ display: 'none' }}
+            />
+          </label>
         )}
       </div>
 
       {/* Profile Header */}
       <div className="profile-header">
         <div className="profile-avatar-large">
-          {profile.profileImage ? (
-            <img src={profile.profileImage} alt={profile.username} />
+          {profile.profile_image ? (
+            <img src={profile.profile_image} alt={profile.username} />
           ) : (
             <div className="avatar-placeholder">
               {profile.username?.charAt(0).toUpperCase() || '?'}
             </div>
           )}
+          {isOwnProfile && (
+            <label className="edit-avatar-btn">
+              📷
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleUpdateProfilePicture}
+                style={{ display: 'none' }}
+              />
+            </label>
+          )}
         </div>
 
         <div className="profile-info">
-          <h1>{profile.username}</h1>
-          <p className="profile-address">
-            {profile.walletAddress?.slice(0, 6)}...{profile.walletAddress?.slice(-4)}
+          <h1>{profile.username || 'Anonymous'}</h1>
+          <p className="profile-wallet">
+            {address?.slice(0, 8)}...{address?.slice(-6)}
           </p>
           {profile.bio && <p className="profile-bio">{profile.bio}</p>}
-          
-          <div className="profile-meta">
-            {profile.location && <span>📍 {profile.location}</span>}
-            {profile.website && (
-              <a href={profile.website} target="_blank" rel="noopener noreferrer">
-                🔗 {profile.website}
-              </a>
-            )}
-          </div>
         </div>
 
-        <div className="profile-actions">
-          {!isOwnProfile && (
-            <>
-              {friendshipStatus === 'none' && (
-                <button className="btn-add-friend" onClick={handleAddFriend}>
-                  ➕ Add Friend
-                </button>
-              )}
-              
-              {friendshipStatus === 'request_sent' && (
-                <button className="btn-pending" disabled>
-                  ⏳ Request Sent
-                </button>
-              )}
-              
-              {friendshipStatus === 'request_received' && (
-                <div className="friend-request-actions">
-                  <button className="btn-accept" onClick={handleAcceptRequest}>
-                    ✓ Accept
-                  </button>
-                  <button className="btn-decline" onClick={handleDeclineRequest}>
-                    ✕ Decline
-                  </button>
-                </div>
-              )}
-              
-              {friendshipStatus === 'friends' && (
-                <button className="btn-remove-friend" onClick={handleRemoveFriend}>
-                  ❌ Remove Friend
-                </button>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="profile-stats">
-        <div className="stat-box">
-          <div className="stat-number">{posts.length}</div>
-          <div className="stat-label">Posts</div>
-        </div>
-        <div className="stat-box">
-          <div className="stat-number">{friendCount}</div>
-          <div className="stat-label">Friends</div>
-        </div>
+        {!isOwnProfile && (
+          <button 
+            className={isFollowing ? 'btn-following' : 'btn-follow'}
+            onClick={handleFollow}
+          >
+            {isFollowing ? 'Following' : 'Follow'}
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
       <div className="profile-tabs">
         <button
-          className={activeTab === 'posts' ? 'tab-active' : ''}
+          className={activeTab === 'posts' ? 'tab active' : 'tab'}
           onClick={() => setActiveTab('posts')}
         >
-          Posts
+          Posts ({posts.length})
         </button>
         <button
-          className={activeTab === 'albums' ? 'tab-active' : ''}
+          className={activeTab === 'albums' ? 'tab active' : 'tab'}
           onClick={() => setActiveTab('albums')}
         >
-          Albums
-        </button>
-        <button
-          className={activeTab === 'friends' ? 'tab-active' : ''}
-          onClick={() => setActiveTab('friends')}
-        >
-          Friends
+          Albums ({albums.length})
         </button>
       </div>
 
@@ -271,14 +277,19 @@ export default function Profile() {
         {activeTab === 'posts' && (
           <div className="posts-list">
             {posts.length === 0 ? (
-              <div className="no-posts">No posts yet</div>
+              <div className="empty-state">
+                <div className="empty-state-icon">📝</div>
+                <div className="empty-state-title">No posts yet</div>
+                <div className="empty-state-description">
+                  {isOwnProfile ? 'Share your first post!' : 'No posts to show'}
+                </div>
+              </div>
             ) : (
               posts.map(post => (
                 <Post
                   key={post.id}
                   post={post}
-                  onDelete={handlePostDeleted}
-                  onUpdate={handlePostUpdated}
+                  onDelete={() => setPosts(posts.filter(p => p.id !== post.id))}
                 />
               ))
             )}
@@ -286,29 +297,171 @@ export default function Profile() {
         )}
 
         {activeTab === 'albums' && (
-          <div className="coming-soon">
-            📸 Albums coming soon
-          </div>
-        )}
+          <div className="albums-section">
+            {!selectedAlbum ? (
+              <>
+                {isOwnProfile && (
+                  <div className="album-actions">
+                    <button
+                      className="btn-create-album"
+                      onClick={() => setShowCreateAlbum(true)}
+                    >
+                      ➕ Create Album
+                    </button>
+                  </div>
+                )}
 
-        {activeTab === 'friends' && (
-          <div className="friends-grid">
-            {friends.length === 0 ? (
-              <div className="no-friends">No friends yet</div>
-            ) : (
-              friends.map(friend => (
-                <div key={friend.wallet_address} className="friend-card">
-                  {friend.profile_image ? (
-                    <img src={friend.profile_image} alt={friend.username} />
-                  ) : (
-                    <div className="friend-avatar">
-                      {friend.username?.charAt(0).toUpperCase() || '?'}
+                {showCreateAlbum && (
+                  <div className="create-album-form">
+                    <form onSubmit={handleCreateAlbum}>
+                      <input
+                        type="text"
+                        placeholder="Album name"
+                        value={newAlbumName}
+                        onChange={(e) => setNewAlbumName(e.target.value)}
+                        autoFocus
+                      />
+                      <div className="form-actions">
+                        <button type="submit" className="btn-primary">Create</button>
+                        <button 
+                          type="button" 
+                          className="btn-secondary"
+                          onClick={() => {
+                            setShowCreateAlbum(false);
+                            setNewAlbumName('');
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                <div className="albums-grid">
+                  {albums.length === 0 ? (
+                    <div className="empty-state">
+                      <div className="empty-state-icon">📁</div>
+                      <div className="empty-state-title">No albums yet</div>
+                      <div className="empty-state-description">
+                        {isOwnProfile ? 'Create your first album!' : 'No albums to show'}
+                      </div>
                     </div>
+                  ) : (
+                    albums.map(album => (
+                      <div 
+                        key={album.id} 
+                        className="album-card"
+                        onClick={() => handleViewAlbum(album)}
+                      >
+                        <div className="album-cover">
+                          {album.cover_photo ? (
+                            <img src={album.cover_photo} alt={album.name} />
+                          ) : (
+                            <div className="album-cover-placeholder">📷</div>
+                          )}
+                        </div>
+                        <div className="album-info">
+                          <h3>{album.name}</h3>
+                          <p>{album.photo_count || 0} photos</p>
+                        </div>
+                      </div>
+                    ))
                   )}
-                  <h3>{friend.username}</h3>
-                  <a href={`/profile/${friend.wallet_address}`}>View Profile</a>
                 </div>
-              ))
+              </>
+            ) : (
+              <div className="album-view">
+                <div className="album-header">
+                  <button 
+                    className="btn-back"
+                    onClick={() => setSelectedAlbum(null)}
+                  >
+                    ← Back to Albums
+                  </button>
+                  <h2>{selectedAlbum.name}</h2>
+                  <div className="album-actions">
+                    {isOwnProfile && !selectedAlbum.is_default && (
+                      <>
+                        <button
+                          className="btn-upload"
+                          onClick={() => setShowUploadToAlbum(true)}
+                        >
+                          ➕ Add Photos
+                        </button>
+                        <button
+                          className="btn-delete-album"
+                          onClick={() => handleDeleteAlbum(selectedAlbum.id)}
+                        >
+                          🗑️ Delete Album
+                        </button>
+                      </>
+                    )}
+                    {isOwnProfile && selectedAlbum.is_default && (
+                      <button
+                        className="btn-upload"
+                        onClick={() => setShowUploadToAlbum(true)}
+                      >
+                        ➕ Add Photos
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {showUploadToAlbum && (
+                  <div className="upload-form">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setSelectedFile(e.target.files[0])}
+                    />
+                    <div className="form-actions">
+                      <button
+                        className="btn-primary"
+                        onClick={() => handleUploadToAlbum(selectedAlbum.id)}
+                        disabled={!selectedFile}
+                      >
+                        Upload
+                      </button>
+                      <button
+                        className="btn-secondary"
+                        onClick={() => {
+                          setShowUploadToAlbum(false);
+                          setSelectedFile(null);
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="photos-grid">
+                  {!selectedAlbum.photos || selectedAlbum.photos.length === 0 ? (
+                    <div className="empty-state">
+                      <div className="empty-state-icon">📷</div>
+                      <div className="empty-state-title">No photos in this album</div>
+                      <div className="empty-state-description">
+                        {isOwnProfile ? 'Add your first photo!' : 'No photos to show'}
+                      </div>
+                    </div>
+                  ) : (
+                    selectedAlbum.photos.map(photo => (
+                      <div key={photo.id} className="photo-card">
+                        <img src={photo.image_url} alt="Album photo" />
+                        {isOwnProfile && (
+                          <button
+                            className="btn-delete-photo"
+                            onClick={() => handleDeletePhoto(photo.id)}
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             )}
           </div>
         )}
