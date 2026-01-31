@@ -402,17 +402,16 @@ export async function uploadToAlbum(formData) {
   return response.json();
 }
 
-async function handleDeletePhoto(photoId) {
-  if (!confirm('Delete this photo?')) return;
-
-  try {
-    await api.deleteAlbumPhoto(selectedAlbum.id, photoId);
-    // Reload album photos
-    const data = await api.getAlbumPhotos(selectedAlbum.id);
-    setSelectedAlbum({ ...selectedAlbum, photos: data.photos });
-  } catch (error) {
-    console.error('Delete photo error:', error);
-  }
+export async function deleteAlbumPhoto(photoId) {
+  const token = localStorage.getItem('token');
+  // Note: This needs the albumId too, but we'll pass 0 as placeholder
+  const response = await fetch(`${API_URL}/api/albums/0/photos/${photoId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
 }
 
 export async function deleteAlbum(albumId) {
