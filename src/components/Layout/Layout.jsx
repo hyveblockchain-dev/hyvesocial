@@ -19,6 +19,7 @@ export default function Layout({ children }) {
 
   useEffect(() => {
     loadNotifications();
+    // Reload notifications every 30 seconds
     const interval = setInterval(loadNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -71,12 +72,9 @@ export default function Layout({ children }) {
 
   return (
     <div className="app-layout">
-      {/* Animated Background */}
-      <div className="animated-background"></div>
-
-      {/* Fixed Header */}
+      {/* Header */}
       <header className="app-header">
-        <div className="header-container">
+        <div className="header-content">
           <div className="logo" onClick={() => navigate('/')}>
             ⚡ Hyve Social
           </div>
@@ -154,10 +152,9 @@ export default function Layout({ children }) {
         )}
       </header>
 
-      {/* Main Content Area */}
       <div className="app-body">
-        {/* Left Sidebar - Fixed */}
-        <aside className="app-sidebar left-sidebar">
+        {/* Sidebar */}
+        <aside className="app-sidebar">
           <div className="user-profile" onClick={() => navigate(`/profile/${user?.walletAddress}`)}>
             <img 
               src={user?.profileImage || `https://api.dicebear.com/7.x/identicon/svg?seed=${user?.walletAddress}`}
@@ -169,10 +166,6 @@ export default function Layout({ children }) {
               <p>0x...{user?.walletAddress?.slice(-4)}</p>
             </div>
           </div>
-
-          <button className="nav-item disconnect-btn" onClick={handleLogout}>
-            🚪 Disconnect Wallet
-          </button>
 
           <nav className="nav-menu">
             <button 
@@ -207,6 +200,12 @@ export default function Layout({ children }) {
             </button>
           </nav>
 
+          <div className="sidebar-footer">
+            <button className="nav-item" onClick={handleLogout}>
+              🚪 Disconnect Wallet
+            </button>
+          </div>
+
           <div className="sidebar-stats">
             <div className="stat-item">
               <span className="stat-number">0</span>
@@ -219,13 +218,15 @@ export default function Layout({ children }) {
           </div>
         </aside>
 
-        {/* Center Content - Scrollable */}
+        {/* Main Content */}
         <main className="app-main">
-          {children}
+          <div className="center-column">
+            {children}
+          </div>
         </main>
 
-        {/* Right Sidebar - Fixed */}
-        <aside className="app-sidebar right-sidebar">
+        {/* Right Sidebar */}
+        <aside className="app-right-sidebar">
           <div className="suggested-users">
             <h3>Suggested Users</h3>
             <div className="user-list">
@@ -252,9 +253,9 @@ export default function Layout({ children }) {
         </aside>
       </div>
 
-      {/* Fixed Footer */}
+      {/* Footer */}
       <footer className="app-footer">
-        <div className="footer-container">
+        <div className="footer-content">
           <span>About</span>
           <span>Help</span>
           <span>Terms</span>
