@@ -1,6 +1,16 @@
 // src/services/api.js
 const API_URL = process.env.REACT_APP_API_URL || 'https://social-api.hyvechain.com';
 
+// Helper function to convert file to base64
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 // ========================================
 // AUTH FUNCTIONS
 // ========================================
@@ -89,14 +99,33 @@ export async function getUserPosts(address) {
   return response.json();
 }
 
-export async function updateProfile(formData) {
+export async function updateProfile(data) {
   const token = localStorage.getItem('token');
+  
+  // Convert FormData to JSON with base64 images
+  const updates = {};
+  
+  if (data instanceof FormData) {
+    for (let [key, value] of data.entries()) {
+      if (value instanceof File) {
+        // Convert file to base64
+        const base64 = await fileToBase64(value);
+        updates[key] = base64;
+      } else {
+        updates[key] = value;
+      }
+    }
+  } else {
+    Object.assign(updates, data);
+  }
+  
   const response = await fetch(`${API_URL}/api/profile`, {
     method: 'PUT',
     headers: {
+      'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: formData,
+    body: JSON.stringify(updates),
   });
   return response.json();
 }
@@ -117,18 +146,23 @@ export async function getPosts() {
 
 export async function createPost(content, imageFile = null) {
   const token = localStorage.getItem('token');
-  const formData = new FormData();
-  formData.append('content', content);
+  
+  const postData = {
+    content: content,
+  };
+  
   if (imageFile) {
-    formData.append('image', imageFile);
+    const base64 = await fileToBase64(imageFile);
+    postData.imageUrl = base64;
   }
 
   const response = await fetch(`${API_URL}/api/posts`, {
     method: 'POST',
     headers: {
+      'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: formData,
+    body: JSON.stringify(postData),
   });
   return response.json();
 }
@@ -272,6 +306,42 @@ export async function getFollowers(address) {
 }
 
 // ========================================
+// FRIEND REQUEST FUNCTIONS
+// ========================================
+
+export async function getFriendRequests() {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/friend-requests`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function acceptFriendRequest(requestId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/friend-request/${requestId}/accept`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function declineFriendRequest(requestId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/friend-request/${requestId}/decline`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+// ========================================
 // ALBUM FUNCTIONS
 // ========================================
 
@@ -315,8 +385,9 @@ export async function uploadToAlbum(formData) {
   const albumId = formData.get('albumId');
   const image = formData.get('image');
   
-  // First upload would need to get a photo URL
-  // For now, return placeholder
+  // Convert image to base64
+  const base64 = await fileToBase64(image);
+  
   const response = await fetch(`${API_URL}/api/albums/${albumId}/photos`, {
     method: 'POST',
     headers: {
@@ -324,7 +395,7 @@ export async function uploadToAlbum(formData) {
       'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify({ 
-      photoUrl: 'https://via.placeholder.com/400',
+      photoUrl: base64,
       caption: ''
     }),
   });
@@ -333,7 +404,7 @@ export async function uploadToAlbum(formData) {
 
 export async function deleteAlbumPhoto(photoId) {
   const token = localStorage.getItem('token');
-  // Need album ID - this is a limitation, frontend should pass both
+  // Note: This needs the albumId too, but we'll pass 0 as placeholder
   const response = await fetch(`${API_URL}/api/albums/0/photos/${photoId}`, {
     method: 'DELETE',
     headers: {
@@ -390,6 +461,11 @@ export default {
   unfollowUser,
   getFollowing,
   getFollowers,
+  
+  // Friend Requests
+  getFriendRequests,
+  acceptFriendRequest,
+  declineFriendRequest,
   
   // Albums
   getAlbums,
