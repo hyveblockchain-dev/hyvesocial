@@ -9,7 +9,7 @@ import './Profile.css';
 
 export default function Profile() {
   const { address } = useParams();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [albums, setAlbums] = useState([]);
@@ -37,6 +37,11 @@ export default function Profile() {
       setLoading(true);
       const data = await api.getUserProfile(address);
       setProfile(data.user);
+      
+      // Update user context if viewing own profile
+      if (isOwnProfile) {
+        setUser(data.user);
+      }
     } catch (error) {
       console.error('Load profile error:', error);
     } finally {
@@ -180,9 +185,17 @@ export default function Profile() {
       const formData = new FormData();
       formData.append('profileImage', compressedFile);
 
-      await api.updateProfile(formData);
-      loadProfile();
-      loadAlbums(); // Reload to show new photo in Profile Photos album
+      const result = await api.updateProfile(formData);
+      
+      // Update both profile state and user context
+      if (result.user) {
+        setProfile(result.user);
+        setUser(result.user);
+      }
+      
+      // Reload everything to ensure consistency
+      await loadProfile();
+      await loadAlbums();
     } catch (error) {
       console.error('Update profile picture error:', error);
       alert('Failed to update profile picture. Please try a smaller image.');
@@ -206,9 +219,17 @@ export default function Profile() {
       const formData = new FormData();
       formData.append('coverImage', compressedFile);
 
-      await api.updateProfile(formData);
-      loadProfile();
-      loadAlbums(); // Reload to show new photo in Cover Photos album
+      const result = await api.updateProfile(formData);
+      
+      // Update both profile state and user context
+      if (result.user) {
+        setProfile(result.user);
+        setUser(result.user);
+      }
+      
+      // Reload everything to ensure consistency
+      await loadProfile();
+      await loadAlbums();
     } catch (error) {
       console.error('Update cover photo error:', error);
       alert('Failed to update cover photo. Please try a smaller image.');
@@ -229,8 +250,8 @@ export default function Profile() {
     <div className="profile-page">
       {/* Cover Photo */}
       <div className="cover-photo">
-        {profile.cover_image ? (
-          <img src={profile.cover_image} alt="Cover" />
+        {profile.coverImage ? (
+          <img src={profile.coverImage} alt="Cover" />
         ) : (
           <div className="cover-placeholder"></div>
         )}
@@ -251,8 +272,8 @@ export default function Profile() {
       {/* Profile Header */}
       <div className="profile-header">
         <div className="profile-avatar-large">
-          {profile.profile_image ? (
-            <img src={profile.profile_image} alt={profile.username} />
+          {profile.profileImage ? (
+            <img src={profile.profileImage} alt={profile.username} />
           ) : (
             <div className="avatar-placeholder">
               {profile.username?.charAt(0).toUpperCase() || '?'}
@@ -390,13 +411,13 @@ export default function Profile() {
                       >
                         <div className="album-cover">
                           {album.cover_photo ? (
-                            <img src={album.cover_photo} alt={album.name} />
+                            <img src={album.cover_photo} alt={album.name || album.title} />
                           ) : (
                             <div className="album-cover-placeholder">📷</div>
                           )}
                         </div>
                         <div className="album-info">
-                          <h3>{album.name}</h3>
+                          <h3>{album.name || album.title}</h3>
                           <p>{album.photo_count || 0} photos</p>
                         </div>
                       </div>
@@ -413,7 +434,7 @@ export default function Profile() {
                   >
                     ← Back to Albums
                   </button>
-                  <h2>{selectedAlbum.name}</h2>
+                  <h2>{selectedAlbum.name || selectedAlbum.title}</h2>
                   <div className="album-actions">
                     {isOwnProfile && !selectedAlbum.is_default && (
                       <>
@@ -486,7 +507,7 @@ export default function Profile() {
                   ) : (
                     selectedAlbum.photos.map(photo => (
                       <div key={photo.id} className="photo-card">
-                        <img src={photo.image_url} alt="Album photo" />
+                        <img src={photo.image_url || photo.photo_url} alt="Album photo" />
                         {isOwnProfile && (
                           <button
                             className="btn-delete-photo"
