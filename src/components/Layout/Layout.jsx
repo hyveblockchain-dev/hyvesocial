@@ -1,58 +1,77 @@
 // src/components/Layout/Layout.jsx
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import Chat from '../Chat/Chat';
-import ChatWindow from '../Chat/ChatWindow';
 import api from '../../services/api';
 import './Layout.css';
 
 export default function Layout({ children }) {
-  const navigate = useNavigate();
-  const location = useLocation();
   const { user, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [selectedChat, setSelectedChat] = useState(null);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [friendRequests, setFriendRequests] = useState([]);
-  const [notificationCount, setNotificationCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
 
   useEffect(() => {
-    loadNotifications();
-    // Reload notifications every 30 seconds
-    const interval = setInterval(loadNotifications, 30000);
-    return () => clearInterval(interval);
+    loadSuggestedUsers();
   }, []);
 
-  async function loadNotifications() {
+  async function loadSuggestedUsers() {
     try {
-      const data = await api.getFriendRequests();
-      setFriendRequests(data.requests || []);
-      setNotificationCount(data.requests?.length || 0);
+      // Check if getUsers function exists
+      if (!api.getUsers) {
+        console.log('getUsers not available');
+        return;
+      }
+      
+      const data = await api.getUsers();
+      
+      if (!data || !data.users) {
+        return;
+      }
+      
+      // Filter out current user and get random 5
+      const others = data.users.filter(u => u.wallet_address !== user?.walletAddress);
+      const random = others.sort(() => 0.5 - Math.random()).slice(0, 5);
+      setSuggestedUsers(random);
     } catch (error) {
-      console.error('Load notifications error:', error);
+      console.error('Load suggested users error:', error);
+      // Don't block the app if this fails
     }
   }
 
-  async function handleAcceptRequest(requestId) {
+  async function handleSearch(query) {
+    setSearchQuery(query);
+    if (query.trim().length < 2) {
+      setShowSearchResults(false);
+      return;
+    }
+
     try {
-      await api.acceptFriendRequest(requestId);
-      setFriendRequests(friendRequests.filter(r => r.id !== requestId));
-      setNotificationCount(prev => Math.max(0, prev - 1));
+      if (!api.searchUsers) {
+        console.log('searchUsers not available');
+        return;
+      }
+      
+      const data = await api.searchUsers(query);
+      setSearchResults(data.users || []);
+      setShowSearchResults(true);
     } catch (error) {
-      console.error('Accept request error:', error);
-      alert('Failed to accept friend request');
+      console.error('Search error:', error);
+      setSearchResults([]);
     }
   }
 
-  async function handleDeclineRequest(requestId) {
-    try {
-      await api.declineFriendRequest(requestId);
-      setFriendRequests(friendRequests.filter(r => r.id !== requestId));
-      setNotificationCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error('Decline request error:', error);
-      alert('Failed to decline friend request');
+  function handleLogout() {
+    if (confirm('Are you sure you want to logout?')) {
+      logout();
+      navigate('/login');
     }
   }
 
@@ -61,229 +80,217 @@ export default function Layout({ children }) {
     setShowChat(false);
   }
 
-  function handleLogout() {
-    logout();
-    navigate('/login');
-  }
-
-  function isActive(path) {
-    return location.pathname === path;
-  }
-
   return (
-    <div className="app-layout">
+    <div className="page-container">
       {/* Header */}
-      <header className="app-header">
-        <div className="header-content">
-          <div className="logo" onClick={() => navigate('/')}>
-            ⚡ Hyve Social
-          </div>
-          <div className="search-bar">
-            <input type="text" placeholder="Search Hyve Social..." />
-          </div>
-          <div className="header-actions">
-            <button 
-              className={`icon-button ${notificationCount > 0 ? 'has-notifications' : ''}`}
-              onClick={() => setShowNotifications(!showNotifications)}
-            >
-              🔔
-              {notificationCount > 0 && (
-                <span className="notification-badge">{notificationCount}</span>
-              )}
-            </button>
-            <div className="user-menu">
-              <img 
-                src={user?.profileImage || `https://api.dicebear.com/7.x/identicon/svg?seed=${user?.walletAddress}`}
-                alt={user?.username}
-                className="user-avatar"
-              />
-            </div>
-          </div>
+      <header className="page-header">
+        <div className="logo">
+          <span className="logo-icon">⚡</span>
+          <span className="logo-text">Hyve Social</span>
         </div>
 
-        {/* Notifications Dropdown */}
-        {showNotifications && (
-          <div className="notifications-dropdown">
-            <div className="notifications-header">
-              <h3>Notifications</h3>
-              <button onClick={() => setShowNotifications(false)}>✕</button>
-            </div>
-            <div className="notifications-list">
-              {friendRequests.length === 0 ? (
-                <div className="no-notifications">
-                  <p>🔔 No new notifications</p>
-                </div>
+        <div className="search-box">
+          <input 
+            type="text" 
+            placeholder="Search users..." 
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            onFocus={() => searchQuery && setShowSearchResults(true)}
+          />
+          
+          {showSearchResults && (
+            <div className="search-dropdown">
+              {searchResults.length === 0 ? (
+                <div className="search-empty">No users found</div>
               ) : (
-                friendRequests.map(request => (
-                  <div key={request.id} className="notification-item">
-                    <div className="notification-avatar">
-                      {request.profile_image ? (
-                        <img src={request.profile_image} alt={request.username} />
-                      ) : (
-                        <div className="avatar-placeholder">
-                          {request.username?.charAt(0).toUpperCase() || '?'}
-                        </div>
-                      )}
-                    </div>
-                    <div className="notification-content">
-                      <p>
-                        <strong>{request.username}</strong> sent you a friend request
-                      </p>
-                      <div className="notification-actions">
-                        <button
-                          className="btn-accept-small"
-                          onClick={() => handleAcceptRequest(request.id)}
-                        >
-                          ✓ Accept
-                        </button>
-                        <button
-                          className="btn-decline-small"
-                          onClick={() => handleDeclineRequest(request.id)}
-                        >
-                          ✕ Decline
-                        </button>
+                searchResults.map(user => (
+                  <Link 
+                    key={user.wallet_address}
+                    to={`/profile/${user.wallet_address}`}
+                    className="search-result"
+                    onClick={() => setShowSearchResults(false)}
+                  >
+                    {user.profile_image ? (
+                      <img src={user.profile_image} alt={user.username} className="search-avatar" />
+                    ) : (
+                      <div className="search-avatar">
+                        {user.username?.charAt(0).toUpperCase() || '?'}
                       </div>
-                    </div>
-                  </div>
+                    )}
+                    <span>{user.username}</span>
+                  </Link>
                 ))
               )}
             </div>
+          )}
+        </div>
+
+        <div className="header-actions">
+          <button className="icon-btn">🔔</button>
+          
+          <div className="user-menu">
+            <button className="user-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
+              {user?.profileImage ? (
+                <img src={user.profileImage} alt={user.username} className="avatar-mini" />
+              ) : (
+                <div className="avatar-mini">
+                  {user?.username?.charAt(0).toUpperCase() || '?'}
+                </div>
+              )}
+            </button>
+
+            {showUserMenu && (
+              <div className="user-dropdown">
+                <Link to={`/profile/${user?.walletAddress}`} onClick={() => setShowUserMenu(false)}>
+                  My Profile
+                </Link>
+                <button onClick={handleLogout}>Disconnect Wallet</button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </header>
 
-      <div className="app-body">
-        {/* Sidebar */}
-        <aside className="app-sidebar">
-          <div className="user-profile" onClick={() => navigate(`/profile/${user?.walletAddress}`)}>
-            <img 
-              src={user?.profileImage || `https://api.dicebear.com/7.x/identicon/svg?seed=${user?.walletAddress}`}
-              alt={user?.username}
-              className="profile-avatar"
-            />
-            <div className="profile-info">
+      {/* Body */}
+      <div className="page-body">
+        {/* Left Sidebar */}
+        <aside className="left-column">
+          <div className="profile-card">
+            {user?.profileImage ? (
+              <img src={user.profileImage} alt={user.username} className="profile-avatar" />
+            ) : (
+              <div className="profile-avatar">
+                {user?.username?.charAt(0).toUpperCase() || '?'}
+              </div>
+            )}
+            <div className="profile-details">
               <h3>{user?.username || 'User'}</h3>
-              <p>0x...{user?.walletAddress?.slice(-4)}</p>
+              <p className="profile-address">
+                {user?.walletAddress?.slice(0, 6)}...{user?.walletAddress?.slice(-4)}
+              </p>
             </div>
+            <button className="disconnect-btn" onClick={handleLogout}>
+              Disconnect Wallet
+            </button>
           </div>
 
           <nav className="nav-menu">
-            <button 
-              className={`nav-item ${isActive('/') ? 'active' : ''}`}
-              onClick={() => navigate('/')}
-            >
-              📰 Feed
-            </button>
-            <button 
-              className={`nav-item ${isActive('/videos') ? 'active' : ''}`}
-              onClick={() => navigate('/videos')}
-            >
-              🎥 Videos
-            </button>
-            <button 
-              className={`nav-item ${isActive(`/profile/${user?.walletAddress}`) ? 'active' : ''}`}
-              onClick={() => navigate(`/profile/${user?.walletAddress}`)}
-            >
-              👤 My Profile
-            </button>
-            <button 
-              className={`nav-item ${isActive('/friends') ? 'active' : ''}`}
-              onClick={() => navigate('/friends')}
-            >
-              👥 Friends
-            </button>
-            <button 
-              className={`nav-item ${isActive('/discover') ? 'active' : ''}`}
-              onClick={() => navigate('/discover')}
-            >
-              🔍 Discover
-            </button>
+            <Link to="/" className={location.pathname === '/' ? 'nav-item active' : 'nav-item'}>
+              <span className="nav-icon">📰</span>
+              <span>Feed</span>
+            </Link>
+            <Link to="/videos" className="nav-item">
+              <span className="nav-icon">🎥</span>
+              <span>Videos</span>
+            </Link>
+            <Link to={`/profile/${user?.walletAddress}`} className="nav-item">
+              <span className="nav-icon">👤</span>
+              <span>My Profile</span>
+            </Link>
+            <Link to="/friends" className="nav-item">
+              <span className="nav-icon">👥</span>
+              <span>Friends</span>
+              <span className="badge">0</span>
+            </Link>
+            <Link to="/discover" className="nav-item">
+              <span className="nav-icon">🔍</span>
+              <span>Discover</span>
+            </Link>
           </nav>
 
-          <div className="sidebar-footer">
-            <button className="nav-item" onClick={handleLogout}>
-              🚪 Disconnect Wallet
-            </button>
+          <div className="stats-section">
+            <div className="stat-item">
+              <h4>YOUR POSTS</h4>
+              <div className="stat-num">0</div>
+            </div>
+            <div className="stat-item">
+              <h4>FRIENDS</h4>
+              <div className="stat-num">0</div>
+            </div>
           </div>
 
-          <div className="sidebar-stats">
-            <div className="stat-item">
-              <span className="stat-number">0</span>
-              <span className="stat-label">POSTS</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-number">0</span>
-              <span className="stat-label">FRIENDS</span>
-            </div>
+          <div className="friends-section">
+            <h4>FRIENDS</h4>
+            <p className="empty-msg">No friends yet. Start following users!</p>
           </div>
         </aside>
 
-        {/* Main Content */}
-        <main className="app-main">
-          <div className="center-column">
-            {children}
-          </div>
+        {/* Center Content */}
+        <main className="center-column">
+          {children}
         </main>
 
         {/* Right Sidebar */}
-        <aside className="app-right-sidebar">
-          <div className="suggested-users">
+        <aside className="right-column">
+          <div className="widget suggestions">
             <h3>Suggested Users</h3>
-            <div className="user-list">
-              <div className="user-item">
-                <div className="user-avatar">👤</div>
-                <div className="user-info">
-                  <div className="user-name">I'm The Man</div>
-                </div>
+            {suggestedUsers.length === 0 ? (
+              <p className="loading">No suggestions</p>
+            ) : (
+              <div className="suggested-list">
+                {suggestedUsers.map(suggestedUser => (
+                  <Link 
+                    key={suggestedUser.wallet_address}
+                    to={`/profile/${suggestedUser.wallet_address}`}
+                    className="suggested-user"
+                  >
+                    {suggestedUser.profile_image ? (
+                      <img src={suggestedUser.profile_image} alt={suggestedUser.username} className="suggested-avatar" />
+                    ) : (
+                      <div className="suggested-avatar">
+                        {suggestedUser.username?.charAt(0).toUpperCase() || '?'}
+                      </div>
+                    )}
+                    <span className="suggested-name">{suggestedUser.username}</span>
+                  </Link>
+                ))}
               </div>
-              <div className="user-item">
-                <div className="user-avatar">👤</div>
-                <div className="user-info">
-                  <div className="user-name">Felix the Cat</div>
-                </div>
-              </div>
-              <div className="user-item">
-                <div className="user-avatar">👤</div>
-                <div className="user-info">
-                  <div className="user-name">test User</div>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
+
+          {/* Chat Button */}
+          <button className="chat-fab-bottom" onClick={() => setShowChat(!showChat)}>
+            💬
+          </button>
         </aside>
       </div>
 
-      {/* Footer */}
-      <footer className="app-footer">
-        <div className="footer-content">
-          <span>About</span>
-          <span>Help</span>
-          <span>Terms</span>
-          <span>Privacy</span>
-          <span>© 2026 Hyve Social</span>
-        </div>
-      </footer>
-
-      {/* Chat Button */}
-      <button className="chat-button" onClick={() => setShowChat(!showChat)}>
-        💬
-      </button>
-
-      {/* Chat Windows */}
+      {/* Chat List Popup */}
       {showChat && (
         <div className="chat-list-popup">
-          <Chat onSelectConversation={handleChatSelect} />
+          <div className="chat-list-header">
+            <h3>💬 Messages</h3>
+            <button className="close-chat" onClick={() => setShowChat(false)}>✕</button>
+          </div>
+          <div className="chat-list-body">
+            <Chat onSelectChat={handleChatSelect} />
+          </div>
         </div>
       )}
 
+      {/* Individual Chat Window */}
       {selectedChat && (
         <div className="chat-window-popup">
-          <ChatWindow
-            conversation={selectedChat}
-            onClose={() => setSelectedChat(null)}
-          />
+          <div className="chat-window-header">
+            <h3>💬 {selectedChat.username}</h3>
+            <button className="close-chat" onClick={() => setSelectedChat(null)}>✕</button>
+          </div>
+          <div className="chat-window-body">
+            <p className="chat-placeholder">Chat with {selectedChat.username}</p>
+          </div>
         </div>
       )}
+
+      {/* Footer */}
+      <footer className="page-footer">
+        <div className="footer-links">
+          <a href="#">About</a>
+          <a href="#">Help</a>
+          <a href="#">Terms</a>
+          <a href="#">Privacy</a>
+        </div>
+        <p className="copyright">© 2026 Hyve Social</p>
+      </footer>
     </div>
   );
 }
