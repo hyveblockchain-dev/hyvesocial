@@ -11,7 +11,7 @@ export async function register(username, walletAddress, signature) {
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ username, walletAddress, signature }),
+    body: JSON.stringify({ address: walletAddress, signature, username }),
   });
   return response.json();
 }
@@ -22,7 +22,7 @@ export async function login(walletAddress, signature) {
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ walletAddress, signature }),
+    body: JSON.stringify({ address: walletAddress, signature }),
   });
   return response.json();
 }
@@ -96,7 +96,7 @@ export async function updateProfile(formData) {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
-    body: formData, // FormData for file uploads
+    body: formData,
   });
   return response.json();
 }
@@ -300,7 +300,7 @@ export async function uploadToAlbum(formData) {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
-    body: formData, // FormData with image and albumId
+    body: formData,
   });
   return response.json();
 }
