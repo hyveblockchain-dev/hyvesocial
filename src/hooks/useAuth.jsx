@@ -33,25 +33,62 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function connectWallet() {
+    if (!window.ethereum) {
+      throw new Error('MetaMask is not installed');
+    }
+
+    try {
+      // Request account access
+      const accounts = await window.ethereum.request({
+        method: 'eth_requestAccounts',
+      });
+
+      const address = accounts[0];
+      console.log('Connected address:', address);
+
+      // Get nonce from backend
+      const nonceResponse = await fetch(`https://social-api.hyvechain.com/api/auth/nonce/${address}`);
+      const { nonce } = await nonceResponse.json();
+      console.log('Got nonce:', nonce);
+
+      // Sign the nonce
+      const signature = await window.ethereum.request({
+        method: 'personal_sign',
+        params: [nonce, address],
+      });
+      console.log('Signature obtained');
+
+      return { address, signature };
+    } catch (error) {
+      console.error('Wallet connection error:', error);
+      throw error;
+    }
+  }
+
   async function login(walletAddress, signature) {
     const data = await api.login(walletAddress, signature);
     
-    // CRITICAL: Save token to localStorage
+    // Save token to localStorage
     if (data.token) {
       localStorage.setItem('token', data.token);
     }
     
-    if (data.user) {
+    if (data.userExists && data.user) {
       setUser(data.user);
+      return { needsRegistration: false };
+    } else {
+      return { needsRegistration: true };
     }
-    
-    return data;
   }
 
-  async function register(username, walletAddress, signature) {
+  async function register(walletAddress, username) {
+    // Get fresh signature for registration
+    const { signature } = await connectWallet();
+    
     const data = await api.register(username, walletAddress, signature);
     
-    // CRITICAL: Save token to localStorage
+    // Save token to localStorage
     if (data.token) {
       localStorage.setItem('token', data.token);
     }
@@ -69,7 +106,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, checkAuth }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, checkAuth, connectWallet }}>
       {children}
     </AuthContext.Provider>
   );
