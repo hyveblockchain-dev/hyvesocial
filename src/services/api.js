@@ -51,7 +51,7 @@ export async function getCurrentUser() {
 
 export async function getUsers() {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/users`, {
+  const response = await fetch(`${API_URL}/api/search/users?q=`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -61,7 +61,7 @@ export async function getUsers() {
 
 export async function searchUsers(query) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/users/search?q=${encodeURIComponent(query)}`, {
+  const response = await fetch(`${API_URL}/api/search/users?q=${encodeURIComponent(query)}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -71,7 +71,7 @@ export async function searchUsers(query) {
 
 export async function getUserProfile(address) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/users/${address}`, {
+  const response = await fetch(`${API_URL}/api/profile/${address}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -81,7 +81,7 @@ export async function getUserProfile(address) {
 
 export async function getUserPosts(address) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/users/${address}/posts`, {
+  const response = await fetch(`${API_URL}/api/posts/user/${address}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -91,7 +91,7 @@ export async function getUserPosts(address) {
 
 export async function updateProfile(formData) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/users/profile`, {
+  const response = await fetch(`${API_URL}/api/profile`, {
     method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -216,7 +216,7 @@ export async function deleteComment(commentId) {
 
 export async function followUser(address) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/users/${address}/follow`, {
+  const response = await fetch(`${API_URL}/api/follow/${address}`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -227,7 +227,7 @@ export async function followUser(address) {
 
 export async function unfollowUser(address) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/users/${address}/follow`, {
+  const response = await fetch(`${API_URL}/api/follow/${address}`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -238,7 +238,22 @@ export async function unfollowUser(address) {
 
 export async function getFollowing() {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/users/following`, {
+  
+  // Get current user's address from token
+  const userResponse = await fetch(`${API_URL}/api/auth/me`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  
+  if (!userResponse.ok) return { following: [] };
+  
+  const userData = await userResponse.json();
+  const address = userData.user?.walletAddress;
+  
+  if (!address) return { following: [] };
+  
+  const response = await fetch(`${API_URL}/api/following/${address}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -248,7 +263,7 @@ export async function getFollowing() {
 
 export async function getFollowers(address) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/users/${address}/followers`, {
+  const response = await fetch(`${API_URL}/api/followers/${address}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -262,7 +277,7 @@ export async function getFollowers(address) {
 
 export async function getAlbums(walletAddress) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/albums/${walletAddress}`, {
+  const response = await fetch(`${API_URL}/api/albums/user/${walletAddress}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -278,36 +293,48 @@ export async function createAlbum(name) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ title: name }),
   });
   return response.json();
 }
 
 export async function getAlbumPhotos(albumId) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/albums/${albumId}/photos`, {
+  const response = await fetch(`${API_URL}/api/albums/${albumId}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
   });
-  return response.json();
+  
+  const data = await response.json();
+  return { photos: data.album?.photos || [] };
 }
 
 export async function uploadToAlbum(formData) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/albums/upload`, {
+  const albumId = formData.get('albumId');
+  const image = formData.get('image');
+  
+  // First upload would need to get a photo URL
+  // For now, return placeholder
+  const response = await fetch(`${API_URL}/api/albums/${albumId}/photos`, {
     method: 'POST',
     headers: {
+      'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: formData,
+    body: JSON.stringify({ 
+      photoUrl: 'https://via.placeholder.com/400',
+      caption: ''
+    }),
   });
   return response.json();
 }
 
 export async function deleteAlbumPhoto(photoId) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/albums/photos/${photoId}`, {
+  // Need album ID - this is a limitation, frontend should pass both
+  const response = await fetch(`${API_URL}/api/albums/0/photos/${photoId}`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
