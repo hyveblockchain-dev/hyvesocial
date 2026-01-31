@@ -1,182 +1,374 @@
 // src/services/api.js
-import axios from 'axios';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
-const API_URL = 'https://social-api.hyvechain.com/api';
+// ========================================
+// AUTH FUNCTIONS
+// ========================================
 
-const apiClient = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export async function register(username, walletAddress, signature) {
+  const response = await fetch(`${API_URL}/api/auth/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, walletAddress, signature }),
+  });
+  return response.json();
+}
 
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('auth_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+export async function login(walletAddress, signature) {
+  const response = await fetch(`${API_URL}/api/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ walletAddress, signature }),
+  });
+  return response.json();
+}
+
+export async function getCurrentUser() {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+
+  const response = await fetch(`${API_URL}/api/auth/me`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  
+  if (!response.ok) {
+    localStorage.removeItem('token');
+    return null;
   }
-  return config;
-});
+  
+  return response.json();
+}
 
-const api = {
-  // =====================
+// ========================================
+// USER FUNCTIONS
+// ========================================
+
+export async function getUsers() {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/users`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function searchUsers(query) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/users/search?q=${encodeURIComponent(query)}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function getUserProfile(address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/users/${address}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function getUserPosts(address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/users/${address}/posts`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function updateProfile(formData) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/users/profile`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData, // FormData for file uploads
+  });
+  return response.json();
+}
+
+// ========================================
+// POST FUNCTIONS
+// ========================================
+
+export async function getPosts() {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/posts`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function createPost(content, imageFile = null) {
+  const token = localStorage.getItem('token');
+  const formData = new FormData();
+  formData.append('content', content);
+  if (imageFile) {
+    formData.append('image', imageFile);
+  }
+
+  const response = await fetch(`${API_URL}/api/posts`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
+  return response.json();
+}
+
+export async function deletePost(postId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/posts/${postId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+// ========================================
+// REACTION FUNCTIONS
+// ========================================
+
+export async function reactToPost(postId, reactionType) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/posts/${postId}/react`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ reactionType }),
+  });
+  return response.json();
+}
+
+export async function removeReaction(postId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/posts/${postId}/react`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+// ========================================
+// COMMENT FUNCTIONS
+// ========================================
+
+export async function getComments(postId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/posts/${postId}/comments`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function addComment(postId, content) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/posts/${postId}/comments`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ content }),
+  });
+  return response.json();
+}
+
+export async function deleteComment(commentId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/comments/${commentId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+// ========================================
+// FOLLOW FUNCTIONS
+// ========================================
+
+export async function followUser(address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/users/${address}/follow`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function unfollowUser(address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/users/${address}/follow`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function getFollowing() {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/users/following`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function getFollowers(address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/users/${address}/followers`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+// ========================================
+// ALBUM FUNCTIONS
+// ========================================
+
+export async function getAlbums(walletAddress) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/albums/${walletAddress}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function createAlbum(name) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/albums`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ name }),
+  });
+  return response.json();
+}
+
+export async function getAlbumPhotos(albumId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/albums/${albumId}/photos`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function uploadToAlbum(formData) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/albums/upload`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData, // FormData with image and albumId
+  });
+  return response.json();
+}
+
+export async function deleteAlbumPhoto(photoId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/albums/photos/${photoId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function deleteAlbum(albumId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/albums/${albumId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+// ========================================
+// DEFAULT EXPORT
+// ========================================
+
+export default {
   // Auth
-  // =====================
-  login: async (walletAddress, signature) => {
-    const response = await apiClient.post('/auth/login', {
-      address: walletAddress,
-      signature,
-    });
-    localStorage.setItem('auth_token', response.data.token);
-    return response.data;
-  },
-
-  register: async (walletAddress, signature, username) => {
-    const loginResponse = await apiClient.post('/auth/login', {
-      address: walletAddress,
-      signature,
-    });
-
-    const token = loginResponse.data.token;
-    localStorage.setItem('auth_token', token);
-
-    const profileResponse = await apiClient.post('/profile', { username });
-
-    return {
-      token,
-      user: profileResponse.data.user,
-    };
-  },
-
-  getCurrentUser: async () => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) throw new Error('No token');
-
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const address = payload.walletAddress;
-
-    const response = await apiClient.get(`/profile/${address}`);
-    return response.data;
-  },
-
-  // =====================
+  register,
+  login,
+  getCurrentUser,
+  
   // Users
-  // =====================
-  getUsers: async () => (await apiClient.get('/search/users?q=')).data,
-
-  getProfile: async (address) =>
-    (await apiClient.get(`/profile/${address}`)).data,
-
-  updateProfile: async (formData) => {
-    const response = await apiClient.put('/users/profile', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return response.data;
-  },
-
-  searchUsers: async (query) =>
-    (await apiClient.get(`/search/users?q=${encodeURIComponent(query)}`)).data,
-
-  // =====================
+  getUsers,
+  searchUsers,
+  getUserProfile,
+  getUserPosts,
+  updateProfile,
+  
   // Posts
-  // =====================
-  createPost: async (content, imageUrl = null) =>
-    (await apiClient.post('/posts', { content, imageUrl })).data,
-
-  getPosts: async () => (await apiClient.get('/posts')).data,
-
-  getPostsByUser: async (address) =>
-    (await apiClient.get(`/posts/user/${address}`)).data,
-
-  deletePost: async (postId) =>
-    (await apiClient.delete(`/posts/${postId}`)).data,
-
-  // =====================
+  getPosts,
+  createPost,
+  deletePost,
+  
   // Reactions
-  // =====================
-  reactToPost: async (postId, reactionType) =>
-    (await apiClient.post(`/posts/${postId}/react`, { reactionType })).data,
-
-  removeReaction: async (postId) =>
-    (await apiClient.delete(`/posts/${postId}/react`)).data,
-
-  getReactions: async (postId) =>
-    (await apiClient.get(`/posts/${postId}/reactions`)).data,
-
-  // =====================
+  reactToPost,
+  removeReaction,
+  
   // Comments
-  // =====================
-  addComment: async (postId, content) =>
-    (await apiClient.post(`/posts/${postId}/comments`, { content })).data,
-
-  getComments: async (postId) =>
-    (await apiClient.get(`/posts/${postId}/comments`)).data,
-
-  deleteComment: async (commentId) =>
-    (await apiClient.delete(`/comments/${commentId}`)).data,
-
-  // =====================
-  // Friends
-  // =====================
-  sendFriendRequest: async (address) =>
-    (await apiClient.post(`/friend-request/${address}`)).data,
-
-  acceptFriendRequest: async (requestId) =>
-    (await apiClient.post(`/friend-request/${requestId}/accept`)).data,
-
-  declineFriendRequest: async (requestId) =>
-    (await apiClient.post(`/friend-request/${requestId}/decline`)).data,
-
-  getFriendRequests: async () =>
-    (await apiClient.get('/friend-requests')).data,
-
-  getFriends: async () => (await apiClient.get('/friends')).data,
-
-  getFriendshipStatus: async (address) =>
-    (await apiClient.get(`/friendship-status/${address}`)).data,
-
-  removeFriend: async (address) =>
-    (await apiClient.delete(`/friend/${address}`)).data,
-
-  // =====================
-  // Messages
-  // =====================
-  sendMessage: async (toAddress, content) =>
-    (await apiClient.post('/messages', { toAddress, content })).data,
-
-  getMessages: async (address) =>
-    (await apiClient.get(`/messages/${address}`)).data,
-
-  getConversations: async () =>
-    (await apiClient.get('/conversations')).data,
-
-  markMessagesAsRead: async (address) =>
-    (await apiClient.put(`/messages/read/${address}`)).data,
-
-  // =====================
-  // Albums (NEW)
-  // =====================
-  getAlbums: async (walletAddress) =>
-    (await apiClient.get(`/albums/${walletAddress}`)).data,
-
-  createAlbum: async (name) =>
-    (await apiClient.post('/albums', { name })).data,
-
-  getAlbumPhotos: async (albumId) =>
-    (await apiClient.get(`/albums/${albumId}/photos`)).data,
-
-  uploadToAlbum: async (formData) => {
-    const response = await apiClient.post('/albums/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return response.data;
-  },
-
-  deleteAlbumPhoto: async (photoId) =>
-    (await apiClient.delete(`/albums/photos/${photoId}`)).data,
-
-  deleteAlbum: async (albumId) =>
-    (await apiClient.delete(`/albums/${albumId}`)).data,
+  getComments,
+  addComment,
+  deleteComment,
+  
+  // Follow
+  followUser,
+  unfollowUser,
+  getFollowing,
+  getFollowers,
+  
+  // Albums
+  getAlbums,
+  createAlbum,
+  getAlbumPhotos,
+  uploadToAlbum,
+  deleteAlbumPhoto,
+  deleteAlbum,
 };
-
-export default api;
