@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import Post from '../Post/Post';
+import { compressImage } from '../../utils/imageCompression';
 import './Profile.css';
 
 export default function Profile() {
@@ -15,6 +16,7 @@ export default function Profile() {
   const [selectedAlbum, setSelectedAlbum] = useState(null);
   const [activeTab, setActiveTab] = useState('posts');
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [showCreateAlbum, setShowCreateAlbum] = useState(false);
   const [newAlbumName, setNewAlbumName] = useState('');
@@ -103,8 +105,15 @@ export default function Profile() {
     if (!selectedFile) return;
 
     try {
+      setUploading(true);
+      
+      // Compress image before upload
+      console.log('Original size:', (selectedFile.size / 1024 / 1024).toFixed(2), 'MB');
+      const compressedFile = await compressImage(selectedFile, 2, 1920);
+      console.log('Compressed size:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
+      
       const formData = new FormData();
-      formData.append('image', selectedFile);
+      formData.append('image', compressedFile);
       formData.append('albumId', albumId);
 
       await api.uploadToAlbum(formData);
@@ -116,6 +125,9 @@ export default function Profile() {
       setSelectedAlbum({ ...selectedAlbum, photos: data.photos });
     } catch (error) {
       console.error('Upload to album error:', error);
+      alert('Failed to upload photo. Please try a smaller image.');
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -158,14 +170,24 @@ export default function Profile() {
     if (!file) return;
 
     try {
+      setUploading(true);
+      
+      // Compress image before upload
+      console.log('Original size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+      const compressedFile = await compressImage(file, 2, 1920);
+      console.log('Compressed size:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
+      
       const formData = new FormData();
-      formData.append('profileImage', file);
+      formData.append('profileImage', compressedFile);
 
       await api.updateProfile(formData);
       loadProfile();
       loadAlbums(); // Reload to show new photo in Profile Photos album
     } catch (error) {
       console.error('Update profile picture error:', error);
+      alert('Failed to update profile picture. Please try a smaller image.');
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -174,14 +196,24 @@ export default function Profile() {
     if (!file) return;
 
     try {
+      setUploading(true);
+      
+      // Compress image before upload
+      console.log('Original size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+      const compressedFile = await compressImage(file, 2, 1920);
+      console.log('Compressed size:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
+      
       const formData = new FormData();
-      formData.append('coverImage', file);
+      formData.append('coverImage', compressedFile);
 
       await api.updateProfile(formData);
       loadProfile();
       loadAlbums(); // Reload to show new photo in Cover Photos album
     } catch (error) {
       console.error('Update cover photo error:', error);
+      alert('Failed to update cover photo. Please try a smaller image.');
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -203,13 +235,14 @@ export default function Profile() {
           <div className="cover-placeholder"></div>
         )}
         {isOwnProfile && (
-          <label className="edit-cover-btn">
-            📷 Change Cover
+          <label className={`edit-cover-btn ${uploading ? 'disabled' : ''}`}>
+            {uploading ? '⏳ Uploading...' : '📷 Change Cover'}
             <input
               type="file"
               accept="image/*"
               onChange={handleUpdateCoverPhoto}
               style={{ display: 'none' }}
+              disabled={uploading}
             />
           </label>
         )}
@@ -226,13 +259,14 @@ export default function Profile() {
             </div>
           )}
           {isOwnProfile && (
-            <label className="edit-avatar-btn">
-              📷
+            <label className={`edit-avatar-btn ${uploading ? 'disabled' : ''}`}>
+              {uploading ? '⏳' : '📷'}
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleUpdateProfilePicture}
                 style={{ display: 'none' }}
+                disabled={uploading}
               />
             </label>
           )}
@@ -386,8 +420,9 @@ export default function Profile() {
                         <button
                           className="btn-upload"
                           onClick={() => setShowUploadToAlbum(true)}
+                          disabled={uploading}
                         >
-                          ➕ Add Photos
+                          {uploading ? '⏳ Uploading...' : '➕ Add Photos'}
                         </button>
                         <button
                           className="btn-delete-album"
@@ -401,8 +436,9 @@ export default function Profile() {
                       <button
                         className="btn-upload"
                         onClick={() => setShowUploadToAlbum(true)}
+                        disabled={uploading}
                       >
-                        ➕ Add Photos
+                        {uploading ? '⏳ Uploading...' : '➕ Add Photos'}
                       </button>
                     )}
                   </div>
@@ -414,14 +450,15 @@ export default function Profile() {
                       type="file"
                       accept="image/*"
                       onChange={(e) => setSelectedFile(e.target.files[0])}
+                      disabled={uploading}
                     />
                     <div className="form-actions">
                       <button
                         className="btn-primary"
                         onClick={() => handleUploadToAlbum(selectedAlbum.id)}
-                        disabled={!selectedFile}
+                        disabled={!selectedFile || uploading}
                       >
-                        Upload
+                        {uploading ? 'Uploading...' : 'Upload'}
                       </button>
                       <button
                         className="btn-secondary"
@@ -429,6 +466,7 @@ export default function Profile() {
                           setShowUploadToAlbum(false);
                           setSelectedFile(null);
                         }}
+                        disabled={uploading}
                       >
                         Cancel
                       </button>
