@@ -7,12 +7,14 @@ import './Friends.css';
 export default function Friends() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('all'); // all, requests, suggestions
+  const [activeTab, setActiveTab] = useState('all');
   const [friends, setFriends] = useState([]);
   const [friendRequests, setFriendRequests] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatPerson, setChatPerson] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -22,15 +24,12 @@ export default function Friends() {
     try {
       setLoading(true);
       
-      // Load friends
       const followingData = await api.getFollowing();
       setFriends(followingData.following || []);
 
-      // Load friend requests
       const requestsData = await api.getFriendRequests();
       setFriendRequests(requestsData.requests || []);
 
-      // Load suggested users
       const usersData = await api.getUsers();
       const currentFriendAddresses = (followingData.following || []).map(f => f.wallet_address);
       const filtered = (usersData.users || [])
@@ -82,6 +81,16 @@ export default function Friends() {
     } catch (error) {
       console.error('Failed to decline request:', error);
     }
+  }
+
+  function openChat(person) {
+    setChatPerson(person);
+    setChatOpen(true);
+  }
+
+  function closeChat() {
+    setChatOpen(false);
+    setChatPerson(null);
   }
 
   function getFilteredList() {
@@ -170,33 +179,35 @@ export default function Friends() {
           <div className="friends-grid">
             {filteredList.map((person) => (
               <div key={person.wallet_address || person.id} className="friend-card">
-                <div className="friend-card-header">
-                  <div
-                    className="friend-avatar"
-                    onClick={() => navigate(`/profile/${person.wallet_address}`)}
-                  >
-                    {person.profile_image ? (
-                      <img src={person.profile_image} alt={person.username} />
-                    ) : (
-                      <div className="avatar-placeholder">
-                        {person.username?.[0]?.toUpperCase() || '?'}
-                      </div>
+                <div 
+                  className="friend-card-clickable"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/profile/${person.wallet_address}`);
+                  }}
+                >
+                  <div className="friend-card-header">
+                    <div className="friend-avatar">
+                      {person.profile_image ? (
+                        <img src={person.profile_image} alt={person.username} />
+                      ) : (
+                        <div className="avatar-placeholder">
+                          {person.username?.[0]?.toUpperCase() || '?'}
+                        </div>
+                      )}
+                    </div>
+                    <div className="online-indicator"></div>
+                  </div>
+
+                  <div className="friend-card-body">
+                    <h3 className="friend-name">
+                      {person.username}
+                    </h3>
+                    {person.bio && <p className="friend-bio">{person.bio}</p>}
+                    {activeTab === 'all' && (
+                      <p className="friend-mutual">12 mutual friends</p>
                     )}
                   </div>
-                  <div className="online-indicator"></div>
-                </div>
-
-                <div className="friend-card-body">
-                  <h3
-                    className="friend-name"
-                    onClick={() => navigate(`/profile/${person.wallet_address}`)}
-                  >
-                    {person.username}
-                  </h3>
-                  {person.bio && <p className="friend-bio">{person.bio}</p>}
-                  {activeTab === 'all' && (
-                    <p className="friend-mutual">12 mutual friends</p>
-                  )}
                 </div>
 
                 <div className="friend-card-actions">
@@ -204,13 +215,19 @@ export default function Friends() {
                     <>
                       <button
                         className="btn-primary"
-                        onClick={() => navigate(`/messages/${person.wallet_address}`)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openChat(person);
+                        }}
                       >
                         Message
                       </button>
                       <button
                         className="btn-secondary"
-                        onClick={() => handleUnfriend(person.wallet_address)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUnfriend(person.wallet_address);
+                        }}
                       >
                         Unfriend
                       </button>
@@ -221,13 +238,19 @@ export default function Friends() {
                     <>
                       <button
                         className="btn-primary"
-                        onClick={() => handleAcceptRequest(person.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAcceptRequest(person.id);
+                        }}
                       >
                         Confirm
                       </button>
                       <button
                         className="btn-secondary"
-                        onClick={() => handleDeclineRequest(person.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeclineRequest(person.id);
+                        }}
                       >
                         Delete
                       </button>
@@ -238,13 +261,19 @@ export default function Friends() {
                     <>
                       <button
                         className="btn-primary"
-                        onClick={() => handleAddFriend(person.wallet_address)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddFriend(person.wallet_address);
+                        }}
                       >
                         Add Friend
                       </button>
                       <button
                         className="btn-secondary"
-                        onClick={() => setSuggestions(suggestions.filter(s => s.wallet_address !== person.wallet_address))}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSuggestions(suggestions.filter(s => s.wallet_address !== person.wallet_address));
+                        }}
                       >
                         Remove
                       </button>
@@ -256,6 +285,52 @@ export default function Friends() {
           </div>
         )}
       </div>
+
+      {/* Chat Modal */}
+      {chatOpen && chatPerson && (
+        <div className="chat-modal-overlay" onClick={closeChat}>
+          <div className="chat-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="chat-modal-header">
+              <div className="chat-modal-user">
+                <div className="chat-modal-avatar">
+                  {chatPerson.profile_image ? (
+                    <img src={chatPerson.profile_image} alt={chatPerson.username} />
+                  ) : (
+                    <div className="avatar-placeholder-small">
+                      {chatPerson.username?.[0]?.toUpperCase() || '?'}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h4>{chatPerson.username}</h4>
+                  <span className="chat-status">Active now</span>
+                </div>
+              </div>
+              <button className="chat-close" onClick={closeChat}>✕</button>
+            </div>
+            <div className="chat-modal-body">
+              <div className="chat-empty">
+                <div className="chat-empty-icon">💬</div>
+                <p>Start a conversation with {chatPerson.username}</p>
+              </div>
+            </div>
+            <div className="chat-modal-footer">
+              <input
+                type="text"
+                placeholder="Type a message..."
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && e.target.value.trim()) {
+                    // TODO: Send message
+                    console.log('Send message:', e.target.value);
+                    e.target.value = '';
+                  }
+                }}
+              />
+              <button className="chat-send">Send</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
