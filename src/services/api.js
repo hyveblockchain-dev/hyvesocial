@@ -252,7 +252,13 @@ export async function getComments(postId) {
   return response.json();
 }
 
-export async function addComment(postId, content) {
+export async function addComment(postId, content, options = {}) {
+  const { parentCommentId, imageFile } = options;
+  let mediaUrl = null;
+  if (imageFile) {
+    mediaUrl = await fileToBase64(imageFile);
+  }
+
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_URL}/api/posts/${postId}/comments`, {
     method: 'POST',
@@ -260,7 +266,11 @@ export async function addComment(postId, content) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({
+      content,
+      parentCommentId,
+      mediaUrl
+    }),
   });
   return response.json();
 }
@@ -276,6 +286,29 @@ export async function deleteComment(commentId) {
   return response.json();
 }
 
+export async function reactToComment(commentId, reactionType) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/comments/${commentId}/reactions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ reactionType }),
+  });
+  return response.json();
+}
+
+export async function removeCommentReaction(commentId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/comments/${commentId}/reactions`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
 // ========================================
 // FOLLOW FUNCTIONS
 // ========================================
@@ -696,6 +729,8 @@ export default {
   getComments,
   addComment,
   deleteComment,
+  reactToComment,
+  removeCommentReaction,
   
   // Follow
   followUser,

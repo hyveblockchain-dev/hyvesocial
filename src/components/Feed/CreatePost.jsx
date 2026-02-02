@@ -159,7 +159,10 @@ export default function CreatePost({ onPostCreated }) {
                     key={emoji}
                     type="button"
                     className="emoji-btn"
-                    onClick={() => setContent((prev) => `${prev}${emoji}`)}
+                    onClick={() => {
+                      setContent((prev) => `${prev}${emoji}`);
+                      setShowEmojiPicker(false);
+                    }}
                   >
                     {emoji}
                   </button>

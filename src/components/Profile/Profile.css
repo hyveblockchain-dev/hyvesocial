@@ -901,6 +901,11 @@
   resize: vertical;
 }
 
+.lightbox-actions {
+  display: grid;
+  gap: 10px;
+}
+
 .lightbox-close {
   position: absolute;
   top: 12px;

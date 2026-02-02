@@ -260,8 +260,15 @@
 
 .add-comment {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-top: 16px;
+}
+
+.add-comment .comment-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .add-comment input {
@@ -274,23 +281,30 @@
   font-size: 14px;
 }
 
-.add-comment button {
-  padding: 10px 20px;
+.add-comment .comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0;
+}
+
+.add-comment .comment-actions button {
+  padding: 8px 16px;
   background: var(--gold-primary);
   color: #000;
   border: none;
-  border-radius: 20px;
+  border-radius: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   font-size: 14px;
 }
 
-.add-comment button:hover:not(:disabled) {
+.add-comment .comment-actions button:hover:not(:disabled) {
   background: var(--gold-light);
 }
 
-.add-comment button:disabled {
+.add-comment .comment-actions button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -306,4 +320,89 @@
   text-align: center;
   color: var(--text-tertiary);
   padding: 16px;
+}
+
+.comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.comment-actions .action-button {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.comment-reaction-count {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.comment-media img {
+  max-width: 260px;
+  width: 100%;
+  border-radius: 8px;
+  margin-top: 8px;
+  display: block;
+}
+
+.reply-box {
+  margin-top: 8px;
+  padding-left: 12px;
+  border-left: 2px solid var(--border-color);
+}
+
+.reply-input {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.reply-input input {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.reply-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.emoji-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.upload-btn {
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.emoji-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  margin-top: 8px;
+}
+
+.reply-list {
+  margin-top: 8px;
+}
+
+.comment.reply {
+  margin-left: 24px;
 }
