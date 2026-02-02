@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import Chat from '../Chat/Chat';
+import ChatWindow from '../Chat/ChatWindow';
 import api from '../../services/api';
 import './Layout.css';
 
@@ -293,13 +294,7 @@ export default function Layout({ children }) {
       {/* Individual Chat Window */}
       {selectedChat && (
         <div className="chat-window-popup">
-          <div className="chat-window-header">
-            <h3>💬 {selectedChat.username}</h3>
-            <button className="close-chat" onClick={() => setSelectedChat(null)}>✕</button>
-          </div>
-          <div className="chat-window-body">
-            <p className="chat-placeholder">Chat with {selectedChat.username}</p>
-          </div>
+          <ChatWindow conversation={selectedChat} onClose={() => setSelectedChat(null)} />
         </div>
       )}
 
