@@ -51,11 +51,6 @@ body {
 }
 
 body.light-mode {
-  --gold-primary: #111827;
-  --gold-light: #1f2937;
-  --gold-dark: #0f172a;
-  --gold-glow: rgba(17, 24, 39, 0.25);
-  --gold-subtle: rgba(17, 24, 39, 0.08);
   --bg-primary: #f5f6f8;
   --bg-secondary: #ffffff;
   --bg-card: rgba(255, 255, 255, 0.92);
