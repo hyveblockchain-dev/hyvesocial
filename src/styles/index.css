@@ -53,13 +53,13 @@ body {
 body.light-mode {
   --bg-primary: #f5f6f8;
   --bg-secondary: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.92);
-  --bg-input: #f0f2f5;
-  --bg-hover: #f3f4f6;
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --text-tertiary: #6b7280;
-  --border-color: #e5e7eb;
+  --bg-card: #ffffff;
+  --bg-input: #eef2f7;
+  --bg-hover: #e7ecf3;
+  --text-primary: #0f172a;
+  --text-secondary: #1f2937;
+  --text-tertiary: #475569;
+  --border-color: #d0d7e2;
 }
 
 /* === ANIMATED BACKGROUND === */

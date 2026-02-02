@@ -17,6 +17,11 @@
   z-index: 100;
 }
 
+body.light-mode .page-header {
+  background: #ffffff;
+  border-bottom-color: #cfd6e2;
+}
+
 .logo {
   display: flex;
   align-items: center;
@@ -235,12 +240,24 @@
   z-index: 50;
 }
 
+body.light-mode .left-column,
+body.light-mode .right-column {
+  background: #ffffff;
+  border-left: 1px solid #e1e7ef;
+  border-right: 1px solid #e1e7ef;
+}
+
 .profile-card {
   background: #2a2a2a;
   padding: 16px;
   border-radius: 8px;
   margin-bottom: 20px;
   text-align: center;
+}
+
+body.light-mode .profile-card {
+  background: #f7f9fc;
+  border: 1px solid #e1e7ef;
 }
 
 .profile-avatar {
@@ -306,6 +323,10 @@
   color: #ccc;
   text-decoration: none;
   font-size: 15px;
+}
+
+body.light-mode .nav-item {
+  color: #111827;
 }
 
 .nav-item:hover {
