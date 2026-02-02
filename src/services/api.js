@@ -1,6 +1,8 @@
 // src/services/api.js
 import { API_URL } from '../utils/env';
 
+let friendsByAddressSupported = true;
+
 // Helper function to convert file to base64
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -373,12 +375,19 @@ export async function getFriends() {
 }
 
 export async function getFriendsByAddress(address) {
+  if (!friendsByAddressSupported) {
+    return { friends: [] };
+  }
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_URL}/api/friends/${address}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
   });
+  if (response.status === 404) {
+    friendsByAddressSupported = false;
+    return { friends: [] };
+  }
   if (!response.ok) {
     return { friends: [] };
   }
