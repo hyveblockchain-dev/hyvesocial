@@ -183,7 +183,7 @@ export default function Friends() {
                   className="friend-card-clickable"
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate(`/profile/${person.wallet_address}`);
+                    navigate(`/profile/${encodeURIComponent(person.username || 'unknown')}`);
                   }}
                 >
                   <div className="friend-card-header">

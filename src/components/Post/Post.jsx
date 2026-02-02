@@ -109,7 +109,7 @@ export default function Post({ post, onDelete, onUpdate }) {
   return (
     <div className="post-card">
       <div className="post-header">
-        <Link to={`/profile/${post.author_address}`} className="post-author">
+        <Link to={`/profile/${encodeURIComponent(post.username || 'unknown')}`} className="post-author">
           {getAvatar(post.profile_image, post.username, 'author-avatar')}
           <div className="author-info">
             <div className="author-name">{post.username || 'Anonymous'}</div>

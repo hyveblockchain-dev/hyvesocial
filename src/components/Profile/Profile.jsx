@@ -1,6 +1,6 @@
 // src/components/Profile/Profile.jsx
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import Post from '../Post/Post';
@@ -8,7 +8,8 @@ import { compressImage } from '../../utils/imageCompression';
 import './Profile.css';
 
 export default function Profile() {
-  const { address } = useParams();
+  const { handle } = useParams();
+  const navigate = useNavigate();
   const { user, setUser } = useAuth();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -44,22 +45,67 @@ export default function Profile() {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [captionDraft, setCaptionDraft] = useState('');
   const [captionSaving, setCaptionSaving] = useState(false);
+  const [resolvedAddress, setResolvedAddress] = useState(null);
   
-  const isOwnProfile = user?.walletAddress === address;
+  const isOwnProfile = user?.walletAddress && user?.walletAddress === resolvedAddress;
   const totalPhotos = albums.reduce((sum, album) => sum + (album.photo_count || 0), 0);
   const friendCount = profile?.friendCount || profile?.friendsCount || friends.length || 0;
   const canViewPrivateContent = isOwnProfile || friendshipStatus === 'friends';
   const currentPhoto = selectedAlbum?.photos?.[lightboxIndex];
+  const isProfilePhotoAlbum = /profile/i.test(selectedAlbum?.name || selectedAlbum?.title || '');
+  const isCoverPhotoAlbum = /cover/i.test(selectedAlbum?.name || selectedAlbum?.title || '');
+
+  function isWalletAddress(value) {
+    return /^0x[a-fA-F0-9]{40}$/.test(value || '');
+  }
 
   useEffect(() => {
-    loadProfile();
-    loadPosts();
-    loadAlbums();
-    loadFriends();
+    resolveProfileHandle();
+  }, [handle, user]);
+
+  useEffect(() => {
+    if (!resolvedAddress) return;
+    loadProfile(resolvedAddress);
+    loadPosts(resolvedAddress);
+    loadAlbums(resolvedAddress);
+    loadFriends(resolvedAddress);
     if (!isOwnProfile && user) {
-      checkFriendshipStatus();
+      checkFriendshipStatus(resolvedAddress);
     }
-  }, [address, user]);
+  }, [resolvedAddress, user]);
+
+  async function resolveProfileHandle() {
+    if (!handle) return;
+
+    if (handle === 'me' && user?.walletAddress) {
+      setResolvedAddress(user.walletAddress);
+      return;
+    }
+
+    if (isWalletAddress(handle)) {
+      setResolvedAddress(handle);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const data = await api.searchUsers(handle);
+      const users = data.users || data || [];
+      const match = users.find((u) => u.username?.toLowerCase() === handle.toLowerCase());
+      if (match?.wallet_address) {
+        setResolvedAddress(match.wallet_address);
+      } else {
+        setResolvedAddress(null);
+        setProfile(null);
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Resolve profile error:', error);
+      setResolvedAddress(null);
+      setProfile(null);
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     if (!isLightboxOpen || !selectedAlbum?.photos?.length) return;
@@ -71,7 +117,7 @@ export default function Profile() {
     setCaptionDraft(photo?.caption || photo?.description || '');
   }, [isLightboxOpen, lightboxIndex, selectedAlbum]);
 
-  async function loadFriends() {
+  async function loadFriends(address) {
     try {
       setFriendsLoading(true);
       const data = isOwnProfile
@@ -86,7 +132,7 @@ export default function Profile() {
     }
   }
 
-  async function loadProfile() {
+  async function loadProfile(address) {
     try {
       setLoading(true);
       const data = await api.getUserProfile(address);
@@ -96,6 +142,10 @@ export default function Profile() {
       if (isOwnProfile) {
         setUser(data.user);
       }
+
+      if (isWalletAddress(handle) && data.user?.username) {
+        navigate(`/profile/${data.user.username}`, { replace: true });
+      }
     } catch (error) {
       console.error('Load profile error:', error);
     } finally {
@@ -103,7 +153,7 @@ export default function Profile() {
     }
   }
 
-  async function loadPosts() {
+  async function loadPosts(address) {
     try {
       const data = await api.getUserPosts(address);
       setPosts(data.posts || []);
@@ -112,7 +162,7 @@ export default function Profile() {
     }
   }
 
-  async function loadAlbums() {
+  async function loadAlbums(address) {
     try {
       const data = await api.getAlbums(address);
       setAlbums(data.albums || []);
@@ -121,7 +171,7 @@ export default function Profile() {
     }
   }
 
-  async function checkFriendshipStatus() {
+  async function checkFriendshipStatus(address) {
     try {
       const data = await api.getFriendshipStatus(address);
       setFriendshipStatus(data.status || 'none');
@@ -132,9 +182,10 @@ export default function Profile() {
   }
 
   async function handleAddFriend() {
+    if (!resolvedAddress) return;
     try {
       setActionLoading(true);
-      await api.sendFriendRequest(address);
+      await api.sendFriendRequest(resolvedAddress);
       setFriendshipStatus('request_sent');
     } catch (error) {
       console.error('Send friend request error:', error);
@@ -176,10 +227,11 @@ export default function Profile() {
   }
 
   async function handleRemoveFriend() {
+    if (!resolvedAddress) return;
     if (!confirm('Remove this friend?')) return;
     try {
       setActionLoading(true);
-      await api.removeFriend(address);
+      await api.removeFriend(resolvedAddress);
       setFriendshipStatus('none');
     } catch (error) {
       console.error('Remove friend error:', error);
@@ -190,10 +242,11 @@ export default function Profile() {
   }
 
   async function handleBlockUser() {
+    if (!resolvedAddress) return;
     if (!confirm('Block this user?')) return;
     try {
       setActionLoading(true);
-      await api.blockUser(address);
+      await api.blockUser(resolvedAddress);
       setFriendshipStatus('blocked');
       setRequestId(null);
     } catch (error) {
@@ -210,7 +263,7 @@ export default function Profile() {
       username: targetUser.username || targetUser.name || targetUser.user?.username || 'User',
       profileImage: targetUser.profileImage || targetUser.profile_image || targetUser.user?.profileImage || ''
     } : {
-      address: profile?.walletAddress || profile?.wallet_address || address,
+      address: profile?.walletAddress || profile?.wallet_address || resolvedAddress,
       username: profile?.username || 'User',
       profileImage: profile?.profileImage || profile?.profile_image || ''
     };
@@ -314,6 +367,44 @@ export default function Profile() {
       alert('Failed to update caption');
     } finally {
       setCaptionSaving(false);
+    }
+  }
+
+  async function setAsProfilePhoto() {
+    if (!currentPhoto) return;
+    try {
+      setActionLoading(true);
+      const photoUrl = currentPhoto.image_url || currentPhoto.photo_url;
+      const result = await api.updateProfile({ profileImage: photoUrl });
+      if (result.user) {
+        setProfile(result.user);
+        setUser(result.user);
+      }
+      await loadProfile();
+    } catch (error) {
+      console.error('Set profile photo error:', error);
+      alert('Failed to set profile photo');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function setAsCoverPhoto() {
+    if (!currentPhoto) return;
+    try {
+      setActionLoading(true);
+      const photoUrl = currentPhoto.image_url || currentPhoto.photo_url;
+      const result = await api.updateProfile({ coverImage: photoUrl });
+      if (result.user) {
+        setProfile(result.user);
+        setUser(result.user);
+      }
+      await loadProfile();
+    } catch (error) {
+      console.error('Set cover photo error:', error);
+      alert('Failed to set cover photo');
+    } finally {
+      setActionLoading(false);
     }
   }
 
@@ -1108,13 +1199,33 @@ export default function Profile() {
                           placeholder="Write a caption..."
                           rows={6}
                         />
-                        <button
-                          className="btn-primary"
-                          onClick={savePhotoCaption}
-                          disabled={captionSaving}
-                        >
-                          {captionSaving ? 'Saving...' : 'Save Caption'}
-                        </button>
+                        <div className="lightbox-actions">
+                          <button
+                            className="btn-primary"
+                            onClick={savePhotoCaption}
+                            disabled={captionSaving}
+                          >
+                            {captionSaving ? 'Saving...' : 'Save Caption'}
+                          </button>
+                          {isOwnProfile && isProfilePhotoAlbum && (
+                            <button
+                              className="btn-secondary"
+                              onClick={setAsProfilePhoto}
+                              disabled={actionLoading}
+                            >
+                              {actionLoading ? 'Updating...' : 'Use as Profile Photo'}
+                            </button>
+                          )}
+                          {isOwnProfile && isCoverPhotoAlbum && (
+                            <button
+                              className="btn-secondary"
+                              onClick={setAsCoverPhoto}
+                              disabled={actionLoading}
+                            >
+                              {actionLoading ? 'Updating...' : 'Use as Cover Photo'}
+                            </button>
+                          )}
+                        </div>
                         {currentPhoto.caption && (
                           <div className="lightbox-caption-preview">
                             <div className="preview-label">Current Caption</div>

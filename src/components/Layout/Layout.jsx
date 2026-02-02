@@ -21,6 +21,11 @@ export default function Layout({ children }) {
   const [postCount, setPostCount] = useState(0);
   const [friendCount, setFriendCount] = useState(0);
 
+  function profilePathFor(userObj) {
+    const handle = userObj?.username || userObj?.user?.username;
+    return handle ? `/profile/${encodeURIComponent(handle)}` : '/profile/unknown';
+  }
+
   useEffect(() => {
     loadSuggestedUsers();
     loadUserStats();
@@ -141,7 +146,7 @@ export default function Layout({ children }) {
                 searchResults.map(user => (
                   <Link 
                     key={user.wallet_address}
-                    to={`/profile/${user.wallet_address}`}
+                    to={profilePathFor(user)}
                     className="search-result"
                     onClick={() => setShowSearchResults(false)}
                   >
@@ -176,7 +181,7 @@ export default function Layout({ children }) {
 
             {showUserMenu && (
               <div className="user-dropdown">
-                <Link to={`/profile/${user?.walletAddress}`} onClick={() => setShowUserMenu(false)}>
+                <Link to="/profile/me" onClick={() => setShowUserMenu(false)}>
                   My Profile
                 </Link>
                 <button onClick={handleLogout}>Disconnect Wallet</button>
@@ -200,9 +205,6 @@ export default function Layout({ children }) {
             )}
             <div className="profile-details">
               <h3>{user?.username || 'User'}</h3>
-              <p className="profile-address">
-                {user?.walletAddress?.slice(0, 6)}...{user?.walletAddress?.slice(-4)}
-              </p>
             </div>
             <button className="disconnect-btn" onClick={handleLogout}>
               Disconnect Wallet
@@ -218,7 +220,7 @@ export default function Layout({ children }) {
               <span className="nav-icon">🎥</span>
               <span>Videos</span>
             </Link>
-            <Link to={`/profile/${user?.walletAddress}`} className="nav-item">
+            <Link to="/profile/me" className="nav-item">
               <span className="nav-icon">👤</span>
               <span>My Profile</span>
             </Link>
@@ -265,7 +267,7 @@ export default function Layout({ children }) {
                 {suggestedUsers.map(suggestedUser => (
                   <Link 
                     key={suggestedUser.wallet_address}
-                    to={`/profile/${suggestedUser.wallet_address}`}
+                    to={profilePathFor(suggestedUser)}
                     className="suggested-user"
                   >
                     {suggestedUser.profile_image ? (

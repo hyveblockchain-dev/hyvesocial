@@ -41,7 +41,7 @@ function App() {
             }
           />
           <Route
-            path="/profile/:address"
+            path="/profile/:handle"
             element={
               <PrivateRoute>
                 <Layout>
