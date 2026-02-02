@@ -20,16 +20,30 @@ export default function Layout({ children }) {
   const [suggestedUsers, setSuggestedUsers] = useState([]);
   const [postCount, setPostCount] = useState(0);
   const [friendCount, setFriendCount] = useState(0);
+  const [isLightMode, setIsLightMode] = useState(() => localStorage.getItem('theme') === 'light');
 
   function profilePathFor(userObj) {
     const handle = userObj?.username || userObj?.user?.username;
     return handle ? `/profile/${encodeURIComponent(handle)}` : '/profile/unknown';
   }
 
+  function getUserAddress(userObj) {
+    return userObj?.wallet_address || userObj?.walletAddress || userObj?.address;
+  }
+
+  function getUserHandle(userObj) {
+    return (userObj?.username || userObj?.user?.username || '').toLowerCase();
+  }
+
   useEffect(() => {
     loadSuggestedUsers();
     loadUserStats();
   }, [user]);
+
+  useEffect(() => {
+    document.body.classList.toggle('light-mode', isLightMode);
+    localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
+  }, [isLightMode]);
 
   useEffect(() => {
     function handleOpenChat(event) {
@@ -51,13 +65,30 @@ export default function Layout({ children }) {
       }
       
       const data = await api.getUsers();
+      const friendsData = api.getFriends ? await api.getFriends() : { friends: [] };
+      const blockedData = api.getBlockedUsers ? await api.getBlockedUsers() : { blocked: [] };
+      const friendList = friendsData.friends || friendsData || [];
+      const blockedList = blockedData.blocked || blockedData.users || blockedData || [];
+      const friendAddressSet = new Set(friendList.map(getUserAddress).filter(Boolean));
+      const friendHandleSet = new Set(friendList.map(getUserHandle).filter(Boolean));
+      const blockedAddressSet = new Set(blockedList.map(getUserAddress).filter(Boolean));
+      const blockedHandleSet = new Set(blockedList.map(getUserHandle).filter(Boolean));
       
       if (!data || !data.users) {
         return;
       }
       
       // Filter out current user and get random 5
-      const others = data.users.filter(u => u.wallet_address !== user?.walletAddress);
+      const others = data.users.filter(u => {
+        const address = getUserAddress(u);
+        const handle = getUserHandle(u);
+        if (address && address === user?.walletAddress) return false;
+        if (address && friendAddressSet.has(address)) return false;
+        if (handle && friendHandleSet.has(handle)) return false;
+        if (address && blockedAddressSet.has(address)) return false;
+        if (handle && blockedHandleSet.has(handle)) return false;
+        return true;
+      });
       const random = others.sort(() => 0.5 - Math.random()).slice(0, 5);
       setSuggestedUsers(random);
     } catch (error) {
@@ -166,28 +197,15 @@ export default function Layout({ children }) {
         </div>
 
         <div className="header-actions">
+          <button
+            className="light-toggle-btn"
+            onClick={() => setIsLightMode((prev) => !prev)}
+            aria-label="Toggle light mode"
+            title={isLightMode ? 'Switch to dark mode' : 'Switch to light mode'}
+          >
+            {isLightMode ? '🌙 Dark' : '🌞 Light'}
+          </button>
           <button className="icon-btn">🔔</button>
-          
-          <div className="user-menu">
-            <button className="user-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
-              {user?.profileImage ? (
-                <img src={user.profileImage} alt={user.username} className="avatar-mini" />
-              ) : (
-                <div className="avatar-mini">
-                  {user?.username?.charAt(0).toUpperCase() || '?'}
-                </div>
-              )}
-            </button>
-
-            {showUserMenu && (
-              <div className="user-dropdown">
-                <Link to="/profile/me" onClick={() => setShowUserMenu(false)}>
-                  My Profile
-                </Link>
-                <button onClick={handleLogout}>Disconnect Wallet</button>
-              </div>
-            )}
-          </div>
         </div>
       </header>
 
