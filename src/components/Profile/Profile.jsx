@@ -357,9 +357,6 @@ export default function Profile() {
 
         <div className="profile-info">
           <h1>{profile.username || 'Anonymous'}</h1>
-          <p className="profile-wallet">
-            {address?.slice(0, 8)}...{address?.slice(-6)}
-          </p>
           {profile.bio && <p className="profile-bio">{profile.bio}</p>}
         </div>
 
