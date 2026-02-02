@@ -49,9 +49,9 @@
 /* Profile Header */
 .profile-header {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 24px;
-  padding: 0 24px 24px;
+  padding: 40px 24px 24px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
@@ -71,6 +71,7 @@
   border: 5px solid var(--bg-primary);
   overflow: hidden;
   flex-shrink: 0;
+  margin-top: -80px;
 }
 
 .profile-avatar-large img {
