@@ -401,6 +401,36 @@
   margin-bottom: 12px;
 }
 
+.about-form {
+  display: grid;
+  gap: 14px;
+}
+
+.about-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.about-form input,
+.about-form textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 14px;
+  resize: vertical;
+}
+
+.about-form input:focus,
+.about-form textarea:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+}
+
 .profile-photos-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -437,6 +467,31 @@
   display: grid;
   gap: 10px;
   color: var(--text-secondary);
+}
+
+.privacy-card {
+  background: var(--bg-card);
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+  padding: 28px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.privacy-icon {
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+
+.privacy-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.privacy-text {
+  font-size: 14px;
+  color: var(--text-tertiary);
 }
 
 .friends-grid {
@@ -493,12 +548,6 @@
 .friend-name {
   color: var(--text-primary);
   font-weight: 600;
-}
-
-.friend-wallet {
-  color: var(--text-tertiary);
-  font-size: 12px;
-  word-break: break-all;
 }
 
 /* Posts List */

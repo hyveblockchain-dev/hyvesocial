@@ -26,10 +26,25 @@ export default function Profile() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [friends, setFriends] = useState([]);
   const [friendsLoading, setFriendsLoading] = useState(false);
+  const [isEditingAbout, setIsEditingAbout] = useState(false);
+  const [aboutSaving, setAboutSaving] = useState(false);
+  const [aboutForm, setAboutForm] = useState({
+    bio: '',
+    location: '',
+    work: '',
+    education: '',
+    website: '',
+    hometown: '',
+    relationshipStatus: '',
+    birthday: '',
+    gender: '',
+    languages: ''
+  });
   
   const isOwnProfile = user?.walletAddress === address;
   const totalPhotos = albums.reduce((sum, album) => sum + (album.photo_count || 0), 0);
   const friendCount = profile?.friendCount || profile?.friendsCount || friends.length || 0;
+  const canViewPrivateContent = isOwnProfile || friendshipStatus === 'friends';
 
   useEffect(() => {
     loadProfile();
@@ -334,6 +349,56 @@ export default function Profile() {
     }
   }
 
+  function startEditAbout() {
+    setAboutForm({
+      bio: profile?.bio || '',
+      location: profile?.location || '',
+      work: profile?.work || '',
+      education: profile?.education || '',
+      website: profile?.website || '',
+      hometown: profile?.hometown || '',
+      relationshipStatus: profile?.relationshipStatus || profile?.relationship_status || '',
+      birthday: profile?.birthday || '',
+      gender: profile?.gender || '',
+      languages: profile?.languages || ''
+    });
+    setIsEditingAbout(true);
+  }
+
+  function cancelEditAbout() {
+    setIsEditingAbout(false);
+  }
+
+  async function saveAboutInfo(e) {
+    e.preventDefault();
+    try {
+      setAboutSaving(true);
+      const result = await api.updateProfile({
+        bio: aboutForm.bio,
+        location: aboutForm.location,
+        work: aboutForm.work,
+        education: aboutForm.education,
+        website: aboutForm.website,
+        hometown: aboutForm.hometown,
+        relationshipStatus: aboutForm.relationshipStatus,
+        birthday: aboutForm.birthday,
+        gender: aboutForm.gender,
+        languages: aboutForm.languages
+      });
+
+      if (result.user) {
+        setProfile(result.user);
+        setUser(result.user);
+      }
+      setIsEditingAbout(false);
+    } catch (error) {
+      console.error('Update about info error:', error);
+      alert('Failed to update profile info');
+    } finally {
+      setAboutSaving(false);
+    }
+  }
+
   if (loading) {
     return <div className="loading-container"><div className="spinner"></div></div>;
   }
@@ -525,14 +590,18 @@ export default function Profile() {
           <div className="profile-content-grid">
             <div className="profile-left">
               <div className="profile-card">
-                <h3>Intro</h3>
+                <div className="profile-card-header">
+                  <h3>Intro</h3>
+                  {isOwnProfile && (
+                    <button className="btn-link" onClick={startEditAbout}>Edit</button>
+                  )}
+                </div>
                 {profile.bio ? (
                   <p className="profile-card-text">{profile.bio}</p>
                 ) : (
                   <p className="profile-card-muted">No bio yet.</p>
                 )}
                 <ul className="profile-details-list">
-                  <li>🏷️ Wallet: <span>{profile.walletAddress || profile.wallet_address || address}</span></li>
                   <li>📍 Location: <span>{profile.location || 'Not set'}</span></li>
                   <li>🌐 Website: <span>{profile.website || 'Not set'}</span></li>
                   <li>🗓️ Joined: <span>{profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'Not set'}</span></li>
@@ -545,7 +614,13 @@ export default function Profile() {
                   <button className="btn-link" onClick={() => setActiveTab('photos')}>See all photos</button>
                 </div>
                 <div className="profile-photos-grid">
-                  {albums.length === 0 ? (
+                  {!canViewPrivateContent ? (
+                    <div className="privacy-card">
+                      <div className="privacy-icon">🔒</div>
+                      <div className="privacy-title">Photos are private</div>
+                      <div className="privacy-text">Add as a friend to see photos.</div>
+                    </div>
+                  ) : albums.length === 0 ? (
                     <div className="profile-card-muted">No photos yet.</div>
                   ) : (
                     albums.slice(0, 9).map(album => (
@@ -564,7 +639,13 @@ export default function Profile() {
 
             <div className="profile-right">
               <div className="posts-list">
-                {posts.length === 0 ? (
+                {!canViewPrivateContent ? (
+                  <div className="privacy-card">
+                    <div className="privacy-icon">🔒</div>
+                    <div className="privacy-title">Posts are private</div>
+                    <div className="privacy-text">Add as a friend to see posts.</div>
+                  </div>
+                ) : posts.length === 0 ? (
                   <div className="empty-state">
                     <div className="empty-state-icon">📝</div>
                     <div className="empty-state-title">No posts yet</div>
@@ -588,18 +669,125 @@ export default function Profile() {
 
         {activeTab === 'about' && (
           <div className="profile-card">
-            <h2>About</h2>
-            <p className="profile-card-text">
-              {profile.bio || 'No bio yet.'}
-            </p>
-            <ul className="profile-details-list">
-              <li>🏷️ Wallet: <span>{profile.walletAddress || profile.wallet_address || address}</span></li>
-              <li>📍 Location: <span>{profile.location || 'Not set'}</span></li>
-              <li>💼 Work: <span>{profile.work || 'Not set'}</span></li>
-              <li>🎓 Education: <span>{profile.education || 'Not set'}</span></li>
-              <li>🌐 Website: <span>{profile.website || 'Not set'}</span></li>
-              <li>🗓️ Joined: <span>{profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'Not set'}</span></li>
-            </ul>
+            <div className="profile-card-header">
+              <h2>About</h2>
+              {isOwnProfile && !isEditingAbout && (
+                <button className="btn-link" onClick={startEditAbout}>Edit</button>
+              )}
+            </div>
+
+            {isOwnProfile && isEditingAbout ? (
+              <form className="about-form" onSubmit={saveAboutInfo}>
+                <label>
+                  Bio
+                  <textarea
+                    value={aboutForm.bio}
+                    onChange={(e) => setAboutForm({ ...aboutForm, bio: e.target.value })}
+                    rows={4}
+                  />
+                </label>
+                <label>
+                  Location
+                  <input
+                    type="text"
+                    value={aboutForm.location}
+                    onChange={(e) => setAboutForm({ ...aboutForm, location: e.target.value })}
+                  />
+                </label>
+                <label>
+                  Work
+                  <input
+                    type="text"
+                    value={aboutForm.work}
+                    onChange={(e) => setAboutForm({ ...aboutForm, work: e.target.value })}
+                  />
+                </label>
+                <label>
+                  Education
+                  <input
+                    type="text"
+                    value={aboutForm.education}
+                    onChange={(e) => setAboutForm({ ...aboutForm, education: e.target.value })}
+                  />
+                </label>
+                <label>
+                  Website
+                  <input
+                    type="text"
+                    value={aboutForm.website}
+                    onChange={(e) => setAboutForm({ ...aboutForm, website: e.target.value })}
+                  />
+                </label>
+                <label>
+                  Hometown
+                  <input
+                    type="text"
+                    value={aboutForm.hometown}
+                    onChange={(e) => setAboutForm({ ...aboutForm, hometown: e.target.value })}
+                  />
+                </label>
+                <label>
+                  Relationship Status
+                  <input
+                    type="text"
+                    value={aboutForm.relationshipStatus}
+                    onChange={(e) => setAboutForm({ ...aboutForm, relationshipStatus: e.target.value })}
+                  />
+                </label>
+                <label>
+                  Birthday
+                  <input
+                    type="text"
+                    placeholder="e.g. Jan 12, 1994"
+                    value={aboutForm.birthday}
+                    onChange={(e) => setAboutForm({ ...aboutForm, birthday: e.target.value })}
+                  />
+                </label>
+                <label>
+                  Gender
+                  <input
+                    type="text"
+                    value={aboutForm.gender}
+                    onChange={(e) => setAboutForm({ ...aboutForm, gender: e.target.value })}
+                  />
+                </label>
+                <label>
+                  Languages
+                  <input
+                    type="text"
+                    placeholder="e.g. English, Spanish"
+                    value={aboutForm.languages}
+                    onChange={(e) => setAboutForm({ ...aboutForm, languages: e.target.value })}
+                  />
+                </label>
+                <div className="form-actions">
+                  <button className="btn-primary" type="submit" disabled={aboutSaving}>
+                    {aboutSaving ? 'Saving...' : 'Save'}
+                  </button>
+                  <button className="btn-secondary" type="button" onClick={cancelEditAbout} disabled={aboutSaving}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <>
+                <p className="profile-card-text">
+                  {profile.bio || 'No bio yet.'}
+                </p>
+                <ul className="profile-details-list">
+                  <li>📍 Location: <span>{profile.location || 'Not set'}</span></li>
+                  <li>💼 Work: <span>{profile.work || 'Not set'}</span></li>
+                  <li>🎓 Education: <span>{profile.education || 'Not set'}</span></li>
+                  <li>🌐 Website: <span>{profile.website || 'Not set'}</span></li>
+                  <li>🏡 Hometown: <span>{profile.hometown || 'Not set'}</span></li>
+                  <li>💞 Relationship: <span>{profile.relationshipStatus || profile.relationship_status || 'Not set'}</span></li>
+                  <li>🎂 Birthday: <span>{profile.birthday || 'Not set'}</span></li>
+                  <li>⚧ Gender: <span>{profile.gender || 'Not set'}</span></li>
+                  <li>🗣️ Languages: <span>{profile.languages || 'Not set'}</span></li>
+                  <li>🗓️ Joined: <span>{profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'Not set'}</span></li>
+                </ul>
+              </>
+            )}
           </div>
         )}
 
@@ -618,7 +806,6 @@ export default function Profile() {
               <div className="friends-grid">
                 {friends.map(friend => {
                   const username = friend.username || friend.name || friend.user?.username || 'User';
-                  const wallet = friend.walletAddress || friend.wallet_address || friend.address || friend.user?.walletAddress;
                   const image = friend.profileImage || friend.profile_image || friend.user?.profileImage;
 
                   return (
@@ -634,7 +821,6 @@ export default function Profile() {
                       </div>
                       <div className="friend-info">
                         <div className="friend-name">{username}</div>
-                        <div className="friend-wallet">{wallet || 'Wallet hidden'}</div>
                       </div>
                       {!isOwnProfile && (
                         <button
@@ -655,7 +841,13 @@ export default function Profile() {
 
         {activeTab === 'photos' && (
           <div className="albums-section">
-            {!selectedAlbum ? (
+            {!canViewPrivateContent ? (
+              <div className="privacy-card">
+                <div className="privacy-icon">🔒</div>
+                <div className="privacy-title">Photos are private</div>
+                <div className="privacy-text">Add as a friend to view albums and photos.</div>
+              </div>
+            ) : !selectedAlbum ? (
               <>
                 {isOwnProfile && (
                   <div className="album-actions">
