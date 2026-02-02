@@ -176,6 +176,8 @@
   margin-bottom: 16px;
   align-self: center;
   min-width: 160px;
+  margin-left: auto;
+  justify-content: flex-end;
 }
 
 .btn-add-friend,
