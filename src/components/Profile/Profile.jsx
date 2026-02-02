@@ -251,7 +251,7 @@ export default function Profile() {
     if (!confirm('Delete this photo?')) return;
 
     try {
-      await api.deleteAlbumPhoto(photoId);
+      await api.deleteAlbumPhoto(selectedAlbum.id, photoId);
       // Reload album photos
       const data = await api.getAlbumPhotos(selectedAlbum.id);
       setSelectedAlbum({ ...selectedAlbum, photos: data.photos });

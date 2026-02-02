@@ -465,10 +465,9 @@ export async function uploadToAlbum(formData) {
   return response.json();
 }
 
-export async function deleteAlbumPhoto(photoId) {
+export async function deleteAlbumPhoto(albumId, photoId) {
   const token = localStorage.getItem('token');
-  // Note: This needs the albumId too, but we'll pass 0 as placeholder
-  const response = await fetch(`${API_URL}/api/albums/0/photos/${photoId}`, {
+  const response = await fetch(`${API_URL}/api/albums/${albumId}/photos/${photoId}`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
