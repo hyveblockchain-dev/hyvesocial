@@ -19,8 +19,13 @@ function getAvatar(imageUrl, username, className) {
 
 export default function Post({ post, onDelete, onUpdate }) {
   const { user } = useAuth();
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(post.reaction_count || 0);
+  const initialReaction = Number.isFinite(Number(post.user_reaction))
+    ? Number(post.user_reaction)
+    : Number.isFinite(Number(post.reaction_type))
+    ? Number(post.reaction_type)
+    : null;
+  const [reactionType, setReactionType] = useState(initialReaction);
+  const [likeCount, setLikeCount] = useState(Number(post.reaction_count) || 0);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
@@ -43,20 +48,58 @@ export default function Post({ post, onDelete, onUpdate }) {
     return date.toLocaleDateString();
   }
 
-  async function handleLike() {
+  const reactionOptions = [
+    { type: 0, label: 'Like', emoji: '👍' },
+    { type: 1, label: 'Love', emoji: '❤️' },
+    { type: 2, label: 'Haha', emoji: '😂' },
+    { type: 3, label: 'Wow', emoji: '😮' },
+    { type: 4, label: 'Sad', emoji: '😢' },
+    { type: 5, label: 'Angry', emoji: '😡' }
+  ];
+
+  function getReactionDisplay(type) {
+    const reaction = reactionOptions.find((option) => option.type === type);
+    return reaction || { label: 'Like', emoji: '👍' };
+  }
+
+  async function handleReact(type) {
     try {
-      if (liked) {
+      if (reactionType === type) {
         await api.removeReaction(post.id);
-        setLiked(false);
-        setLikeCount(prev => prev - 1);
+        setReactionType(null);
+        setLikeCount((prev) => Math.max(0, Number(prev) - 1));
+        return;
+      }
+
+      const data = await api.reactToPost(post.id, type);
+      setReactionType(type);
+
+      const serverCount = Number(
+        data?.reaction_count ??
+        data?.post?.reaction_count ??
+        data?.reactions ??
+        data?.count
+      );
+
+      if (!Number.isNaN(serverCount)) {
+        setLikeCount(serverCount);
       } else {
-        await api.reactToPost(post.id, 0);
-        setLiked(true);
-        setLikeCount(prev => prev + 1);
+        setLikeCount((prev) => {
+          const current = Number(prev) || 0;
+          if (reactionType === null) return current + 1;
+          return current;
+        });
       }
     } catch (error) {
       console.error('Like error:', error);
     }
+  }
+
+  async function handleLikeToggle() {
+    if (reactionType !== null) {
+      return handleReact(reactionType);
+    }
+    return handleReact(0);
   }
 
   async function loadComments() {
@@ -135,9 +178,32 @@ export default function Post({ post, onDelete, onUpdate }) {
       </div>
 
       <div className="post-actions">
-        <button className={`action-button ${liked ? 'liked' : ''}`} onClick={handleLike}>
-          👍 Like
-        </button>
+        <div className="reaction-wrapper">
+          <button
+            className={`action-button ${reactionType !== null ? 'liked' : ''}`}
+            onClick={handleLikeToggle}
+          >
+            {reactionType !== null ? (
+              <>
+                {getReactionDisplay(reactionType).emoji} {getReactionDisplay(reactionType).label}
+              </>
+            ) : (
+              <>👍 Like</>
+            )}
+          </button>
+          <div className="reaction-menu">
+            {reactionOptions.map((option) => (
+              <button
+                key={option.type}
+                className="reaction-item"
+                onClick={() => handleReact(option.type)}
+                title={option.label}
+              >
+                {option.emoji}
+              </button>
+            ))}
+          </div>
+        </div>
         <button className="action-button" onClick={loadComments}>
           💬 Comment
         </button>

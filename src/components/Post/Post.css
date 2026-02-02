@@ -107,6 +107,59 @@
   gap: 8px;
 }
 
+.reaction-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.reaction-wrapper .action-button {
+  width: 100%;
+}
+
+.reaction-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: all 0.2s ease;
+  z-index: 5;
+}
+
+.reaction-wrapper:hover .reaction-menu,
+.reaction-menu:focus-within {
+  opacity: 1;
+  transform: translateY(-6px);
+  pointer-events: auto;
+}
+
+.reaction-item {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-secondary);
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.reaction-item:hover {
+  transform: translateY(-2px) scale(1.1);
+  background: var(--bg-hover);
+}
+
 .action-button {
   flex: 1;
   padding: 12px;
