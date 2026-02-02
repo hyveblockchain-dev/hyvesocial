@@ -162,6 +162,91 @@
   color: #ef4444;
 }
 
+.profile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.btn-add-friend,
+.btn-pending,
+.btn-remove-friend,
+.btn-blocked {
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-add-friend {
+  background: var(--gold-primary);
+  color: #000;
+}
+
+.btn-add-friend:hover {
+  background: var(--gold-light);
+  transform: translateY(-2px);
+}
+
+.btn-pending,
+.btn-blocked {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  cursor: default;
+}
+
+.friend-request-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-accept,
+.btn-decline,
+.btn-block {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-accept {
+  background: #22c55e;
+  color: #0b0b0b;
+}
+
+.btn-accept:hover {
+  filter: brightness(1.05);
+  transform: translateY(-2px);
+}
+
+.btn-decline,
+.btn-remove-friend {
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+.btn-decline:hover,
+.btn-remove-friend:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.btn-block {
+  background: transparent;
+  color: #f59e0b;
+  border: 1px solid #f59e0b;
+}
+
+.btn-block:hover {
+  background: rgba(245, 158, 11, 0.1);
+}
+
 /* Tabs */
 .profile-tabs {
   display: flex;

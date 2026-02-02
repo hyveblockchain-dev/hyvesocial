@@ -341,6 +341,59 @@ export async function declineFriendRequest(requestId) {
   return response.json();
 }
 
+export async function sendFriendRequest(address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/friend-request/${address}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function getFriendshipStatus(address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/friendship-status/${address}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function getFriends() {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/friends`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function removeFriend(address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/friend/${address}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function blockUser(address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/block/${address}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
 // ========================================
 // ALBUM FUNCTIONS
 // ========================================
@@ -493,6 +546,11 @@ export default {
   getFriendRequests,
   acceptFriendRequest,
   declineFriendRequest,
+  sendFriendRequest,
+  getFriendshipStatus,
+  getFriends,
+  removeFriend,
+  blockUser,
   
   // Albums
   getAlbums,

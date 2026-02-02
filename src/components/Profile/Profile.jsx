@@ -17,7 +17,9 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState('posts');
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [friendshipStatus, setFriendshipStatus] = useState('none');
+  const [requestId, setRequestId] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
   const [showCreateAlbum, setShowCreateAlbum] = useState(false);
   const [newAlbumName, setNewAlbumName] = useState('');
   const [showUploadToAlbum, setShowUploadToAlbum] = useState(false);
@@ -29,8 +31,10 @@ export default function Profile() {
     loadProfile();
     loadPosts();
     loadAlbums();
-    checkFollowing();
-  }, [address]);
+    if (!isOwnProfile && user) {
+      checkFriendshipStatus();
+    }
+  }, [address, user]);
 
   async function loadProfile() {
     try {
@@ -67,28 +71,86 @@ export default function Profile() {
     }
   }
 
-  async function checkFollowing() {
-    if (!isOwnProfile && user) {
-      try {
-        const data = await api.getFollowing();
-        setIsFollowing(data.following?.some(f => f.address === address));
-      } catch (error) {
-        console.error('Check following error:', error);
-      }
+  async function checkFriendshipStatus() {
+    try {
+      const data = await api.getFriendshipStatus(address);
+      setFriendshipStatus(data.status || 'none');
+      setRequestId(data.requestId || null);
+    } catch (error) {
+      console.error('Check friendship error:', error);
     }
   }
 
-  async function handleFollow() {
+  async function handleAddFriend() {
     try {
-      if (isFollowing) {
-        await api.unfollowUser(address);
-        setIsFollowing(false);
-      } else {
-        await api.followUser(address);
-        setIsFollowing(true);
-      }
+      setActionLoading(true);
+      await api.sendFriendRequest(address);
+      setFriendshipStatus('request_sent');
     } catch (error) {
-      console.error('Follow error:', error);
+      console.error('Send friend request error:', error);
+      alert(error?.message || 'Failed to send friend request');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleAcceptRequest() {
+    if (!requestId) return;
+    try {
+      setActionLoading(true);
+      await api.acceptFriendRequest(requestId);
+      setFriendshipStatus('friends');
+      setRequestId(null);
+    } catch (error) {
+      console.error('Accept friend request error:', error);
+      alert('Failed to accept friend request');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleDeclineRequest() {
+    if (!requestId) return;
+    if (!confirm('Decline this friend request?')) return;
+    try {
+      setActionLoading(true);
+      await api.declineFriendRequest(requestId);
+      setFriendshipStatus('none');
+      setRequestId(null);
+    } catch (error) {
+      console.error('Decline friend request error:', error);
+      alert('Failed to decline friend request');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleRemoveFriend() {
+    if (!confirm('Remove this friend?')) return;
+    try {
+      setActionLoading(true);
+      await api.removeFriend(address);
+      setFriendshipStatus('none');
+    } catch (error) {
+      console.error('Remove friend error:', error);
+      alert('Failed to remove friend');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleBlockUser() {
+    if (!confirm('Block this user?')) return;
+    try {
+      setActionLoading(true);
+      await api.blockUser(address);
+      setFriendshipStatus('blocked');
+      setRequestId(null);
+    } catch (error) {
+      console.error('Block user error:', error);
+      alert('Failed to block user');
+    } finally {
+      setActionLoading(false);
     }
   }
 
@@ -302,12 +364,68 @@ export default function Profile() {
         </div>
 
         {!isOwnProfile && (
-          <button 
-            className={isFollowing ? 'btn-following' : 'btn-follow'}
-            onClick={handleFollow}
-          >
-            {isFollowing ? 'Following' : 'Follow'}
-          </button>
+          <div className="profile-actions">
+            {friendshipStatus === 'none' && (
+              <button
+                className="btn-add-friend"
+                onClick={handleAddFriend}
+                disabled={actionLoading}
+              >
+                ➕ Add Friend
+              </button>
+            )}
+
+            {friendshipStatus === 'request_sent' && (
+              <button className="btn-pending" disabled>
+                ⏳ Request Sent
+              </button>
+            )}
+
+            {friendshipStatus === 'request_received' && (
+              <div className="friend-request-actions">
+                <button
+                  className="btn-accept"
+                  onClick={handleAcceptRequest}
+                  disabled={actionLoading}
+                >
+                  ✓ Accept
+                </button>
+                <button
+                  className="btn-decline"
+                  onClick={handleDeclineRequest}
+                  disabled={actionLoading}
+                >
+                  ✕ Decline
+                </button>
+              </div>
+            )}
+
+            {friendshipStatus === 'friends' && (
+              <button
+                className="btn-remove-friend"
+                onClick={handleRemoveFriend}
+                disabled={actionLoading}
+              >
+                ❌ Remove Friend
+              </button>
+            )}
+
+            {friendshipStatus === 'blocked' && (
+              <button className="btn-blocked" disabled>
+                🚫 Blocked
+              </button>
+            )}
+
+            {friendshipStatus !== 'blocked' && (
+              <button
+                className="btn-block"
+                onClick={handleBlockUser}
+                disabled={actionLoading}
+              >
+                🚫 Block
+              </button>
+            )}
+          </div>
         )}
       </div>
 
