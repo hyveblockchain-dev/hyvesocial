@@ -13,7 +13,7 @@
   background: var(--bg-secondary);
   border-radius: 12px;
   overflow: hidden;
-  margin-bottom: -60px;
+  margin-bottom: 16px;
   z-index: 0;
 }
 
@@ -49,9 +49,9 @@
 /* Profile Header */
 .profile-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 24px;
-  padding: 40px 24px 24px;
+  padding: 24px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
@@ -71,7 +71,6 @@
   border: 5px solid var(--bg-primary);
   overflow: hidden;
   flex-shrink: 0;
-  margin-top: -80px;
 }
 
 .profile-avatar-large img {
@@ -171,10 +170,11 @@
 
 .profile-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 16px;
-  align-self: flex-start;
+  align-self: center;
   min-width: 160px;
 }
 
