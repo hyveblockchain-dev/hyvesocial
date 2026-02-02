@@ -114,6 +114,29 @@
   gap: 12px;
 }
 
+.light-toggle-btn {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.light-toggle-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+
 .icon-btn {
   width: 40px;
   height: 40px;
@@ -315,6 +338,7 @@
   margin-bottom: 20px;
   border-top: 1px solid #333;
   border-bottom: 1px solid #333;
+  text-align: center;
 }
 
 .stat-item {
@@ -329,12 +353,14 @@
   font-size: 11px;
   color: #888;
   margin-bottom: 6px;
+  text-align: center;
 }
 
 .stat-num {
   font-size: 24px;
   font-weight: 700;
   color: var(--gold-primary);
+  text-align: center;
 }
 
 .friends-section h4 {
@@ -387,6 +413,10 @@
   font-size: 16px;
   margin-bottom: 16px;
   color: var(--gold-primary);
+}
+
+.widget.suggestions h3 {
+  text-align: center;
 }
 
 .loading {

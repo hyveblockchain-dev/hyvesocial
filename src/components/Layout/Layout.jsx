@@ -203,7 +203,7 @@ export default function Layout({ children }) {
             aria-label="Toggle light mode"
             title={isLightMode ? 'Switch to dark mode' : 'Switch to light mode'}
           >
-            {isLightMode ? '🌙 Dark' : '🌞 Light'}
+            {isLightMode ? '🌙' : '🌞'}
           </button>
           <button className="icon-btn">🔔</button>
         </div>
