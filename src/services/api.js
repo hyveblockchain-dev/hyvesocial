@@ -372,6 +372,16 @@ export async function getFriends() {
   return response.json();
 }
 
+export async function getFriendsByAddress(address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/friends/${address}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
 export async function removeFriend(address) {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_URL}/api/friend/${address}`, {
@@ -549,6 +559,7 @@ export default {
   sendFriendRequest,
   getFriendshipStatus,
   getFriends,
+  getFriendsByAddress,
   removeFriend,
   blockUser,
   

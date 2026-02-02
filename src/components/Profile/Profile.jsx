@@ -24,17 +24,37 @@ export default function Profile() {
   const [newAlbumName, setNewAlbumName] = useState('');
   const [showUploadToAlbum, setShowUploadToAlbum] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [friends, setFriends] = useState([]);
+  const [friendsLoading, setFriendsLoading] = useState(false);
   
   const isOwnProfile = user?.walletAddress === address;
+  const totalPhotos = albums.reduce((sum, album) => sum + (album.photo_count || 0), 0);
+  const friendCount = profile?.friendCount || profile?.friendsCount || friends.length || 0;
 
   useEffect(() => {
     loadProfile();
     loadPosts();
     loadAlbums();
+    loadFriends();
     if (!isOwnProfile && user) {
       checkFriendshipStatus();
     }
   }, [address, user]);
+
+  async function loadFriends() {
+    try {
+      setFriendsLoading(true);
+      const data = isOwnProfile
+        ? await api.getFriends()
+        : await api.getFriendsByAddress(address);
+      setFriends(data.friends || data || []);
+    } catch (error) {
+      console.error('Load friends error:', error);
+      setFriends([]);
+    } finally {
+      setFriendsLoading(false);
+    }
+  }
 
   async function loadProfile() {
     try {
@@ -154,8 +174,12 @@ export default function Profile() {
     }
   }
 
-  function handleMessageUser() {
-    const conversation = {
+  function handleMessageUser(targetUser) {
+    const conversation = targetUser ? {
+      address: targetUser.walletAddress || targetUser.wallet_address || targetUser.address,
+      username: targetUser.username || targetUser.name || targetUser.user?.username || 'User',
+      profileImage: targetUser.profileImage || targetUser.profile_image || targetUser.user?.profileImage || ''
+    } : {
       address: profile?.walletAddress || profile?.wallet_address || address,
       username: profile?.username || 'User',
       profileImage: profile?.profileImage || profile?.profile_image || ''
@@ -368,6 +392,11 @@ export default function Profile() {
         <div className="profile-info">
           <h1>{profile.username || 'Anonymous'}</h1>
           {profile.bio && <p className="profile-bio">{profile.bio}</p>}
+          <div className="profile-stats">
+            <span><strong>{friendCount}</strong> Friends</span>
+            <span><strong>{posts.length}</strong> Posts</span>
+            <span><strong>{totalPhotos}</strong> Photos</span>
+          </div>
         </div>
 
         {!isOwnProfile && (
@@ -442,49 +471,189 @@ export default function Profile() {
             </button>
           </div>
         )}
+        {isOwnProfile && (
+          <div className="profile-actions">
+            <button className="btn-secondary">✏️ Edit Profile</button>
+            <button className="btn-secondary">➕ Add to Story</button>
+            <button className="btn-secondary">⋯ More</button>
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
       <div className="profile-tabs">
-        <button
-          className={activeTab === 'posts' ? 'tab active' : 'tab'}
-          onClick={() => setActiveTab('posts')}
-        >
-          Posts ({posts.length})
-        </button>
-        <button
-          className={activeTab === 'albums' ? 'tab active' : 'tab'}
-          onClick={() => setActiveTab('albums')}
-        >
-          Albums ({albums.length})
-        </button>
+        <div className="tab-group">
+          <button
+            className={activeTab === 'posts' ? 'tab active' : 'tab'}
+            onClick={() => setActiveTab('posts')}
+          >
+            Posts
+          </button>
+          <button
+            className={activeTab === 'about' ? 'tab active' : 'tab'}
+            onClick={() => setActiveTab('about')}
+          >
+            About
+          </button>
+          <button
+            className={activeTab === 'friends' ? 'tab active' : 'tab'}
+            onClick={() => setActiveTab('friends')}
+          >
+            Friends
+          </button>
+          <button
+            className={activeTab === 'photos' ? 'tab active' : 'tab'}
+            onClick={() => setActiveTab('photos')}
+          >
+            Photos
+          </button>
+          <button
+            className={activeTab === 'more' ? 'tab active' : 'tab'}
+            onClick={() => setActiveTab('more')}
+          >
+            More
+          </button>
+        </div>
+        <div className="tab-actions">
+          <button className="btn-secondary">⚙️ Settings</button>
+        </div>
       </div>
 
       {/* Content */}
       <div className="profile-content">
         {activeTab === 'posts' && (
-          <div className="posts-list">
-            {posts.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-state-icon">📝</div>
-                <div className="empty-state-title">No posts yet</div>
-                <div className="empty-state-description">
-                  {isOwnProfile ? 'Share your first post!' : 'No posts to show'}
+          <div className="profile-content-grid">
+            <div className="profile-left">
+              <div className="profile-card">
+                <h3>Intro</h3>
+                {profile.bio ? (
+                  <p className="profile-card-text">{profile.bio}</p>
+                ) : (
+                  <p className="profile-card-muted">No bio yet.</p>
+                )}
+                <ul className="profile-details-list">
+                  <li>🏷️ Wallet: <span>{profile.walletAddress || profile.wallet_address || address}</span></li>
+                  <li>📍 Location: <span>{profile.location || 'Not set'}</span></li>
+                  <li>🌐 Website: <span>{profile.website || 'Not set'}</span></li>
+                  <li>🗓️ Joined: <span>{profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'Not set'}</span></li>
+                </ul>
+              </div>
+
+              <div className="profile-card">
+                <div className="profile-card-header">
+                  <h3>Photos</h3>
+                  <button className="btn-link" onClick={() => setActiveTab('photos')}>See all photos</button>
+                </div>
+                <div className="profile-photos-grid">
+                  {albums.length === 0 ? (
+                    <div className="profile-card-muted">No photos yet.</div>
+                  ) : (
+                    albums.slice(0, 9).map(album => (
+                      <div key={album.id} className="profile-photo-tile">
+                        {album.cover_photo ? (
+                          <img src={album.cover_photo} alt={album.name || album.title} />
+                        ) : (
+                          <div className="profile-photo-placeholder">📷</div>
+                        )}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
+            </div>
+
+            <div className="profile-right">
+              <div className="posts-list">
+                {posts.length === 0 ? (
+                  <div className="empty-state">
+                    <div className="empty-state-icon">📝</div>
+                    <div className="empty-state-title">No posts yet</div>
+                    <div className="empty-state-description">
+                      {isOwnProfile ? 'Share your first post!' : 'No posts to show'}
+                    </div>
+                  </div>
+                ) : (
+                  posts.map(post => (
+                    <Post
+                      key={post.id}
+                      post={post}
+                      onDelete={() => setPosts(posts.filter(p => p.id !== post.id))}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'about' && (
+          <div className="profile-card">
+            <h2>About</h2>
+            <p className="profile-card-text">
+              {profile.bio || 'No bio yet.'}
+            </p>
+            <ul className="profile-details-list">
+              <li>🏷️ Wallet: <span>{profile.walletAddress || profile.wallet_address || address}</span></li>
+              <li>📍 Location: <span>{profile.location || 'Not set'}</span></li>
+              <li>💼 Work: <span>{profile.work || 'Not set'}</span></li>
+              <li>🎓 Education: <span>{profile.education || 'Not set'}</span></li>
+              <li>🌐 Website: <span>{profile.website || 'Not set'}</span></li>
+              <li>🗓️ Joined: <span>{profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'Not set'}</span></li>
+            </ul>
+          </div>
+        )}
+
+        {activeTab === 'friends' && (
+          <div className="profile-card">
+            <h2>Friends</h2>
+            {friendsLoading ? (
+              <div className="loading-container"><div className="spinner"></div></div>
+            ) : friends.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">👥</div>
+                <div className="empty-state-title">No friends to show</div>
+                <div className="empty-state-description">Connect with people to see them here.</div>
+              </div>
             ) : (
-              posts.map(post => (
-                <Post
-                  key={post.id}
-                  post={post}
-                  onDelete={() => setPosts(posts.filter(p => p.id !== post.id))}
-                />
-              ))
+              <div className="friends-grid">
+                {friends.map(friend => {
+                  const username = friend.username || friend.name || friend.user?.username || 'User';
+                  const wallet = friend.walletAddress || friend.wallet_address || friend.address || friend.user?.walletAddress;
+                  const image = friend.profileImage || friend.profile_image || friend.user?.profileImage;
+
+                  return (
+                    <div key={friend.id || wallet || username} className="friend-card">
+                      <div className="friend-avatar">
+                        {image ? (
+                          <img src={image} alt={username} />
+                        ) : (
+                          <div className="friend-avatar-placeholder">
+                            {username.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="friend-info">
+                        <div className="friend-name">{username}</div>
+                        <div className="friend-wallet">{wallet || 'Wallet hidden'}</div>
+                      </div>
+                      {!isOwnProfile && (
+                        <button
+                          className="btn-message"
+                          onClick={() => handleMessageUser(friend)}
+                          disabled={actionLoading}
+                        >
+                          💬 Message
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}
 
-        {activeTab === 'albums' && (
+        {activeTab === 'photos' && (
           <div className="albums-section">
             {!selectedAlbum ? (
               <>
@@ -655,6 +824,20 @@ export default function Profile() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'more' && (
+          <div className="profile-card">
+            <h2>More</h2>
+            <ul className="profile-more-list">
+              <li>✅ Check-ins</li>
+              <li>🎵 Music</li>
+              <li>🎮 Games</li>
+              <li>🏆 Sports</li>
+              <li>📅 Events</li>
+              <li>🛍️ Marketplace</li>
+            </ul>
           </div>
         )}
       </div>
