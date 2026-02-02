@@ -45,6 +45,10 @@ body.light-mode .page-header {
   margin: 0 40px;
 }
 
+.mobile-search {
+  display: none;
+}
+
 .search-box input {
   width: 100%;
   padding: 10px 20px;
@@ -150,6 +154,10 @@ body.light-mode .page-header {
   border: none;
   cursor: pointer;
   font-size: 20px;
+}
+
+.mobile-search-btn {
+  display: none;
 }
 
 .icon-btn:hover {
@@ -329,6 +337,17 @@ body.light-mode .nav-item {
   color: #111827;
 }
 
+body.light-mode .nav-item:hover {
+  background: #e9edf5;
+  color: #111827;
+}
+
+body.light-mode .nav-item.active {
+  background: #ffd700;
+  color: #111827;
+  font-weight: 700;
+}
+
 .nav-item:hover {
   background: #2a2a2a;
 }
@@ -419,6 +438,90 @@ body.light-mode .nav-item {
   z-index: 50;
   display: flex;
   flex-direction: column;
+}
+
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .page-header {
+    width: 100%;
+    left: 0;
+    transform: none;
+    padding: 0 12px;
+  }
+
+  .search-box {
+    display: none;
+  }
+
+  .mobile-search-btn {
+    display: inline-flex;
+  }
+
+  .mobile-search {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 12px;
+    display: flex;
+    gap: 10px;
+    z-index: 120;
+  }
+
+  .mobile-search input {
+    flex: 1;
+  }
+
+  .left-column,
+  .right-column {
+    display: none;
+  }
+
+  .center-column {
+    max-width: 100%;
+    padding: 16px;
+  }
+
+  .page-body {
+    padding-bottom: 80px;
+  }
+
+  .mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 120;
+  }
+
+  .mobile-nav-item {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text-primary);
+    background: transparent;
+    font-size: 20px;
+  }
+
+  .mobile-nav-item.active {
+    background: var(--gold-primary);
+    color: #000;
+  }
 }
 
 .widget {

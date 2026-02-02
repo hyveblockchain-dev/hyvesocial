@@ -21,6 +21,7 @@ export default function Layout({ children }) {
   const [postCount, setPostCount] = useState(0);
   const [friendCount, setFriendCount] = useState(0);
   const [isLightMode, setIsLightMode] = useState(() => localStorage.getItem('theme') === 'light');
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   function profilePathFor(userObj) {
     const handle = userObj?.username || userObj?.user?.username;
@@ -198,6 +199,14 @@ export default function Layout({ children }) {
 
         <div className="header-actions">
           <button
+            className="icon-btn mobile-search-btn"
+            onClick={() => setShowMobileSearch((prev) => !prev)}
+            aria-label="Search"
+            title="Search"
+          >
+            🔍
+          </button>
+          <button
             className="light-toggle-btn"
             onClick={() => setIsLightMode((prev) => !prev)}
             aria-label="Toggle light mode"
@@ -208,6 +217,25 @@ export default function Layout({ children }) {
           <button className="icon-btn">🔔</button>
         </div>
       </header>
+
+      {showMobileSearch && (
+        <div className="mobile-search">
+          <input
+            type="text"
+            placeholder="Search users..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            onFocus={() => searchQuery && setShowSearchResults(true)}
+          />
+          <button
+            className="icon-btn"
+            onClick={() => setShowMobileSearch(false)}
+            aria-label="Close search"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Body */}
       <div className="page-body">
@@ -308,6 +336,24 @@ export default function Layout({ children }) {
           </button>
         </aside>
       </div>
+
+      <nav className="mobile-nav">
+        <Link to="/" className={location.pathname === '/' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
+          📰
+        </Link>
+        <Link to="/videos" className={location.pathname === '/videos' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
+          🎥
+        </Link>
+        <Link to="/profile/me" className={location.pathname.startsWith('/profile') ? 'mobile-nav-item active' : 'mobile-nav-item'}>
+          👤
+        </Link>
+        <Link to="/friends" className={location.pathname === '/friends' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
+          👥
+        </Link>
+        <Link to="/discover" className={location.pathname === '/discover' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
+          🔍
+        </Link>
+      </nav>
 
       {/* Chat List Popup */}
       {showChat && (
