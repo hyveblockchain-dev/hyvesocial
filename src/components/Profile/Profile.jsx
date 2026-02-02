@@ -538,7 +538,15 @@ export default function Profile() {
         )}
         {isOwnProfile && (
           <div className="profile-actions">
-            <button className="btn-secondary">✏️ Edit Profile</button>
+            <button
+              className="btn-secondary"
+              onClick={() => {
+                setActiveTab('about');
+                startEditAbout();
+              }}
+            >
+              ✏️ Edit Profile
+            </button>
             <button className="btn-secondary">➕ Add to Story</button>
             <button className="btn-secondary">⋯ More</button>
           </div>

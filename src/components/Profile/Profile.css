@@ -55,7 +55,7 @@
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  margin: -90px 16px 20px;
+  margin: 16px 16px 20px;
   flex-wrap: wrap;
   row-gap: 16px;
   position: relative;
@@ -876,7 +876,7 @@
 
 @media (max-width: 900px) {
   .profile-header {
-    margin: -60px 12px 20px;
+    margin: 12px 12px 20px;
   }
 
   .profile-content-grid {
