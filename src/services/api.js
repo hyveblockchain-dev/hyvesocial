@@ -476,6 +476,19 @@ export async function deleteAlbumPhoto(albumId, photoId) {
   return response.json();
 }
 
+export async function updateAlbumPhotoCaption(albumId, photoId, caption) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/albums/${albumId}/photos/${photoId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ caption }),
+  });
+  return response.json();
+}
+
 export async function deleteAlbum(albumId) {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_URL}/api/albums/${albumId}`, {
@@ -568,6 +581,7 @@ export default {
   getAlbumPhotos,
   uploadToAlbum,
   deleteAlbumPhoto,
+  updateAlbumPhotoCaption,
   deleteAlbum,
 
   // Chat/Messages

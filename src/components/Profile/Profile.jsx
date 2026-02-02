@@ -40,11 +40,16 @@ export default function Profile() {
     gender: '',
     languages: ''
   });
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [captionDraft, setCaptionDraft] = useState('');
+  const [captionSaving, setCaptionSaving] = useState(false);
   
   const isOwnProfile = user?.walletAddress === address;
   const totalPhotos = albums.reduce((sum, album) => sum + (album.photo_count || 0), 0);
   const friendCount = profile?.friendCount || profile?.friendsCount || friends.length || 0;
   const canViewPrivateContent = isOwnProfile || friendshipStatus === 'friends';
+  const currentPhoto = selectedAlbum?.photos?.[lightboxIndex];
 
   useEffect(() => {
     loadProfile();
@@ -55,6 +60,16 @@ export default function Profile() {
       checkFriendshipStatus();
     }
   }, [address, user]);
+
+  useEffect(() => {
+    if (!isLightboxOpen || !selectedAlbum?.photos?.length) return;
+    if (lightboxIndex >= selectedAlbum.photos.length) {
+      setLightboxIndex(0);
+      return;
+    }
+    const photo = selectedAlbum.photos[lightboxIndex];
+    setCaptionDraft(photo?.caption || photo?.description || '');
+  }, [isLightboxOpen, lightboxIndex, selectedAlbum]);
 
   async function loadFriends() {
     try {
@@ -257,6 +272,48 @@ export default function Profile() {
       setSelectedAlbum({ ...selectedAlbum, photos: data.photos });
     } catch (error) {
       console.error('Delete photo error:', error);
+    }
+  }
+
+  function openLightbox(index) {
+    setLightboxIndex(index);
+    setIsLightboxOpen(true);
+  }
+
+  function closeLightbox() {
+    setIsLightboxOpen(false);
+  }
+
+  function showNextPhoto() {
+    if (!selectedAlbum?.photos?.length) return;
+    setLightboxIndex((prev) => (prev + 1) % selectedAlbum.photos.length);
+  }
+
+  function showPrevPhoto() {
+    if (!selectedAlbum?.photos?.length) return;
+    setLightboxIndex((prev) => (prev - 1 + selectedAlbum.photos.length) % selectedAlbum.photos.length);
+  }
+
+  async function savePhotoCaption() {
+    if (!selectedAlbum || !currentPhoto) return;
+    try {
+      setCaptionSaving(true);
+      const result = await api.updateAlbumPhotoCaption(selectedAlbum.id, currentPhoto.id, captionDraft);
+      const nextCaption = result?.photo?.caption ?? captionDraft;
+      setSelectedAlbum((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          photos: prev.photos.map((photo) =>
+            photo.id === currentPhoto.id ? { ...photo, caption: nextCaption } : photo
+          )
+        };
+      });
+    } catch (error) {
+      console.error('Update photo caption error:', error);
+      alert('Failed to update caption');
+    } finally {
+      setCaptionSaving(false);
     }
   }
 
@@ -1007,13 +1064,20 @@ export default function Profile() {
                       </div>
                     </div>
                   ) : (
-                    selectedAlbum.photos.map(photo => (
-                      <div key={photo.id} className="photo-card">
+                    selectedAlbum.photos.map((photo, index) => (
+                      <div
+                        key={photo.id}
+                        className="photo-card"
+                        onClick={() => openLightbox(index)}
+                      >
                         <img src={photo.image_url || photo.photo_url} alt="Album photo" />
                         {isOwnProfile && (
                           <button
                             className="btn-delete-photo"
-                            onClick={() => handleDeletePhoto(photo.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeletePhoto(photo.id);
+                            }}
                           >
                             🗑️
                           </button>
@@ -1022,6 +1086,45 @@ export default function Profile() {
                     ))
                   )}
                 </div>
+
+                {isLightboxOpen && currentPhoto && (
+                  <div className="lightbox-overlay" onClick={closeLightbox}>
+                    <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+                      <button className="lightbox-close" onClick={closeLightbox}>✕</button>
+                      <button className="lightbox-nav left" onClick={showPrevPhoto}>❮</button>
+                      <button className="lightbox-nav right" onClick={showNextPhoto}>❯</button>
+
+                      <div className="lightbox-image">
+                        <img
+                          src={currentPhoto.image_url || currentPhoto.photo_url}
+                          alt="Album photo"
+                        />
+                      </div>
+                      <div className="lightbox-side">
+                        <h3>Photo Caption</h3>
+                        <textarea
+                          value={captionDraft}
+                          onChange={(e) => setCaptionDraft(e.target.value)}
+                          placeholder="Write a caption..."
+                          rows={6}
+                        />
+                        <button
+                          className="btn-primary"
+                          onClick={savePhotoCaption}
+                          disabled={captionSaving}
+                        >
+                          {captionSaving ? 'Saving...' : 'Save Caption'}
+                        </button>
+                        {currentPhoto.caption && (
+                          <div className="lightbox-caption-preview">
+                            <div className="preview-label">Current Caption</div>
+                            <div className="preview-text">{currentPhoto.caption}</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
