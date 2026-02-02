@@ -262,19 +262,19 @@ export default function Layout({ children }) {
               <span className="nav-icon">📰</span>
               <span>Feed</span>
             </Link>
-            <Link to="/videos" className="nav-item">
+            <Link to="/videos" className={location.pathname === '/videos' ? 'nav-item active' : 'nav-item'}>
               <span className="nav-icon">🎥</span>
               <span>Videos</span>
             </Link>
-            <Link to="/profile/me" className="nav-item">
+            <Link to="/profile/me" className={location.pathname.startsWith('/profile') ? 'nav-item active' : 'nav-item'}>
               <span className="nav-icon">👤</span>
               <span>My Profile</span>
             </Link>
-            <Link to="/friends" className="nav-item">
+            <Link to="/friends" className={location.pathname === '/friends' ? 'nav-item active' : 'nav-item'}>
               <span className="nav-icon">👥</span>
               <span>Friends</span>
             </Link>
-            <Link to="/discover" className="nav-item">
+            <Link to="/discover" className={location.pathname === '/discover' ? 'nav-item active' : 'nav-item'}>
               <span className="nav-icon">🔍</span>
               <span>Discover</span>
             </Link>

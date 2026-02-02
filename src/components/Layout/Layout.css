@@ -403,6 +403,10 @@ body.light-mode .nav-item.active {
   text-align: center;
 }
 
+body.light-mode .stat-num {
+  color: #111827;
+}
+
 .friends-section h4 {
   font-size: 11px;
   color: #888;
@@ -537,6 +541,10 @@ body.light-mode .nav-item.active {
   font-size: 16px;
   margin-bottom: 16px;
   color: var(--gold-primary);
+}
+
+body.light-mode .widget h3 {
+  color: #111827;
 }
 
 .widget.suggestions h3 {
