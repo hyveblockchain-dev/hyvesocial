@@ -2,6 +2,7 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
+import { compressImage } from '../../utils/imageCompression';
 import './CreatePost.css';
 
 export default function CreatePost({ onPostCreated }) {
@@ -30,7 +31,12 @@ export default function CreatePost({ onPostCreated }) {
     setError('');
 
     try {
-      const data = await api.createPost(content.trim(), imageFile, videoUrl.trim());
+      let uploadImage = imageFile;
+      if (imageFile) {
+        uploadImage = await compressImage(imageFile, 2, 1920);
+      }
+
+      const data = await api.createPost(content.trim(), uploadImage, videoUrl.trim());
 
       // Inject user data for immediate display
       const postWithUser = {
@@ -120,21 +126,6 @@ export default function CreatePost({ onPostCreated }) {
           </div>
         )}
 
-        {showEmojiPicker && (
-          <div className="emoji-picker">
-            {emojiOptions.map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                className="emoji-btn"
-                onClick={() => setContent((prev) => `${prev}${emoji}`)}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        )}
-
         {error && <div className="error-text">{error}</div>}
 
         <div className="create-post-actions">
@@ -160,6 +151,21 @@ export default function CreatePost({ onPostCreated }) {
             >
               😊 Emoji
             </button>
+
+            {showEmojiPicker && (
+              <div className="emoji-picker" role="menu">
+                {emojiOptions.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    className="emoji-btn"
+                    onClick={() => setContent((prev) => `${prev}${emoji}`)}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <button 

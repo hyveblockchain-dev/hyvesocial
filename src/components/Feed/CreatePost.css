@@ -71,6 +71,10 @@
   justify-content: space-between;
   align-items: center;
 }
+
+.post-options {
+  position: relative;
+}
 .media-preview {
   position: relative;
   margin-top: 12px;
@@ -100,14 +104,18 @@
   align-items: center;
 }
 .emoji-picker {
+  position: absolute;
+  bottom: 48px;
+  left: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 12px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   padding: 10px;
   border-radius: 10px;
+  z-index: 5;
+  min-width: 220px;
 }
 .emoji-btn {
   border: none;

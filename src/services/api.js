@@ -184,6 +184,18 @@ export async function createPost(content, imageFile = null, videoUrl = '') {
     },
     body: JSON.stringify(postData),
   });
+  if (!response.ok) {
+    if (response.status === 413) {
+      throw new Error('Image too large. Please choose a smaller image.');
+    }
+    const text = await response.text();
+    throw new Error(text || 'Failed to create post');
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    throw new Error('Unexpected response from server');
+  }
   return response.json();
 }
 
