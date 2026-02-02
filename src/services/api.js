@@ -379,7 +379,18 @@ export async function getFriendsByAddress(address) {
       'Authorization': `Bearer ${token}`,
     },
   });
-  return response.json();
+  if (!response.ok) {
+    return { friends: [] };
+  }
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    return { friends: [] };
+  }
+  try {
+    return response.json();
+  } catch (error) {
+    return { friends: [] };
+  }
 }
 
 export async function removeFriend(address) {

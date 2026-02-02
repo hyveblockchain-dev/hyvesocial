@@ -118,6 +118,10 @@ export default function Profile() {
   }, [isLightboxOpen, lightboxIndex, selectedAlbum]);
 
   async function loadFriends(address) {
+    if (!address) {
+      setFriends([]);
+      return;
+    }
     try {
       setFriendsLoading(true);
       const data = isOwnProfile
