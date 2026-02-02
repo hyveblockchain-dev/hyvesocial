@@ -154,6 +154,16 @@ export default function Profile() {
     }
   }
 
+  function handleMessageUser() {
+    const conversation = {
+      address: profile?.walletAddress || profile?.wallet_address || address,
+      username: profile?.username || 'User',
+      profileImage: profile?.profileImage || profile?.profile_image || ''
+    };
+
+    window.dispatchEvent(new CustomEvent('open-chat', { detail: conversation }));
+  }
+
   async function handleCreateAlbum(e) {
     e.preventDefault();
     if (!newAlbumName.trim()) return;
@@ -422,6 +432,14 @@ export default function Profile() {
                 🚫 Block
               </button>
             )}
+
+            <button
+              className="btn-message"
+              onClick={handleMessageUser}
+              disabled={actionLoading}
+            >
+              💬 Message
+            </button>
           </div>
         )}
       </div>

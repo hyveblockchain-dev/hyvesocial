@@ -14,6 +14,7 @@
   border-radius: 12px;
   overflow: hidden;
   margin-bottom: -60px;
+  z-index: 0;
 }
 
 .cover-photo img {
@@ -57,6 +58,8 @@
   margin-bottom: 20px;
   flex-wrap: wrap;
   row-gap: 16px;
+  position: relative;
+  z-index: 2;
 }
 
 .profile-avatar-large {
@@ -211,7 +214,8 @@
 
 .btn-accept,
 .btn-decline,
-.btn-block {
+.btn-block,
+.btn-message {
   padding: 10px 16px;
   border-radius: 8px;
   font-weight: 600;
@@ -250,6 +254,16 @@
 
 .btn-block:hover {
   background: rgba(245, 158, 11, 0.1);
+}
+
+.btn-message {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-message:hover {
+  background: var(--bg-hover);
 }
 
 /* Tabs */

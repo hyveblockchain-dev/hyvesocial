@@ -26,6 +26,17 @@ export default function Layout({ children }) {
     loadUserStats();
   }, [user]);
 
+  useEffect(() => {
+    function handleOpenChat(event) {
+      if (!event?.detail) return;
+      setSelectedChat(event.detail);
+      setShowChat(false);
+    }
+
+    window.addEventListener('open-chat', handleOpenChat);
+    return () => window.removeEventListener('open-chat', handleOpenChat);
+  }, []);
+
   async function loadSuggestedUsers() {
     try {
       // Check if getUsers function exists
