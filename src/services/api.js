@@ -338,6 +338,71 @@ export async function getFollowers(address) {
 }
 
 // ========================================
+// STORIES FUNCTIONS
+// ========================================
+
+export async function getStories() {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/stories`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    return { stories: [] };
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    return { stories: [] };
+  }
+
+  return response.json();
+}
+
+export async function createStory({ file, mediaType }) {
+  const token = localStorage.getItem('token');
+  const base64 = await fileToBase64(file);
+  const response = await fetch(`${API_URL}/api/stories`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ media: base64, mediaType: mediaType || 'image' }),
+  });
+
+  if (!response.ok) {
+    if (response.status === 413) {
+      throw new Error('Story image too large. Please use a smaller image.');
+    }
+    const textResponse = await response.text();
+    throw new Error(textResponse || 'Failed to create story');
+  }
+
+  return response.json();
+}
+
+
+export async function deleteStory(storyId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/stories/${storyId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const textResponse = await response.text();
+    throw new Error(textResponse || 'Failed to delete story');
+  }
+
+  return response.json();
+}
+
+// ========================================
 // FRIEND REQUEST FUNCTIONS
 // ========================================
 
@@ -637,6 +702,11 @@ export default {
   unfollowUser,
   getFollowing,
   getFollowers,
+  
+  // Stories
+  getStories,
+  createStory,
+  deleteStory,
   
   // Friend Requests
   getFriendRequests,
