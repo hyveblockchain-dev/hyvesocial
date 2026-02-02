@@ -71,6 +71,50 @@
   justify-content: space-between;
   align-items: center;
 }
+.media-preview {
+  position: relative;
+  margin-top: 12px;
+}
+.media-preview img {
+  width: 100%;
+  border-radius: 12px;
+  max-height: 320px;
+  object-fit: cover;
+}
+.remove-media {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  cursor: pointer;
+}
+.video-input {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  align-items: center;
+}
+.emoji-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  border-radius: 10px;
+}
+.emoji-btn {
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+}
 
 .post-options {
   display: flex;

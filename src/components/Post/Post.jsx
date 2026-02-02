@@ -172,6 +172,12 @@ export default function Post({ post, onDelete, onUpdate }) {
         </div>
       )}
 
+      {post.video_url && (
+        <div className="post-video">
+          <video controls src={post.video_url} />
+        </div>
+      )}
+
       <div className="post-stats">
         <span>{likeCount} likes</span>
         <span>{post.comment_count || comments.length} comments</span>

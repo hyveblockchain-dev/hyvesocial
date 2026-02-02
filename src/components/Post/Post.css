@@ -91,6 +91,13 @@
   margin-bottom: 16px;
 }
 
+.post-video video {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  background: #000;
+}
+
 .post-stats {
   display: flex;
   gap: 16px;
@@ -129,16 +136,25 @@
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
   opacity: 0;
   transform: translateY(8px);
-  pointer-events: none;
+  pointer-events: auto;
   transition: all 0.2s ease;
   z-index: 5;
 }
 
+.reaction-menu::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -10px;
+  height: 10px;
+}
+
 .reaction-wrapper:hover .reaction-menu,
+.reaction-menu:hover,
 .reaction-menu:focus-within {
   opacity: 1;
   transform: translateY(-6px);
-  pointer-events: auto;
 }
 
 .reaction-item {

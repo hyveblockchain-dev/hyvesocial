@@ -146,16 +146,34 @@ export async function getPosts() {
   return response.json();
 }
 
-export async function createPost(content, imageFile = null) {
+export async function createPost(content, imageFile = null, videoUrl = '') {
   const token = localStorage.getItem('token');
-  
+
+  let normalizedContent = content;
+  let normalizedImageFile = imageFile;
+  let normalizedVideoUrl = videoUrl;
+  let preEncodedImage = null;
+
+  if (typeof content === 'object' && content !== null) {
+    normalizedContent = content.content || '';
+    normalizedImageFile = content.imageFile || null;
+    normalizedVideoUrl = content.videoUrl || content.video_url || '';
+    preEncodedImage = content.imageUrl || content.image_url || null;
+  }
+
   const postData = {
-    content: content,
+    content: normalizedContent,
   };
   
-  if (imageFile) {
-    const base64 = await fileToBase64(imageFile);
+  if (preEncodedImage) {
+    postData.imageUrl = preEncodedImage;
+  } else if (normalizedImageFile) {
+    const base64 = await fileToBase64(normalizedImageFile);
     postData.imageUrl = base64;
+  }
+
+  if (normalizedVideoUrl) {
+    postData.videoUrl = normalizedVideoUrl;
   }
 
   const response = await fetch(`${API_URL}/api/posts`, {
@@ -424,6 +442,30 @@ export async function blockUser(address) {
   return response.json();
 }
 
+export async function getBlockedUsers() {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/blocked`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    return { blocked: [] };
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    return { blocked: [] };
+  }
+
+  try {
+    return response.json();
+  } catch (error) {
+    return { blocked: [] };
+  }
+}
+
 // ========================================
 // ALBUM FUNCTIONS
 // ========================================
@@ -594,6 +636,7 @@ export default {
   getFriendsByAddress,
   removeFriend,
   blockUser,
+  getBlockedUsers,
   
   // Albums
   getAlbums,
