@@ -16,6 +16,7 @@ export default function Feed() {
   const [showStoryModal, setShowStoryModal] = useState(false);
   const [storyFile, setStoryFile] = useState(null);
   const [storyPreview, setStoryPreview] = useState('');
+  const [storyText, setStoryText] = useState('');
   const [storyPosting, setStoryPosting] = useState(false);
 
   useEffect(() => {
@@ -79,12 +80,23 @@ export default function Feed() {
     try {
       setStoryPosting(true);
       const compressed = await compressImage(storyFile, 2, 1920);
-      const data = await api.createStory({ file: compressed, mediaType: compressed.type || 'image' });
+      const data = await api.createStory({
+        file: compressed,
+        mediaType: compressed.type || 'image',
+        text: storyText.trim()
+      });
       const newStory = data.story || data;
-      setStories((prev) => [newStory, ...prev]);
+      const enrichedStory = {
+        ...newStory,
+        username: newStory.username || user?.username,
+        profile_image: newStory.profile_image || user?.profileImage
+      };
+      setStories((prev) => [enrichedStory, ...prev]);
       setShowStoryModal(false);
       setStoryFile(null);
       setStoryPreview('');
+      setStoryText('');
+      loadStories();
     } catch (error) {
       console.error('Create story error:', error);
       alert(error?.message || 'Failed to create story');
@@ -186,6 +198,9 @@ export default function Feed() {
                 )}
               </div>
               <span className="story-name">{ownerName}</span>
+              {(story.text || story.caption) && (
+                <span className="story-text">{story.text || story.caption}</span>
+              )}
               {isOwner && (
                 <div className="story-actions">
                   <button type="button" onClick={() => handleDeleteStory(story.id)}>Delete</button>
@@ -210,6 +225,12 @@ export default function Feed() {
               }}
             />
             {storyPreview && <img className="story-preview" src={storyPreview} alt="Story preview" />}
+            <textarea
+              rows={3}
+              placeholder="Add a caption..."
+              value={storyText}
+              onChange={(e) => setStoryText(e.target.value)}
+            />
             <div className="story-modal-actions">
               <button className="btn-secondary" onClick={() => setShowStoryModal(false)}>Cancel</button>
               <button className="btn-primary" onClick={handleCreateStory} disabled={storyPosting}>

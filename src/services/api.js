@@ -361,7 +361,7 @@ export async function getStories() {
   return response.json();
 }
 
-export async function createStory({ file, mediaType }) {
+export async function createStory({ file, mediaType, text }) {
   const token = localStorage.getItem('token');
   const base64 = await fileToBase64(file);
   const response = await fetch(`${API_URL}/api/stories`, {
@@ -370,7 +370,7 @@ export async function createStory({ file, mediaType }) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ media: base64, mediaType: mediaType || 'image' }),
+    body: JSON.stringify({ media: base64, mediaType: mediaType || 'image', text }),
   });
 
   if (!response.ok) {
