@@ -2,6 +2,7 @@
 import { createContext, useState, useEffect } from 'react';
 import api from '../services/api';
 import io from 'socket.io-client';
+import { API_URL, SOCKET_URL } from '../utils/env';
 
 export const AuthContext = createContext();
 
@@ -39,7 +40,7 @@ export function AuthProvider({ children }) {
 
   function connectSocket(token) {
     try {
-      socket = io('https://social-api.hyvechain.com', {
+      socket = io(SOCKET_URL, {
         auth: { token },
         transports: ['websocket', 'polling']
       });
@@ -111,7 +112,7 @@ export function AuthProvider({ children }) {
       console.log('Connected address:', address);
 
       // Get nonce from backend
-      const nonceResponse = await fetch(`https://social-api.hyvechain.com/api/auth/nonce/${address}`);
+      const nonceResponse = await fetch(`${API_URL}/api/auth/nonce/${address}`);
       const { nonce } = await nonceResponse.json();
       console.log('Got nonce:', nonce);
 

@@ -58,7 +58,16 @@ export default function Chat({ onSelectChat }) {
 
   function handleSelectChat(conversation) {
     if (onSelectChat) {
-      onSelectChat(conversation);
+      const address = conversation.wallet_address || conversation.walletAddress || conversation.address;
+      const username = conversation.username || 'Anonymous';
+      const profileImage = conversation.profile_image || conversation.profileImage || '';
+
+      onSelectChat({
+        ...conversation,
+        address,
+        username,
+        profileImage
+      });
     }
   }
 

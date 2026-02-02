@@ -6,7 +6,8 @@ export default defineConfig({
   server: {
     port: 3001,
     host: true,
-    open: true
+    open: true,
+    allowedHosts: ['immediately-males-conventions-cfr.trycloudflare.com']
   },
   build: {
     outDir: 'dist',

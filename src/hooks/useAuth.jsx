@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
+import { API_URL } from '../utils/env';
 
 const AuthContext = createContext(null);
 
@@ -48,7 +49,7 @@ export function AuthProvider({ children }) {
       console.log('Connected address:', address);
 
       // Get nonce from backend
-      const nonceResponse = await fetch(`https://social-api.hyvechain.com/api/auth/nonce/${address}`);
+      const nonceResponse = await fetch(`${API_URL}/api/auth/nonce/${address}`);
       const { nonce } = await nonceResponse.json();
       console.log('Got nonce:', nonce);
 

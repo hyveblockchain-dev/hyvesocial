@@ -1,5 +1,5 @@
 // src/services/api.js
-const API_URL = process.env.REACT_APP_API_URL || 'https://social-api.hyvechain.com';
+import { API_URL } from '../utils/env';
 
 // Helper function to convert file to base64
 function fileToBase64(file) {
@@ -426,6 +426,33 @@ export async function deleteAlbum(albumId) {
 }
 
 // ========================================
+// CHAT/MESSAGES FUNCTIONS
+// ========================================
+
+export async function getMessages(address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/messages/${address}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function sendMessage(toAddress, content) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/messages`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ toAddress, content }),
+  });
+  return response.json();
+}
+
+// ========================================
 // DEFAULT EXPORT
 // ========================================
 
@@ -474,4 +501,8 @@ export default {
   uploadToAlbum,
   deleteAlbumPhoto,
   deleteAlbum,
+
+  // Chat/Messages
+  getMessages,
+  sendMessage,
 };

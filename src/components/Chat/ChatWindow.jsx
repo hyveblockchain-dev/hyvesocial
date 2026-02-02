@@ -10,9 +10,10 @@ export default function ChatWindow({ conversation, onClose }) {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
+  const conversationAddress = conversation?.address || conversation?.wallet_address || conversation?.walletAddress;
 
   useEffect(() => {
-    if (conversation?.address) {
+    if (conversationAddress) {
       loadMessages();
       
       // Listen for new messages
@@ -26,7 +27,7 @@ export default function ChatWindow({ conversation, onClose }) {
         }
       };
     }
-  }, [conversation?.address, socket]);
+  }, [conversationAddress, socket]);
 
   useEffect(() => {
     scrollToBottom();
@@ -34,19 +35,19 @@ export default function ChatWindow({ conversation, onClose }) {
 
   function handleNewMessage(message) {
     if (
-      message.from_address === conversation.address ||
-      message.to_address === conversation.address
+      message.from_address === conversationAddress ||
+      message.to_address === conversationAddress
     ) {
       setMessages(prev => [...prev, message]);
     }
   }
 
   async function loadMessages() {
-    if (!conversation?.address) return;
+    if (!conversationAddress) return;
     
     try {
       setLoading(true);
-      const data = await api.getMessages(conversation.address);
+      const data = await api.getMessages(conversationAddress);
       setMessages(data.messages || []);
     } catch (error) {
       console.error('Load messages error:', error);
@@ -61,7 +62,7 @@ export default function ChatWindow({ conversation, onClose }) {
     if (!newMessage.trim()) return;
 
     try {
-      const message = await api.sendMessage(conversation.address, newMessage);
+      const message = await api.sendMessage(conversationAddress, newMessage);
       setMessages(prev => [...prev, message.message]);
       setNewMessage('');
     } catch (error) {
@@ -96,7 +97,8 @@ export default function ChatWindow({ conversation, onClose }) {
           <div className="no-messages">No messages yet. Start the conversation!</div>
         ) : (
           messages.map((message, index) => {
-            const isOwn = message.from_address === user?.walletAddress;
+            const currentAddress = user?.walletAddress || user?.wallet_address;
+            const isOwn = message.from_address === currentAddress;
             return (
               <div key={index} className={`message ${isOwn ? 'own' : 'other'}`}>
                 <div className="message-content">{message.content}</div>

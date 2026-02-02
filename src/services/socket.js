@@ -1,7 +1,6 @@
 // src/services/socket.js
 import { io } from 'socket.io-client';
-
-const SOCKET_URL = 'https://social-api.hyvechain.com';
+import { SOCKET_URL } from '../utils/env';
 
 class SocketService {
   constructor() {
