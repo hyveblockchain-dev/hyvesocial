@@ -319,7 +319,8 @@ export default function Layout({ children }) {
             className="icon-btn mobile-search-btn"
             onClick={() => {
               setShowMobileSearch((prev) => !prev);
-              setShowNotificationsMenu(false); // Close notifications when opening search
+              setShowNotificationsMenu(false);
+              setShowChat(false);
             }}
             aria-label="Search"
             title="Search"
@@ -339,7 +340,8 @@ export default function Layout({ children }) {
               className="icon-btn"
               onClick={() => {
                 setShowNotificationsMenu((prev) => !prev);
-                setShowMobileSearch(false); // Close search when opening notifications
+                setShowMobileSearch(false);
+                setShowChat(false);
               }}
               aria-label="Notifications"
               title="Notifications"
@@ -590,6 +592,8 @@ export default function Layout({ children }) {
           onClick={() => {
             setSelectedChat(null);
             setShowChat(true);
+            setShowMobileSearch(false);
+            setShowNotificationsMenu(false);
           }}
           aria-label="Open chat"
           title="Chat"
