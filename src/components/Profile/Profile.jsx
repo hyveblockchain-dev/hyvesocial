@@ -627,7 +627,7 @@ export default function Profile() {
         education: aboutForm.education,
         website: aboutForm.website,
         hometown: aboutForm.hometown,
-        relationshipStatus: aboutForm.relationshipStatus,
+        relationship_status: aboutForm.relationshipStatus,
         birthday: aboutForm.birthday,
         gender: aboutForm.gender,
         languages: aboutForm.languages
@@ -818,9 +818,6 @@ export default function Profile() {
             >
               ➕ Add to Story
             </button>
-            <button className="btn-secondary" onClick={() => setActiveTab('more')}>
-              ⋯ More
-            </button>
           </div>
         )}
       </div>
@@ -852,20 +849,7 @@ export default function Profile() {
           >
             Photos
           </button>
-          <button
-            className={activeTab === 'more' ? 'tab active' : 'tab'}
-            onClick={() => setActiveTab('more')}
-          >
-            More
-          </button>
         </div>
-        {isOwnProfile && (
-          <div className="tab-actions">
-            <button className="btn-secondary" onClick={() => setActiveTab('more')}>
-              ⚙️ Settings
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Content */}
@@ -1383,19 +1367,6 @@ export default function Profile() {
           </div>
         )}
 
-        {activeTab === 'more' && (
-          <div className="profile-card">
-            <h2>More</h2>
-            <ul className="profile-more-list">
-              <li>✅ Check-ins</li>
-              <li>🎵 Music</li>
-              <li>🎮 Games</li>
-              <li>🏆 Sports</li>
-              <li>📅 Events</li>
-              <li>🛍️ Marketplace</li>
-            </ul>
-          </div>
-        )}
       </div>
     </div>
   );
