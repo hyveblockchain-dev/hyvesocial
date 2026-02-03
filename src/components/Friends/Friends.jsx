@@ -24,17 +24,19 @@ export default function Friends() {
     try {
       setLoading(true);
       
-      const followingData = await api.getFollowing();
-      setFriends(followingData.following || []);
+      const friendsData = await api.getFriends();
+      setFriends(friendsData.friends || friendsData || []);
 
       const requestsData = await api.getFriendRequests();
       setFriendRequests(requestsData.requests || []);
 
       const usersData = await api.getUsers();
-      const currentFriendAddresses = (followingData.following || []).map(f => f.wallet_address);
+      const currentFriendAddresses = (friendsData.friends || friendsData || []).map(f => f.wallet_address);
+      const requestAddresses = (requestsData.requests || []).map(r => r.from_address || r.wallet_address);
       const filtered = (usersData.users || [])
         .filter(u => u.wallet_address !== user?.walletAddress)
         .filter(u => !currentFriendAddresses.includes(u.wallet_address))
+        .filter(u => !requestAddresses.includes(u.wallet_address))
         .slice(0, 20);
       setSuggestions(filtered);
     } catch (error) {
@@ -48,7 +50,7 @@ export default function Friends() {
     if (!confirm('Are you sure you want to remove this friend?')) return;
     
     try {
-      await api.unfollowUser(address);
+      await api.removeFriend(address);
       setFriends(friends.filter(f => f.wallet_address !== address));
     } catch (error) {
       console.error('Failed to unfriend:', error);
@@ -57,7 +59,7 @@ export default function Friends() {
 
   async function handleAddFriend(address) {
     try {
-      await api.followUser(address);
+      await api.sendFriendRequest(address);
       setSuggestions(suggestions.filter(s => s.wallet_address !== address));
       await loadData();
     } catch (error) {
