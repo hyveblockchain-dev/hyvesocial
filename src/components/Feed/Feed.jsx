@@ -23,6 +23,7 @@ export default function Feed() {
   const FEED_CACHE_TS_KEY = 'feed_posts_cache_ts';
 
   useEffect(() => {
+    let hasCache = false;
     const cached = sessionStorage.getItem(FEED_CACHE_KEY);
     if (cached) {
       try {
@@ -30,13 +31,14 @@ export default function Feed() {
         if (Array.isArray(parsed) && parsed.length > 0) {
           setPosts(parsed);
           setLoading(false);
+          hasCache = true;
         }
       } catch (error) {
         console.error('Failed to parse feed cache:', error);
       }
     }
 
-    loadPosts({ silent: true });
+    loadPosts({ silent: hasCache });
     loadFriends();
     loadStories();
   }, []);
