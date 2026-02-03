@@ -1,0 +1,41 @@
+.group-detail-page {
+  max-width: 700px;
+  margin: 32px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  padding: 24px;
+}
+.group-detail-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.group-detail-cover {
+  width: 160px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.group-detail-info {
+  flex: 1;
+}
+.group-detail-info h1 {
+  margin: 0 0 8px 0;
+  font-size: 2rem;
+}
+.group-detail-meta {
+  color: #888;
+  font-size: 1rem;
+  margin-top: 8px;
+}
+.group-detail-content {
+  margin-top: 32px;
+  color: #444;
+}
+.group-detail-page.error {
+  color: #c00;
+  text-align: center;
+}

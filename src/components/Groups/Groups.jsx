@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import './Groups.css';
 
@@ -27,6 +28,7 @@ const SUGGESTED_GROUPS = [
 ];
 
 export default function Groups() {
+  const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -202,7 +204,12 @@ export default function Groups() {
         ) : (
           <div className="groups-grid">
             {memberGroups.map((group) => (
-              <div key={group.id} className="group-card">
+              <div
+                key={group.id}
+                className="group-card clickable"
+                onClick={() => navigate(`/groups/${group.id}`)}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className="group-cover">
                   <img src={group.cover_image || group.coverImage} alt={group.name} loading="lazy" />
                 </div>
@@ -216,7 +223,7 @@ export default function Groups() {
                   <button
                     type="button"
                     className="groups-secondary"
-                    onClick={() => handleLeaveGroup(group.id)}
+                    onClick={e => { e.stopPropagation(); handleLeaveGroup(group.id); }}
                   >
                     Leave group
                   </button>
@@ -236,7 +243,12 @@ export default function Groups() {
         ) : (
           <div className="groups-grid">
             {discoverGroups.map((group) => (
-              <div key={group.id} className="group-card">
+              <div
+                key={group.id}
+                className="group-card clickable"
+                onClick={() => navigate(`/groups/${group.id}`)}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className="group-cover">
                   <img src={group.cover_image || group.coverImage} alt={group.name} loading="lazy" />
                 </div>
@@ -250,7 +262,7 @@ export default function Groups() {
                   <button
                     type="button"
                     className="groups-secondary"
-                    onClick={() => handleJoinGroup(group.id)}
+                    onClick={e => { e.stopPropagation(); handleJoinGroup(group.id); }}
                   >
                     Join group
                   </button>

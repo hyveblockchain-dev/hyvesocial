@@ -12,6 +12,7 @@ const Friends = lazy(() => import('./components/Friends/Friends'));
 const Notifications = lazy(() => import('./components/Notifications/Notifications'));
 const Discover = lazy(() => import('./components/Discover/Discover'));
 const Groups = lazy(() => import('./components/Groups/Groups'));
+const GroupDetail = lazy(() => import('./components/Groups/GroupDetail'));
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -119,6 +120,16 @@ function App() {
                 <PrivateRoute>
                   <Layout>
                     <Groups />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/groups/:groupId"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <GroupDetail />
                   </Layout>
                 </PrivateRoute>
               }
