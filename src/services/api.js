@@ -915,6 +915,12 @@ export default {
   updateAlbumPhotoCaption,
   deleteAlbum,
 
+  // Groups
+  getGroups,
+  createGroup,
+  joinGroup,
+  leaveGroup,
+
   // Chat/Messages
   getMessages,
   sendMessage,
