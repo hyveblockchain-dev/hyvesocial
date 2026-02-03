@@ -408,14 +408,14 @@ export default function Layout({ children }) {
         <Link to="/" className={location.pathname === '/' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
           📰
         </Link>
-        <Link to="/profile/me" className={location.pathname.startsWith('/profile') ? 'mobile-nav-item active' : 'mobile-nav-item'}>
-          👤
-        </Link>
         <Link to="/friends" className={location.pathname === '/friends' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
           👥
         </Link>
         <Link to="/discover" className={location.pathname === '/discover' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
           🔍
+        </Link>
+        <Link to="/profile/me" className={location.pathname.startsWith('/profile') ? 'mobile-nav-item active' : 'mobile-nav-item'}>
+          👤
         </Link>
       </nav>
 

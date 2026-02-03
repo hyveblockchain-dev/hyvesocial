@@ -493,6 +493,20 @@
   }
 
   .post-actions .action-button {
-    flex: 1 1 45%;
+    flex: 1 1 auto;
+  }
+
+  .post-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .reaction-wrapper {
+    width: 100%;
+  }
+
+  .reaction-wrapper .action-button {
+    width: 100%;
   }
 }
