@@ -7,6 +7,79 @@ import { API_URL, WALLETCONNECT_PROJECT_ID } from '../utils/env';
 const AuthContext = createContext(null);
 let walletConnectProvider;
 
+// Hyve Chain Configuration
+const HYVE_CHAIN = {
+  chainId: '0x23F0', // 9200 in hex
+  chainIdDecimal: 9200,
+  chainName: 'Hyve Network',
+  nativeCurrency: {
+    name: 'HYVE',
+    symbol: 'HYVE',
+    decimals: 18
+  },
+  rpcUrls: ['https://rpc.hyvechain.com'],
+  blockExplorerUrls: ['https://explorer.hyvechain.com']
+};
+
+// Function to switch to Hyve chain
+async function switchToHyveChain(provider) {
+  try {
+    // Try to switch to the Hyve chain
+    await provider.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: HYVE_CHAIN.chainId }]
+    });
+    console.log('Switched to Hyve chain');
+    return true;
+  } catch (switchError) {
+    // If chain doesn't exist in wallet, add it
+    if (switchError.code === 4902 || switchError.message?.includes('Unrecognized chain')) {
+      try {
+        await provider.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: HYVE_CHAIN.chainId,
+            chainName: HYVE_CHAIN.chainName,
+            nativeCurrency: HYVE_CHAIN.nativeCurrency,
+            rpcUrls: HYVE_CHAIN.rpcUrls,
+            blockExplorerUrls: HYVE_CHAIN.blockExplorerUrls
+          }]
+        });
+        console.log('Added and switched to Hyve chain');
+        return true;
+      } catch (addError) {
+        console.error('Failed to add Hyve chain:', addError);
+        throw new Error('Please add Hyve Network to your wallet manually');
+      }
+    }
+    // User rejected the switch
+    if (switchError.code === 4001) {
+      throw new Error('Please switch to Hyve Network to use this app');
+    }
+    console.error('Failed to switch chain:', switchError);
+    throw switchError;
+  }
+}
+
+// Function to check if on correct chain
+async function ensureCorrectChain(provider) {
+  try {
+    const chainId = await provider.request({ method: 'eth_chainId' });
+    const currentChainId = parseInt(chainId, 16);
+    
+    console.log('Current chain ID:', currentChainId, 'Expected:', HYVE_CHAIN.chainIdDecimal);
+    
+    if (currentChainId !== HYVE_CHAIN.chainIdDecimal) {
+      console.log('Wrong chain detected, switching to Hyve...');
+      await switchToHyveChain(provider);
+    }
+    return true;
+  } catch (error) {
+    console.error('Chain check error:', error);
+    throw error;
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -55,10 +128,10 @@ export function AuthProvider({ children }) {
         if (!walletConnectProvider) {
           walletConnectProvider = await EthereumProvider.init({
             projectId: WALLETCONNECT_PROJECT_ID,
-            chains: [1],
-            optionalChains: [1],
+            chains: [HYVE_CHAIN.chainIdDecimal],
+            optionalChains: [HYVE_CHAIN.chainIdDecimal, 1, 56], // Hyve, Ethereum, BSC
             showQrModal: true,
-            methods: ['eth_requestAccounts', 'personal_sign'],
+            methods: ['eth_requestAccounts', 'personal_sign', 'wallet_switchEthereumChain', 'wallet_addEthereumChain'],
             events: ['accountsChanged', 'chainChanged', 'disconnect'],
             metadata: {
               name: 'Hyve Social',
@@ -81,6 +154,9 @@ export function AuthProvider({ children }) {
 
       const address = accounts[0];
       console.log('Connected address:', address);
+
+      // Ensure user is on the correct chain (Hyve Network)
+      await ensureCorrectChain(provider);
 
       // Get nonce from backend
       const nonceResponse = await fetch(`${API_URL}/api/auth/nonce/${address}`);
