@@ -33,6 +33,10 @@ export default function GroupDetail() {
   const [activityLoading, setActivityLoading] = useState(false);
   const [activityError, setActivityError] = useState('');
   const [activityFilter, setActivityFilter] = useState('all');
+  const [editDescription, setEditDescription] = useState('');
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [coverPreview, setCoverPreview] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
 
   const myAddress = (user?.walletAddress || '').toLowerCase();
 
@@ -398,6 +402,83 @@ export default function GroupDetail() {
     }
   }
 
+  async function handleSaveDescription() {
+    try {
+      setBusy(true);
+      setNotice('');
+      const data = await api.updateGroup(groupId, { description: editDescription });
+      if (data?.error) {
+        setNotice(data.error);
+        return;
+      }
+      setGroup(data?.group || { ...group, description: editDescription });
+      setEditingDescription(false);
+      setNotice('Description updated.');
+    } catch {
+      setNotice('Failed to update description.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCoverUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setBusy(true);
+      setNotice('');
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      setCoverPreview(base64);
+      const data = await api.updateGroup(groupId, { coverImage: base64 });
+      if (data?.error) {
+        setNotice(data.error);
+        setCoverPreview(null);
+        return;
+      }
+      setGroup(data?.group || { ...group, cover_image: base64 });
+      setNotice('Cover photo updated.');
+    } catch {
+      setNotice('Failed to upload cover photo.');
+      setCoverPreview(null);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleAvatarUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setBusy(true);
+      setNotice('');
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      setAvatarPreview(base64);
+      const data = await api.updateGroup(groupId, { avatarImage: base64 });
+      if (data?.error) {
+        setNotice(data.error);
+        setAvatarPreview(null);
+        return;
+      }
+      setGroup(data?.group || { ...group, avatar_image: base64 });
+      setNotice('Group avatar updated.');
+    } catch {
+      setNotice('Failed to upload avatar.');
+      setAvatarPreview(null);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleSavePostingPermission() {
     try {
       setBusy(true);
@@ -517,7 +598,8 @@ export default function GroupDetail() {
   if (error) return <div className="group-page error">{error}</div>;
   if (!group) return <div className="group-page">Group not found.</div>;
 
-  const coverUrl = group.cover_image || group.coverImage;
+  const coverUrl = coverPreview || group.cover_image || group.coverImage;
+  const avatarUrl = avatarPreview || group.avatar_image || group.avatarImage;
   const groupName = group.name || 'Group';
   const groupDescription = group.description || '';
   const memberCount = group.member_count || members.length || 1;
@@ -562,7 +644,11 @@ export default function GroupDetail() {
         <div className="group-hero-bar">
           <div className="group-hero-left">
             <div className="group-avatar" aria-hidden="true">
-              {(groupName || '?').slice(0, 1).toUpperCase()}
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="group-avatar-img" />
+              ) : (
+                (groupName || '?').slice(0, 1).toUpperCase()
+              )}
             </div>
             <div className="group-hero-meta">
               <h1 className="group-title">{groupName}</h1>
@@ -648,7 +734,54 @@ export default function GroupDetail() {
       {activeTab === 'about' && (
         <div className="group-panel">
           <h2>About</h2>
-          <div className="group-muted">{groupDescription || 'No description yet.'}</div>
+          
+          <div className="group-about-description">
+            {adminEnabled && editingDescription ? (
+              <div className="group-edit-description">
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  placeholder="Write a description for this group..."
+                  rows={4}
+                  maxLength={1000}
+                  disabled={busy}
+                />
+                <div className="group-edit-actions">
+                  <button className="group-btn tiny" onClick={handleSaveDescription} disabled={busy}>
+                    Save
+                  </button>
+                  <button
+                    className="group-btn tiny secondary"
+                    onClick={() => {
+                      setEditingDescription(false);
+                      setEditDescription(groupDescription);
+                    }}
+                    disabled={busy}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="group-description-text">
+                  {groupDescription || 'No description yet.'}
+                </div>
+                {adminEnabled && (
+                  <button
+                    className="group-btn tiny"
+                    onClick={() => {
+                      setEditDescription(groupDescription);
+                      setEditingDescription(true);
+                    }}
+                  >
+                    Edit description
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+
           <div className="group-about-grid">
             <div className="group-about-item">
               <div className="group-about-k">Privacy</div>
@@ -765,6 +898,56 @@ export default function GroupDetail() {
         <div className="group-panel">
           <h2>Admin tools</h2>
           <div className="group-muted">Settings, approvals, and logs for moderators.</div>
+
+          <div className="group-admin-settings">
+            <h3>Group appearance</h3>
+            <div className="group-muted">Customize how your group looks.</div>
+            <div className="group-appearance-row">
+              <div className="group-appearance-item">
+                <label>Cover photo</label>
+                <div className="group-image-upload">
+                  <div
+                    className="group-cover-preview"
+                    style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}
+                  >
+                    {!coverUrl && <span>No cover</span>}
+                  </div>
+                  <label className="group-btn tiny">
+                    Upload cover
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCoverUpload}
+                      disabled={busy}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                </div>
+              </div>
+              <div className="group-appearance-item">
+                <label>Group avatar</label>
+                <div className="group-image-upload">
+                  <div className="group-avatar-preview">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="" />
+                    ) : (
+                      <span>{(groupName || '?').slice(0, 1).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <label className="group-btn tiny">
+                    Upload avatar
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      disabled={busy}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div className="group-admin-settings">
             <h3>Post permissions</h3>
