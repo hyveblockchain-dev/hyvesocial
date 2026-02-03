@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
@@ -10,6 +10,8 @@ export default function GroupDetail() {
   const { groupId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const coverInputRef = useRef(null);
+  const avatarInputRef = useRef(null);
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -424,9 +426,11 @@ export default function GroupDetail() {
   async function handleCoverUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Reset input so same file can be selected again
+    e.target.value = '';
     try {
       setBusy(true);
-      setNotice('');
+      setNotice('Uploading cover photo...');
       const base64 = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
@@ -436,13 +440,14 @@ export default function GroupDetail() {
       setCoverPreview(base64);
       const data = await api.updateGroup(groupId, { coverImage: base64 });
       if (data?.error) {
-        setNotice(data.error);
+        setNotice('Error: ' + data.error);
         setCoverPreview(null);
         return;
       }
       setGroup(data?.group || { ...group, cover_image: base64 });
-      setNotice('Cover photo updated.');
-    } catch {
+      setNotice('Cover photo updated successfully!');
+    } catch (err) {
+      console.error('Cover upload error:', err);
       setNotice('Failed to upload cover photo.');
       setCoverPreview(null);
     } finally {
@@ -453,9 +458,11 @@ export default function GroupDetail() {
   async function handleAvatarUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Reset input so same file can be selected again
+    e.target.value = '';
     try {
       setBusy(true);
-      setNotice('');
+      setNotice('Uploading avatar...');
       const base64 = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
@@ -465,13 +472,14 @@ export default function GroupDetail() {
       setAvatarPreview(base64);
       const data = await api.updateGroup(groupId, { avatarImage: base64 });
       if (data?.error) {
-        setNotice(data.error);
+        setNotice('Error: ' + data.error);
         setAvatarPreview(null);
         return;
       }
       setGroup(data?.group || { ...group, avatar_image: base64 });
-      setNotice('Group avatar updated.');
-    } catch {
+      setNotice('Group avatar updated successfully!');
+    } catch (err) {
+      console.error('Avatar upload error:', err);
       setNotice('Failed to upload avatar.');
       setAvatarPreview(null);
     } finally {
@@ -912,16 +920,22 @@ export default function GroupDetail() {
                   >
                     {!coverUrl && <span>No cover</span>}
                   </div>
-                  <label className="group-btn tiny">
-                    Upload cover
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleCoverUpload}
-                      disabled={busy}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
+                  <input
+                    ref={coverInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCoverUpload}
+                    disabled={busy}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    type="button"
+                    className="group-btn tiny"
+                    onClick={() => coverInputRef.current?.click()}
+                    disabled={busy}
+                  >
+                    {busy ? 'Uploading...' : 'Upload cover'}
+                  </button>
                 </div>
               </div>
               <div className="group-appearance-item">
@@ -934,16 +948,22 @@ export default function GroupDetail() {
                       <span>{(groupName || '?').slice(0, 1).toUpperCase()}</span>
                     )}
                   </div>
-                  <label className="group-btn tiny">
-                    Upload avatar
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      disabled={busy}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    disabled={busy}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    type="button"
+                    className="group-btn tiny"
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={busy}
+                  >
+                    {busy ? 'Uploading...' : 'Upload avatar'}
+                  </button>
                 </div>
               </div>
             </div>
