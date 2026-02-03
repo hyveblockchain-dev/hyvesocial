@@ -232,12 +232,12 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
     }
   }
 
-  const isShareable =
+  const rawShareFlag =
     post.allow_share ??
     post.allowShare ??
     post.shareable ??
-    post.is_shareable ??
-    false;
+    post.is_shareable;
+  const isShareable = rawShareFlag !== false;
 
   async function handleShare() {
     if (!isShareable) {
@@ -246,7 +246,10 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
     }
 
     try {
-      const sharedContent = `Shared from @${post.username || 'user'}: ${post.content || ''}`.trim();
+      const baseText = post.content?.trim();
+      const sharedContent = baseText
+        ? `Shared from @${post.username || 'user'}: ${baseText}`
+        : `Shared a post from @${post.username || 'user'}`;
       const data = await api.createPost({
         content: sharedContent,
         imageUrl: post.image_url || null,
