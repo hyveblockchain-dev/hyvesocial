@@ -8,6 +8,7 @@ import Feed from './components/Feed/Feed';
 import Profile from './components/Profile/Profile';
 import Friends from './components/Friends/Friends';
 import Notifications from './components/Notifications/Notifications';
+import Discover from './components/Discover/Discover';
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -85,7 +86,7 @@ function App() {
             element={
               <PrivateRoute>
                 <Layout>
-                  <div className="coming-soon">🔍 Discover coming soon</div>
+                  <Discover />
                 </Layout>
               </PrivateRoute>
             }
