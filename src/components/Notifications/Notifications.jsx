@@ -11,6 +11,23 @@ export default function Notifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const READ_NOTIFICATIONS_KEY = 'read_notifications';
+
+  function getReadNotifications() {
+    try {
+      const stored = localStorage.getItem(READ_NOTIFICATIONS_KEY);
+      return new Set(stored ? JSON.parse(stored) : []);
+    } catch (error) {
+      return new Set();
+    }
+  }
+
+  function markNotificationRead(id) {
+    const current = getReadNotifications();
+    current.add(id);
+    localStorage.setItem(READ_NOTIFICATIONS_KEY, JSON.stringify([...current]));
+  }
+
   useEffect(() => {
     loadFriendRequests();
   }, []);
@@ -54,13 +71,16 @@ export default function Notifications() {
       setLoading(true);
       const data = await api.getFriendRequests();
       const requests = data.requests || [];
+      const read = getReadNotifications();
       setFriendRequests(requests);
-      const requestNotifications = requests.map((request) => ({
+      const requestNotifications = requests
+        .filter((request) => !read.has(`request-${request.id}`))
+        .map((request) => ({
         id: `request-${request.id}`,
         type: 'friend_request',
         createdAt: request.created_at || new Date().toISOString(),
         request
-      }));
+        }));
       setNotifications((prev) => {
         const existingIds = new Set(prev.map((item) => item.id));
         const merged = [...requestNotifications.filter((item) => !existingIds.has(item.id)), ...prev];
@@ -76,6 +96,7 @@ export default function Notifications() {
   async function handleAccept(requestId) {
     try {
       await api.acceptFriendRequest(requestId);
+      markNotificationRead(`request-${requestId}`);
       setFriendRequests(friendRequests.filter(r => r.id !== requestId));
       setNotifications((prev) => prev.filter((item) => item.id !== `request-${requestId}`));
     } catch (error) {
@@ -87,6 +108,7 @@ export default function Notifications() {
   async function handleDecline(requestId) {
     try {
       await api.declineFriendRequest(requestId);
+      markNotificationRead(`request-${requestId}`);
       setFriendRequests(friendRequests.filter(r => r.id !== requestId));
       setNotifications((prev) => prev.filter((item) => item.id !== `request-${requestId}`));
     } catch (error) {

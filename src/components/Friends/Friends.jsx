@@ -6,7 +6,7 @@ import './Friends.css';
 
 export default function Friends() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, socket } = useAuth();
   const [activeTab, setActiveTab] = useState('all');
   const [friends, setFriends] = useState([]);
   const [friendRequests, setFriendRequests] = useState([]);
@@ -19,6 +19,26 @@ export default function Friends() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleFriendRequest = () => {
+      loadData();
+    };
+
+    const handleFriendAccepted = () => {
+      loadData();
+    };
+
+    socket.on('friend_request', handleFriendRequest);
+    socket.on('friend_request_accepted', handleFriendAccepted);
+
+    return () => {
+      socket.off('friend_request', handleFriendRequest);
+      socket.off('friend_request_accepted', handleFriendAccepted);
+    };
+  }, [socket]);
 
   async function loadData() {
     try {

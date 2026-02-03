@@ -26,6 +26,23 @@ export default function Layout({ children }) {
   const [isLightMode, setIsLightMode] = useState(() => localStorage.getItem('theme') === 'light');
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 
+  const READ_NOTIFICATIONS_KEY = 'read_notifications';
+
+  function getReadNotifications() {
+    try {
+      const stored = localStorage.getItem(READ_NOTIFICATIONS_KEY);
+      return new Set(stored ? JSON.parse(stored) : []);
+    } catch (error) {
+      return new Set();
+    }
+  }
+
+  function markNotificationRead(id) {
+    const current = getReadNotifications();
+    current.add(id);
+    localStorage.setItem(READ_NOTIFICATIONS_KEY, JSON.stringify([...current]));
+  }
+
   function profilePathFor(userObj) {
     const handle = userObj?.username || userObj?.user?.username;
     return handle ? `/profile/${encodeURIComponent(handle)}` : '/profile/unknown';
@@ -154,7 +171,9 @@ export default function Layout({ children }) {
     try {
       const data = await api.getFriendRequests();
       const requests = data.requests || [];
-      setNotificationItems(requests);
+      const read = getReadNotifications();
+      const unreadRequests = requests.filter((request) => !read.has(`request-${request.id}`));
+      setNotificationItems(unreadRequests);
     } catch (error) {
       console.error('Load notifications error:', error);
       setNotificationItems([]);
@@ -296,7 +315,11 @@ export default function Layout({ children }) {
                         key={request.id}
                         to="/notifications"
                         className="notification-item"
-                        onClick={() => setShowNotificationsMenu(false)}
+                        onClick={() => {
+                          markNotificationRead(`request-${request.id}`);
+                          setNotificationItems((prev) => prev.filter((item) => item.id !== request.id));
+                          setShowNotificationsMenu(false);
+                        }}
                       >
                         {request.profile_image ? (
                           <img src={request.profile_image} alt={request.username} />

@@ -84,6 +84,21 @@ export default function Feed() {
     );
   }, [friends]);
 
+  const visiblePosts = useMemo(() => {
+    const currentAddress = user?.walletAddress || user?.wallet_address;
+    return posts.filter((post) => {
+      const authorAddress =
+        post.author_address ||
+        post.wallet_address ||
+        post.user?.walletAddress ||
+        post.user?.wallet_address ||
+        post.address;
+      if (currentAddress && authorAddress === currentAddress) return true;
+      if (authorAddress && friendAddressSet.has(authorAddress)) return true;
+      return false;
+    });
+  }, [posts, friendAddressSet, user]);
+
   const visibleStories = useMemo(() => {
     return (stories || []).filter((story) => {
       const ownerAddress =
@@ -370,12 +385,12 @@ export default function Feed() {
       <CreatePost onPostCreated={handlePostCreated} />
 
       <div className="posts-list">
-        {posts.length === 0 ? (
+        {visiblePosts.length === 0 ? (
           <div className="no-posts">
-            <p>No posts yet. Be the first to post!</p>
+            <p>No posts yet. Add friends to see their posts!</p>
           </div>
         ) : (
-          posts.map(post => (
+          visiblePosts.map(post => (
             <Post
               key={post.id}
               post={post}

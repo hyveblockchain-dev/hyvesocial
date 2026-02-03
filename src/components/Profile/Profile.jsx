@@ -10,7 +10,7 @@ import './Profile.css';
 export default function Profile() {
   const { handle } = useParams();
   const navigate = useNavigate();
-  const { user, setUser } = useAuth();
+  const { user, setUser, socket } = useAuth();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [albums, setAlbums] = useState([]);
@@ -72,6 +72,23 @@ export default function Profile() {
       checkFriendshipStatus(resolvedAddress);
     }
   }, [resolvedAddress, user]);
+
+  useEffect(() => {
+    if (!socket || !resolvedAddress) return;
+
+    const handleFriendAccepted = (payload) => {
+      const fromAddress = payload?.from || payload?.address;
+      if (!fromAddress) return;
+      if (fromAddress === resolvedAddress) {
+        setFriendshipStatus('friends');
+      }
+    };
+
+    socket.on('friend_request_accepted', handleFriendAccepted);
+    return () => {
+      socket.off('friend_request_accepted', handleFriendAccepted);
+    };
+  }, [socket, resolvedAddress]);
 
   async function resolveProfileHandle() {
     if (!handle) return;
