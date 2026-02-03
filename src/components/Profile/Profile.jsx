@@ -617,7 +617,8 @@ export default function Profile() {
     e.preventDefault();
     try {
       setAboutSaving(true);
-      const result = await api.updateProfile({
+      
+      const dataToSend = {
         bio: aboutForm.bio,
         location: aboutForm.location,
         work: aboutForm.work,
@@ -628,9 +629,16 @@ export default function Profile() {
         birthday: aboutForm.birthday,
         gender: aboutForm.gender,
         languages: aboutForm.languages
-      });
+      };
+      
+      console.log('saveAboutInfo - aboutForm state:', aboutForm);
+      console.log('saveAboutInfo - sending to API:', dataToSend);
+      
+      const result = await api.updateProfile(dataToSend);
 
       console.log('saveAboutInfo - result.user:', result.user);
+      console.log('saveAboutInfo - result.user.bio:', result.user?.bio);
+      console.log('saveAboutInfo - result.user.location:', result.user?.location);
       
       // Always clear cache to ensure fresh data on reload
       setProfileCache((prev) => {
