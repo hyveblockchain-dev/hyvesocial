@@ -534,6 +534,89 @@ export async function getFriends() {
   return response.json();
 }
 
+export async function getGroups() {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    return { groups: [] };
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    return { groups: [] };
+  }
+
+  try {
+    return response.json();
+  } catch (error) {
+    return { groups: [] };
+  }
+}
+
+export async function createGroup(payload) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload || {})
+  });
+  return response.json();
+}
+
+export async function joinGroup(groupId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/join`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function leaveGroup(groupId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/leave`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function getGroupMembers(groupId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/members`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    return { members: [] };
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    return { members: [] };
+  }
+
+  try {
+    return response.json();
+  } catch (error) {
+    return { members: [] };
+  }
+}
+
 export async function getPresence() {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_URL}/api/presence`, {

@@ -43,6 +43,15 @@
   box-shadow: 0 10px 20px rgba(255, 215, 0, 0.2);
 }
 
+.groups-error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+
 .groups-secondary {
   background: transparent;
   color: var(--text-primary);

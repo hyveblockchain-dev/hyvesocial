@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import api from '../../services/api';
 import './Groups.css';
 
 const SUGGESTED_GROUPS = [
@@ -25,29 +26,14 @@ const SUGGESTED_GROUPS = [
   }
 ];
 
-const LOCAL_GROUPS_KEY = 'hyve_local_groups';
-
 export default function Groups() {
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [privacy, setPrivacy] = useState('Public');
   const [groups, setGroups] = useState([]);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(LOCAL_GROUPS_KEY);
-      if (stored) {
-        setGroups(JSON.parse(stored));
-      }
-    } catch (error) {
-      setGroups([]);
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem(LOCAL_GROUPS_KEY, JSON.stringify(groups));
-  }, [groups]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const coverPool = useMemo(
     () => [
@@ -58,30 +44,88 @@ export default function Groups() {
     []
   );
 
+  useEffect(() => {
+    loadGroups();
+  }, []);
+
   function resetForm() {
     setName('');
     setDescription('');
     setPrivacy('Public');
   }
 
-  function handleCreateGroup(event) {
+  async function loadGroups() {
+    try {
+      setLoading(true);
+      setError('');
+      const data = await api.getGroups();
+      setGroups(data.groups || []);
+    } catch (err) {
+      console.error('Failed to load groups:', err);
+      setError('Failed to load groups.');
+      setGroups([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCreateGroup(event) {
     event.preventDefault();
 
     if (!name.trim()) return;
 
-    const nextGroup = {
-      id: `group-${Date.now()}`,
-      name: name.trim(),
-      description: description.trim(),
-      privacy,
-      members: 1,
-      coverImage: coverPool[Math.floor(Math.random() * coverPool.length)]
-    };
-
-    setGroups((prev) => [nextGroup, ...prev]);
-    resetForm();
-    setShowCreate(false);
+    try {
+      setError('');
+      const payload = {
+        name: name.trim(),
+        description: description.trim(),
+        privacy: privacy.toLowerCase(),
+        coverImage: coverPool[Math.floor(Math.random() * coverPool.length)]
+      };
+      const data = await api.createGroup(payload);
+      if (data?.error) {
+        setError(data.error);
+        return;
+      }
+      resetForm();
+      setShowCreate(false);
+      await loadGroups();
+    } catch (err) {
+      console.error('Failed to create group:', err);
+      setError('Failed to create group.');
+    }
   }
+
+  async function handleJoinGroup(groupId) {
+    try {
+      const data = await api.joinGroup(groupId);
+      if (data?.error) {
+        setError(data.error);
+        return;
+      }
+      await loadGroups();
+    } catch (err) {
+      console.error('Failed to join group:', err);
+      setError('Failed to join group.');
+    }
+  }
+
+  async function handleLeaveGroup(groupId) {
+    try {
+      const data = await api.leaveGroup(groupId);
+      if (data?.error) {
+        setError(data.error);
+        return;
+      }
+      await loadGroups();
+    } catch (err) {
+      console.error('Failed to leave group:', err);
+      setError('Failed to leave group.');
+    }
+  }
+
+  const memberGroups = groups.filter((group) => group.is_member);
+  const discoverGroups = groups.filter((group) => !group.is_member);
 
   return (
     <div className="groups-page">
@@ -94,6 +138,8 @@ export default function Groups() {
           Create Group
         </button>
       </div>
+
+      {error && <div className="groups-error">{error}</div>}
 
       {showCreate && (
         <div className="groups-create">
@@ -147,24 +193,33 @@ export default function Groups() {
 
       <section className="groups-section">
         <h2>Your groups</h2>
-        {groups.length === 0 ? (
+        {loading ? (
+          <div className="groups-empty">Loading groups...</div>
+        ) : memberGroups.length === 0 ? (
           <div className="groups-empty">
             <p>No groups yet. Create one to get started.</p>
           </div>
         ) : (
           <div className="groups-grid">
-            {groups.map((group) => (
+            {memberGroups.map((group) => (
               <div key={group.id} className="group-card">
                 <div className="group-cover">
-                  <img src={group.coverImage} alt={group.name} loading="lazy" />
+                  <img src={group.cover_image || group.coverImage} alt={group.name} loading="lazy" />
                 </div>
                 <div className="group-content">
                   <h3>{group.name}</h3>
                   {group.description && <p>{group.description}</p>}
                   <div className="group-meta">
-                    <span>{group.members} member</span>
+                    <span>{group.member_count || 1} members</span>
                     <span>{group.privacy}</span>
                   </div>
+                  <button
+                    type="button"
+                    className="groups-secondary"
+                    onClick={() => handleLeaveGroup(group.id)}
+                  >
+                    Leave group
+                  </button>
                 </div>
               </div>
             ))}
@@ -174,26 +229,36 @@ export default function Groups() {
 
       <section className="groups-section">
         <h2>Suggested groups</h2>
-        <div className="groups-grid">
-          {SUGGESTED_GROUPS.map((group) => (
-            <div key={group.id} className="group-card">
-              <div className="group-cover">
-                <img src={group.coverImage} alt={group.name} loading="lazy" />
-              </div>
-              <div className="group-content">
-                <h3>{group.name}</h3>
-                <p>Join a focused community of builders and creators.</p>
-                <div className="group-meta">
-                  <span>{group.members} members</span>
-                  <span>{group.privacy}</span>
+        {discoverGroups.length === 0 ? (
+          <div className="groups-empty">
+            <p>No public groups available right now.</p>
+          </div>
+        ) : (
+          <div className="groups-grid">
+            {discoverGroups.map((group) => (
+              <div key={group.id} className="group-card">
+                <div className="group-cover">
+                  <img src={group.cover_image || group.coverImage} alt={group.name} loading="lazy" />
                 </div>
-                <button type="button" className="groups-secondary">
-                  Join group
-                </button>
+                <div className="group-content">
+                  <h3>{group.name}</h3>
+                  <p>{group.description || 'Join a focused community of builders and creators.'}</p>
+                  <div className="group-meta">
+                    <span>{group.member_count || 0} members</span>
+                    <span>{group.privacy}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="groups-secondary"
+                    onClick={() => handleJoinGroup(group.id)}
+                  >
+                    Join group
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
