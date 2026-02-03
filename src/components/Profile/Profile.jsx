@@ -48,7 +48,6 @@ export default function Profile() {
   const [resolvedAddress, setResolvedAddress] = useState(null);
   
   const isOwnProfile = user?.walletAddress && user?.walletAddress === resolvedAddress;
-  const totalPhotos = albums.reduce((sum, album) => sum + (album.photo_count || 0), 0);
   const friendCount = profile?.friendCount || profile?.friendsCount || friends.length || 0;
   const canViewPrivateContent = isOwnProfile || friendshipStatus === 'friends';
   const currentPhoto = selectedAlbum?.photos?.[lightboxIndex];
@@ -612,7 +611,6 @@ export default function Profile() {
           <div className="profile-stats">
             <span><strong>{friendCount}</strong> Friends</span>
             <span><strong>{posts.length}</strong> Posts</span>
-            <span><strong>{totalPhotos}</strong> Photos</span>
           </div>
         </div>
 
