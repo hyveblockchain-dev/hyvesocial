@@ -296,10 +296,17 @@
   cursor: pointer;
 }
 
+.story-viewer-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
 .story-viewer-media img {
   width: 100%;
-  max-height: 60vh;
-  object-fit: cover;
+  max-height: 75vh;
+  object-fit: contain;
   display: block;
 }
 
