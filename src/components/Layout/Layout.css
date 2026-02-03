@@ -707,6 +707,7 @@ body.light-mode .stat-num {
     border: 1px solid rgba(255, 255, 255, 0.08);
     font-size: 20px;
     transition: transform 0.15s ease, background 0.2s ease, color 0.2s ease;
+    cursor: pointer;
   }
 
   .mobile-nav-item.active {

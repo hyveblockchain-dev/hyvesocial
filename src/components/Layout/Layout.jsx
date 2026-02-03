@@ -524,6 +524,18 @@ export default function Layout({ children }) {
         <Link to="/discover" className={location.pathname === '/discover' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
           🔍
         </Link>
+        <button
+          type="button"
+          className={`mobile-nav-item ${showChat ? 'active' : ''}`}
+          onClick={() => {
+            setSelectedChat(null);
+            setShowChat(true);
+          }}
+          aria-label="Open chat"
+          title="Chat"
+        >
+          💬
+        </button>
         <Link to="/profile/me" className={location.pathname.startsWith('/profile') ? 'mobile-nav-item active' : 'mobile-nav-item'}>
           👤
         </Link>
