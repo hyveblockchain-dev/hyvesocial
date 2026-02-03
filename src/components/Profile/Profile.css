@@ -387,6 +387,7 @@
   color: var(--text-secondary);
   line-height: 1.5;
   margin-bottom: 12px;
+  text-align: left;
 }
 
 .profile-card-muted {
@@ -402,6 +403,11 @@
   gap: 10px;
   color: var(--text-secondary);
   font-size: 14px;
+  text-align: left;
+}
+
+.profile-details-list li {
+  text-align: left;
 }
 
 .profile-details-list span {
