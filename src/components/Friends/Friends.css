@@ -104,11 +104,14 @@
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  justify-items: start;
 }
 
 .friend-card {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 320px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
