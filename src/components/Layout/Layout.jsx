@@ -476,6 +476,10 @@ export default function Layout({ children }) {
               <span className="nav-icon">👥</span>
               <span>Friends</span>
             </Link>
+            <Link to="/groups" className={location.pathname === '/groups' ? 'nav-item active' : 'nav-item'}>
+              <span className="nav-icon">G</span>
+              <span>Groups</span>
+            </Link>
             <Link to="/discover" className={location.pathname === '/discover' ? 'nav-item active' : 'nav-item'}>
               <span className="nav-icon">🔍</span>
               <span>Discover</span>
@@ -567,6 +571,9 @@ export default function Layout({ children }) {
         </Link>
         <Link to="/friends" className={location.pathname === '/friends' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
           👥
+        </Link>
+        <Link to="/groups" className={location.pathname === '/groups' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
+          G
         </Link>
         <Link to="/discover" className={location.pathname === '/discover' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
           🔍

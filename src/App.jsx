@@ -11,6 +11,7 @@ const Profile = lazy(() => import('./components/Profile/Profile'));
 const Friends = lazy(() => import('./components/Friends/Friends'));
 const Notifications = lazy(() => import('./components/Notifications/Notifications'));
 const Discover = lazy(() => import('./components/Discover/Discover'));
+const Groups = lazy(() => import('./components/Groups/Groups'));
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -40,6 +41,7 @@ function App() {
       import('./components/Friends/Friends'),
       import('./components/Notifications/Notifications'),
       import('./components/Discover/Discover'),
+      import('./components/Groups/Groups'),
       import('./components/Auth/Login')
     ];
     preloads.forEach((promise) => promise.catch(() => {}));
@@ -107,6 +109,16 @@ function App() {
                 <PrivateRoute>
                   <Layout>
                     <Discover />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/groups"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <Groups />
                   </Layout>
                 </PrivateRoute>
               }
