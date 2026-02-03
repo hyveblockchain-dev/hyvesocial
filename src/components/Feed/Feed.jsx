@@ -151,6 +151,13 @@ export default function Feed() {
     }
   }
 
+  function closeStoryModal() {
+    setShowStoryModal(false);
+    setStoryFile(null);
+    setStoryPreview('');
+    setStoryText('');
+  }
+
   async function handleDeleteStory(storyId) {
     if (!confirm('Delete your story?')) return;
     try {
@@ -298,7 +305,7 @@ export default function Feed() {
         })}
       </div>
       {showStoryModal && (
-        <div className="story-modal" onClick={() => setShowStoryModal(false)}>
+        <div className="story-modal" onClick={closeStoryModal}>
           <div className="story-modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>Create Story</h3>
             <input
@@ -315,7 +322,22 @@ export default function Feed() {
                 setStoryPreview(URL.createObjectURL(file));
               }}
             />
-            {storyPreview && <img className="story-preview" src={storyPreview} alt="Story preview" />}
+            {storyPreview && (
+              <div className="story-preview-container">
+                <img className="story-preview" src={storyPreview} alt="Story preview" />
+                <button
+                  type="button"
+                  className="story-preview-remove"
+                  onClick={() => {
+                    setStoryFile(null);
+                    setStoryPreview('');
+                  }}
+                  title="Remove image"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
             <textarea
               rows={3}
               placeholder="Add a caption..."
@@ -323,7 +345,7 @@ export default function Feed() {
               onChange={(e) => setStoryText(e.target.value)}
             />
             <div className="story-modal-actions">
-              <button className="btn-secondary" onClick={() => setShowStoryModal(false)}>Cancel</button>
+              <button className="btn-secondary" onClick={closeStoryModal}>Cancel</button>
               <button className="btn-primary" onClick={handleCreateStory} disabled={storyPosting}>
                 {storyPosting ? 'Posting...' : 'Post Story'}
               </button>
