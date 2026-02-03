@@ -1,5 +1,5 @@
 // src/components/Profile/Profile.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
@@ -42,6 +42,13 @@ export default function Profile() {
     gender: '',
     languages: ''
   });
+  const aboutFormRef = useRef(aboutForm);
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    aboutFormRef.current = aboutForm;
+  }, [aboutForm]);
+  
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [captionDraft, setCaptionDraft] = useState('');
@@ -621,20 +628,23 @@ export default function Profile() {
     try {
       setAboutSaving(true);
       
+      // Use ref to get the latest form values (avoids stale closure)
+      const currentForm = aboutFormRef.current;
+      
       const dataToSend = {
-        bio: aboutForm.bio,
-        location: aboutForm.location,
-        work: aboutForm.work,
-        education: aboutForm.education,
-        website: aboutForm.website,
-        hometown: aboutForm.hometown,
-        relationship_status: aboutForm.relationshipStatus,
-        birthday: aboutForm.birthday,
-        gender: aboutForm.gender,
-        languages: aboutForm.languages
+        bio: currentForm.bio,
+        location: currentForm.location,
+        work: currentForm.work,
+        education: currentForm.education,
+        website: currentForm.website,
+        hometown: currentForm.hometown,
+        relationship_status: currentForm.relationshipStatus,
+        birthday: currentForm.birthday,
+        gender: currentForm.gender,
+        languages: currentForm.languages
       };
       
-      console.log('saveAboutInfo - aboutForm state:', aboutForm);
+      console.log('saveAboutInfo - aboutFormRef.current:', currentForm);
       console.log('saveAboutInfo - sending to API:', dataToSend);
       
       const result = await api.updateProfile(dataToSend);
