@@ -3,30 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import './Groups.css';
 
-const SUGGESTED_GROUPS = [
-  {
-    id: 'design-hub',
-    name: 'Design Hub',
-    members: 1280,
-    privacy: 'Public',
-    coverImage: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=80'
-  },
-  {
-    id: 'builders-lab',
-    name: 'Builders Lab',
-    members: 742,
-    privacy: 'Private',
-    coverImage: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80'
-  },
-  {
-    id: 'creator-roundtable',
-    name: 'Creator Roundtable',
-    members: 530,
-    privacy: 'Public',
-    coverImage: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80'
-  }
-];
-
 export default function Groups() {
   const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
@@ -36,6 +12,8 @@ export default function Groups() {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeView, setActiveView] = useState('your');
+  const [search, setSearch] = useState('');
 
   const coverPool = useMemo(
     () => [
@@ -45,10 +23,6 @@ export default function Groups() {
     ],
     []
   );
-
-  useEffect(() => {
-    loadGroups();
-  }, []);
 
   function resetForm() {
     setName('');
@@ -60,12 +34,14 @@ export default function Groups() {
     try {
       setLoading(true);
       setError('');
+
       const data = await api.getGroups();
       if (data?.error) {
         setError(data.error);
         setGroups([]);
         return;
       }
+
       setGroups(data?.groups || []);
     } catch (err) {
       console.error('Failed to load groups:', err);
@@ -76,9 +52,18 @@ export default function Groups() {
     }
   }
 
+  useEffect(() => {
+    loadGroups();
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    const hasYourGroups = groups.some((g) => !!g.is_member);
+    setActiveView(hasYourGroups ? 'your' : 'discover');
+  }, [loading, groups]);
+
   async function handleCreateGroup(event) {
     event.preventDefault();
-
     if (!name.trim()) return;
 
     try {
@@ -135,21 +120,38 @@ export default function Groups() {
     }
   }
 
-  const memberGroups = groups.filter((group) => group.is_member);
-  const discoverGroups = groups.filter((group) => !group.is_member);
+  const memberGroups = useMemo(() => groups.filter((g) => g.is_member), [groups]);
+  const discoverGroups = useMemo(() => groups.filter((g) => !g.is_member), [groups]);
+
+  const filteredMemberGroups = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return memberGroups;
+    return memberGroups.filter((g) => String(g.name || '').toLowerCase().includes(q));
+  }, [memberGroups, search]);
+
+  const filteredDiscoverGroups = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return discoverGroups;
+    return discoverGroups.filter((g) => String(g.name || '').toLowerCase().includes(q));
+  }, [discoverGroups, search]);
+
+  const railGroups = activeView === 'your' ? filteredMemberGroups : filteredDiscoverGroups;
+  const mainGroups = railGroups;
+
+  function coverFor(group) {
+    return group.cover_image || group.coverImage;
+  }
+
+  function memberCountFor(group) {
+    return group.member_count || group.members || 1;
+  }
+
+  function privacyLabelFor(group) {
+    return String(group.privacy || 'public').toLowerCase();
+  }
 
   return (
     <div className="groups-page">
-      <div className="groups-header">
-        <div>
-          <h1>Groups</h1>
-          <p>Build communities around shared interests.</p>
-        </div>
-        <button className="groups-primary" onClick={() => setShowCreate(true)}>
-          Create Group
-        </button>
-      </div>
-
       {error && <div className="groups-error">{error}</div>}
 
       {showCreate && (
@@ -168,6 +170,7 @@ export default function Groups() {
                 Close
               </button>
             </div>
+
             <label>
               Group name
               <input
@@ -178,6 +181,7 @@ export default function Groups() {
                 onChange={(event) => setName(event.target.value)}
               />
             </label>
+
             <label>
               Description
               <textarea
@@ -188,6 +192,7 @@ export default function Groups() {
                 onChange={(event) => setDescription(event.target.value)}
               />
             </label>
+
             <label>
               Privacy
               <select value={privacy} onChange={(event) => setPrivacy(event.target.value)}>
@@ -195,6 +200,7 @@ export default function Groups() {
                 <option value="Private">Private</option>
               </select>
             </label>
+
             <button type="submit" className="groups-primary">
               Create
             </button>
@@ -202,85 +208,158 @@ export default function Groups() {
         </div>
       )}
 
-      <section className="groups-section">
-        <h2>Your groups</h2>
-        {loading ? (
-          <div className="groups-empty">Loading groups...</div>
-        ) : memberGroups.length === 0 ? (
-          <div className="groups-empty">
-            <p>No groups yet. Create one to get started.</p>
-          </div>
-        ) : (
-          <div className="groups-grid">
-            {memberGroups.map((group) => (
-              <div
-                key={group.id}
-                className="group-card clickable"
-                onClick={() => navigate(`/groups/${group.id}`)}
-                style={{ cursor: 'pointer' }}
-              >
-                <div className="group-cover">
-                  <img src={group.cover_image || group.coverImage} alt={group.name} loading="lazy" />
-                </div>
-                <div className="group-content">
-                  <h3>{group.name}</h3>
-                  {group.description && <p>{group.description}</p>}
-                  <div className="group-meta">
-                    <span>{group.member_count || 1} members</span>
-                    <span>{group.privacy}</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="groups-secondary"
-                    onClick={e => { e.stopPropagation(); handleLeaveGroup(group.id); }}
-                  >
-                    Leave group
-                  </button>
-                </div>
+      <div className="groups-layout">
+        <aside className="groups-rail">
+          <div className="groups-rail-card">
+            <div className="groups-rail-top">
+              <div>
+                <h1 className="groups-title">Groups</h1>
+                <p className="groups-subtitle">Communities and people.</p>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+              <button className="groups-primary" onClick={() => setShowCreate(true)}>
+                Create
+              </button>
+            </div>
 
-      <section className="groups-section">
-        <h2>Suggested groups</h2>
-        {discoverGroups.length === 0 ? (
-          <div className="groups-empty">
-            <p>No public groups available right now.</p>
-          </div>
-        ) : (
-          <div className="groups-grid">
-            {discoverGroups.map((group) => (
-              <div
-                key={group.id}
-                className="group-card clickable"
-                onClick={() => navigate(`/groups/${group.id}`)}
-                style={{ cursor: 'pointer' }}
+            <div className="groups-rail-tabs">
+              <button
+                type="button"
+                className={activeView === 'your' ? 'groups-tab active' : 'groups-tab'}
+                onClick={() => setActiveView('your')}
               >
-                <div className="group-cover">
-                  <img src={group.cover_image || group.coverImage} alt={group.name} loading="lazy" />
-                </div>
-                <div className="group-content">
-                  <h3>{group.name}</h3>
-                  <p>{group.description || 'Join a focused community of builders and creators.'}</p>
-                  <div className="group-meta">
-                    <span>{group.member_count || 0} members</span>
-                    <span>{group.privacy}</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="groups-secondary"
-                    onClick={e => { e.stopPropagation(); handleJoinGroup(group.id); }}
-                  >
-                    Join group
-                  </button>
-                </div>
-              </div>
-            ))}
+                Your groups
+              </button>
+              <button
+                type="button"
+                className={activeView === 'discover' ? 'groups-tab active' : 'groups-tab'}
+                onClick={() => setActiveView('discover')}
+              >
+                Discover
+              </button>
+            </div>
+
+            <div className="groups-search">
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search groups"
+                aria-label="Search groups"
+              />
+            </div>
           </div>
-        )}
-      </section>
+
+          <div className="groups-rail-card">
+            <div className="groups-rail-list-header">
+              <h2>{activeView === 'your' ? 'Your groups' : 'Suggested'}</h2>
+              <button type="button" className="groups-link" onClick={() => setSearch('')}>
+                Clear
+              </button>
+            </div>
+
+            {loading ? (
+              <div className="groups-muted">Loading…</div>
+            ) : railGroups.length === 0 ? (
+              <div className="groups-muted">{activeView === 'your' ? 'No groups yet.' : 'No groups found.'}</div>
+            ) : (
+              <div className="groups-rail-list">
+                {railGroups.slice(0, 8).map((group) => (
+                  <button
+                    key={group.id}
+                    type="button"
+                    className="groups-rail-item"
+                    onClick={() => navigate(`/groups/${group.id}`)}
+                  >
+                    <div
+                      className="groups-rail-avatar"
+                      style={coverFor(group) ? { backgroundImage: `url(${coverFor(group)})` } : undefined}
+                      aria-hidden="true"
+                    />
+                    <div className="groups-rail-item-meta">
+                      <div className="groups-rail-item-name">{group.name}</div>
+                      <div className="groups-rail-item-sub">
+                        <span className="groups-pill">{privacyLabelFor(group)}</span>
+                        <span className="groups-dot">•</span>
+                        <span>{memberCountFor(group)} members</span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </aside>
+
+        <main className="groups-main">
+          <div className="groups-main-header">
+            <h2>{activeView === 'your' ? 'Your groups' : 'Discover groups'}</h2>
+            <div className="groups-muted">
+              {activeView === 'your'
+                ? 'Your communities and discussions'
+                : 'Browse and join groups you like'}
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="groups-empty">Loading groups...</div>
+          ) : mainGroups.length === 0 ? (
+            <div className="groups-empty">
+              {activeView === 'your' ? <p>Create a group to get started.</p> : <p>No public groups available right now.</p>}
+            </div>
+          ) : (
+            <div className="groups-grid">
+              {mainGroups.map((group) => (
+                <div
+                  key={group.id}
+                  className="group-card clickable"
+                  onClick={() => navigate(`/groups/${group.id}`)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="group-cover">
+                    {coverFor(group) ? (
+                      <img src={coverFor(group)} alt={group.name} loading="lazy" />
+                    ) : (
+                      <div className="groups-cover-fallback" aria-hidden="true" />
+                    )}
+                  </div>
+                  <div className="group-content">
+                    <h3>{group.name}</h3>
+                    {group.description && <p>{group.description}</p>}
+                    <div className="group-meta">
+                      <span>{memberCountFor(group)} members</span>
+                      <span>{privacyLabelFor(group)}</span>
+                    </div>
+                    {group.is_member ? (
+                      <button
+                        type="button"
+                        className="groups-secondary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLeaveGroup(group.id);
+                        }}
+                      >
+                        Leave group
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="groups-secondary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleJoinGroup(group.id);
+                        }}
+                      >
+                        {privacyLabelFor(group) === 'private' ? 'Request to join' : 'Join group'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
+
 }

@@ -4,27 +4,205 @@
   gap: 24px;
 }
 
-.groups-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+.groups-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
   gap: 16px;
+}
+
+.groups-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.groups-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.groups-rail-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 18px;
-  padding: 20px;
+  padding: 16px;
 }
 
-.groups-header h1 {
+.groups-rail-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.groups-title {
   font-size: 28px;
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   color: var(--text-primary);
 }
 
-.groups-header p {
+.groups-subtitle {
   margin: 0;
   color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.groups-main-header {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.groups-main-header h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.groups-muted {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.groups-rail-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.groups-tab {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.groups-tab.active {
+  color: #000;
+  border-color: rgba(255, 215, 0, 0.35);
+  background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+}
+
+.groups-search {
+  margin-top: 12px;
+}
+
+.groups-search input {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 12px 14px;
+  border-radius: 12px;
   font-size: 14px;
+}
+
+.groups-rail-list-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.groups-rail-list-header h2 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.groups-link {
+  border: none;
+  background: transparent;
+  color: var(--gold-primary);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.groups-link:hover {
+  text-decoration: underline;
+}
+
+.groups-rail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.groups-rail-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  text-align: left;
+}
+
+.groups-rail-item:hover {
+  background: rgba(255, 215, 0, 0.05);
+}
+
+.groups-rail-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background-size: cover;
+  background-position: center;
+  background-color: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.12);
+}
+
+.groups-rail-item-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.groups-rail-item-name {
+  font-weight: 900;
+  color: var(--text-primary);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.groups-rail-item-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.groups-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 215, 0, 0.06);
+  color: var(--text-primary);
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.groups-dot {
+  opacity: 0.7;
 }
 
 .groups-primary {
@@ -153,6 +331,18 @@
   min-height: 100%;
 }
 
+.group-cover {
+  width: 100%;
+  height: 140px;
+  background: rgba(255, 215, 0, 0.06);
+}
+
+.groups-cover-fallback {
+  width: 100%;
+  height: 140px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.18), rgba(255, 255, 255, 0.03));
+}
+
 .group-cover img {
   width: 100%;
   height: 140px;
@@ -189,12 +379,11 @@
 }
 
 @media (max-width: 768px) {
-  .groups-header {
-    flex-direction: column;
-    align-items: flex-start;
+  .groups-layout {
+    grid-template-columns: 1fr;
   }
 
   .groups-primary {
-    width: 100%;
+    padding: 12px 14px;
   }
 }
