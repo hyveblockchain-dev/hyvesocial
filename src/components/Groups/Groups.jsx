@@ -208,82 +208,48 @@ export default function Groups() {
         </div>
       )}
 
-      <div className="groups-layout">
-        <aside className="groups-rail">
-          <div className="groups-rail-card">
-            <div className="groups-rail-top">
-              <div>
-                <h1 className="groups-title">Groups</h1>
-                <p className="groups-subtitle">Communities and people.</p>
-              </div>
-              <button className="groups-primary" onClick={() => setShowCreate(true)}>
-                Create
-              </button>
-            </div>
+      <header className="groups-header">
+        <div className="groups-header-top">
+          <div>
+            <h1 className="groups-title">Groups</h1>
+            <p className="groups-subtitle">Communities and people.</p>
+          </div>
+          <button className="groups-primary" onClick={() => setShowCreate(true)}>
+            + Create Group
+          </button>
+        </div>
 
-            <div className="groups-rail-tabs">
-              <button
-                type="button"
-                className={activeView === 'your' ? 'groups-tab active' : 'groups-tab'}
-                onClick={() => setActiveView('your')}
-              >
-                Your groups
-              </button>
-              <button
-                type="button"
-                className={activeView === 'discover' ? 'groups-tab active' : 'groups-tab'}
-                onClick={() => setActiveView('discover')}
-              >
-                Discover
-              </button>
-            </div>
-
-            <div className="groups-search">
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search groups"
-                aria-label="Search groups"
-              />
-            </div>
+        <div className="groups-header-controls">
+          <div className="groups-tabs">
+            <button
+              type="button"
+              className={activeView === 'your' ? 'groups-tab active' : 'groups-tab'}
+              onClick={() => setActiveView('your')}
+            >
+              Your groups
+            </button>
+            <button
+              type="button"
+              className={activeView === 'discover' ? 'groups-tab active' : 'groups-tab'}
+              onClick={() => setActiveView('discover')}
+            >
+              Discover
+            </button>
           </div>
 
-          <div className="groups-rail-card groups-rail-card-list">
-            {loading ? (
-              <div className="groups-muted">Loading…</div>
-            ) : railGroups.length === 0 ? (
-              <div className="groups-muted">{activeView === 'your' ? 'No groups yet.' : 'No groups found.'}</div>
-            ) : (
-              <div className="groups-rail-list">
-                {railGroups.slice(0, 8).map((group) => (
-                  <button
-                    key={group.id}
-                    type="button"
-                    className="groups-rail-item"
-                    onClick={() => navigate(`/groups/${group.id}`)}
-                  >
-                    <div
-                      className="groups-rail-avatar"
-                      style={coverFor(group) ? { backgroundImage: `url(${coverFor(group)})` } : undefined}
-                      aria-hidden="true"
-                    />
-                    <div className="groups-rail-item-meta">
-                      <div className="groups-rail-item-name">{group.name}</div>
-                      <div className="groups-rail-item-sub">
-                        <span className="groups-pill">{privacyLabelFor(group)}</span>
-                        <span className="groups-dot">•</span>
-                        <span>{memberCountFor(group)} members</span>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+          <div className="groups-search">
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search groups..."
+              aria-label="Search groups"
+            />
           </div>
-        </aside>
+        </div>
+      </header>
 
-        <main className="groups-main">
+      <main className="groups-main">
 
           {loading ? (
             <div className="groups-empty">Loading groups...</div>
@@ -343,7 +309,6 @@ export default function Groups() {
             </div>
           )}
         </main>
-      </div>
     </div>
   );
 
