@@ -648,7 +648,7 @@ export default function Profile() {
         education: currentForm.education,
         website: currentForm.website,
         hometown: currentForm.hometown,
-        relationship_status: currentForm.relationshipStatus,
+        relationshipStatus: currentForm.relationshipStatus,
         birthday: currentForm.birthday,
         gender: currentForm.gender,
         languages: currentForm.languages
@@ -662,6 +662,7 @@ export default function Profile() {
       console.log('saveAboutInfo - result.user:', result.user);
       console.log('saveAboutInfo - result.user.bio:', result.user?.bio);
       console.log('saveAboutInfo - result.user.location:', result.user?.location);
+      console.log('saveAboutInfo - result.user.relationshipStatus:', result.user?.relationshipStatus);
       
       // Always clear cache to ensure fresh data on reload
       setProfileCache((prev) => {
