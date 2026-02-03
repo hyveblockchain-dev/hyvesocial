@@ -30,7 +30,7 @@ export default function Profile() {
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [aboutSaving, setAboutSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
-  const [aboutForm, setAboutForm] = useState({
+  const [aboutForm, setAboutFormState] = useState({
     bio: '',
     location: '',
     work: '',
@@ -44,10 +44,19 @@ export default function Profile() {
   });
   const aboutFormRef = useRef(aboutForm);
   
-  // Keep ref in sync with state
-  useEffect(() => {
-    aboutFormRef.current = aboutForm;
-  }, [aboutForm]);
+  // Custom setter that updates both state and ref synchronously
+  const setAboutForm = (updater) => {
+    if (typeof updater === 'function') {
+      setAboutFormState(prev => {
+        const newValue = updater(prev);
+        aboutFormRef.current = newValue;
+        return newValue;
+      });
+    } else {
+      aboutFormRef.current = updater;
+      setAboutFormState(updater);
+    }
+  };
   
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
