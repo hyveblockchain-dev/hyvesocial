@@ -60,7 +60,7 @@ export default function Profile() {
 
   useEffect(() => {
     resolveProfileHandle();
-  }, [handle, user]);
+  }, [handle, user?.walletAddress]);
 
   useEffect(() => {
     if (!resolvedAddress) return;
@@ -71,7 +71,7 @@ export default function Profile() {
     if (!isOwnProfile && user) {
       checkFriendshipStatus(resolvedAddress);
     }
-  }, [resolvedAddress, user]);
+  }, [resolvedAddress]);
 
   useEffect(() => {
     if (!socket || !resolvedAddress) return;
@@ -94,12 +94,12 @@ export default function Profile() {
     if (!handle) return;
 
     if (handle === 'me' && user?.walletAddress) {
-      setResolvedAddress(user.walletAddress);
+      setResolvedAddress((prev) => (prev === user.walletAddress ? prev : user.walletAddress));
       return;
     }
 
     if (isWalletAddress(handle)) {
-      setResolvedAddress(handle);
+      setResolvedAddress((prev) => (prev === handle ? prev : handle));
       return;
     }
 
@@ -109,7 +109,7 @@ export default function Profile() {
       const users = data.users || data || [];
       const match = users.find((u) => u.username?.toLowerCase() === handle.toLowerCase());
       if (match?.wallet_address) {
-        setResolvedAddress(match.wallet_address);
+        setResolvedAddress((prev) => (prev === match.wallet_address ? prev : match.wallet_address));
       } else {
         setResolvedAddress(null);
         setProfile(null);
