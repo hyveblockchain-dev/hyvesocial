@@ -158,12 +158,15 @@ export async function createPost(content, imageFile = null, videoUrl = '') {
   let normalizedImageFile = imageFile;
   let normalizedVideoUrl = videoUrl;
   let preEncodedImage = null;
+  let normalizedAllowShare = undefined;
 
   if (typeof content === 'object' && content !== null) {
     normalizedContent = content.content || '';
     normalizedImageFile = content.imageFile || null;
     normalizedVideoUrl = content.videoUrl || content.video_url || '';
     preEncodedImage = content.imageUrl || content.image_url || null;
+    normalizedAllowShare =
+      content.allowShare ?? content.allow_share ?? content.shareable ?? content.is_shareable;
   }
 
   const postData = {
@@ -179,6 +182,11 @@ export async function createPost(content, imageFile = null, videoUrl = '') {
 
   if (normalizedVideoUrl) {
     postData.videoUrl = normalizedVideoUrl;
+  }
+
+  if (typeof normalizedAllowShare === 'boolean') {
+    postData.allowShare = normalizedAllowShare;
+    postData.allow_share = normalizedAllowShare;
   }
 
   const response = await fetch(`${API_URL}/api/posts`, {

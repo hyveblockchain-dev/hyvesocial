@@ -288,6 +288,7 @@ export default function Feed() {
               post={post}
               onDelete={handlePostDeleted}
               onUpdate={handlePostUpdated}
+              onShare={handlePostCreated}
             />
           ))
         )}

@@ -17,7 +17,7 @@ function getAvatar(imageUrl, username, className) {
   );
 }
 
-export default function Post({ post, onDelete, onUpdate }) {
+export default function Post({ post, onDelete, onUpdate, onShare }) {
   const { user } = useAuth();
   const initialReaction = Number.isFinite(Number(post.user_reaction))
     ? Number(post.user_reaction)
@@ -232,6 +232,45 @@ export default function Post({ post, onDelete, onUpdate }) {
     }
   }
 
+  const isShareable =
+    post.allow_share ??
+    post.allowShare ??
+    post.shareable ??
+    post.is_shareable ??
+    false;
+
+  async function handleShare() {
+    if (!isShareable) {
+      alert('Sharing is disabled for this post.');
+      return;
+    }
+
+    try {
+      const sharedContent = `Shared from @${post.username || 'user'}: ${post.content || ''}`.trim();
+      const data = await api.createPost({
+        content: sharedContent,
+        imageUrl: post.image_url || null,
+        videoUrl: post.video_url || '',
+        allowShare: false
+      });
+
+      if (onShare && data?.post) {
+        onShare({
+          ...data.post,
+          username: user?.username,
+          profile_image: user?.profileImage,
+          reaction_count: 0,
+          comment_count: 0,
+          image_url: data.post?.image_url || post.image_url || '',
+          video_url: data.post?.video_url || post.video_url || ''
+        });
+      }
+    } catch (error) {
+      console.error('Share post error:', error);
+      alert('Failed to share post');
+    }
+  }
+
   function renderReplies(parentId, depth) {
     return comments
       .filter((reply) => reply.parent_comment_id === parentId)
@@ -440,7 +479,12 @@ export default function Post({ post, onDelete, onUpdate }) {
         <button className="action-button" onClick={loadComments}>
           💬 Comment
         </button>
-        <button className="action-button">
+        <button
+          className="action-button"
+          onClick={handleShare}
+          disabled={!isShareable}
+          title={!isShareable ? 'Sharing disabled' : 'Share post'}
+        >
           📤 Share
         </button>
       </div>

@@ -14,6 +14,7 @@ export default function CreatePost({ onPostCreated }) {
   const [videoUrl, setVideoUrl] = useState('');
   const [showVideoInput, setShowVideoInput] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [allowShare, setAllowShare] = useState(true);
   const fileInputRef = useRef(null);
   const { user } = useAuth();
 
@@ -36,7 +37,12 @@ export default function CreatePost({ onPostCreated }) {
         uploadImage = await compressImage(imageFile, 2, 1920);
       }
 
-      const data = await api.createPost(content.trim(), uploadImage, videoUrl.trim());
+      const data = await api.createPost({
+        content: content.trim(),
+        imageFile: uploadImage,
+        videoUrl: videoUrl.trim(),
+        allowShare
+      });
 
       // Inject user data for immediate display
       const postWithUser = {
@@ -46,7 +52,8 @@ export default function CreatePost({ onPostCreated }) {
         reaction_count: 0,
         comment_count: 0,
         image_url: data.post?.image_url || imagePreview,
-        video_url: data.post?.video_url || data.post?.videoUrl || videoUrl.trim()
+        video_url: data.post?.video_url || data.post?.videoUrl || videoUrl.trim(),
+        allow_share: allowShare
       };
 
       // ✨ THIS IS THE MAGIC - NO PAGE REFRESH! ✨
@@ -59,6 +66,7 @@ export default function CreatePost({ onPostCreated }) {
       setVideoUrl('');
       setShowVideoInput(false);
       setShowEmojiPicker(false);
+      setAllowShare(true);
       
       // Show success (optional)
       console.log('Post created successfully!');
@@ -151,6 +159,15 @@ export default function CreatePost({ onPostCreated }) {
             >
               😊 Emoji
             </button>
+
+            <label className="option-toggle">
+              <input
+                type="checkbox"
+                checked={allowShare}
+                onChange={(e) => setAllowShare(e.target.checked)}
+              />
+              <span>Allow Sharing</span>
+            </label>
 
             {showEmojiPicker && (
               <div className="emoji-picker" role="menu">
