@@ -534,6 +534,30 @@ export async function getFriends() {
   return response.json();
 }
 
+export async function getPresence() {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/presence`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    return { presence: [] };
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    return { presence: [] };
+  }
+
+  try {
+    return response.json();
+  } catch (error) {
+    return { presence: [] };
+  }
+}
+
 export async function getFriendsByAddress(address) {
   if (!friendsByAddressSupported) {
     return { friends: [] };

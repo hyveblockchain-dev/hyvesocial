@@ -22,6 +22,8 @@ export default function Layout({ children }) {
   const [suggestedUsers, setSuggestedUsers] = useState([]);
   const [postCount, setPostCount] = useState(0);
   const [friendCount, setFriendCount] = useState(0);
+  const [friendsList, setFriendsList] = useState([]);
+  const [presenceMap, setPresenceMap] = useState({});
   const [onlineFriends, setOnlineFriends] = useState([]);
   const [isLightMode, setIsLightMode] = useState(() => localStorage.getItem('theme') === 'light');
   const [showMobileSearch, setShowMobileSearch] = useState(false);
@@ -70,12 +72,40 @@ export default function Layout({ children }) {
       loadNotifications();
     };
 
+    const handlePresenceUpdate = (payload) => {
+      const address = payload?.address?.toLowerCase?.() || payload?.address;
+      if (!address) return;
+
+      setPresenceMap((prev) => ({
+        ...prev,
+        [address]: {
+          address,
+          online: payload?.status === 'online',
+          lastSeen: payload?.lastSeen || prev?.[address]?.lastSeen || null
+        }
+      }));
+    };
+
     socket.on('friend_request', handleFriendRequest);
+    socket.on('presence:update', handlePresenceUpdate);
 
     return () => {
       socket.off('friend_request', handleFriendRequest);
+      socket.off('presence:update', handlePresenceUpdate);
     };
   }, [socket]);
+
+  useEffect(() => {
+    if (!friendsList.length) {
+      setOnlineFriends([]);
+      return;
+    }
+    const nextOnline = friendsList.filter((friend) => {
+      const address = getUserAddress(friend)?.toLowerCase?.() || getUserAddress(friend);
+      return address && presenceMap[address]?.online;
+    });
+    setOnlineFriends(nextOnline);
+  }, [friendsList, presenceMap]);
 
   useEffect(() => {
     document.body.classList.toggle('light-mode', isLightMode);
@@ -162,11 +192,31 @@ export default function Layout({ children }) {
   async function loadOnlineFriends() {
     if (!api.getFriends) return;
     try {
-      const data = await api.getFriends();
-      const friends = data.friends || data || [];
-      setOnlineFriends(friends);
+      const [friendsData, presenceData] = await Promise.all([
+        api.getFriends(),
+        api.getPresence ? api.getPresence() : Promise.resolve({ presence: [] })
+      ]);
+      const friends = friendsData.friends || friendsData || [];
+      const presenceList = presenceData?.presence || [];
+
+      const nextPresence = {};
+      presenceList.forEach((entry) => {
+        const address = entry?.address?.toLowerCase?.() || entry?.address;
+        if (address) {
+          nextPresence[address] = {
+            address,
+            online: !!entry?.online,
+            lastSeen: entry?.lastSeen || null
+          };
+        }
+      });
+
+      setFriendsList(friends);
+      setPresenceMap(nextPresence);
     } catch (error) {
       console.error('Load online friends error:', error);
+      setFriendsList([]);
+      setPresenceMap({});
       setOnlineFriends([]);
     }
   }

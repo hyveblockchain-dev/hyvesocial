@@ -16,9 +16,14 @@ export default function Friends() {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatPerson, setChatPerson] = useState(null);
   const [mutualCounts, setMutualCounts] = useState({});
+  const [presenceMap, setPresenceMap] = useState({});
 
   useEffect(() => {
     loadData();
+  }, []);
+
+  useEffect(() => {
+    loadPresence();
   }, []);
 
   useEffect(() => {
@@ -73,12 +78,28 @@ export default function Friends() {
       loadData();
     };
 
+    const handlePresenceUpdate = (payload) => {
+      const address = payload?.address?.toLowerCase?.() || payload?.address;
+      if (!address) return;
+
+      setPresenceMap((prev) => ({
+        ...prev,
+        [address]: {
+          address,
+          online: payload?.status === 'online',
+          lastSeen: payload?.lastSeen || prev?.[address]?.lastSeen || null
+        }
+      }));
+    };
+
     socket.on('friend_request', handleFriendRequest);
     socket.on('friend_request_accepted', handleFriendAccepted);
+    socket.on('presence:update', handlePresenceUpdate);
 
     return () => {
       socket.off('friend_request', handleFriendRequest);
       socket.off('friend_request_accepted', handleFriendAccepted);
+      socket.off('presence:update', handlePresenceUpdate);
     };
   }, [socket]);
 
@@ -88,6 +109,8 @@ export default function Friends() {
       
       const friendsData = await api.getFriends();
       setFriends(friendsData.friends || friendsData || []);
+
+      await loadPresence();
 
       const requestsData = await api.getFriendRequests();
       setFriendRequests(requestsData.requests || []);
@@ -105,6 +128,29 @@ export default function Friends() {
       console.error('Failed to load friends data:', error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadPresence() {
+    if (!api.getPresence) return;
+    try {
+      const data = await api.getPresence();
+      const presenceList = data?.presence || [];
+      const nextMap = {};
+      presenceList.forEach((entry) => {
+        const address = entry?.address?.toLowerCase?.() || entry?.address;
+        if (address) {
+          nextMap[address] = {
+            address,
+            online: !!entry?.online,
+            lastSeen: entry?.lastSeen || null
+          };
+        }
+      });
+      setPresenceMap(nextMap);
+    } catch (error) {
+      console.error('Failed to load presence:', error);
+      setPresenceMap({});
     }
   }
 
@@ -260,7 +306,9 @@ export default function Friends() {
                         </div>
                       )}
                     </div>
-                    <div className="online-indicator"></div>
+                    {(presenceMap[(person.wallet_address || person.walletAddress || person.address || '').toLowerCase?.() || (person.wallet_address || person.walletAddress || person.address)]?.online) && (
+                      <div className="online-indicator"></div>
+                    )}
                   </div>
 
                   <div className="friend-card-body">
@@ -369,7 +417,15 @@ export default function Friends() {
                 </div>
                 <div>
                   <h4>{chatPerson.username}</h4>
-                  <span className="chat-status">Active now</span>
+                  <span className="chat-status">
+                    {(() => {
+                      const address = (chatPerson.wallet_address || chatPerson.walletAddress || chatPerson.address || '').toLowerCase?.() || (chatPerson.wallet_address || chatPerson.walletAddress || chatPerson.address);
+                      const entry = address ? presenceMap[address] : null;
+                      if (entry?.online) return 'Active now';
+                      if (entry?.lastSeen) return 'Offline';
+                      return 'Offline';
+                    })()}
+                  </span>
                 </div>
               </div>
               <button className="chat-close" onClick={closeChat}>✕</button>
