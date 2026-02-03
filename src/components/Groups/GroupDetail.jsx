@@ -600,8 +600,6 @@ export default function GroupDetail() {
             )}
           </div>
         </div>
-
-        {groupDescription ? <p className="group-description">{groupDescription}</p> : null}
       </div>
 
       <div className="group-tabs" role="tablist" aria-label="Group sections">
