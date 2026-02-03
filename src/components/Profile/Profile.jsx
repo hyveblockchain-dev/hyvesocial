@@ -1074,9 +1074,15 @@ export default function Profile() {
                 {friends.map(friend => {
                   const username = friend.username || friend.name || friend.user?.username || 'User';
                   const image = friend.profileImage || friend.profile_image || friend.user?.profileImage;
+                  const friendKey =
+                    friend.id ||
+                    friend.wallet_address ||
+                    friend.walletAddress ||
+                    friend.address ||
+                    username;
 
                   return (
-                    <div key={friend.id || wallet || username} className="friend-card">
+                    <div key={friendKey} className="friend-card">
                       <div className="friend-avatar">
                         {image ? (
                           <img src={image} alt={username} />
