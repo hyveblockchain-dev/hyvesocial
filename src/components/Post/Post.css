@@ -8,6 +8,12 @@
   animation: fadeIn 0.3s ease-out;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.post-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
 }
 
 .post-header {
@@ -191,6 +197,10 @@
   font-weight: 500;
 }
 
+.action-button:active {
+  transform: scale(0.97);
+}
+
 .action-button:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
@@ -198,6 +208,7 @@
 
 .action-button.liked {
   color: var(--gold-primary);
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.45);
 }
 
 .comments-section {
