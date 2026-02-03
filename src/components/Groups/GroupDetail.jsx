@@ -12,6 +12,7 @@ export default function GroupDetail() {
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [viewAsMember, setViewAsMember] = useState(false);
   const [members, setMembers] = useState([]);
   const [requests, setRequests] = useState([]);
   const [notice, setNotice] = useState('');
@@ -44,6 +45,7 @@ export default function GroupDetail() {
   }, [members, myAddress]);
 
   const isAdmin = isOwner || myRole === 'admin' || myRole === 'owner';
+  const adminEnabled = isAdmin && !viewAsMember;
 
   const isMember = useMemo(() => {
     if (group?.is_member === true) return true;
@@ -59,18 +61,18 @@ export default function GroupDetail() {
   }, [group]);
 
   const effectivePostingPermission = (group?.posting_permission || group?.postingPermission || postingPermission || 'members').toLowerCase();
-  const canPost = effectivePostingPermission === 'admins' ? isAdmin : (isMember || isOwner);
+  const canPost = effectivePostingPermission === 'admins' ? adminEnabled : (isMember || isOwner);
 
   const effectiveRequireApproval = !!(group?.require_post_approval ?? group?.requirePostApproval ?? requirePostApproval);
   const effectiveAdminsBypass = !!(group?.admins_bypass_approval ?? group?.adminsBypassApproval ?? adminsBypassApproval);
 
   const pendingPosts = useMemo(() => {
-    if (!isAdmin) return [];
+    if (!adminEnabled) return [];
     return (posts || []).filter((p) => String(p.moderation_status || '').toLowerCase() === 'pending');
-  }, [posts, isAdmin]);
+  }, [posts, adminEnabled]);
 
   async function refreshModeration(nextGroupId = groupId) {
-    if (!isAdmin) return;
+    if (!adminEnabled) return;
     if (!api.getGroupModeration) return;
     setModerationError('');
     setModerationLoading(true);
@@ -118,7 +120,7 @@ export default function GroupDetail() {
   }
 
   async function refreshActivity(nextGroupId = groupId) {
-    if (!isAdmin) return;
+    if (!adminEnabled) return;
     if (!api.getGroupActivity) return;
     setActivityError('');
     setActivityLoading(true);
@@ -245,28 +247,28 @@ export default function GroupDetail() {
   }, [groupId, canViewPosts]);
 
   useEffect(() => {
-    if (!isAdmin) {
+    if (!adminEnabled) {
       setRequests([]);
       return;
     }
     refreshRequests(groupId);
-  }, [groupId, isAdmin]);
+  }, [groupId, adminEnabled]);
 
   useEffect(() => {
-    if (!isAdmin) {
+    if (!adminEnabled) {
       setModerationItems([]);
       return;
     }
     refreshModeration(groupId);
-  }, [groupId, isAdmin, moderationFilter]);
+  }, [groupId, adminEnabled, moderationFilter]);
 
   useEffect(() => {
-    if (!isAdmin) {
+    if (!adminEnabled) {
       setActivityItems([]);
       return;
     }
     refreshActivity(groupId);
-  }, [groupId, isAdmin, activityFilter]);
+  }, [groupId, adminEnabled, activityFilter]);
 
   async function handleJoin() {
     try {
@@ -285,7 +287,7 @@ export default function GroupDetail() {
       await refreshGroup(groupId);
       await refreshMembers(groupId);
       await refreshPosts(groupId);
-      if (isAdmin) await refreshRequests(groupId);
+      if (adminEnabled) await refreshRequests(groupId);
     } catch {
       setNotice('Failed to join group.');
     } finally {
@@ -311,7 +313,7 @@ export default function GroupDetail() {
       } else {
         await refreshPosts(groupId);
       }
-      if (isAdmin) await refreshRequests(groupId);
+      if (adminEnabled) await refreshRequests(groupId);
     } catch {
       setNotice('Failed to leave group.');
     } finally {
@@ -527,6 +529,18 @@ export default function GroupDetail() {
                 Join group
               </button>
             )}
+
+            {isAdmin && (
+              <label className="group-view-toggle">
+                <input
+                  type="checkbox"
+                  checked={viewAsMember}
+                  onChange={(e) => setViewAsMember(e.target.checked)}
+                  disabled={busy}
+                />
+                <span>View as member</span>
+              </label>
+            )}
           </div>
         </div>
       </div>
@@ -542,8 +556,8 @@ export default function GroupDetail() {
             {members.map((m) => {
               const addr = (m.member_address || '').toLowerCase();
               const isMe = addr && addr === myAddress;
-              const isMemberOwner = addr && addr === (group.owner_address || '').toLowerCase();
-              const canRemove = isAdmin && !isMemberOwner && !isMe;
+              const isMemberOwner = addr && addr === (group.owner_address || group.ownerAddress || '').toLowerCase();
+              const canRemove = adminEnabled && !isMemberOwner && !isMe;
               const canPromote = isOwner && !isMemberOwner;
               return (
                 <div key={m.member_address} className="group-member">
@@ -557,7 +571,7 @@ export default function GroupDetail() {
                     </div>
                   </div>
 
-                  {isAdmin && (
+                  {adminEnabled && (
                     <div className="group-member-actions">
                       {canPromote && m.role !== 'admin' && m.role !== 'owner' && (
                         <button className="group-btn tiny" onClick={() => handleRoleChange(m.member_address, 'admin')} disabled={busy}>
@@ -583,12 +597,18 @@ export default function GroupDetail() {
         )}
       </div>
 
-      {isAdmin && (
-        <div className="group-detail-section">
-          <h2>Admin</h2>
-          <div className="group-muted">
-            Owner can promote admins. Admins can approve requests and remove members.
-          </div>
+      {adminEnabled && (
+        <details className="group-admin-details">
+          <summary>
+            <span>Admin tools</span>
+            <span className="group-muted">(settings, approvals, logs)</span>
+          </summary>
+
+          <div className="group-detail-section">
+            <h2>Admin</h2>
+            <div className="group-muted">
+              Owner can promote admins. Admins can approve requests and remove members.
+            </div>
 
           <div className="group-admin-settings">
             <h3>Post permissions</h3>
@@ -798,7 +818,8 @@ export default function GroupDetail() {
               </div>
             )}
           </div>
-        </div>
+          </div>
+        </details>
       )}
 
       <div className="group-detail-content">
@@ -830,17 +851,17 @@ export default function GroupDetail() {
               const isPinned = pinnedPostId !== null && String(p.id) === String(pinnedPostId);
               const status = String(p.moderation_status || 'published').toLowerCase();
               const isMine = (p.author_address || '').toLowerCase() === myAddress;
-              const showStatus = (status !== 'published') && (isMine || isAdmin);
+              const showStatus = (status !== 'published') && (isMine || adminEnabled);
               return (
                 <div key={p.id} className={isPinned ? 'group-post pinned' : 'group-post'}>
-                  {(isPinned || isAdmin) && (
+                  {(isPinned || adminEnabled) && (
                     <div className="group-post-toolbar">
                       <div className="group-post-badges">
                         {isPinned && <span className="group-pin-badge">Pinned</span>}
                         {showStatus && status === 'pending' && <span className="group-status-badge pending">Pending</span>}
                         {showStatus && status === 'rejected' && <span className="group-status-badge rejected">Rejected</span>}
                       </div>
-                      {isAdmin && (
+                      {adminEnabled && (
                         isPinned ? (
                           <button className="group-btn tiny" onClick={handleUnpin} disabled={busy}>
                             Unpin
@@ -853,7 +874,7 @@ export default function GroupDetail() {
                       )}
                     </div>
                   )}
-                  {showStatus && !isAdmin && status === 'pending' && (
+                  {showStatus && !adminEnabled && status === 'pending' && (
                     <div className="group-muted">Your post is waiting for approval.</div>
                   )}
                   <Post post={p} onDelete={handlePostDeleted} />
