@@ -773,14 +773,51 @@ export async function getGroupById(groupId) {
 
 export async function updateGroup(groupId, payload) {
   const token = localStorage.getItem('token');
+  const updates = {};
+
+  if (payload instanceof FormData) {
+    for (let [key, value] of payload.entries()) {
+      if (value instanceof File) {
+        const base64 = await fileToBase64(value);
+        updates[key] = base64;
+      } else {
+        updates[key] = value;
+      }
+    }
+  } else if (payload && typeof payload === 'object') {
+    Object.assign(updates, payload);
+  }
+
+  if (updates.coverImage && !updates.cover_image) updates.cover_image = updates.coverImage;
+  if (updates.cover_image && !updates.coverImage) updates.coverImage = updates.cover_image;
+  if (updates.avatarImage && !updates.avatar_image) updates.avatar_image = updates.avatarImage;
+  if (updates.avatar_image && !updates.avatarImage) updates.avatarImage = updates.avatar_image;
+
   const response = await fetch(`${API_URL}/api/groups/${groupId}`, {
-    method: 'PATCH',
+    method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(payload || {})
+    body: JSON.stringify(updates || {})
   });
+
+  const contentType = response.headers.get('content-type') || '';
+  if (!response.ok) {
+    if (contentType.includes('application/json')) {
+      try {
+        return await response.json();
+      } catch {
+        return { error: 'Failed to update group' };
+      }
+    }
+    const text = await response.text();
+    return { error: text || 'Failed to update group' };
+  }
+
+  if (!contentType.includes('application/json')) {
+    return { success: true };
+  }
   return response.json();
 }
 

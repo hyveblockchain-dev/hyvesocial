@@ -4,6 +4,7 @@ import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import CreatePost from '../Feed/CreatePost';
 import Post from '../Post/Post';
+import { compressImage } from '../../utils/imageCompression';
 import './GroupDetail.css';
 
 export default function GroupDetail() {
@@ -428,23 +429,30 @@ export default function GroupDetail() {
     if (!file) return;
     // Reset input so same file can be selected again
     e.target.value = '';
+    if (file.size > 5 * 1024 * 1024) {
+      setNotice('Image too large. Max 5MB.');
+      return;
+    }
     try {
       setBusy(true);
       setNotice('Uploading cover photo...');
-      const base64 = await new Promise((resolve, reject) => {
+      const compressedFile = await compressImage(file, 2, 1920);
+      const previewBase64 = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
         reader.onerror = reject;
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(compressedFile);
       });
-      setCoverPreview(base64);
-      const data = await api.updateGroup(groupId, { coverImage: base64 });
+      setCoverPreview(previewBase64);
+      const formData = new FormData();
+      formData.append('coverImage', compressedFile);
+      const data = await api.updateGroup(groupId, formData);
       if (data?.error) {
         setNotice('Error: ' + data.error);
         setCoverPreview(null);
         return;
       }
-      setGroup(data?.group || { ...group, cover_image: base64 });
+      setGroup(data?.group || { ...group, cover_image: previewBase64 });
       setNotice('Cover photo updated successfully!');
     } catch (err) {
       console.error('Cover upload error:', err);
@@ -460,23 +468,30 @@ export default function GroupDetail() {
     if (!file) return;
     // Reset input so same file can be selected again
     e.target.value = '';
+    if (file.size > 5 * 1024 * 1024) {
+      setNotice('Image too large. Max 5MB.');
+      return;
+    }
     try {
       setBusy(true);
       setNotice('Uploading avatar...');
-      const base64 = await new Promise((resolve, reject) => {
+      const compressedFile = await compressImage(file, 2, 1024);
+      const previewBase64 = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
         reader.onerror = reject;
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(compressedFile);
       });
-      setAvatarPreview(base64);
-      const data = await api.updateGroup(groupId, { avatarImage: base64 });
+      setAvatarPreview(previewBase64);
+      const formData = new FormData();
+      formData.append('avatarImage', compressedFile);
+      const data = await api.updateGroup(groupId, formData);
       if (data?.error) {
         setNotice('Error: ' + data.error);
         setAvatarPreview(null);
         return;
       }
-      setGroup(data?.group || { ...group, avatar_image: base64 });
+      setGroup(data?.group || { ...group, avatar_image: previewBase64 });
       setNotice('Group avatar updated successfully!');
     } catch (err) {
       console.error('Avatar upload error:', err);
