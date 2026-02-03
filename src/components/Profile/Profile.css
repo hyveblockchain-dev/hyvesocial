@@ -1007,22 +1007,92 @@
 
 @media (max-width: 600px) {
   .cover-photo {
-    height: 220px;
+    height: 200px;
   }
 
   .profile-header {
-    padding: 16px;
+    padding: 12px;
+    gap: 16px;
   }
 
   .profile-avatar-large {
-    width: 120px;
-    height: 120px;
+    width: 96px;
+    height: 96px;
   }
 
   .profile-info h1 {
-    font-size: 24px;
+    font-size: 20px;
   }
 
+  .profile-bio {
+    font-size: 14px;
+  }
+
+  .profile-stats {
+    gap: 10px;
+    font-size: 12px;
+  }
+
+  .profile-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .btn-follow,
+  .btn-following,
+  .btn-add-friend,
+  .btn-pending,
+  .btn-remove-friend,
+  .btn-blocked,
+  .btn-accept,
+  .btn-decline,
+  .btn-block,
+  .btn-message {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .profile-tabs {
+    gap: 6px;
+  }
+
+  .tab {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+
+@media (max-width: 480px) {
+  .cover-photo {
+    height: 170px;
+  }
+
+  .profile-header {
+    padding: 10px;
+  }
+
+  .profile-avatar-large {
+    width: 84px;
+    height: 84px;
+  }
+
+  .profile-info h1 {
+    font-size: 18px;
+  }
+
+  .profile-wallet {
+    font-size: 12px;
+  }
+
+  .profile-bio {
+    font-size: 13px;
+  }
+
+  .profile-stats {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
   .profile-stats {
     flex-wrap: wrap;
   }
