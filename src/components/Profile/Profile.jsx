@@ -594,7 +594,8 @@ export default function Profile() {
   }
 
   function startEditAbout() {
-    setAboutForm({
+    console.log('startEditAbout called - profile:', profile);
+    const newForm = {
       bio: profile?.bio || '',
       location: profile?.location || '',
       work: profile?.work || '',
@@ -605,7 +606,9 @@ export default function Profile() {
       birthday: profile?.birthday || '',
       gender: profile?.gender || '',
       languages: profile?.languages || ''
-    });
+    };
+    console.log('startEditAbout - setting form to:', newForm);
+    setAboutForm(newForm);
     setIsEditingAbout(true);
   }
 
