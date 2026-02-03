@@ -986,7 +986,10 @@ export default function Profile() {
                   Bio
                   <textarea
                     value={aboutForm.bio}
-                    onChange={(e) => setAboutForm(prev => ({ ...prev, bio: e.target.value }))}
+                    onChange={(e) => {
+                      console.log('Bio changed to:', e.target.value);
+                      setAboutForm(prev => ({ ...prev, bio: e.target.value }));
+                    }}
                     rows={4}
                   />
                 </label>
@@ -995,7 +998,10 @@ export default function Profile() {
                   <input
                     type="text"
                     value={aboutForm.location}
-                    onChange={(e) => setAboutForm(prev => ({ ...prev, location: e.target.value }))}
+                    onChange={(e) => {
+                      console.log('Location changed to:', e.target.value);
+                      setAboutForm(prev => ({ ...prev, location: e.target.value }));
+                    }}
                   />
                 </label>
                 <label>
@@ -1035,7 +1041,10 @@ export default function Profile() {
                   <input
                     type="text"
                     value={aboutForm.relationshipStatus}
-                    onChange={(e) => setAboutForm(prev => ({ ...prev, relationshipStatus: e.target.value }))}
+                    onChange={(e) => {
+                      console.log('Relationship changed to:', e.target.value);
+                      setAboutForm(prev => ({ ...prev, relationshipStatus: e.target.value }));
+                    }}
                   />
                 </label>
                 <label>
