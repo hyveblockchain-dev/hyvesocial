@@ -140,11 +140,11 @@ export default function Layout({ children }) {
       const friendsData = api.getFriends ? await api.getFriends() : { friends: [] };
       const blockedData = api.getBlockedUsers ? await api.getBlockedUsers() : { blocked: [] };
       const friendList = friendsData.friends || friendsData || [];
-      const blockedList = blockedData.blocked || blockedData.users || blockedData || [];
+      const blockedList = blockedData.blocks || blockedData.blocked || blockedData.users || [];
       const friendAddressSet = new Set(friendList.map(getUserAddress).filter(Boolean));
       const friendHandleSet = new Set(friendList.map(getUserHandle).filter(Boolean));
-      const blockedAddressSet = new Set(blockedList.map(getUserAddress).filter(Boolean));
-      const blockedHandleSet = new Set(blockedList.map(getUserHandle).filter(Boolean));
+      const blockedAddressSet = new Set(Array.isArray(blockedList) ? blockedList.map(getUserAddress).filter(Boolean) : []);
+      const blockedHandleSet = new Set(Array.isArray(blockedList) ? blockedList.map(getUserHandle).filter(Boolean) : []);
       
       if (!data || !data.users) {
         return;
