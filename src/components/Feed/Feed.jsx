@@ -19,8 +19,24 @@ export default function Feed() {
   const [storyText, setStoryText] = useState('');
   const [storyPosting, setStoryPosting] = useState(false);
 
+  const FEED_CACHE_KEY = 'feed_posts_cache';
+  const FEED_CACHE_TS_KEY = 'feed_posts_cache_ts';
+
   useEffect(() => {
-    loadPosts();
+    const cached = sessionStorage.getItem(FEED_CACHE_KEY);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setPosts(parsed);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Failed to parse feed cache:', error);
+      }
+    }
+
+    loadPosts({ silent: true });
     loadFriends();
     loadStories();
   }, []);
@@ -116,29 +132,47 @@ export default function Feed() {
     }
   }
 
-  async function loadPosts() {
+  async function loadPosts({ silent = false } = {}) {
     try {
-      setLoading(true);
-      const data = await api.getPosts();
-      setPosts(data.posts || []);
+      if (!silent) setLoading(true);
+      const data = await api.getPosts({ limit: 50, offset: 0 });
+      const loadedPosts = data.posts || [];
+      setPosts(loadedPosts);
+      sessionStorage.setItem(FEED_CACHE_KEY, JSON.stringify(loadedPosts));
+      sessionStorage.setItem(FEED_CACHE_TS_KEY, Date.now().toString());
     } catch (error) {
       console.error('Load posts error:', error);
-      setPosts([]);
+      if (!silent) setPosts([]);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
   function handlePostCreated(newPost) {
-    setPosts([newPost, ...posts]);
+    setPosts((prev) => {
+      const updated = [newPost, ...prev];
+      sessionStorage.setItem(FEED_CACHE_KEY, JSON.stringify(updated));
+      sessionStorage.setItem(FEED_CACHE_TS_KEY, Date.now().toString());
+      return updated;
+    });
   }
 
   function handlePostDeleted(postId) {
-    setPosts(posts.filter(p => p.id !== postId));
+    setPosts((prev) => {
+      const updated = prev.filter((p) => p.id !== postId);
+      sessionStorage.setItem(FEED_CACHE_KEY, JSON.stringify(updated));
+      sessionStorage.setItem(FEED_CACHE_TS_KEY, Date.now().toString());
+      return updated;
+    });
   }
 
   function handlePostUpdated(updatedPost) {
-    setPosts(posts.map(p => p.id === updatedPost.id ? updatedPost : p));
+    setPosts((prev) => {
+      const updated = prev.map((p) => (p.id === updatedPost.id ? updatedPost : p));
+      sessionStorage.setItem(FEED_CACHE_KEY, JSON.stringify(updated));
+      sessionStorage.setItem(FEED_CACHE_TS_KEY, Date.now().toString());
+      return updated;
+    });
   }
 
   if (loading) {

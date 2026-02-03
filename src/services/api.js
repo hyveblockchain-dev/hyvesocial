@@ -136,9 +136,14 @@ export async function updateProfile(data) {
 // POST FUNCTIONS
 // ========================================
 
-export async function getPosts() {
+export async function getPosts(options = {}) {
+  const { limit, offset } = options || {};
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/posts`, {
+  const params = new URLSearchParams();
+  if (limit !== undefined && limit !== null) params.set('limit', String(limit));
+  if (offset !== undefined && offset !== null) params.set('offset', String(offset));
+  const url = params.toString() ? `${API_URL}/api/posts?${params}` : `${API_URL}/api/posts`;
+  const response = await fetch(url, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
