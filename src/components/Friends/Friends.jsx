@@ -15,10 +15,52 @@ export default function Friends() {
   const [loading, setLoading] = useState(true);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatPerson, setChatPerson] = useState(null);
+  const [mutualCounts, setMutualCounts] = useState({});
 
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (!friends.length || !api.getFriendsByAddress) return;
+    const myFriendAddresses = new Set(
+      friends
+        .map((f) => f.wallet_address || f.walletAddress || f.address)
+        .filter(Boolean)
+    );
+
+    let cancelled = false;
+
+    async function loadMutuals() {
+      const nextCounts = {};
+      for (const friend of friends) {
+        const address = friend.wallet_address || friend.walletAddress || friend.address;
+        if (!address) continue;
+        try {
+          const data = await api.getFriendsByAddress(address);
+          const friendList = data.friends || data || [];
+          const count = friendList.reduce((total, item) => {
+            const itemAddress = item.wallet_address || item.walletAddress || item.address;
+            if (itemAddress && myFriendAddresses.has(itemAddress)) {
+              return total + 1;
+            }
+            return total;
+          }, 0);
+          nextCounts[address] = count;
+        } catch (error) {
+          console.error('Failed to load mutual friends:', error);
+        }
+      }
+      if (!cancelled) {
+        setMutualCounts(nextCounts);
+      }
+    }
+
+    loadMutuals();
+    return () => {
+      cancelled = true;
+    };
+  }, [friends]);
 
   useEffect(() => {
     if (!socket) return;
@@ -227,7 +269,9 @@ export default function Friends() {
                     </h3>
                     {person.bio && <p className="friend-bio">{person.bio}</p>}
                     {activeTab === 'all' && (
-                      <p className="friend-mutual">12 mutual friends</p>
+                      <p className="friend-mutual">
+                        {(mutualCounts[person.wallet_address || person.walletAddress || person.address] || 0)} mutual friends
+                      </p>
                     )}
                   </div>
                 </div>
