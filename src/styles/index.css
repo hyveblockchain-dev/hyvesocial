@@ -62,6 +62,33 @@ body.light-mode {
   --border-color: #d0d7e2;
 }
 
+body.light-mode .bg-animation {
+  opacity: 1;
+}
+
+body.light-mode .orb {
+  opacity: 0.45;
+}
+
+body.light-mode .orb-1 {
+  background: radial-gradient(circle, rgba(24, 119, 242, 0.45) 0%, transparent 70%);
+}
+
+body.light-mode .orb-2 {
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.45) 0%, transparent 70%);
+}
+
+body.light-mode .orb-3 {
+  background: radial-gradient(circle, rgba(255, 168, 0, 0.35) 0%, transparent 70%);
+}
+
+body.light-mode .grid-overlay {
+  opacity: 0.35;
+  background-image:
+    linear-gradient(rgba(24, 119, 242, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(24, 119, 242, 0.08) 1px, transparent 1px);
+}
+
 /* === ANIMATED BACKGROUND === */
 .bg-animation {
   position: fixed;
