@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import CreatePost from '../Feed/CreatePost';
@@ -8,6 +8,7 @@ import './GroupDetail.css';
 
 export default function GroupDetail() {
   const { groupId } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -523,7 +524,31 @@ export default function GroupDetail() {
   const privacy = String(group.privacy || 'public').toLowerCase();
   const isLocked = privacy === 'private' && !isMember && !isOwner;
   const postingLabel = effectivePostingPermission === 'admins' ? 'Admins can post' : 'Members can post';
-  const memberPreview = members.slice(0, 6);
+  const createdAtRaw = group.created_at || group.createdAt;
+  const createdAt = createdAtRaw ? new Date(createdAtRaw).toLocaleDateString() : null;
+  const ownerAddressRaw = group.owner_address || group.ownerAddress || '';
+  const ownerAddress = ownerAddressRaw ? ownerAddressRaw.toLowerCase() : '';
+  const ownerRow = ownerAddress
+    ? members.find((m) => String(m.member_address || '').toLowerCase() === ownerAddress)
+    : null;
+
+  function avatarForMember(m) {
+    return (
+      m?.profile_image ||
+      m?.profileImage ||
+      m?.avatar_url ||
+      m?.avatarUrl ||
+      m?.profile_photo ||
+      m?.profilePhoto ||
+      m?.photo_url ||
+      m?.photoUrl ||
+      ''
+    );
+  }
+
+  function profileHandleForMember(m) {
+    return m?.username || m?.handle || m?.member_address || '';
+  }
 
   return (
     <div className="group-page">
@@ -625,9 +650,7 @@ export default function GroupDetail() {
       {activeTab === 'about' && (
         <div className="group-panel">
           <h2>About</h2>
-          <div className="group-muted">
-            {groupDescription || 'No description yet.'}
-          </div>
+          <div className="group-muted">{groupDescription || 'No description yet.'}</div>
           <div className="group-about-grid">
             <div className="group-about-item">
               <div className="group-about-k">Privacy</div>
@@ -638,12 +661,28 @@ export default function GroupDetail() {
               <div className="group-about-v">{memberCount}</div>
             </div>
             <div className="group-about-item">
+              <div className="group-about-k">Owner</div>
+              <div className="group-about-v">{ownerRow?.username || ownerAddressRaw || '—'}</div>
+            </div>
+            <div className="group-about-item">
+              <div className="group-about-k">Created</div>
+              <div className="group-about-v">{createdAt || '—'}</div>
+            </div>
+            <div className="group-about-item">
               <div className="group-about-k">Posting</div>
               <div className="group-about-v">{postingLabel}</div>
             </div>
             <div className="group-about-item">
               <div className="group-about-k">Post approval</div>
               <div className="group-about-v">{effectiveRequireApproval ? 'On' : 'Off'}</div>
+            </div>
+            <div className="group-about-item">
+              <div className="group-about-k">Admins bypass approval</div>
+              <div className="group-about-v">{effectiveAdminsBypass ? 'On' : 'Off'}</div>
+            </div>
+            <div className="group-about-item">
+              <div className="group-about-k">Pinned post</div>
+              <div className="group-about-v">{pinnedPostId !== null ? `#${pinnedPostId}` : 'None'}</div>
             </div>
           </div>
         </div>
@@ -666,12 +705,25 @@ export default function GroupDetail() {
                 const isMemberOwner = addr && addr === (group.owner_address || group.ownerAddress || '').toLowerCase();
                 const canRemove = adminEnabled && !isMemberOwner && !isMe;
                 const canPromote = isOwner && !isMemberOwner;
+                const handle = profileHandleForMember(m);
+                const avatarUrl = avatarForMember(m);
 
                 return (
                   <div key={m.member_address} className="group-member">
-                    <div className="group-member-main">
+                    <button
+                      type="button"
+                      className="group-member-main"
+                      onClick={() => {
+                        if (!handle) return;
+                        navigate(`/profile/${encodeURIComponent(handle)}`);
+                      }}
+                    >
                       <div className="group-member-avatar" aria-hidden="true">
-                        {(m.username || m.member_address || '?').slice(0, 1).toUpperCase()}
+                        {avatarUrl ? (
+                          <img className="group-member-avatar-img" src={avatarUrl} alt="" loading="lazy" />
+                        ) : (
+                          (m.username || m.member_address || '?').slice(0, 1).toUpperCase()
+                        )}
                       </div>
                       <div>
                         <div className="group-member-name">
@@ -682,7 +734,7 @@ export default function GroupDetail() {
                           <span className="badge">{m.role}</span>
                         </div>
                       </div>
-                    </div>
+                    </button>
 
                     {adminEnabled && (
                       <div className="group-member-actions">
@@ -886,107 +938,73 @@ export default function GroupDetail() {
       )}
 
       {activeTab === 'discussion' && (
-        <div className="group-body">
-          <aside className="group-side">
-            <div className="group-panel">
-              <h2>About</h2>
-              <div className="group-muted">{groupDescription || 'No description yet.'}</div>
-              <div className="group-side-meta">
-                <div className="group-side-row"><span className="group-pill">{privacy}</span><span>{memberCount} members</span></div>
-                <div className="group-side-row"><span className="group-muted">Posting</span><span>{postingLabel}</span></div>
-                {effectiveRequireApproval && (
-                  <div className="group-side-row"><span className="group-muted">Approval</span><span>Required</span></div>
-                )}
-              </div>
-            </div>
-
-            <div className="group-panel">
+        <div className="group-panel">
+          {isLocked ? (
+            <>
+              <h2>This is a private group</h2>
+              <div className="group-muted">Request to join to see posts and discussions.</div>
+            </>
+          ) : (
+            <>
               <div className="group-panel-header">
-                <h2>Members</h2>
-                <button type="button" className="group-link" onClick={() => setActiveTab('members')}>See all</button>
+                <h2>Discussion</h2>
+                {pinnedPostId !== null ? <span className="group-muted">Pinned post is highlighted</span> : null}
               </div>
-              {memberPreview.length === 0 ? (
-                <div className="group-muted">No members to show.</div>
+
+              {canPost ? (
+                <CreatePost groupId={groupId} contextLabel={groupName} onPostCreated={handlePostCreated} />
               ) : (
-                <div className="group-member-preview">
-                  {memberPreview.map((m) => (
-                    <div key={m.member_address} className="group-member-chip">
-                      <div className="group-member-chip-avatar" aria-hidden="true">{(m.username || m.member_address || '?').slice(0, 1).toUpperCase()}</div>
-                      <div className="group-member-chip-name">{m.username || m.member_address}</div>
-                    </div>
-                  ))}
+                <div className="group-muted">
+                  {effectivePostingPermission === 'admins' ? 'Only admins can post in this group.' : 'Join this group to post.'}
                 </div>
               )}
-            </div>
-          </aside>
 
-          <main className="group-main">
-            {isLocked ? (
-              <div className="group-panel">
-                <h2>This is a private group</h2>
-                <div className="group-muted">Request to join to see posts and discussions.</div>
-              </div>
-            ) : (
-              <>
-                <div className="group-panel">
-                  <div className="group-panel-header">
-                    <h2>Discussion</h2>
-                    {pinnedPostId !== null ? <span className="group-muted">Pinned post is highlighted</span> : null}
-                  </div>
+              {postsLoading ? (
+                <div className="group-muted" style={{ marginTop: 12 }}>Loading posts…</div>
+              ) : postsError ? (
+                <div className="group-muted" style={{ marginTop: 12 }}>{postsError}</div>
+              ) : posts.length === 0 ? (
+                <div className="group-muted" style={{ marginTop: 12 }}>No posts yet.</div>
+              ) : (
+                <div className="group-posts" style={{ marginTop: 12 }}>
+                  {posts.map((p) => {
+                    const isPinned = pinnedPostId !== null && String(p.id) === String(pinnedPostId);
+                    const status = String(p.moderation_status || 'published').toLowerCase();
+                    const isMine = (p.author_address || '').toLowerCase() === myAddress;
+                    const showStatus = status !== 'published' && (isMine || adminEnabled);
 
-                  {canPost ? (
-                    <CreatePost groupId={groupId} contextLabel={groupName} onPostCreated={handlePostCreated} />
-                  ) : (
-                    <div className="group-muted">
-                      {effectivePostingPermission === 'admins' ? 'Only admins can post in this group.' : 'Join this group to post.'}
-                    </div>
-                  )}
-                </div>
-
-                {postsLoading ? (
-                  <div className="group-panel"><div className="group-muted">Loading posts…</div></div>
-                ) : postsError ? (
-                  <div className="group-panel"><div className="group-muted">{postsError}</div></div>
-                ) : posts.length === 0 ? (
-                  <div className="group-panel"><div className="group-muted">No posts yet.</div></div>
-                ) : (
-                  <div className="group-posts">
-                    {posts.map((p) => {
-                      const isPinned = pinnedPostId !== null && String(p.id) === String(pinnedPostId);
-                      const status = String(p.moderation_status || 'published').toLowerCase();
-                      const isMine = (p.author_address || '').toLowerCase() === myAddress;
-                      const showStatus = (status !== 'published') && (isMine || adminEnabled);
-
-                      return (
-                        <div key={p.id} className={isPinned ? 'group-post pinned' : 'group-post'}>
-                          {(isPinned || adminEnabled) && (
-                            <div className="group-post-toolbar">
-                              <div className="group-post-badges">
-                                {isPinned && <span className="group-pin-badge">Pinned</span>}
-                                {showStatus && status === 'pending' && <span className="group-status-badge pending">Pending</span>}
-                                {showStatus && status === 'rejected' && <span className="group-status-badge rejected">Rejected</span>}
-                              </div>
-                              {adminEnabled && (
-                                isPinned ? (
-                                  <button className="group-btn tiny" onClick={handleUnpin} disabled={busy}>Unpin</button>
-                                ) : (
-                                  <button className="group-btn tiny" onClick={() => handlePin(p.id)} disabled={busy}>Pin</button>
-                                )
-                              )}
+                    return (
+                      <div key={p.id} className={isPinned ? 'group-post pinned' : 'group-post'}>
+                        {(isPinned || adminEnabled) && (
+                          <div className="group-post-toolbar">
+                            <div className="group-post-badges">
+                              {isPinned && <span className="group-pin-badge">Pinned</span>}
+                              {showStatus && status === 'pending' && <span className="group-status-badge pending">Pending</span>}
+                              {showStatus && status === 'rejected' && <span className="group-status-badge rejected">Rejected</span>}
                             </div>
-                          )}
-                          {showStatus && !adminEnabled && status === 'pending' && (
-                            <div className="group-muted">Your post is waiting for approval.</div>
-                          )}
-                          <Post post={p} onDelete={handlePostDeleted} />
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </>
-            )}
-          </main>
+                            {adminEnabled &&
+                              (isPinned ? (
+                                <button className="group-btn tiny" onClick={handleUnpin} disabled={busy}>
+                                  Unpin
+                                </button>
+                              ) : (
+                                <button className="group-btn tiny" onClick={() => handlePin(p.id)} disabled={busy}>
+                                  Pin
+                                </button>
+                              ))}
+                          </div>
+                        )}
+                        {showStatus && !adminEnabled && status === 'pending' && (
+                          <div className="group-muted">Your post is waiting for approval.</div>
+                        )}
+                        <Post post={p} onDelete={handlePostDeleted} />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
     </div>
