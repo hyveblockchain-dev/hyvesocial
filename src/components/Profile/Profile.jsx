@@ -71,7 +71,7 @@ export default function Profile() {
     if (!isOwnProfile && user) {
       checkFriendshipStatus(resolvedAddress);
     }
-  }, [resolvedAddress]);
+  }, [resolvedAddress, handle]);
 
   useEffect(() => {
     if (!socket || !resolvedAddress) return;
