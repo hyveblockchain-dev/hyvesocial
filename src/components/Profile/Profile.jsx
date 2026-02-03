@@ -512,6 +512,11 @@ export default function Profile() {
     const file = e.target.files[0];
     if (!file) return;
 
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image too large. Max 5MB.');
+      return;
+    }
+
     try {
       setUploading(true);
       
@@ -545,6 +550,11 @@ export default function Profile() {
   async function handleUpdateCoverPhoto(e) {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image too large. Max 5MB.');
+      return;
+    }
 
     try {
       setUploading(true);

@@ -42,6 +42,8 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
   const [commentReactionCounts, setCommentReactionCounts] = useState({});
   const [showReactionMenu, setShowReactionMenu] = useState(false);
 
+  const MAX_COMMENT_IMAGE_MB = 5;
+
   const isOwner = user?.walletAddress === post.author_address;
 
   function formatDate(dateString) {
@@ -376,6 +378,10 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
+                        if (file.size > MAX_COMMENT_IMAGE_MB * 1024 * 1024) {
+                          alert(`Image too large. Max ${MAX_COMMENT_IMAGE_MB}MB.`);
+                          return;
+                        }
                         setReplyImage((prev) => ({ ...prev, [comment.id]: file }));
                         setReplyPreview((prev) => ({
                           ...prev,
@@ -543,6 +549,10 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
+                      if (file.size > MAX_COMMENT_IMAGE_MB * 1024 * 1024) {
+                        alert(`Image too large. Max ${MAX_COMMENT_IMAGE_MB}MB.`);
+                        return;
+                      }
                       setCommentImage(file);
                       setCommentPreview(URL.createObjectURL(file));
                     }}

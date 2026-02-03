@@ -21,6 +21,8 @@ export default function Feed() {
   const [showStoryViewer, setShowStoryViewer] = useState(false);
   const [activeStory, setActiveStory] = useState(null);
 
+  const MAX_STORY_IMAGE_MB = 5;
+
   const FEED_CACHE_KEY = 'feed_posts_cache';
   const FEED_CACHE_TS_KEY = 'feed_posts_cache_ts';
 
@@ -305,6 +307,10 @@ export default function Feed() {
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
+                if (file.size > MAX_STORY_IMAGE_MB * 1024 * 1024) {
+                  alert(`Image too large. Max ${MAX_STORY_IMAGE_MB}MB.`);
+                  return;
+                }
                 setStoryFile(file);
                 setStoryPreview(URL.createObjectURL(file));
               }}

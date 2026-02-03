@@ -21,6 +21,9 @@ export default function CreatePost({ onPostCreated }) {
   const videoInputRef = useRef(null);
   const { user } = useAuth();
 
+  const MAX_IMAGE_MB = 5;
+  const MAX_VIDEO_MB = 25;
+
   const emojiOptions = ['😀','😄','😁','😅','😂','😍','🥳','😎','😮','😢','😡','👍','❤️'];
 
   async function handleSubmit(e) {
@@ -240,6 +243,10 @@ export default function CreatePost({ onPostCreated }) {
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (!file) return;
+            if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+              setError(`Image too large. Max ${MAX_IMAGE_MB}MB.`);
+              return;
+            }
             setImageFile(file);
             setImagePreview(URL.createObjectURL(file));
           }}
@@ -252,6 +259,10 @@ export default function CreatePost({ onPostCreated }) {
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (!file) return;
+            if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
+              setError(`Video too large. Max ${MAX_VIDEO_MB}MB.`);
+              return;
+            }
             setVideoFile(file);
             setVideoPreview(URL.createObjectURL(file));
             setVideoUrl('');
