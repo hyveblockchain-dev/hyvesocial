@@ -483,6 +483,46 @@ small {
     min-height: 300px;
     font-size: 18px;
   }
+
+  .card,
+  .post-card,
+  .profile-card,
+  .widget {
+    padding: 16px;
+    border-radius: 10px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.65rem 1.1rem;
+    font-size: 0.95rem;
+    border-radius: 8px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="url"],
+  input[type="password"],
+  input[type="search"],
+  textarea {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.95rem;
+  }
+
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="url"],
+  input[type="password"],
+  input[type="search"],
+  textarea {
+    font-size: 16px;
+  }
 }
 
 /* Focus Visible (Accessibility) */

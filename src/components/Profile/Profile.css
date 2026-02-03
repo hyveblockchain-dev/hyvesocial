@@ -1006,9 +1006,21 @@
 }
 
 @media (max-width: 600px) {
+  .cover-photo {
+    height: 220px;
+  }
+
+  .profile-header {
+    padding: 16px;
+  }
+
   .profile-avatar-large {
     width: 120px;
     height: 120px;
+  }
+
+  .profile-info h1 {
+    font-size: 24px;
   }
 
   .profile-stats {

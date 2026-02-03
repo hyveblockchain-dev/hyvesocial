@@ -408,3 +408,91 @@
 .comment.reply {
   margin-left: 24px;
 }
+
+@media (max-width: 768px) {
+  .post-card {
+    padding: 16px;
+  }
+
+  .author-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .author-name {
+    font-size: 15px;
+  }
+
+  .post-content {
+    font-size: 14px;
+  }
+
+  .post-image img {
+    max-height: 360px;
+  }
+
+  .post-actions {
+    flex-wrap: wrap;
+  }
+
+  .action-button {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .reaction-item {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+  }
+
+  .comment-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+
+  .comment-author {
+    font-size: 13px;
+  }
+
+  .comment-content p {
+    font-size: 13px;
+  }
+
+  .comment-media img {
+    max-width: 100%;
+  }
+
+  .add-comment input {
+    padding: 8px 12px;
+  }
+
+  .add-comment .comment-actions button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .reply-box {
+    padding-left: 8px;
+  }
+
+  .comment.reply {
+    margin-left: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .post-header {
+    gap: 8px;
+  }
+
+  .post-stats {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .post-actions .action-button {
+    flex: 1 1 45%;
+  }
+}

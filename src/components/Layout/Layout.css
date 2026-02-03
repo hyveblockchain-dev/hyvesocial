@@ -513,6 +513,10 @@ body.light-mode .stat-num {
     padding: 0 12px;
   }
 
+  .page-footer {
+    display: none;
+  }
+
   .search-box {
     display: none;
   }
@@ -561,7 +565,7 @@ body.light-mode .stat-num {
   }
 
   .page-body {
-    padding-bottom: 80px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
 
   .mobile-nav {
@@ -576,6 +580,7 @@ body.light-mode .stat-num {
     justify-content: space-around;
     align-items: center;
     z-index: 120;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .mobile-nav-item {
@@ -594,6 +599,59 @@ body.light-mode .stat-num {
   .mobile-nav-item.active {
     background: var(--gold-primary);
     color: #000;
+  }
+}
+
+@media (max-width: 600px) {
+  .page-header {
+    height: 56px;
+  }
+
+  .page-body {
+    padding-top: 56px;
+  }
+
+  .logo-text {
+    font-size: 18px;
+  }
+
+  .light-toggle-btn,
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  .mobile-search {
+    top: 56px;
+    padding: 8px 10px;
+  }
+
+  .mobile-nav {
+    height: calc(56px + env(safe-area-inset-bottom));
+  }
+
+  .mobile-nav-item {
+    width: 40px;
+    height: 40px;
+  }
+
+  .center-column {
+    padding: 12px;
+  }
+
+  .chat-list-popup,
+  .chat-window-popup {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(92vw, 360px);
+    height: 70vh;
+    bottom: 80px;
   }
 }
 

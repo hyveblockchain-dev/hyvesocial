@@ -311,6 +311,30 @@
   }
 }
 
+@media (max-width: 600px) {
+  .friends-page {
+    padding: 16px 12px;
+    gap: 14px;
+  }
+
+  .friends-header h1 {
+    font-size: 22px;
+  }
+
+  .friends-tabs {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .friends-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .friend-card {
+    max-width: 100%;
+  }
+}
+
 /* Chat Modal */
 .chat-modal-overlay {
   position: fixed;
