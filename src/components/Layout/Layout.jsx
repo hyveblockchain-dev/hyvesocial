@@ -365,29 +365,60 @@ export default function Layout({ children }) {
                   <div className="notification-empty">No new notifications</div>
                 ) : (
                   <div className="notification-items">
-                    {notificationItems.slice(0, 3).map((request) => (
-                      <Link
-                        key={request.id}
-                        to="/notifications"
-                        className="notification-item"
-                        onClick={() => {
-                          markNotificationRead(`request-${request.id}`);
-                          setNotificationItems((prev) => prev.filter((item) => item.id !== request.id));
-                          setShowNotificationsMenu(false);
-                        }}
-                      >
-                        {request.profile_image ? (
-                          <img src={request.profile_image} alt={request.username} />
-                        ) : (
-                          <div className="notification-avatar">
-                            {request.username?.charAt(0).toUpperCase() || '?'}
+                    {notificationItems.slice(0, 5).map((request) => (
+                      <div key={request.id} className="notification-item">
+                        <Link
+                          to={profilePathFor(request)}
+                          className="notification-item-user"
+                          onClick={() => setShowNotificationsMenu(false)}
+                        >
+                          {request.profile_image ? (
+                            <img src={request.profile_image} alt={request.username} />
+                          ) : (
+                            <div className="notification-avatar">
+                              {request.username?.charAt(0).toUpperCase() || '?'}
+                            </div>
+                          )}
+                          <div className="notification-text">
+                            <strong>{request.username}</strong>
+                            <span> sent you a friend request</span>
                           </div>
-                        )}
-                        <div>
-                          <strong>{request.username}</strong>
-                          <span> sent you a friend request</span>
+                        </Link>
+                        <div className="notification-item-actions">
+                          <button
+                            className="btn-accept-small"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              try {
+                                await api.acceptFriendRequest(request.id);
+                                markNotificationRead(`request-${request.id}`);
+                                setNotificationItems((prev) => prev.filter((item) => item.id !== request.id));
+                              } catch (err) {
+                                console.error('Accept friend request error:', err);
+                              }
+                            }}
+                            title="Accept"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            className="btn-decline-small"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              try {
+                                await api.declineFriendRequest(request.id);
+                                markNotificationRead(`request-${request.id}`);
+                                setNotificationItems((prev) => prev.filter((item) => item.id !== request.id));
+                              } catch (err) {
+                                console.error('Decline friend request error:', err);
+                              }
+                            }}
+                            title="Decline"
+                          >
+                            ✕
+                          </button>
                         </div>
-                      </Link>
+                      </div>
                     ))}
                   </div>
                 )}
