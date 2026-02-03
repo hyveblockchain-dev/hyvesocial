@@ -1,5 +1,5 @@
 // src/App.jsx
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
 import { useAuth } from './hooks/useAuth';
 import Layout from './components/Layout/Layout';
@@ -28,7 +28,7 @@ function PrivateRoute({ children }) {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <MemoryRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route
@@ -92,7 +92,7 @@ function App() {
             }
           />
         </Routes>
-      </BrowserRouter>
+      </MemoryRouter>
     </AuthProvider>
   );
 }
