@@ -317,7 +317,10 @@ export default function Layout({ children }) {
         <div className="header-actions">
           <button
             className="icon-btn mobile-search-btn"
-            onClick={() => setShowMobileSearch((prev) => !prev)}
+            onClick={() => {
+              setShowMobileSearch((prev) => !prev);
+              setShowNotificationsMenu(false); // Close notifications when opening search
+            }}
             aria-label="Search"
             title="Search"
           >
@@ -334,7 +337,10 @@ export default function Layout({ children }) {
           <div className="notification-menu">
             <button
               className="icon-btn"
-              onClick={() => setShowNotificationsMenu((prev) => !prev)}
+              onClick={() => {
+                setShowNotificationsMenu((prev) => !prev);
+                setShowMobileSearch(false); // Close search when opening notifications
+              }}
               aria-label="Notifications"
               title="Notifications"
             >
