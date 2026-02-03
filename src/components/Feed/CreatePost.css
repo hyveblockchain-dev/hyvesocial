@@ -85,6 +85,13 @@
   max-height: 320px;
   object-fit: cover;
 }
+.media-preview video {
+  width: 100%;
+  border-radius: 12px;
+  max-height: 320px;
+  object-fit: cover;
+  background: #000;
+}
 .remove-media {
   position: absolute;
   top: 8px;

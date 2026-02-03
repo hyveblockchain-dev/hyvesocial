@@ -13,20 +13,23 @@ export default function ChatWindow({ conversation, onClose }) {
   const conversationAddress = conversation?.address || conversation?.wallet_address || conversation?.walletAddress;
 
   useEffect(() => {
-    if (conversationAddress) {
-      loadMessages();
-      
-      // Listen for new messages
-      if (socket) {
-        socket.on('new_message', handleNewMessage);
-      }
-
-      return () => {
-        if (socket) {
-          socket.off('new_message', handleNewMessage);
-        }
-      };
+    if (!conversationAddress) {
+      setLoading(false);
+      return;
     }
+
+    loadMessages();
+
+    // Listen for new messages
+    if (socket) {
+      socket.on('new_message', handleNewMessage);
+    }
+
+    return () => {
+      if (socket) {
+        socket.off('new_message', handleNewMessage);
+      }
+    };
   }, [conversationAddress, socket]);
 
   useEffect(() => {

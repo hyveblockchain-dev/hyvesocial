@@ -18,6 +18,8 @@ export default function Feed() {
   const [storyPreview, setStoryPreview] = useState('');
   const [storyText, setStoryText] = useState('');
   const [storyPosting, setStoryPosting] = useState(false);
+  const [showStoryViewer, setShowStoryViewer] = useState(false);
+  const [activeStory, setActiveStory] = useState(null);
 
   const FEED_CACHE_KEY = 'feed_posts_cache';
   const FEED_CACHE_TS_KEY = 'feed_posts_cache_ts';
@@ -41,6 +43,15 @@ export default function Feed() {
     loadPosts({ silent: hasCache });
     loadFriends();
     loadStories();
+  }, []);
+
+  useEffect(() => {
+    function handleOpenStoryCreator() {
+      setShowStoryModal(true);
+    }
+
+    window.addEventListener('open-story-creator', handleOpenStoryCreator);
+    return () => window.removeEventListener('open-story-creator', handleOpenStoryCreator);
   }, []);
 
   async function loadFriends() {
@@ -128,10 +139,19 @@ export default function Feed() {
     try {
       await api.deleteStory(storyId);
       setStories((prev) => prev.filter((story) => story.id !== storyId));
+      if (activeStory?.id === storyId) {
+        setActiveStory(null);
+        setShowStoryViewer(false);
+      }
     } catch (error) {
       console.error('Delete story error:', error);
       alert('Failed to delete story');
     }
+  }
+
+  function openStoryViewer(story) {
+    setActiveStory(story);
+    setShowStoryViewer(true);
   }
 
   async function loadPosts({ silent = false } = {}) {
@@ -225,6 +245,12 @@ export default function Feed() {
               key={story.id || `story-${index}`}
               className="story-card"
               style={imageUrl ? { backgroundImage: `url(${imageUrl})` } : { background: fallbackColor }}
+              role="button"
+              tabIndex={0}
+              onClick={() => openStoryViewer(story)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') openStoryViewer(story);
+              }}
             >
               <div className="story-initials">
                 {ownerAvatar ? (
@@ -239,7 +265,15 @@ export default function Feed() {
               )}
               {isOwner && (
                 <div className="story-actions">
-                  <button type="button" onClick={() => handleDeleteStory(story.id)}>Delete</button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteStory(story.id);
+                    }}
+                  >
+                    Delete
+                  </button>
                 </div>
               )}
             </div>
@@ -273,6 +307,63 @@ export default function Feed() {
                 {storyPosting ? 'Posting...' : 'Post Story'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {showStoryViewer && activeStory && (
+        <div className="story-viewer" onClick={() => setShowStoryViewer(false)}>
+          <div className="story-viewer-content" onClick={(e) => e.stopPropagation()}>
+            <div className="story-viewer-header">
+              <div className="story-viewer-user">
+                {activeStory.profile_image || activeStory.user?.profile_image ? (
+                  <img
+                    src={activeStory.profile_image || activeStory.user?.profile_image}
+                    alt={activeStory.username || activeStory.user?.username || 'User'}
+                  />
+                ) : (
+                  <div className="story-viewer-avatar">
+                    {(activeStory.username || activeStory.user?.username || 'U').charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span>{activeStory.username || activeStory.user?.username || 'User'}</span>
+              </div>
+              <button className="story-viewer-close" onClick={() => setShowStoryViewer(false)}>
+                ✕
+              </button>
+            </div>
+            <div className="story-viewer-media">
+              <img
+                src={
+                  activeStory.media_url ||
+                  activeStory.mediaUrl ||
+                  activeStory.image_url ||
+                  activeStory.imageUrl ||
+                  ''
+                }
+                alt="Story"
+              />
+            </div>
+            {(activeStory.text || activeStory.caption) && (
+              <div className="story-viewer-text">{activeStory.text || activeStory.caption}</div>
+            )}
+            {(() => {
+              const ownerAddress =
+                activeStory.user?.walletAddress ||
+                activeStory.user?.wallet_address ||
+                activeStory.owner_address ||
+                activeStory.wallet_address ||
+                activeStory.address;
+              const isOwner = ownerAddress
+                ? ownerAddress === user?.walletAddress
+                : (activeStory.user?.username || activeStory.username) === user?.username;
+              return isOwner ? (
+                <div className="story-viewer-actions">
+                  <button type="button" onClick={() => handleDeleteStory(activeStory.id)}>
+                    Delete Story
+                  </button>
+                </div>
+              ) : null;
+            })()}
           </div>
         </div>
       )}

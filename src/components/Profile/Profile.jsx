@@ -177,8 +177,23 @@ export default function Profile() {
   async function checkFriendshipStatus(address) {
     try {
       const data = await api.getFriendshipStatus(address);
-      setFriendshipStatus(data.status || 'none');
+      let nextStatus = data.status || 'none';
       setRequestId(data.requestId || null);
+
+      if (api.getBlockedUsers) {
+        const blockedData = await api.getBlockedUsers();
+        const blockedList = blockedData.blocked || blockedData.users || blockedData || [];
+        const blockedAddresses = new Set(
+          blockedList
+            .map((item) => item.wallet_address || item.walletAddress || item.address)
+            .filter(Boolean)
+        );
+        if (blockedAddresses.has(address)) {
+          nextStatus = 'blocked';
+        }
+      }
+
+      setFriendshipStatus(nextStatus);
     } catch (error) {
       console.error('Check friendship error:', error);
     }
@@ -260,6 +275,22 @@ export default function Profile() {
     }
   }
 
+  async function handleUnblockUser() {
+    if (!resolvedAddress) return;
+    try {
+      setActionLoading(true);
+      if (api.unblockUser) {
+        await api.unblockUser(resolvedAddress);
+      }
+      setFriendshipStatus('none');
+    } catch (error) {
+      console.error('Unblock user error:', error);
+      alert('Failed to unblock user');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   function handleMessageUser(targetUser) {
     const conversation = targetUser ? {
       address: targetUser.walletAddress || targetUser.wallet_address || targetUser.address,
@@ -270,6 +301,11 @@ export default function Profile() {
       username: profile?.username || 'User',
       profileImage: profile?.profileImage || profile?.profile_image || ''
     };
+
+    if (!conversation.address) {
+      alert('Missing wallet address for this user.');
+      return;
+    }
 
     window.dispatchEvent(new CustomEvent('open-chat', { detail: conversation }));
   }
@@ -662,9 +698,18 @@ export default function Profile() {
             )}
 
             {friendshipStatus === 'blocked' && (
-              <button className="btn-blocked" disabled>
-                🚫 Blocked
-              </button>
+              <>
+                <button className="btn-blocked" disabled>
+                  🚫 Blocked
+                </button>
+                <button
+                  className="btn-secondary"
+                  onClick={handleUnblockUser}
+                  disabled={actionLoading}
+                >
+                  ✅ Unblock
+                </button>
+              </>
             )}
 
             {friendshipStatus !== 'blocked' && (
@@ -697,8 +742,20 @@ export default function Profile() {
             >
               ✏️ Edit Profile
             </button>
-            <button className="btn-secondary">➕ Add to Story</button>
-            <button className="btn-secondary">⋯ More</button>
+            <button
+              className="btn-secondary"
+              onClick={() => {
+                navigate('/');
+                setTimeout(() => {
+                  window.dispatchEvent(new CustomEvent('open-story-creator'));
+                }, 150);
+              }}
+            >
+              ➕ Add to Story
+            </button>
+            <button className="btn-secondary" onClick={() => setActiveTab('more')}>
+              ⋯ More
+            </button>
           </div>
         )}
       </div>
@@ -737,9 +794,13 @@ export default function Profile() {
             More
           </button>
         </div>
-        <div className="tab-actions">
-          <button className="btn-secondary">⚙️ Settings</button>
-        </div>
+        {isOwnProfile && (
+          <div className="tab-actions">
+            <button className="btn-secondary" onClick={() => setActiveTab('more')}>
+              ⚙️ Settings
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -751,7 +812,15 @@ export default function Profile() {
                 <div className="profile-card-header">
                   <h3>Intro</h3>
                   {isOwnProfile && (
-                    <button className="btn-link" onClick={startEditAbout}>Edit</button>
+                    <button
+                      className="btn-link"
+                      onClick={() => {
+                        setActiveTab('about');
+                        startEditAbout();
+                      }}
+                    >
+                      Edit
+                    </button>
                   )}
                 </div>
                 {profile.bio ? (

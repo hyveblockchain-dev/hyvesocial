@@ -129,6 +129,17 @@ export async function updateProfile(data) {
     },
     body: JSON.stringify(updates),
   });
+
+  const contentType = response.headers.get('content-type') || '';
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || 'Failed to update profile');
+  }
+
+  if (!contentType.includes('application/json')) {
+    return { success: true };
+  }
+
   return response.json();
 }
 
@@ -157,6 +168,7 @@ export async function createPost(content, imageFile = null, videoUrl = '') {
   let normalizedContent = content;
   let normalizedImageFile = imageFile;
   let normalizedVideoUrl = videoUrl;
+  let normalizedVideoFile = null;
   let preEncodedImage = null;
   let normalizedAllowShare = undefined;
 
@@ -164,6 +176,7 @@ export async function createPost(content, imageFile = null, videoUrl = '') {
     normalizedContent = content.content || '';
     normalizedImageFile = content.imageFile || null;
     normalizedVideoUrl = content.videoUrl || content.video_url || '';
+    normalizedVideoFile = content.videoFile || null;
     preEncodedImage = content.imageUrl || content.image_url || null;
     normalizedAllowShare =
       content.allowShare ?? content.allow_share ?? content.shareable ?? content.is_shareable;
@@ -182,6 +195,9 @@ export async function createPost(content, imageFile = null, videoUrl = '') {
 
   if (normalizedVideoUrl) {
     postData.videoUrl = normalizedVideoUrl;
+  } else if (normalizedVideoFile) {
+    const base64Video = await fileToBase64(normalizedVideoFile);
+    postData.videoUrl = base64Video;
   }
 
   if (typeof normalizedAllowShare === 'boolean') {
@@ -272,6 +288,9 @@ export async function addComment(postId, content, options = {}) {
     mediaUrl = await fileToBase64(imageFile);
   }
 
+  const normalizedContent = typeof content === 'string' ? content.trim() : '';
+  const contentToSend = normalizedContent || (mediaUrl ? ' ' : '');
+
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_URL}/api/posts/${postId}/comments`, {
     method: 'POST',
@@ -280,7 +299,7 @@ export async function addComment(postId, content, options = {}) {
       'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify({
-      content,
+      content: contentToSend,
       parentCommentId,
       mediaUrl
     }),
@@ -565,6 +584,17 @@ export async function blockUser(address) {
   return response.json();
 }
 
+export async function unblockUser(address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/block/${address}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
 export async function getBlockedUsers() {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_URL}/api/blocked`, {
@@ -766,6 +796,7 @@ export default {
   getFriendsByAddress,
   removeFriend,
   blockUser,
+  unblockUser,
   getBlockedUsers,
   
   // Albums

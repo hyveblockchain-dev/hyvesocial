@@ -199,10 +199,10 @@ export default function Layout({ children }) {
     <div className="page-container">
       {/* Header */}
       <header className="page-header">
-        <div className="logo">
+        <Link to="/" className="logo" aria-label="Go to home">
           <span className="logo-icon">⚡</span>
           <span className="logo-text">Hyve Social</span>
-        </div>
+        </Link>
 
         <div className="search-box">
           <input 
@@ -241,6 +241,14 @@ export default function Layout({ children }) {
         </div>
 
         <div className="header-actions">
+          <button
+            className="icon-btn"
+            onClick={() => navigate(-1)}
+            aria-label="Go back"
+            title="Back"
+          >
+            ←
+          </button>
           <button
             className="icon-btn mobile-search-btn"
             onClick={() => setShowMobileSearch((prev) => !prev)}

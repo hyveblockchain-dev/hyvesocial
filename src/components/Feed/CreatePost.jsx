@@ -11,11 +11,14 @@ export default function CreatePost({ onPostCreated }) {
   const [error, setError] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [videoFile, setVideoFile] = useState(null);
+  const [videoPreview, setVideoPreview] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [showVideoInput, setShowVideoInput] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [allowShare, setAllowShare] = useState(true);
   const fileInputRef = useRef(null);
+  const videoInputRef = useRef(null);
   const { user } = useAuth();
 
   const emojiOptions = ['😀','😄','😁','😅','😂','😍','🥳','😎','😮','😢','😡','👍','❤️'];
@@ -23,7 +26,7 @@ export default function CreatePost({ onPostCreated }) {
   async function handleSubmit(e) {
     e.preventDefault();
     
-    if (!content.trim() && !imageFile && !videoUrl.trim()) {
+    if (!content.trim() && !imageFile && !videoUrl.trim() && !videoFile) {
       setError('Please write something!');
       return;
     }
@@ -41,6 +44,7 @@ export default function CreatePost({ onPostCreated }) {
         content: content.trim(),
         imageFile: uploadImage,
         videoUrl: videoUrl.trim(),
+        videoFile,
         allowShare
       });
 
@@ -52,7 +56,7 @@ export default function CreatePost({ onPostCreated }) {
         reaction_count: 0,
         comment_count: 0,
         image_url: data.post?.image_url || imagePreview,
-        video_url: data.post?.video_url || data.post?.videoUrl || videoUrl.trim(),
+        video_url: data.post?.video_url || data.post?.videoUrl || videoUrl.trim() || videoPreview,
         allow_share: allowShare
       };
 
@@ -63,6 +67,8 @@ export default function CreatePost({ onPostCreated }) {
       setContent('');
       setImageFile(null);
       setImagePreview('');
+      setVideoFile(null);
+      setVideoPreview('');
       setVideoUrl('');
       setShowVideoInput(false);
       setShowEmojiPicker(false);
@@ -117,6 +123,22 @@ export default function CreatePost({ onPostCreated }) {
           </div>
         )}
 
+        {videoPreview && (
+          <div className="media-preview">
+            <video src={videoPreview} controls />
+            <button
+              type="button"
+              className="remove-media"
+              onClick={() => {
+                setVideoFile(null);
+                setVideoPreview('');
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {showVideoInput && (
           <div className="video-input">
             <input
@@ -128,8 +150,17 @@ export default function CreatePost({ onPostCreated }) {
             <button
               type="button"
               className="btn-secondary"
+              onClick={() => videoInputRef.current?.click()}
+            >
+              Upload Video
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
               onClick={() => {
                 setVideoUrl('');
+                setVideoFile(null);
+                setVideoPreview('');
                 setShowVideoInput(false);
               }}
             >
@@ -195,7 +226,7 @@ export default function CreatePost({ onPostCreated }) {
           <button 
             type="submit" 
             className="post-button"
-            disabled={posting || !content.trim()}
+            disabled={posting || (!content.trim() && !imageFile && !videoUrl.trim() && !videoFile)}
           >
             {posting ? 'Posting...' : 'Post'}
           </button>
@@ -211,6 +242,19 @@ export default function CreatePost({ onPostCreated }) {
             if (!file) return;
             setImageFile(file);
             setImagePreview(URL.createObjectURL(file));
+          }}
+        />
+        <input
+          ref={videoInputRef}
+          type="file"
+          accept="video/*"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            setVideoFile(file);
+            setVideoPreview(URL.createObjectURL(file));
+            setVideoUrl('');
           }}
         />
       </form>
