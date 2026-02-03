@@ -633,14 +633,31 @@ export default function Profile() {
         languages: aboutForm.languages
       });
 
+      // If API returns updated user, use it; otherwise reload from server
       if (result.user) {
         setProfile(result.user);
         setUser(result.user);
+      } else {
+        // Reload profile from server to get updated data
+        const data = await api.getUserProfile(resolvedAddress);
+        if (data.user) {
+          setProfile(data.user);
+          setUser(data.user);
+          // Clear cache so next load gets fresh data
+          setProfileCache((prev) => {
+            const copy = { ...prev };
+            delete copy[resolvedAddress];
+            return copy;
+          });
+        }
       }
       setIsEditingAbout(false);
+      setProfileMessage('Profile updated successfully!');
+      setTimeout(() => setProfileMessage(''), 3000);
     } catch (error) {
       console.error('Update about info error:', error);
-      alert('Failed to update profile info');
+      setProfileMessage('Failed to update profile info');
+      setTimeout(() => setProfileMessage(''), 3000);
     } finally {
       setAboutSaving(false);
     }

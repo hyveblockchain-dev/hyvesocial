@@ -121,6 +121,8 @@ export async function updateProfile(data) {
     Object.assign(updates, data);
   }
   
+  console.log('updateProfile - sending data:', updates);
+  
   const response = await fetch(`${API_URL}/api/profile`, {
     method: 'PUT',
     headers: {
@@ -133,14 +135,18 @@ export async function updateProfile(data) {
   const contentType = response.headers.get('content-type') || '';
   if (!response.ok) {
     const text = await response.text();
+    console.error('updateProfile - error response:', text);
     throw new Error(text || 'Failed to update profile');
   }
 
   if (!contentType.includes('application/json')) {
+    console.log('updateProfile - non-JSON response, returning success');
     return { success: true };
   }
 
-  return response.json();
+  const result = await response.json();
+  console.log('updateProfile - response:', result);
+  return result;
 }
 
 // ========================================
@@ -964,24 +970,25 @@ export async function unblockUser(address) {
 
 export async function getBlockedUsers() {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/blocked`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    return { blocked: [] };
-  }
-
-  const contentType = response.headers.get('content-type') || '';
-  if (!contentType.includes('application/json')) {
-    return { blocked: [] };
-  }
-
   try {
+    const response = await fetch(`${API_URL}/api/blocked`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      return { blocked: [] };
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      return { blocked: [] };
+    }
+
     return response.json();
   } catch (error) {
+    // Silently return empty if endpoint doesn't exist
     return { blocked: [] };
   }
 }
