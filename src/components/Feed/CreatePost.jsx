@@ -82,7 +82,11 @@ export default function CreatePost({ onPostCreated }) {
     <div className="create-post-box">
       <div className="create-post-header">
         <div className="user-avatar">
-          {user?.username?.charAt(0).toUpperCase() || '?'}
+          {user?.profileImage ? (
+            <img src={user.profileImage} alt={user.username || 'User'} />
+          ) : (
+            user?.username?.charAt(0).toUpperCase() || '?'
+          )}
         </div>
         <h3>What's on your mind, {user?.username}?</h3>
       </div>
