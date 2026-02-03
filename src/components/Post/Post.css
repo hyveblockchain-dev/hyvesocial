@@ -168,19 +168,11 @@
   height: 10px;
 }
 
-.reaction-wrapper:hover .reaction-menu,
 .reaction-wrapper.open .reaction-menu,
 .reaction-menu:hover,
 .reaction-menu:focus-within {
   opacity: 1;
   transform: translateY(-6px);
-}
-
-@media (hover: none) {
-  .reaction-wrapper:hover .reaction-menu {
-    opacity: 0;
-    transform: translateY(8px);
-  }
 }
 
 .reaction-item {
