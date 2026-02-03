@@ -120,8 +120,19 @@ export default function Groups() {
     }
   }
 
-  const memberGroups = useMemo(() => groups.filter((g) => g.is_member), [groups]);
-  const discoverGroups = useMemo(() => groups.filter((g) => !g.is_member), [groups]);
+  function isMemberFor(group) {
+    const raw = group?.is_member ?? group?.isMember ?? group?.member
+      ?? group?.member_status ?? group?.memberStatus;
+    if (typeof raw === 'string') {
+      const normalized = raw.toLowerCase();
+      return normalized === 't' || normalized === 'true' || normalized === '1' || normalized === 'yes';
+    }
+    if (typeof raw === 'number') return raw === 1;
+    return !!raw;
+  }
+
+  const memberGroups = useMemo(() => groups.filter((g) => isMemberFor(g)), [groups]);
+  const discoverGroups = useMemo(() => groups.filter((g) => !isMemberFor(g)), [groups]);
 
   const filteredMemberGroups = useMemo(() => {
     const q = search.trim().toLowerCase();
