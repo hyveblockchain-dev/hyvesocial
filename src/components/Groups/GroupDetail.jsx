@@ -13,6 +13,7 @@ export default function GroupDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [viewAsMember, setViewAsMember] = useState(false);
+  const [activeTab, setActiveTab] = useState('discussion');
   const [members, setMembers] = useState([]);
   const [requests, setRequests] = useState([]);
   const [notice, setNotice] = useState('');
@@ -222,6 +223,8 @@ export default function GroupDetail() {
       setError('');
       setNotice('');
       try {
+        setActiveTab('discussion');
+        setViewAsMember(false);
         const loadedGroup = await refreshGroup(groupId);
         await refreshMembers(groupId);
         if (loadedGroup) {
@@ -235,6 +238,12 @@ export default function GroupDetail() {
     }
     fetchGroup();
   }, [groupId]);
+
+  useEffect(() => {
+    if (!adminEnabled && activeTab === 'admin') {
+      setActiveTab('discussion');
+    }
+  }, [adminEnabled, activeTab]);
 
   useEffect(() => {
     if (!groupId) return;
@@ -503,30 +512,53 @@ export default function GroupDetail() {
     }
   }
 
-  if (loading) return <div className="group-detail-page">Loading...</div>;
-  if (error) return <div className="group-detail-page error">{error}</div>;
-  if (!group) return <div className="group-detail-page">Group not found.</div>;
+  if (loading) return <div className="group-page">Loading...</div>;
+  if (error) return <div className="group-page error">{error}</div>;
+  if (!group) return <div className="group-page">Group not found.</div>;
+
+  const coverUrl = group.cover_image || group.coverImage;
+  const groupName = group.name || 'Group';
+  const groupDescription = group.description || '';
+  const memberCount = group.member_count || members.length || 1;
+  const privacy = String(group.privacy || 'public').toLowerCase();
+  const isLocked = privacy === 'private' && !isMember && !isOwner;
+  const postingLabel = effectivePostingPermission === 'admins' ? 'Admins can post' : 'Members can post';
+  const memberPreview = members.slice(0, 6);
 
   return (
-    <div className="group-detail-page">
-      <div className="group-detail-header">
-        <img className="group-detail-cover" src={group.cover_image || group.coverImage} alt={group.name} />
-        <div className="group-detail-info">
-          <h1>{group.name}</h1>
-          <p>{group.description}</p>
-          <div className="group-detail-meta">
-            <span>{group.member_count || 1} members</span>
-            <span>{group.privacy}</span>
+    <div className="group-page">
+      <div className="group-hero">
+        <div
+          className="group-hero-cover"
+          style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}
+          role="img"
+          aria-label={`${groupName} cover`}
+        />
+        <div className="group-hero-bar">
+          <div className="group-hero-left">
+            <div className="group-avatar" aria-hidden="true">
+              {(groupName || '?').slice(0, 1).toUpperCase()}
+            </div>
+            <div className="group-hero-meta">
+              <h1 className="group-title">{groupName}</h1>
+              <div className="group-subtitle">
+                <span className="group-pill">{privacy}</span>
+                <span className="group-dot">•</span>
+                <span>{memberCount} members</span>
+                <span className="group-dot">•</span>
+                <span>{postingLabel}</span>
+              </div>
+            </div>
           </div>
 
-          <div className="group-detail-actions">
-            {group.is_member ? (
+          <div className="group-hero-actions">
+            {isMember ? (
               <button className="group-btn secondary" onClick={handleLeave} disabled={busy || isOwner}>
                 {isOwner ? 'Owner' : 'Leave group'}
               </button>
             ) : (
               <button className="group-btn primary" onClick={handleJoin} disabled={busy}>
-                Join group
+                {privacy === 'private' ? 'Request to join' : 'Join group'}
               </button>
             )}
 
@@ -543,82 +575,152 @@ export default function GroupDetail() {
             )}
           </div>
         </div>
+
+        {groupDescription ? <p className="group-description">{groupDescription}</p> : null}
       </div>
 
-      {notice && <div className="group-notice">{notice}</div>}
-
-      <div className="group-detail-section">
-        <h2>Members</h2>
-        {members.length === 0 ? (
-          <div className="group-muted">No members to show.</div>
-        ) : (
-          <div className="group-members">
-            {members.map((m) => {
-              const addr = (m.member_address || '').toLowerCase();
-              const isMe = addr && addr === myAddress;
-              const isMemberOwner = addr && addr === (group.owner_address || group.ownerAddress || '').toLowerCase();
-              const canRemove = adminEnabled && !isMemberOwner && !isMe;
-              const canPromote = isOwner && !isMemberOwner;
-              return (
-                <div key={m.member_address} className="group-member">
-                  <div className="group-member-main">
-                    <div className="group-member-name">
-                      {m.username || m.member_address}
-                      {isMe ? ' (you)' : ''}
-                    </div>
-                    <div className="group-member-meta">
-                      <span className="badge">{m.role}</span>
-                    </div>
-                  </div>
-
-                  {adminEnabled && (
-                    <div className="group-member-actions">
-                      {canPromote && m.role !== 'admin' && m.role !== 'owner' && (
-                        <button className="group-btn tiny" onClick={() => handleRoleChange(m.member_address, 'admin')} disabled={busy}>
-                          Make admin
-                        </button>
-                      )}
-                      {canPromote && m.role === 'admin' && (
-                        <button className="group-btn tiny" onClick={() => handleRoleChange(m.member_address, 'member')} disabled={busy}>
-                          Remove admin
-                        </button>
-                      )}
-                      {canRemove && (
-                        <button className="group-btn tiny danger" onClick={() => handleRemove(m.member_address)} disabled={busy}>
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+      <div className="group-tabs" role="tablist" aria-label="Group sections">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'discussion'}
+          className={activeTab === 'discussion' ? 'group-tab active' : 'group-tab'}
+          onClick={() => setActiveTab('discussion')}
+        >
+          Discussion
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'about'}
+          className={activeTab === 'about' ? 'group-tab active' : 'group-tab'}
+          onClick={() => setActiveTab('about')}
+        >
+          About
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'members'}
+          className={activeTab === 'members' ? 'group-tab active' : 'group-tab'}
+          onClick={() => setActiveTab('members')}
+        >
+          Members
+        </button>
+        {adminEnabled && (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'admin'}
+            className={activeTab === 'admin' ? 'group-tab active' : 'group-tab'}
+            onClick={() => setActiveTab('admin')}
+          >
+            Admin
+          </button>
         )}
       </div>
 
-      {adminEnabled && (
-        <details className="group-admin-details">
-          <summary>
-            <span>Admin tools</span>
-            <span className="group-muted">(settings, approvals, logs)</span>
-          </summary>
+      {notice ? <div className="group-notice">{notice}</div> : null}
 
-          <div className="group-detail-section">
-            <h2>Admin</h2>
-            <div className="group-muted">
-              Owner can promote admins. Admins can approve requests and remove members.
+      {activeTab === 'about' && (
+        <div className="group-panel">
+          <h2>About</h2>
+          <div className="group-muted">
+            {groupDescription || 'No description yet.'}
+          </div>
+          <div className="group-about-grid">
+            <div className="group-about-item">
+              <div className="group-about-k">Privacy</div>
+              <div className="group-about-v">{privacy}</div>
             </div>
+            <div className="group-about-item">
+              <div className="group-about-k">Members</div>
+              <div className="group-about-v">{memberCount}</div>
+            </div>
+            <div className="group-about-item">
+              <div className="group-about-k">Posting</div>
+              <div className="group-about-v">{postingLabel}</div>
+            </div>
+            <div className="group-about-item">
+              <div className="group-about-k">Post approval</div>
+              <div className="group-about-v">{effectiveRequireApproval ? 'On' : 'Off'}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'members' && (
+        <div className="group-panel">
+          <div className="group-panel-header">
+            <h2>Members</h2>
+            <div className="group-muted">{memberCount} total</div>
+          </div>
+
+          {members.length === 0 ? (
+            <div className="group-muted">No members to show.</div>
+          ) : (
+            <div className="group-members">
+              {members.map((m) => {
+                const addr = (m.member_address || '').toLowerCase();
+                const isMe = addr && addr === myAddress;
+                const isMemberOwner = addr && addr === (group.owner_address || group.ownerAddress || '').toLowerCase();
+                const canRemove = adminEnabled && !isMemberOwner && !isMe;
+                const canPromote = isOwner && !isMemberOwner;
+
+                return (
+                  <div key={m.member_address} className="group-member">
+                    <div className="group-member-main">
+                      <div className="group-member-avatar" aria-hidden="true">
+                        {(m.username || m.member_address || '?').slice(0, 1).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="group-member-name">
+                          {m.username || m.member_address}
+                          {isMe ? ' (you)' : ''}
+                        </div>
+                        <div className="group-member-meta">
+                          <span className="badge">{m.role}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {adminEnabled && (
+                      <div className="group-member-actions">
+                        {canPromote && m.role !== 'admin' && m.role !== 'owner' && (
+                          <button className="group-btn tiny" onClick={() => handleRoleChange(m.member_address, 'admin')} disabled={busy}>
+                            Make admin
+                          </button>
+                        )}
+                        {canPromote && m.role === 'admin' && (
+                          <button className="group-btn tiny" onClick={() => handleRoleChange(m.member_address, 'member')} disabled={busy}>
+                            Remove admin
+                          </button>
+                        )}
+                        {canRemove && (
+                          <button className="group-btn tiny danger" onClick={() => handleRemove(m.member_address)} disabled={busy}>
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'admin' && adminEnabled && (
+        <div className="group-panel">
+          <h2>Admin tools</h2>
+          <div className="group-muted">Settings, approvals, and logs for moderators.</div>
 
           <div className="group-admin-settings">
             <h3>Post permissions</h3>
             <div className="group-muted">Control who can create posts in this group.</div>
             <div className="group-admin-row">
-              <select
-                value={postingPermission}
-                onChange={(e) => setPostingPermission(e.target.value)}
-                disabled={busy}
-              >
+              <select value={postingPermission} onChange={(e) => setPostingPermission(e.target.value)} disabled={busy}>
                 <option value="members">Members can post</option>
                 <option value="admins">Admins only</option>
               </select>
@@ -633,21 +735,11 @@ export default function GroupDetail() {
             <div className="group-muted">When enabled, member posts require admin approval before publishing.</div>
             <div className="group-admin-row">
               <label className="group-toggle">
-                <input
-                  type="checkbox"
-                  checked={requirePostApproval}
-                  onChange={(e) => setRequirePostApproval(e.target.checked)}
-                  disabled={busy}
-                />
+                <input type="checkbox" checked={requirePostApproval} onChange={(e) => setRequirePostApproval(e.target.checked)} disabled={busy} />
                 <span>Require approval</span>
               </label>
               <label className="group-toggle">
-                <input
-                  type="checkbox"
-                  checked={adminsBypassApproval}
-                  onChange={(e) => setAdminsBypassApproval(e.target.checked)}
-                  disabled={busy || !requirePostApproval}
-                />
+                <input type="checkbox" checked={adminsBypassApproval} onChange={(e) => setAdminsBypassApproval(e.target.checked)} disabled={busy || !requirePostApproval} />
                 <span>Admins bypass approval</span>
               </label>
               <button className="group-btn tiny" onClick={handleSaveModeration} disabled={busy}>
@@ -666,18 +758,12 @@ export default function GroupDetail() {
                   {pendingPosts.map((p) => (
                     <div key={p.id} className="group-pending-item">
                       <div className="group-pending-meta">
-                        <div className="group-pending-title">
-                          {p.username || p.author_address}
-                        </div>
+                        <div className="group-pending-title">{p.username || p.author_address}</div>
                         <div className="group-muted">{(p.content || '').slice(0, 140)}{(p.content || '').length > 140 ? '…' : ''}</div>
                       </div>
                       <div className="group-request-actions">
-                        <button className="group-btn tiny" onClick={() => handleApprovePost(p.id)} disabled={busy}>
-                          Approve
-                        </button>
-                        <button className="group-btn tiny danger" onClick={() => handleRejectPost(p.id)} disabled={busy}>
-                          Reject
-                        </button>
+                        <button className="group-btn tiny" onClick={() => handleApprovePost(p.id)} disabled={busy}>Approve</button>
+                        <button className="group-btn tiny danger" onClick={() => handleRejectPost(p.id)} disabled={busy}>Reject</button>
                       </div>
                     </div>
                   ))}
@@ -689,19 +775,13 @@ export default function GroupDetail() {
           <div className="group-admin-settings">
             <h3>Moderation history</h3>
             <div className="group-admin-row">
-              <select
-                value={moderationFilter}
-                onChange={(e) => setModerationFilter(e.target.value)}
-                disabled={busy}
-              >
+              <select value={moderationFilter} onChange={(e) => setModerationFilter(e.target.value)} disabled={busy}>
                 <option value="all">All</option>
                 <option value="pending">Pending</option>
                 <option value="approved">Approved</option>
                 <option value="rejected">Rejected</option>
               </select>
-              <button className="group-btn tiny" onClick={() => refreshModeration(groupId)} disabled={busy || moderationLoading}>
-                Refresh
-              </button>
+              <button className="group-btn tiny" onClick={() => refreshModeration(groupId)} disabled={busy || moderationLoading}>Refresh</button>
             </div>
 
             {moderationLoading ? (
@@ -715,19 +795,15 @@ export default function GroupDetail() {
                 {moderationItems.map((it) => {
                   const status = String(it.moderation_status || '').toLowerCase();
                   const isApproved = !!it.approved_by;
-                  const who = isApproved
-                    ? (it.approver_username || it.approved_by)
-                    : (it.rejector_username || it.rejected_by);
+                  const who = isApproved ? (it.approver_username || it.approved_by) : (it.rejector_username || it.rejected_by);
                   const when = it.approved_at || it.rejected_at || it.created_at;
                   const label = status === 'pending' ? 'Pending' : isApproved ? 'Approved' : 'Rejected';
-                  const badgeClass =
-                    label === 'Approved' ? 'approved' : label === 'Rejected' ? 'rejected' : 'pending';
+                  const badgeClass = label === 'Approved' ? 'approved' : label === 'Rejected' ? 'rejected' : 'pending';
+
                   return (
                     <div key={it.id} className="group-pending-item">
                       <div className="group-pending-meta">
-                        <div className="group-pending-title">
-                          {it.author_username || it.author_address}
-                        </div>
+                        <div className="group-pending-title">{it.author_username || it.author_address}</div>
                         <div className="group-muted">
                           <span className={`group-status-badge ${badgeClass}`}>{label}</span>
                           {' '}· {who ? `by ${who}` : ''}{when ? ` · ${new Date(when).toLocaleString()}` : ''}
@@ -744,11 +820,7 @@ export default function GroupDetail() {
           <div className="group-admin-settings">
             <h3>Activity log</h3>
             <div className="group-admin-row">
-              <select
-                value={activityFilter}
-                onChange={(e) => setActivityFilter(e.target.value)}
-                disabled={busy}
-              >
+              <select value={activityFilter} onChange={(e) => setActivityFilter(e.target.value)} disabled={busy}>
                 <option value="all">All</option>
                 <option value="create_group">Group created</option>
                 <option value="update_settings">Settings updated</option>
@@ -765,9 +837,7 @@ export default function GroupDetail() {
                 <option value="pin_post">Post pinned</option>
                 <option value="unpin_post">Post unpinned</option>
               </select>
-              <button className="group-btn tiny" onClick={() => refreshActivity(groupId)} disabled={busy || activityLoading}>
-                Refresh
-              </button>
+              <button className="group-btn tiny" onClick={() => refreshActivity(groupId)} disabled={busy || activityLoading}>Refresh</button>
             </div>
 
             {activityLoading ? (
@@ -785,9 +855,7 @@ export default function GroupDetail() {
                       <div className="group-pending-meta">
                         <div className="group-pending-title">{f.actor}</div>
                         <div className="group-muted">{f.text}{f.when ? ` · ${f.when}` : ''}</div>
-                        {f.snippet ? (
-                          <div className="group-muted">{f.snippet}{String(it.post_content || '').length > 160 ? '…' : ''}</div>
-                        ) : null}
+                        {f.snippet ? <div className="group-muted">{f.snippet}{String(it.post_content || '').length > 160 ? '…' : ''}</div> : null}
                       </div>
                     </div>
                   );
@@ -796,7 +864,7 @@ export default function GroupDetail() {
             )}
           </div>
 
-          <div className="group-admin-requests">
+          <div className="group-admin-settings">
             <h3>Join requests</h3>
             {requests.length === 0 ? (
               <div className="group-muted">No pending requests.</div>
@@ -806,84 +874,121 @@ export default function GroupDetail() {
                   <div key={r.requester_address} className="group-request">
                     <div className="group-request-name">{r.username || r.requester_address}</div>
                     <div className="group-request-actions">
-                      <button className="group-btn tiny" onClick={() => handleApprove(r.requester_address)} disabled={busy}>
-                        Approve
-                      </button>
-                      <button className="group-btn tiny danger" onClick={() => handleDecline(r.requester_address)} disabled={busy}>
-                        Decline
-                      </button>
+                      <button className="group-btn tiny" onClick={() => handleApprove(r.requester_address)} disabled={busy}>Approve</button>
+                      <button className="group-btn tiny danger" onClick={() => handleDecline(r.requester_address)} disabled={busy}>Decline</button>
                     </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
-          </div>
-        </details>
+        </div>
       )}
 
-      <div className="group-detail-content">
-        <h2>Posts</h2>
+      {activeTab === 'discussion' && (
+        <div className="group-body">
+          <aside className="group-side">
+            <div className="group-panel">
+              <h2>About</h2>
+              <div className="group-muted">{groupDescription || 'No description yet.'}</div>
+              <div className="group-side-meta">
+                <div className="group-side-row"><span className="group-pill">{privacy}</span><span>{memberCount} members</span></div>
+                <div className="group-side-row"><span className="group-muted">Posting</span><span>{postingLabel}</span></div>
+                {effectiveRequireApproval && (
+                  <div className="group-side-row"><span className="group-muted">Approval</span><span>Required</span></div>
+                )}
+              </div>
+            </div>
 
-        {canPost ? (
-          <CreatePost
-            groupId={groupId}
-            contextLabel={group.name}
-            onPostCreated={handlePostCreated}
-          />
-        ) : (
-          <div className="group-muted">
-            {effectivePostingPermission === 'admins'
-              ? 'Only admins can post in this group.'
-              : 'Join this group to post.'}
-          </div>
-        )}
+            <div className="group-panel">
+              <div className="group-panel-header">
+                <h2>Members</h2>
+                <button type="button" className="group-link" onClick={() => setActiveTab('members')}>See all</button>
+              </div>
+              {memberPreview.length === 0 ? (
+                <div className="group-muted">No members to show.</div>
+              ) : (
+                <div className="group-member-preview">
+                  {memberPreview.map((m) => (
+                    <div key={m.member_address} className="group-member-chip">
+                      <div className="group-member-chip-avatar" aria-hidden="true">{(m.username || m.member_address || '?').slice(0, 1).toUpperCase()}</div>
+                      <div className="group-member-chip-name">{m.username || m.member_address}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </aside>
 
-        {postsLoading ? (
-          <div className="group-muted">Loading posts…</div>
-        ) : postsError ? (
-          <div className="group-muted">{postsError}</div>
-        ) : posts.length === 0 ? (
-          <div className="group-muted">No posts yet.</div>
-        ) : (
-          <div className="group-posts">
-            {posts.map((p) => {
-              const isPinned = pinnedPostId !== null && String(p.id) === String(pinnedPostId);
-              const status = String(p.moderation_status || 'published').toLowerCase();
-              const isMine = (p.author_address || '').toLowerCase() === myAddress;
-              const showStatus = (status !== 'published') && (isMine || adminEnabled);
-              return (
-                <div key={p.id} className={isPinned ? 'group-post pinned' : 'group-post'}>
-                  {(isPinned || adminEnabled) && (
-                    <div className="group-post-toolbar">
-                      <div className="group-post-badges">
-                        {isPinned && <span className="group-pin-badge">Pinned</span>}
-                        {showStatus && status === 'pending' && <span className="group-status-badge pending">Pending</span>}
-                        {showStatus && status === 'rejected' && <span className="group-status-badge rejected">Rejected</span>}
-                      </div>
-                      {adminEnabled && (
-                        isPinned ? (
-                          <button className="group-btn tiny" onClick={handleUnpin} disabled={busy}>
-                            Unpin
-                          </button>
-                        ) : (
-                          <button className="group-btn tiny" onClick={() => handlePin(p.id)} disabled={busy}>
-                            Pin
-                          </button>
-                        )
-                      )}
+          <main className="group-main">
+            {isLocked ? (
+              <div className="group-panel">
+                <h2>This is a private group</h2>
+                <div className="group-muted">Request to join to see posts and discussions.</div>
+              </div>
+            ) : (
+              <>
+                <div className="group-panel">
+                  <div className="group-panel-header">
+                    <h2>Discussion</h2>
+                    {pinnedPostId !== null ? <span className="group-muted">Pinned post is highlighted</span> : null}
+                  </div>
+
+                  {canPost ? (
+                    <CreatePost groupId={groupId} contextLabel={groupName} onPostCreated={handlePostCreated} />
+                  ) : (
+                    <div className="group-muted">
+                      {effectivePostingPermission === 'admins' ? 'Only admins can post in this group.' : 'Join this group to post.'}
                     </div>
                   )}
-                  {showStatus && !adminEnabled && status === 'pending' && (
-                    <div className="group-muted">Your post is waiting for approval.</div>
-                  )}
-                  <Post post={p} onDelete={handlePostDeleted} />
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+
+                {postsLoading ? (
+                  <div className="group-panel"><div className="group-muted">Loading posts…</div></div>
+                ) : postsError ? (
+                  <div className="group-panel"><div className="group-muted">{postsError}</div></div>
+                ) : posts.length === 0 ? (
+                  <div className="group-panel"><div className="group-muted">No posts yet.</div></div>
+                ) : (
+                  <div className="group-posts">
+                    {posts.map((p) => {
+                      const isPinned = pinnedPostId !== null && String(p.id) === String(pinnedPostId);
+                      const status = String(p.moderation_status || 'published').toLowerCase();
+                      const isMine = (p.author_address || '').toLowerCase() === myAddress;
+                      const showStatus = (status !== 'published') && (isMine || adminEnabled);
+
+                      return (
+                        <div key={p.id} className={isPinned ? 'group-post pinned' : 'group-post'}>
+                          {(isPinned || adminEnabled) && (
+                            <div className="group-post-toolbar">
+                              <div className="group-post-badges">
+                                {isPinned && <span className="group-pin-badge">Pinned</span>}
+                                {showStatus && status === 'pending' && <span className="group-status-badge pending">Pending</span>}
+                                {showStatus && status === 'rejected' && <span className="group-status-badge rejected">Rejected</span>}
+                              </div>
+                              {adminEnabled && (
+                                isPinned ? (
+                                  <button className="group-btn tiny" onClick={handleUnpin} disabled={busy}>Unpin</button>
+                                ) : (
+                                  <button className="group-btn tiny" onClick={() => handlePin(p.id)} disabled={busy}>Pin</button>
+                                )
+                              )}
+                            </div>
+                          )}
+                          {showStatus && !adminEnabled && status === 'pending' && (
+                            <div className="group-muted">Your post is waiting for approval.</div>
+                          )}
+                          <Post post={p} onDelete={handlePostDeleted} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+          </main>
+        </div>
+      )}
     </div>
   );
 }
