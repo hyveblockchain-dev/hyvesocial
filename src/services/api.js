@@ -171,6 +171,7 @@ export async function createPost(content, imageFile = null, videoUrl = '') {
   let normalizedVideoFile = null;
   let preEncodedImage = null;
   let normalizedAllowShare = undefined;
+  let normalizedGroupId = undefined;
 
   if (typeof content === 'object' && content !== null) {
     normalizedContent = content.content || '';
@@ -180,11 +181,16 @@ export async function createPost(content, imageFile = null, videoUrl = '') {
     preEncodedImage = content.imageUrl || content.image_url || null;
     normalizedAllowShare =
       content.allowShare ?? content.allow_share ?? content.shareable ?? content.is_shareable;
+    normalizedGroupId = content.groupId ?? content.group_id;
   }
 
   const postData = {
     content: normalizedContent,
   };
+
+  if (normalizedGroupId !== undefined && normalizedGroupId !== null && normalizedGroupId !== '') {
+    postData.groupId = normalizedGroupId;
+  }
   
   if (preEncodedImage) {
     postData.imageUrl = preEncodedImage;
@@ -225,6 +231,81 @@ export async function createPost(content, imageFile = null, videoUrl = '') {
   if (!contentType.includes('application/json')) {
     throw new Error('Unexpected response from server');
   }
+  return response.json();
+}
+
+export async function getGroupPosts(groupId, options = {}) {
+  const { limit, offset } = options || {};
+  const token = localStorage.getItem('token');
+  const params = new URLSearchParams();
+  if (limit !== undefined && limit !== null) params.set('limit', String(limit));
+  if (offset !== undefined && offset !== null) params.set('offset', String(offset));
+  const url = params.toString()
+    ? `${API_URL}/api/groups/${groupId}/posts?${params}`
+    : `${API_URL}/api/groups/${groupId}/posts`;
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function approveGroupPost(groupId, postId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/posts/${postId}/approve`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+}
+
+export async function rejectGroupPost(groupId, postId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/posts/${postId}/reject`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+}
+
+export async function getGroupModeration(groupId, options = {}) {
+  const token = localStorage.getItem('token');
+  const params = new URLSearchParams();
+  if (options?.status) params.set('status', String(options.status));
+  if (options?.limit !== undefined && options?.limit !== null) params.set('limit', String(options.limit));
+  if (options?.offset !== undefined && options?.offset !== null) params.set('offset', String(options.offset));
+  const url = params.toString()
+    ? `${API_URL}/api/groups/${groupId}/moderation?${params}`
+    : `${API_URL}/api/groups/${groupId}/moderation`;
+
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+}
+
+export async function getGroupActivity(groupId, options = {}) {
+  const token = localStorage.getItem('token');
+  const params = new URLSearchParams();
+  if (options?.type) params.set('type', String(options.type));
+  if (options?.limit !== undefined && options?.limit !== null) params.set('limit', String(options.limit));
+  if (options?.offset !== undefined && options?.offset !== null) params.set('offset', String(options.offset));
+  const url = params.toString()
+    ? `${API_URL}/api/groups/${groupId}/activity?${params}`
+    : `${API_URL}/api/groups/${groupId}/activity`;
+
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
   return response.json();
 }
 
@@ -536,61 +617,107 @@ export async function getFriends() {
 
 export async function getGroups() {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/groups`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    return { groups: [] };
-  }
-
-  const contentType = response.headers.get('content-type') || '';
-  if (!contentType.includes('application/json')) {
-    return { groups: [] };
-  }
-
   try {
-    return response.json();
+    const response = await fetch(`${API_URL}/api/groups`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      return { error: 'Unexpected response from server' };
+    }
+
+    const data = await response.json();
+    if (!response.ok) {
+      return { error: data?.error || 'Failed to load groups' };
+    }
+
+    return data;
   } catch (error) {
-    return { groups: [] };
+    return { error: 'Failed to reach server' };
   }
 }
 
 export async function createGroup(payload) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/groups`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload || {})
-  });
-  return response.json();
+  try {
+    const response = await fetch(`${API_URL}/api/groups`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload || {})
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      return { error: 'Unexpected response from server' };
+    }
+
+    const data = await response.json();
+    if (!response.ok) {
+      return { error: data?.error || 'Failed to create group' };
+    }
+
+    return data;
+  } catch (error) {
+    return { error: 'Failed to reach server' };
+  }
 }
 
 export async function joinGroup(groupId) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/groups/${groupId}/join`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-  return response.json();
+  try {
+    const response = await fetch(`${API_URL}/api/groups/${groupId}/join`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      return { error: 'Unexpected response from server' };
+    }
+
+    const data = await response.json();
+    if (!response.ok) {
+      return { error: data?.error || 'Failed to join group' };
+    }
+
+    return data;
+  } catch (error) {
+    return { error: 'Failed to reach server' };
+  }
 }
 
 export async function leaveGroup(groupId) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/groups/${groupId}/leave`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-  return response.json();
+  try {
+    const response = await fetch(`${API_URL}/api/groups/${groupId}/leave`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      return { error: 'Unexpected response from server' };
+    }
+
+    const data = await response.json();
+    if (!response.ok) {
+      return { error: data?.error || 'Failed to leave group' };
+    }
+
+    return data;
+  } catch (error) {
+    return { error: 'Failed to reach server' };
+  }
 }
 
 export async function getGroupMembers(groupId) {
@@ -615,6 +742,102 @@ export async function getGroupMembers(groupId) {
   } catch (error) {
     return { members: [] };
   }
+}
+
+export async function getGroupById(groupId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      try {
+        return await response.json();
+      } catch {
+        // ignore
+      }
+    }
+    return { error: 'Failed to load group' };
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    return { error: 'Unexpected response from server' };
+  }
+  return response.json();
+}
+
+export async function updateGroup(groupId, payload) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload || {})
+  });
+  return response.json();
+}
+
+export async function getGroupJoinRequests(groupId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/requests`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+}
+
+export async function approveGroupJoinRequest(groupId, address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/requests/${address}/approve`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+}
+
+export async function declineGroupJoinRequest(groupId, address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/requests/${address}/decline`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+}
+
+export async function removeGroupMember(groupId, address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/members/${address}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+}
+
+export async function setGroupMemberRole(groupId, address, role) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/members/${address}/role`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ role })
+  });
+  return response.json();
 }
 
 export async function getPresence() {
@@ -868,6 +1091,11 @@ export default {
   
   // Posts
   getPosts,
+  getGroupPosts,
+  approveGroupPost,
+  rejectGroupPost,
+  getGroupModeration,
+  getGroupActivity,
   createPost,
   deletePost,
   
@@ -917,9 +1145,17 @@ export default {
 
   // Groups
   getGroups,
+  getGroupById,
+  updateGroup,
   createGroup,
   joinGroup,
   leaveGroup,
+  getGroupMembers,
+  getGroupJoinRequests,
+  approveGroupJoinRequest,
+  declineGroupJoinRequest,
+  removeGroupMember,
+  setGroupMemberRole,
 
   // Chat/Messages
   getMessages,

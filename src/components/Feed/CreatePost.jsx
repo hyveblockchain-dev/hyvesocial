@@ -5,7 +5,7 @@ import api from '../../services/api';
 import { compressImage } from '../../utils/imageCompression';
 import './CreatePost.css';
 
-export default function CreatePost({ onPostCreated }) {
+export default function CreatePost({ onPostCreated, groupId = null, contextLabel = '' }) {
   const [content, setContent] = useState('');
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState('');
@@ -20,6 +20,7 @@ export default function CreatePost({ onPostCreated }) {
   const fileInputRef = useRef(null);
   const videoInputRef = useRef(null);
   const { user } = useAuth();
+  const displayName = user?.username || 'there';
 
   const MAX_IMAGE_MB = 5;
   const MAX_VIDEO_MB = 25;
@@ -48,23 +49,28 @@ export default function CreatePost({ onPostCreated }) {
         imageFile: uploadImage,
         videoUrl: videoUrl.trim(),
         videoFile,
-        allowShare
+        allowShare,
+        groupId
       });
 
       // Inject user data for immediate display
       const postWithUser = {
         ...data.post,
-        username: user.username,
-        profile_image: user.profileImage,
+        username: user?.username,
+        profile_image: user?.profileImage,
         reaction_count: 0,
         comment_count: 0,
         image_url: data.post?.image_url || imagePreview,
         video_url: data.post?.video_url || data.post?.videoUrl || videoUrl.trim() || videoPreview,
-        allow_share: allowShare
+        allow_share: allowShare,
+        group_id: groupId ?? data.post?.group_id,
+        groupId: groupId ?? data.post?.group_id
       };
 
       // ✨ THIS IS THE MAGIC - NO PAGE REFRESH! ✨
-      onPostCreated(postWithUser);
+      if (typeof onPostCreated === 'function') {
+        onPostCreated(postWithUser);
+      }
 
       // Clear form
       setContent('');
@@ -97,7 +103,11 @@ export default function CreatePost({ onPostCreated }) {
             user?.username?.charAt(0).toUpperCase() || '?'
           )}
         </div>
-        <h3>What's on your mind, {user?.username}?</h3>
+        <h3>
+          {contextLabel
+            ? `Share something in ${contextLabel}, ${displayName}?`
+            : `What's on your mind, ${displayName}?`}
+        </h3>
       </div>
 
       <form onSubmit={handleSubmit}>

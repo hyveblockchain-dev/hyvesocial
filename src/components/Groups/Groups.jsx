@@ -61,7 +61,12 @@ export default function Groups() {
       setLoading(true);
       setError('');
       const data = await api.getGroups();
-      setGroups(data.groups || []);
+      if (data?.error) {
+        setError(data.error);
+        setGroups([]);
+        return;
+      }
+      setGroups(data?.groups || []);
     } catch (err) {
       console.error('Failed to load groups:', err);
       setError('Failed to load groups.');
@@ -103,6 +108,10 @@ export default function Groups() {
       const data = await api.joinGroup(groupId);
       if (data?.error) {
         setError(data.error);
+        return;
+      }
+      if (data?.requested) {
+        setError('Join request sent. Waiting for admin approval.');
         return;
       }
       await loadGroups();

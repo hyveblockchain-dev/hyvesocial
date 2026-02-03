@@ -31,9 +31,260 @@
   font-size: 1rem;
   margin-top: 8px;
 }
+
+.group-detail-actions {
+  margin-top: 12px;
+}
+
+.group-btn {
+  border: 1px solid rgba(0,0,0,0.12);
+  background: #f7f7f7;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.group-btn.primary {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.group-btn.secondary {
+  background: #fff;
+}
+
+.group-btn.tiny {
+  padding: 7px 10px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+}
+
+.group-btn.danger {
+  background: #fff;
+  border-color: rgba(220,38,38,0.35);
+  color: #b91c1c;
+}
+
+.group-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.group-notice {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(37,99,235,0.08);
+  color: #1f2937;
+}
+
+.group-detail-section {
+  margin-top: 22px;
+}
+
+.group-detail-section h2 {
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+}
+
+.group-detail-section h3 {
+  margin: 12px 0 8px;
+  font-size: 1.05rem;
+}
+
+.group-muted {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.group-members {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.group-member {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+}
+
+.group-member-name {
+  font-weight: 700;
+  color: #111827;
+}
+
+.group-member-meta {
+  margin-top: 4px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.05);
+  color: #374151;
+  font-size: 0.82rem;
+  text-transform: lowercase;
+}
+
+.group-member-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.group-requests {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.group-request {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+}
+
+.group-request-name {
+  font-weight: 700;
+  color: #111827;
+}
+
+.group-request-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.group-admin-settings {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  background: rgba(0,0,0,0.02);
+}
+
+.group-admin-row {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.group-admin-row select {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: #fff;
+  font-weight: 600;
+}
+
+.group-toggle {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-weight: 700;
+  color: #111827;
+}
+
+.group-toggle input {
+  width: 18px;
+  height: 18px;
+}
+
+.group-pending-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.group-pending-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.group-pending-title {
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 4px;
+}
 .group-detail-content {
   margin-top: 32px;
   color: #444;
+}
+
+.group-detail-content h2 {
+  margin: 0 0 12px;
+  font-size: 1.2rem;
+}
+
+.group-posts {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.group-post-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.group-post-badges {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.group-pin-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.16);
+  color: #92400e;
+  font-weight: 800;
+  font-size: 0.82rem;
+}
+
+.group-status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.82rem;
+}
+
+.group-status-badge.pending {
+  background: rgba(37, 99, 235, 0.10);
+  color: #1d4ed8;
+}
+
+.group-status-badge.approved {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+}
+
+.group-status-badge.rejected {
+  background: rgba(220, 38, 38, 0.10);
+  color: #b91c1c;
 }
 .group-detail-page.error {
   color: #c00;

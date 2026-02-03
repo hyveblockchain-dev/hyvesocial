@@ -2,3 +2,11 @@
 dist/
 .DS_Store
 *.log
+
+# Environment files (keep examples)
+.env
+.env.*
+!.env.example
+
+# Local-only backend mirror (not for GitHub)
+backend-remote/
