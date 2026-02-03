@@ -249,14 +249,7 @@ export default function Groups() {
             </div>
           </div>
 
-          <div className="groups-rail-card">
-            <div className="groups-rail-list-header">
-              <h2>{activeView === 'your' ? 'Your groups' : 'Suggested'}</h2>
-              <button type="button" className="groups-link" onClick={() => setSearch('')}>
-                Clear
-              </button>
-            </div>
-
+          <div className="groups-rail-card groups-rail-card-list">
             {loading ? (
               <div className="groups-muted">Loading…</div>
             ) : railGroups.length === 0 ? (
@@ -291,14 +284,6 @@ export default function Groups() {
         </aside>
 
         <main className="groups-main">
-          <div className="groups-main-header">
-            <h2>{activeView === 'your' ? 'Your groups' : 'Discover groups'}</h2>
-            <div className="groups-muted">
-              {activeView === 'your'
-                ? 'Your communities and discussions'
-                : 'Browse and join groups you like'}
-            </div>
-          </div>
 
           {loading ? (
             <div className="groups-empty">Loading groups...</div>
