@@ -475,7 +475,13 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
         >
           <button
             className={`action-button ${reactionType !== null ? 'liked' : ''}`}
-            onClick={handleLikeToggle}
+            onClick={() => {
+              if (!showReactionMenu) {
+                setShowReactionMenu(true);
+                return;
+              }
+              handleLikeToggle();
+            }}
           >
             <>👍 Like</>
           </button>

@@ -176,6 +176,13 @@
   transform: translateY(-6px);
 }
 
+@media (hover: none) {
+  .reaction-wrapper:hover .reaction-menu {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
 .reaction-item {
   width: 36px;
   height: 36px;
