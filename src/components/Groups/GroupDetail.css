@@ -382,6 +382,12 @@
   font-weight: 800;
 }
 
+.badge.danger {
+  background: rgba(220, 53, 69, 0.15);
+  border-color: rgba(220, 53, 69, 0.3);
+  color: #ff6b7a;
+}
+
 .group-member-actions {
   display: flex;
   gap: 8px;

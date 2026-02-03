@@ -883,6 +883,38 @@ export async function setGroupMemberRole(groupId, address, role) {
   return response.json();
 }
 
+export async function banGroupMember(groupId, address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/members/${address}/ban`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+}
+
+export async function unbanGroupMember(groupId, address) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/members/${address}/unban`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+}
+
+export async function getGroupBans(groupId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/bans`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+}
+
 export async function getPresence() {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_URL}/api/presence`, {
@@ -1200,6 +1232,9 @@ export default {
   declineGroupJoinRequest,
   removeGroupMember,
   setGroupMemberRole,
+  banGroupMember,
+  unbanGroupMember,
+  getGroupBans,
 
   // Chat/Messages
   getMessages,

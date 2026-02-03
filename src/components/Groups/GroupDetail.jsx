@@ -40,6 +40,7 @@ export default function GroupDetail() {
   const [editingDescription, setEditingDescription] = useState(false);
   const [coverPreview, setCoverPreview] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
+  const [bannedMembers, setBannedMembers] = useState([]);
 
   const myAddress = (user?.walletAddress || '').toLowerCase();
 
@@ -273,6 +274,14 @@ export default function GroupDetail() {
 
   useEffect(() => {
     if (!adminEnabled) {
+      setBannedMembers([]);
+      return;
+    }
+    refreshBans(groupId);
+  }, [groupId, adminEnabled]);
+
+  useEffect(() => {
+    if (!adminEnabled) {
       setModerationItems([]);
       return;
     }
@@ -388,6 +397,53 @@ export default function GroupDetail() {
       await refreshGroup(groupId);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleBan(memberAddress) {
+    if (!confirm('Ban this member? They will be removed and cannot rejoin.')) return;
+    try {
+      setBusy(true);
+      const data = await api.banGroupMember(groupId, memberAddress);
+      if (data?.error) {
+        setNotice(data.error);
+        return;
+      }
+      setNotice('Member banned successfully.');
+      await refreshMembers(groupId);
+      await refreshBans(groupId);
+      await refreshGroup(groupId);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleUnban(memberAddress) {
+    try {
+      setBusy(true);
+      const data = await api.unbanGroupMember(groupId, memberAddress);
+      if (data?.error) {
+        setNotice(data.error);
+        return;
+      }
+      setNotice('Member unbanned.');
+      await refreshBans(groupId);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function refreshBans(nextGroupId = groupId) {
+    if (!adminEnabled) return;
+    try {
+      const data = await api.getGroupBans(nextGroupId);
+      if (data?.error) {
+        setBannedMembers([]);
+        return;
+      }
+      setBannedMembers(data?.bans || data || []);
+    } catch {
+      setBannedMembers([]);
     }
   }
 
@@ -903,8 +959,13 @@ export default function GroupDetail() {
                           </button>
                         )}
                         {canRemove && (
-                          <button className="group-btn tiny danger" onClick={() => handleRemove(m.member_address)} disabled={busy}>
+                          <button className="group-btn tiny" onClick={() => handleRemove(m.member_address)} disabled={busy}>
                             Remove
+                          </button>
+                        )}
+                        {canRemove && (
+                          <button className="group-btn tiny danger" onClick={() => handleBan(m.member_address)} disabled={busy}>
+                            Ban
                           </button>
                         )}
                       </div>
@@ -1124,6 +1185,40 @@ export default function GroupDetail() {
                         <div className="group-pending-title">{f.actor}</div>
                         <div className="group-muted">{f.text}{f.when ? ` · ${f.when}` : ''}</div>
                         {f.snippet ? <div className="group-muted">{f.snippet}{String(it.post_content || '').length > 160 ? '…' : ''}</div> : null}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="group-admin-settings">
+            <h3>Banned members</h3>
+            <div className="group-muted">Members who are banned cannot rejoin the group.</div>
+            {bannedMembers.length === 0 ? (
+              <div className="group-muted" style={{ marginTop: 12 }}>No banned members.</div>
+            ) : (
+              <div className="group-members" style={{ marginTop: 12 }}>
+                {bannedMembers.map((b) => {
+                  const addr = b.member_address || b.address || '';
+                  return (
+                    <div key={addr} className="group-member">
+                      <div className="group-member-main">
+                        <div className="group-member-avatar" aria-hidden="true">
+                          {(b.username || addr || '?').slice(0, 1).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="group-member-name">{b.username || addr}</div>
+                          <div className="group-member-meta">
+                            <span className="badge danger">Banned</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="group-member-actions">
+                        <button className="group-btn tiny" onClick={() => handleUnban(addr)} disabled={busy}>
+                          Unban
+                        </button>
                       </div>
                     </div>
                   );
