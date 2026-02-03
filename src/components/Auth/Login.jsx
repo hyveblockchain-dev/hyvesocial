@@ -68,9 +68,29 @@ export default function Login() {
   return (
     <div className="login-page">
       <div className="login-container">
-        <div className="login-header">
-          <h1>HyveSocial</h1>
-          <p>Decentralized Social Media</p>
+        <div className="login-hero">
+          <div className="login-hero-content">
+            <div className="login-brand">
+              <img src="/hyve-logo.svg" alt="Hyve" className="login-logo" />
+              <div>
+                <h1>Hyve Social</h1>
+                <p>Decentralized social, built for modern communities.</p>
+              </div>
+            </div>
+            <div className="login-hero-copy">
+              <h2>Connect. Share. Grow.</h2>
+              <p>
+                A secure, wallet-powered social layer with private feeds, rich profiles, and real-time conversations.
+              </p>
+            </div>
+          </div>
+          <div className="login-hero-media">
+            <img
+              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80"
+              alt="Community meeting"
+              loading="lazy"
+            />
+          </div>
         </div>
 
         {error && (
@@ -86,7 +106,7 @@ export default function Login() {
               onClick={handleConnect}
               disabled={loading}
             >
-              {loading ? '⏳ Connecting...' : '🦊 Connect with MetaMask'}
+              {loading ? 'Connecting...' : 'Connect with MetaMask'}
             </button>
             <p className="login-subtitle">Connect your wallet to get started on Hyve Social</p>
           </div>
@@ -117,16 +137,28 @@ export default function Login() {
 
         <div className="login-features">
           <div className="feature">
-            <span className="feature-icon">⚡</span>
-            <span>Gas-Free</span>
+            <img
+              src="https://images.unsplash.com/photo-1523961131990-5ea7c61b2107?auto=format&fit=crop&w=300&q=80"
+              alt="Fast onboarding"
+              loading="lazy"
+            />
+            <span>Fast onboarding</span>
           </div>
           <div className="feature">
-            <span className="feature-icon">🔒</span>
-            <span>Secure</span>
+            <img
+              src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=300&q=80"
+              alt="Secure access"
+              loading="lazy"
+            />
+            <span>Secure access</span>
           </div>
           <div className="feature">
-            <span className="feature-icon">🌐</span>
-            <span>Decentralized</span>
+            <img
+              src="https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=300&q=80"
+              alt="Community focus"
+              loading="lazy"
+            />
+            <span>Community first</span>
           </div>
         </div>
       </div>
