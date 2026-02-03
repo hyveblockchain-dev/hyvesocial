@@ -1,8 +1,10 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import EthereumProvider from '@walletconnect/ethereum-provider';
 import api from '../services/api';
-import { API_URL } from '../utils/env';
+import { API_URL, WALLETCONNECT_PROJECT_ID } from '../utils/env';
 
 const AuthContext = createContext(null);
+let walletConnectProvider;
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -35,14 +37,40 @@ export function AuthProvider({ children }) {
   }
 
   async function connectWallet() {
-    if (!window.ethereum) {
-      throw new Error('MetaMask is not installed');
-    }
-
     try {
-      // Request account access
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts',
+      const hasInjected = typeof window !== 'undefined' && window.ethereum;
+      let provider = window.ethereum;
+
+      if (!hasInjected) {
+        if (!WALLETCONNECT_PROJECT_ID) {
+          throw new Error('WalletConnect is not configured. Please set VITE_WALLETCONNECT_PROJECT_ID.');
+        }
+
+        if (!walletConnectProvider) {
+          walletConnectProvider = await EthereumProvider.init({
+            projectId: WALLETCONNECT_PROJECT_ID,
+            chains: [1],
+            optionalChains: [1],
+            showQrModal: true,
+            methods: ['eth_requestAccounts', 'personal_sign'],
+            events: ['accountsChanged', 'chainChanged', 'disconnect'],
+            metadata: {
+              name: 'Hyve Social',
+              description: 'Hyve Social - Decentralized Social Media',
+              url: window.location.origin,
+              icons: [`${window.location.origin}/vite.svg`]
+            }
+          });
+        }
+
+        provider = walletConnectProvider;
+        if (!provider.connected) {
+          await provider.connect();
+        }
+      }
+
+      const accounts = await provider.request({
+        method: 'eth_requestAccounts'
       });
 
       const address = accounts[0];
@@ -54,9 +82,9 @@ export function AuthProvider({ children }) {
       console.log('Got nonce:', nonce);
 
       // Sign the nonce
-      const signature = await window.ethereum.request({
+      const signature = await provider.request({
         method: 'personal_sign',
-        params: [nonce, address],
+        params: [nonce, address]
       });
       console.log('Signature obtained');
 
