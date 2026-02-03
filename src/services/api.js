@@ -971,7 +971,7 @@ export async function unblockUser(address) {
 export async function getBlockedUsers() {
   const token = localStorage.getItem('token');
   try {
-    const response = await fetch(`${API_URL}/api/blocked`, {
+    const response = await fetch(`${API_URL}/api/blocks`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },

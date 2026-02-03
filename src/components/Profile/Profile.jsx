@@ -44,18 +44,19 @@ export default function Profile() {
   });
   const aboutFormRef = useRef(aboutForm);
   
-  // Custom setter that updates both state and ref synchronously
+  // Custom setter that updates ref synchronously BEFORE React processes state
   const setAboutForm = (updater) => {
+    let newValue;
     if (typeof updater === 'function') {
-      setAboutFormState(prev => {
-        const newValue = updater(prev);
-        aboutFormRef.current = newValue;
-        return newValue;
-      });
+      // Compute new value using current ref (always up to date)
+      newValue = updater(aboutFormRef.current);
     } else {
-      aboutFormRef.current = updater;
-      setAboutFormState(updater);
+      newValue = updater;
     }
+    // Update ref IMMEDIATELY (synchronous)
+    aboutFormRef.current = newValue;
+    // Then update React state
+    setAboutFormState(newValue);
   };
   
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
