@@ -2,7 +2,7 @@
 
 .notifications-container {
   max-width: 100%;
-  padding: 20px;
+  padding: 24px;
 }
 
 .notifications-header {
@@ -10,11 +10,14 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .notifications-header h2 {
-  font-size: 24px;
+  font-size: 26px;
+  font-weight: 800;
   margin: 0;
 }
 
@@ -37,14 +40,14 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 10px 16px;
   border-radius: 999px;
   border: none;
   background: transparent;
   color: var(--text-secondary);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 .notifications-tabs .tab:hover {
@@ -62,51 +65,61 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
   border-radius: 999px;
   font-size: 11px;
-  background: #ffd700;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
   color: #000;
 }
 
 .notifications-loading,
 .no-notifications {
   text-align: center;
-  padding: 60px 20px;
+  padding: 80px 20px;
   color: var(--text-secondary);
 }
 
 .no-notifications p {
   font-size: 18px;
+  font-weight: 500;
 }
 
 .notifications-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .notification-card {
   display: flex;
-  gap: 16px;
-  padding: 20px;
+  gap: 18px;
+  padding: 20px 22px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: 16px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  transition: all 0.25s ease;
+}
+
+.notification-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 215, 0, 0.15);
 }
 
 .notification-avatar {
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  background: var(--gold-primary);
+  background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
   overflow: hidden;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
 }
 
 .notification-avatar img {
@@ -133,6 +146,7 @@
 .notification-content p {
   margin-bottom: 12px;
   color: var(--text-primary);
+  line-height: 1.5;
 }
 
 .notification-meta {
@@ -142,50 +156,63 @@
 
 .notification-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
 .btn-accept,
 .btn-decline {
-  padding: 8px 20px;
-  border-radius: 6px;
-  font-weight: 600;
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-weight: 700;
   cursor: pointer;
   border: none;
   font-size: 14px;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
 }
 
 .btn-accept {
-  background: #4CAF50;
+  background: linear-gradient(135deg, #4CAF50 0%, #388e3c 100%);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 
 .btn-accept:hover {
-  background: #45a049;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
 }
 
 .btn-decline {
   background: transparent;
   color: #ef4444;
-  border: 1px solid #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.5);
 }
 
 .btn-decline:hover {
   background: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
 }
 
 @media (max-width: 768px) {
+  .notifications-container {
+    padding: 18px 14px;
+  }
+  
   .notifications-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 14px;
+  }
+  
+  .notifications-tabs {
+    width: 100%;
+    justify-content: center;
   }
 
   .notification-card {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    padding: 20px 16px;
   }
 
   .notification-actions {
@@ -195,17 +222,18 @@
 
 @media (max-width: 600px) {
   .notifications-container {
-    padding: 16px 12px;
+    padding: 14px 10px;
   }
 
   .notification-card {
-    padding: 16px;
-    gap: 12px;
+    padding: 16px 14px;
+    gap: 14px;
+    border-radius: 14px;
   }
 
   .notification-avatar {
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
   }
 
   .notification-actions {
@@ -217,5 +245,11 @@
   .btn-accept,
   .btn-decline {
     width: 100%;
+    padding: 12px 20px;
+  }
+  
+  .notifications-tabs .tab {
+    padding: 8px 12px;
+    font-size: 13px;
   }
 }

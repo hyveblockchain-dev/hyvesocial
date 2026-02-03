@@ -2,7 +2,7 @@
 .friends-page {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
   padding: 24px;
   color: var(--text-primary);
 }
@@ -11,14 +11,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .friends-header h1 {
   margin: 0;
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .friends-search {
@@ -28,71 +33,74 @@
 
 .friends-search input {
   width: 100%;
-  padding: 12px 16px;
-  border-radius: 999px;
+  padding: 14px 20px;
+  border-radius: 50px;
   border: 1px solid var(--border-color);
-  background: var(--bg-input);
+  background: rgba(255, 255, 255, 0.03);
   color: var(--text-primary);
   font-size: 14px;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 .friends-search input:focus {
   outline: none;
-  border-color: rgba(255, 215, 0, 0.6);
-  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.1);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .friends-tabs {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border-color);
-  border-radius: 999px;
+  border-radius: 20px;
   backdrop-filter: blur(12px);
 }
 
 .friends-tabs .tab {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
+  gap: 10px;
+  padding: 12px 20px;
   border: none;
-  border-radius: 999px;
+  border-radius: 16px;
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
   font-weight: 600;
-  transition: all 0.2s ease;
+  font-size: 14px;
+  transition: all 0.25s ease;
 }
 
 .friends-tabs .tab:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
 }
 
 .friends-tabs .tab.active {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.18), rgba(255, 215, 0, 0.04));
-  color: #ffd700;
-  box-shadow: inset 0 0 0 1px rgba(255, 215, 0, 0.35);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
+  color: var(--gold-primary);
+  box-shadow: inset 0 0 0 1px rgba(255, 215, 0, 0.3);
 }
 
 .tab-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 22px;
-  height: 22px;
+  min-width: 24px;
+  height: 24px;
   padding: 0 8px;
-  border-radius: 999px;
+  border-radius: 12px;
   font-size: 12px;
+  font-weight: 700;
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
 }
 
 .tab-count.badge {
-  background: #ffd700;
+  background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
   color: #000;
 }
 
@@ -102,55 +110,54 @@
 
 .friends-grid {
   display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  justify-items: start;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 }
 
 .friend-card {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 320px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(12px);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(20px);
+  transition: all 0.3s ease;
 }
 
 .friend-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(255, 215, 0, 0.4);
-  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.45);
+  border-color: rgba(255, 215, 0, 0.3);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.35);
 }
 
 .friend-card-header {
   position: relative;
-  padding: 20px 20px 8px;
-  min-height: 74px;
+  padding: 24px 20px 12px;
+  min-height: 80px;
 }
 
 .friend-card-header::before {
   content: '';
   position: absolute;
   inset: 0;
-  height: 64px;
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(255, 215, 0, 0.02));
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  height: 70px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.02) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .friend-avatar {
   position: relative;
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   overflow: hidden;
-  border: 3px solid rgba(0, 0, 0, 0.6);
+  border: 4px solid var(--bg-card);
   background: #000;
   z-index: 1;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .friend-avatar img,
@@ -164,32 +171,32 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 22px;
-  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  font-weight: 800;
+  font-size: 24px;
+  background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
   color: #000;
 }
 
 .online-indicator {
   position: absolute;
-  bottom: 18px;
-  left: 70px;
-  width: 9px;
-  height: 9px;
+  bottom: 20px;
+  left: 80px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #3ddc84;
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.6);
+  background: #22c55e;
+  box-shadow: 0 0 0 3px var(--bg-card), 0 0 12px rgba(34, 197, 94, 0.5);
   z-index: 2;
 }
 
 .friend-card-body {
-  padding: 8px 20px 16px;
+  padding: 12px 20px 18px;
   flex: 1;
 }
 
 .friend-name {
-  margin: 0 0 4px;
-  font-size: 16px;
+  margin: 0 0 6px;
+  font-size: 17px;
   font-weight: 700;
 }
 
@@ -197,6 +204,7 @@
   margin: 0 0 8px;
   font-size: 13px;
   color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 .friend-mutual {
@@ -209,42 +217,44 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-  padding: 14px 20px 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px 20px 20px;
+  border-top: 1px solid var(--border-color);
 }
 
 .friend-card-actions .btn-primary,
 .friend-card-actions .btn-secondary {
   width: 100%;
   min-width: 0;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
   border: none;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 13px;
   text-align: center;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 .friend-card-actions .btn-primary {
-  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
   color: #000;
-  box-shadow: 0 6px 14px rgba(255, 215, 0, 0.25);
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.25);
 }
 
 .friend-card-actions .btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(255, 215, 0, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.35);
 }
 
 .friend-card-actions .btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
 .friend-card-actions .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 215, 0, 0.3);
 }
 
 .friend-card-actions .btn-primary:only-child,
@@ -271,27 +281,29 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  min-height: 240px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px dashed rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
-  padding: 24px;
+  min-height: 280px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--border-color);
+  border-radius: 20px;
+  padding: 32px;
 }
 
 .friends-empty .empty-icon {
-  font-size: 40px;
-  margin-bottom: 12px;
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
 }
 
 .friends-empty h3 {
-  margin: 0 0 6px;
-  font-size: 18px;
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 700;
 }
 
 .friends-empty p {
   margin: 0;
   color: var(--text-tertiary);
-  font-size: 14px;
+  font-size: 15px;
 }
 
 @media (max-width: 900px) {
@@ -308,30 +320,52 @@
   .friends-tabs {
     flex-wrap: wrap;
     border-radius: 16px;
+    width: 100%;
+  }
+
+  .friends-tabs .tab {
+    flex: 1;
+    justify-content: center;
+    min-width: 120px;
   }
 }
 
 @media (max-width: 600px) {
   .friends-page {
     padding: 16px 12px;
-    gap: 14px;
+    gap: 16px;
   }
 
   .friends-header h1 {
-    font-size: 22px;
+    font-size: 24px;
   }
 
   .friends-tabs {
-    width: 100%;
-    justify-content: flex-start;
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .friends-tabs .tab {
+    padding: 10px 14px;
+    font-size: 13px;
   }
 
   .friends-grid {
     grid-template-columns: 1fr;
+    gap: 14px;
   }
 
   .friend-card {
-    max-width: 100%;
+    border-radius: 16px;
+  }
+
+  .friend-avatar {
+    width: 64px;
+    height: 64px;
+  }
+
+  .friend-name {
+    font-size: 16px;
   }
 }
 

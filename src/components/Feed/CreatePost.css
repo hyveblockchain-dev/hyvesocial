@@ -3,32 +3,40 @@
 .create-post-box {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 20px;
+  padding: 24px;
   margin-bottom: 20px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.create-post-box:focus-within {
+  border-color: rgba(255, 215, 0, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .create-post-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 14px;
+  margin-bottom: 18px;
 }
 
 .create-post-header .user-avatar {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background: var(--gold-primary);
+  background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
   color: #000;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
+  font-weight: 700;
   flex-shrink: 0;
   overflow: hidden;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
 }
 
 .create-post-header .user-avatar img {
@@ -39,37 +47,41 @@
 
 .create-post-header h3 {
   font-size: 15px;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--text-secondary);
 }
 
 .create-post-box textarea {
   width: 100%;
-  min-height: 100px;
-  background: var(--bg-input);
+  min-height: 110px;
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  padding: 12px 16px;
-  border-radius: 8px;
+  padding: 16px 18px;
+  border-radius: 16px;
   font-family: inherit;
   font-size: 15px;
   resize: vertical;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  transition: all 0.25s ease;
 }
 
 .create-post-box textarea::placeholder {
-  color: #666;
+  color: var(--text-tertiary);
 }
 
 .create-post-box textarea:focus {
   outline: none;
-  border-color: var(--gold-primary);
+  border-color: rgba(255, 215, 0, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.08);
 }
 
 .create-post-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
 }
 
 .post-options {
@@ -77,58 +89,74 @@
 }
 .media-preview {
   position: relative;
-  margin-top: 12px;
+  margin-top: 14px;
 }
 .media-preview img {
   width: 100%;
-  border-radius: 12px;
+  border-radius: 16px;
   max-height: 320px;
   object-fit: cover;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 }
 .media-preview video {
   width: 100%;
-  border-radius: 12px;
+  border-radius: 16px;
   max-height: 320px;
   object-fit: cover;
   background: #000;
 }
 .remove-media {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 32px;
-  height: 32px;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: none;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
   color: #fff;
   cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+}
+.remove-media:hover {
+  background: rgba(239, 68, 68, 0.9);
+  transform: scale(1.1);
 }
 .video-input {
   display: flex;
   gap: 10px;
-  margin-top: 12px;
+  margin-top: 14px;
   align-items: center;
 }
 .emoji-picker {
   position: absolute;
-  bottom: 48px;
+  bottom: 52px;
   left: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  padding: 10px;
-  border-radius: 10px;
+  padding: 12px;
+  border-radius: 16px;
   z-index: 5;
-  min-width: 220px;
+  min-width: 240px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
 }
 .emoji-btn {
   border: none;
   background: transparent;
-  font-size: 20px;
+  font-size: 22px;
   cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+.emoji-btn:hover {
+  background: var(--bg-hover);
+  transform: scale(1.15);
 }
 
 .post-options {
@@ -137,17 +165,25 @@
 }
 
 .option-button {
-  padding: 8px 16px;
-  background: transparent;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  border-radius: 6px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
   font-size: 13px;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+}
+
+.option-button:hover {
+  background: var(--bg-hover);
+  border-color: rgba(255, 215, 0, 0.3);
+  color: var(--gold-primary);
+}
 }
 
 .option-button:hover {

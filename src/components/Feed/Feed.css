@@ -7,44 +7,59 @@
 .feed-container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .stories-row {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 140px;
-  gap: 12px;
+  grid-auto-columns: 130px;
+  gap: 14px;
   overflow-x: auto;
-  padding-bottom: 6px;
+  padding-bottom: 8px;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.stories-row::-webkit-scrollbar {
+  display: none;
 }
 
 .story-card {
   position: relative;
-  height: 190px;
-  border-radius: 14px;
+  height: 200px;
+  border-radius: 18px;
   overflow: hidden;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 12px;
+  padding: 14px;
   color: #fff;
   font-weight: 600;
   scroll-snap-align: start;
-  border: 1px solid var(--border-color);
-  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(30, 30, 40, 0.6) 0%, rgba(15, 15, 25, 0.9) 100%);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   text-align: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.story-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.7) 100%);
+  pointer-events: none;
 }
 
 .story-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 215, 0, 0.3);
 }
 
 .story-card.create-story {
@@ -53,20 +68,29 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 10px;
-  border: 1px dashed var(--border-color);
+  gap: 12px;
+  border: 2px dashed rgba(255, 215, 0, 0.25);
+}
+
+.story-card.create-story::before {
+  display: none;
+}
+
+.story-card.create-story:hover {
+  border-color: rgba(255, 215, 0, 0.5);
+  background: rgba(255, 215, 0, 0.05);
 }
 
 .story-avatar {
-  width: 64px;
-  height: 64px;
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid var(--gold-primary);
+  border: 3px solid var(--gold-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.15);
+  box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .story-avatar img {
@@ -81,40 +105,50 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--gold-primary);
+  background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
   color: #000;
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .story-add {
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   border: none;
-  background: var(--gold-primary);
+  background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
   color: #000;
-  font-size: 22px;
+  font-size: 24px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+  transition: all 0.25s ease;
+}
+
+.story-add:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.4);
 }
 
 .story-initials {
   position: absolute;
   top: 12px;
   left: 12px;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
   font-weight: 700;
   overflow: hidden;
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  z-index: 2;
 }
 
 .story-initials img {
@@ -125,14 +159,19 @@
 
 .story-name {
   font-size: 13px;
-  text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  font-weight: 600;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+  z-index: 2;
+  position: relative;
 }
 
 .story-text {
   font-size: 12px;
-  color: #fff;
-  text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.7);
   margin-top: 4px;
+  z-index: 2;
+  position: relative;
 }
 
 
