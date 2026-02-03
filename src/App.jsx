@@ -1,5 +1,5 @@
 // src/App.jsx
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
 import { useAuth } from './hooks/useAuth';
@@ -32,6 +32,19 @@ function LoadingScreen() {
 }
 
 function App() {
+  useEffect(() => {
+    const preloads = [
+      import('./components/Layout/Layout'),
+      import('./components/Feed/Feed'),
+      import('./components/Profile/Profile'),
+      import('./components/Friends/Friends'),
+      import('./components/Notifications/Notifications'),
+      import('./components/Discover/Discover'),
+      import('./components/Auth/Login')
+    ];
+    preloads.forEach((promise) => promise.catch(() => {}));
+  }, []);
+
   return (
     <AuthProvider>
       <MemoryRouter>
