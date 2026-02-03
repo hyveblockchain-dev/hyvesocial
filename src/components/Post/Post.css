@@ -117,6 +117,16 @@
   margin-bottom: 8px;
 }
 
+.reaction-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reaction-emoji {
+  font-size: 14px;
+}
+
 .post-actions {
   display: flex;
   gap: 8px;
@@ -159,6 +169,7 @@
 }
 
 .reaction-wrapper:hover .reaction-menu,
+.reaction-wrapper.open .reaction-menu,
 .reaction-menu:hover,
 .reaction-menu:focus-within {
   opacity: 1;

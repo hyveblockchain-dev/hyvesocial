@@ -40,6 +40,7 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
   const [replyEmojiOpen, setReplyEmojiOpen] = useState({});
   const [commentReactions, setCommentReactions] = useState({});
   const [commentReactionCounts, setCommentReactionCounts] = useState({});
+  const [showReactionMenu, setShowReactionMenu] = useState(false);
 
   const isOwner = user?.walletAddress === post.author_address;
 
@@ -74,12 +75,15 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
     return reaction || { label: 'Like', emoji: '👍' };
   }
 
-  async function handleReact(type) {
+  async function handleReact(type, options = {}) {
     try {
       if (reactionType === type) {
         await api.removeReaction(post.id);
         setReactionType(null);
         setLikeCount((prev) => Math.max(0, Number(prev) - 1));
+        if (options.closeMenu) {
+          setShowReactionMenu(false);
+        }
         return;
       }
 
@@ -101,6 +105,10 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
           if (reactionType === null) return current + 1;
           return current;
         });
+      }
+
+      if (options.closeMenu) {
+        setShowReactionMenu(false);
       }
     } catch (error) {
       console.error('Like error:', error);
@@ -448,30 +456,35 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
       )}
 
       <div className="post-stats">
-        <span>{likeCount} likes</span>
+        <span className="reaction-summary">
+          {reactionType !== null && (
+            <span className="reaction-emoji">{getReactionDisplay(reactionType).emoji}</span>
+          )}
+          {likeCount} likes
+        </span>
         <span>{post.comment_count || comments.length} comments</span>
       </div>
 
       <div className="post-actions">
-        <div className="reaction-wrapper">
+        <div
+          className={`reaction-wrapper${showReactionMenu ? ' open' : ''}`}
+          onMouseEnter={() => setShowReactionMenu(true)}
+          onMouseLeave={() => setShowReactionMenu(false)}
+          onFocus={() => setShowReactionMenu(true)}
+          onBlur={() => setShowReactionMenu(false)}
+        >
           <button
             className={`action-button ${reactionType !== null ? 'liked' : ''}`}
             onClick={handleLikeToggle}
           >
-            {reactionType !== null ? (
-              <>
-                {getReactionDisplay(reactionType).emoji} {getReactionDisplay(reactionType).label}
-              </>
-            ) : (
-              <>👍 Like</>
-            )}
+            <>👍 Like</>
           </button>
           <div className="reaction-menu">
             {reactionOptions.map((option) => (
               <button
                 key={option.type}
                 className="reaction-item"
-                onClick={() => handleReact(option.type)}
+                onClick={() => handleReact(option.type, { closeMenu: true })}
                 title={option.label}
               >
                 {option.emoji}
