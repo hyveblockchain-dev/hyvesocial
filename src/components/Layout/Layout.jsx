@@ -590,12 +590,16 @@ export default function Layout({ children }) {
           type="button"
           className={`mobile-nav-item ${showChat ? 'active' : ''}`}
           onClick={() => {
-            setSelectedChat(null);
-            setShowChat(true);
-            setShowMobileSearch(false);
-            setShowNotificationsMenu(false);
+            if (showChat) {
+              setShowChat(false);
+            } else {
+              setSelectedChat(null);
+              setShowChat(true);
+              setShowMobileSearch(false);
+              setShowNotificationsMenu(false);
+            }
           }}
-          aria-label="Open chat"
+          aria-label="Toggle chat"
           title="Chat"
         >
           💬
