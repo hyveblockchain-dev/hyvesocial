@@ -161,6 +161,19 @@
   cursor: not-allowed;
 }
 
+.friend-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.12);
+  border: 1px solid rgba(255, 215, 0, 0.35);
+}
+
 @media (max-width: 720px) {
   .discover-header {
     flex-direction: column;

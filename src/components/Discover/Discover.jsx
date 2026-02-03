@@ -9,6 +9,7 @@ export default function Discover() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState([]);
+  const [friends, setFriends] = useState([]);
   const [pendingRequests, setPendingRequests] = useState({});
 
   useEffect(() => {
@@ -18,10 +19,14 @@ export default function Discover() {
   async function loadDiscover() {
     try {
       setLoading(true);
-      const [usersData, blockedData] = await Promise.all([
+      const [usersData, blockedData, friendsData] = await Promise.all([
         api.getUsers(),
-        api.getBlockedUsers()
+        api.getBlockedUsers(),
+        api.getFriends()
       ]);
+
+      const friendList = friendsData.friends || friendsData || [];
+      setFriends(friendList);
 
       const blockedAddresses = new Set(
         (blockedData.blocked || []).map((blocked) => blocked.wallet_address).filter(Boolean)
@@ -56,6 +61,14 @@ export default function Discover() {
     return users.filter((u) => u.username?.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [users, searchQuery]);
 
+  const friendAddressSet = useMemo(() => {
+    return new Set(
+      (friends || [])
+        .map((friend) => friend.wallet_address || friend.walletAddress || friend.address)
+        .filter(Boolean)
+    );
+  }, [friends]);
+
   return (
     <div className="discover-page">
       <div className="discover-header">
@@ -86,8 +99,10 @@ export default function Discover() {
               <div className="discover-empty">No users found.</div>
             ) : (
               <div className="users-grid">
-                {filteredUsers.map((person) => (
-                  <div key={person.wallet_address} className="user-card">
+                {filteredUsers.map((person) => {
+                  const isFriend = friendAddressSet.has(person.wallet_address);
+                  return (
+                    <div key={person.wallet_address} className="user-card">
                     <div className="user-card-info">
                       <div className="user-avatar">
                         {person.profile_image ? (
@@ -103,15 +118,20 @@ export default function Discover() {
                         {person.bio && <div className="user-bio">{person.bio}</div>}
                       </div>
                     </div>
-                    <button
-                      className="btn-primary"
-                      onClick={() => handleSendRequest(person.wallet_address)}
-                      disabled={pendingRequests[person.wallet_address]}
-                    >
-                      {pendingRequests[person.wallet_address] ? 'Requested' : 'Add Friend'}
-                    </button>
-                  </div>
-                ))}
+                      {isFriend ? (
+                        <span className="friend-badge">Friends</span>
+                      ) : (
+                        <button
+                          className="btn-primary"
+                          onClick={() => handleSendRequest(person.wallet_address)}
+                          disabled={pendingRequests[person.wallet_address]}
+                        >
+                          {pendingRequests[person.wallet_address] ? 'Requested' : 'Add Friend'}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </section>
