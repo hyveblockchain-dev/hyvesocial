@@ -309,22 +309,45 @@ export default function Profile() {
   }
 
   function handleMessageUser(targetUser) {
-    const conversation = targetUser ? {
-      address: targetUser.walletAddress || targetUser.wallet_address || targetUser.address,
-      username: targetUser.username || targetUser.name || targetUser.user?.username || 'User',
-      profileImage: targetUser.profileImage || targetUser.profile_image || targetUser.user?.profileImage || ''
-    } : {
-      address: profile?.walletAddress || profile?.wallet_address || resolvedAddress,
-      username: profile?.username || 'User',
-      profileImage: profile?.profileImage || profile?.profile_image || ''
-    };
+    const address =
+      targetUser?.walletAddress ||
+      targetUser?.wallet_address ||
+      targetUser?.address ||
+      targetUser?.user?.walletAddress ||
+      targetUser?.user?.wallet_address ||
+      targetUser?.user?.address ||
+      profile?.walletAddress ||
+      profile?.wallet_address ||
+      profile?.address ||
+      resolvedAddress ||
+      (isWalletAddress(handle) ? handle : null);
 
-    if (!conversation.address) {
+    const username =
+      targetUser?.username ||
+      targetUser?.name ||
+      targetUser?.user?.username ||
+      profile?.username ||
+      'User';
+
+    const profileImage =
+      targetUser?.profileImage ||
+      targetUser?.profile_image ||
+      targetUser?.user?.profileImage ||
+      targetUser?.user?.profile_image ||
+      profile?.profileImage ||
+      profile?.profile_image ||
+      '';
+
+    if (!address) {
       alert('Missing wallet address for this user.');
       return;
     }
 
-    window.dispatchEvent(new CustomEvent('open-chat', { detail: conversation }));
+    window.dispatchEvent(
+      new CustomEvent('open-chat', {
+        detail: { address, username, profileImage }
+      })
+    );
   }
 
   async function handleCreateAlbum(e) {
