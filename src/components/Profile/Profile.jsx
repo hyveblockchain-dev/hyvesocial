@@ -986,7 +986,7 @@ export default function Profile() {
                   Bio
                   <textarea
                     value={aboutForm.bio}
-                    onChange={(e) => setAboutForm({ ...aboutForm, bio: e.target.value })}
+                    onChange={(e) => setAboutForm(prev => ({ ...prev, bio: e.target.value }))}
                     rows={4}
                   />
                 </label>
@@ -995,7 +995,7 @@ export default function Profile() {
                   <input
                     type="text"
                     value={aboutForm.location}
-                    onChange={(e) => setAboutForm({ ...aboutForm, location: e.target.value })}
+                    onChange={(e) => setAboutForm(prev => ({ ...prev, location: e.target.value }))}
                   />
                 </label>
                 <label>
@@ -1003,7 +1003,7 @@ export default function Profile() {
                   <input
                     type="text"
                     value={aboutForm.work}
-                    onChange={(e) => setAboutForm({ ...aboutForm, work: e.target.value })}
+                    onChange={(e) => setAboutForm(prev => ({ ...prev, work: e.target.value }))}
                   />
                 </label>
                 <label>
@@ -1011,7 +1011,7 @@ export default function Profile() {
                   <input
                     type="text"
                     value={aboutForm.education}
-                    onChange={(e) => setAboutForm({ ...aboutForm, education: e.target.value })}
+                    onChange={(e) => setAboutForm(prev => ({ ...prev, education: e.target.value }))}
                   />
                 </label>
                 <label>
@@ -1019,7 +1019,7 @@ export default function Profile() {
                   <input
                     type="text"
                     value={aboutForm.website}
-                    onChange={(e) => setAboutForm({ ...aboutForm, website: e.target.value })}
+                    onChange={(e) => setAboutForm(prev => ({ ...prev, website: e.target.value }))}
                   />
                 </label>
                 <label>
@@ -1027,7 +1027,7 @@ export default function Profile() {
                   <input
                     type="text"
                     value={aboutForm.hometown}
-                    onChange={(e) => setAboutForm({ ...aboutForm, hometown: e.target.value })}
+                    onChange={(e) => setAboutForm(prev => ({ ...prev, hometown: e.target.value }))}
                   />
                 </label>
                 <label>
@@ -1035,7 +1035,7 @@ export default function Profile() {
                   <input
                     type="text"
                     value={aboutForm.relationshipStatus}
-                    onChange={(e) => setAboutForm({ ...aboutForm, relationshipStatus: e.target.value })}
+                    onChange={(e) => setAboutForm(prev => ({ ...prev, relationshipStatus: e.target.value }))}
                   />
                 </label>
                 <label>
@@ -1044,7 +1044,7 @@ export default function Profile() {
                     type="text"
                     placeholder="e.g. Jan 12, 1994"
                     value={aboutForm.birthday}
-                    onChange={(e) => setAboutForm({ ...aboutForm, birthday: e.target.value })}
+                    onChange={(e) => setAboutForm(prev => ({ ...prev, birthday: e.target.value }))}
                   />
                 </label>
                 <label>
@@ -1052,7 +1052,7 @@ export default function Profile() {
                   <input
                     type="text"
                     value={aboutForm.gender}
-                    onChange={(e) => setAboutForm({ ...aboutForm, gender: e.target.value })}
+                    onChange={(e) => setAboutForm(prev => ({ ...prev, gender: e.target.value }))}
                   />
                 </label>
                 <label>
@@ -1061,7 +1061,7 @@ export default function Profile() {
                     type="text"
                     placeholder="e.g. English, Spanish"
                     value={aboutForm.languages}
-                    onChange={(e) => setAboutForm({ ...aboutForm, languages: e.target.value })}
+                    onChange={(e) => setAboutForm(prev => ({ ...prev, languages: e.target.value }))}
                   />
                 </label>
                 <div className="form-actions">
