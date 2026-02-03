@@ -226,6 +226,13 @@ export default function Layout({ children }) {
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
             onFocus={() => searchQuery && setShowSearchResults(true)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSearch(searchQuery);
+                setShowSearchResults(true);
+              }
+            }}
           />
           <button
             className="icon-btn"
@@ -234,6 +241,34 @@ export default function Layout({ children }) {
           >
             ✕
           </button>
+          {showSearchResults && (
+            <div className="mobile-search-results">
+              {searchResults.length === 0 ? (
+                <div className="search-empty">No users found</div>
+              ) : (
+                searchResults.map((user) => (
+                  <Link
+                    key={user.wallet_address}
+                    to={profilePathFor(user)}
+                    className="search-result"
+                    onClick={() => {
+                      setShowSearchResults(false);
+                      setShowMobileSearch(false);
+                    }}
+                  >
+                    {user.profile_image ? (
+                      <img src={user.profile_image} alt={user.username} className="search-avatar" />
+                    ) : (
+                      <div className="search-avatar">
+                        {user.username?.charAt(0).toUpperCase() || '?'}
+                      </div>
+                    )}
+                    <span>{user.username}</span>
+                  </Link>
+                ))
+              )}
+            </div>
+          )}
         </div>
       )}
 

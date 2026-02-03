@@ -475,10 +475,22 @@ body.light-mode .stat-num {
     display: flex;
     gap: 10px;
     z-index: 120;
+    flex-wrap: wrap;
   }
 
   .mobile-search input {
     flex: 1;
+  }
+
+  .mobile-search-results {
+    width: 100%;
+    margin-top: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    max-height: 240px;
+    overflow-y: auto;
   }
 
   .left-column,
