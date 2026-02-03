@@ -157,12 +157,9 @@ export default function Profile() {
   async function loadProfile(address) {
     try {
       setLoading(true);
-      const cached = profileCache[address];
-      if (cached) {
-        setProfile(cached);
-        setLoading(false);
-      }
+      // Skip cache - always load fresh from server
       const data = await api.getUserProfile(address);
+      console.log('loadProfile - loaded from server:', data.user);
       setProfile(data.user);
       setProfileCache((prev) => ({ ...prev, [address]: data.user }));
       
