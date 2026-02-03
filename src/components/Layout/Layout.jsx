@@ -266,14 +266,6 @@ export default function Layout({ children }) {
 
         <div className="header-actions">
           <button
-            className="icon-btn"
-            onClick={() => navigate(-1)}
-            aria-label="Go back"
-            title="Back"
-          >
-            ←
-          </button>
-          <button
             className="icon-btn mobile-search-btn"
             onClick={() => setShowMobileSearch((prev) => !prev)}
             aria-label="Search"
