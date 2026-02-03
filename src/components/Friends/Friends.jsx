@@ -15,6 +15,9 @@ export default function Friends() {
   const [loading, setLoading] = useState(true);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatPerson, setChatPerson] = useState(null);
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatSending, setChatSending] = useState(false);
+  const [chatNotice, setChatNotice] = useState('');
   const [mutualCounts, setMutualCounts] = useState({});
   const [presenceMap, setPresenceMap] = useState({});
 
@@ -196,11 +199,48 @@ export default function Friends() {
   function openChat(person) {
     setChatPerson(person);
     setChatOpen(true);
+    setChatMessage('');
+    setChatNotice('');
   }
 
   function closeChat() {
     setChatOpen(false);
     setChatPerson(null);
+    setChatMessage('');
+    setChatNotice('');
+  }
+
+  async function handleSendChatMessage() {
+    const message = chatMessage.trim();
+    if (!message) return;
+
+    const address =
+      chatPerson?.wallet_address ||
+      chatPerson?.walletAddress ||
+      chatPerson?.address ||
+      '';
+
+    if (!address) {
+      setChatNotice('Missing wallet address for this user.');
+      return;
+    }
+
+    try {
+      setChatSending(true);
+      setChatNotice('');
+      const data = await api.sendMessage(address, message);
+      if (data?.error) {
+        setChatNotice(data.error);
+        return;
+      }
+      setChatMessage('');
+      setChatNotice('Message sent.');
+    } catch (error) {
+      console.error('Send message error:', error);
+      setChatNotice('Failed to send message.');
+    } finally {
+      setChatSending(false);
+    }
   }
 
   function getFilteredList() {
@@ -434,21 +474,26 @@ export default function Friends() {
               <div className="chat-empty">
                 <div className="chat-empty-icon">💬</div>
                 <p>Start a conversation with {chatPerson.username}</p>
+                {chatNotice && <div className="chat-muted">{chatNotice}</div>}
               </div>
             </div>
             <div className="chat-modal-footer">
               <input
                 type="text"
                 placeholder="Type a message..."
+                value={chatMessage}
+                onChange={(e) => setChatMessage(e.target.value)}
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter' && e.target.value.trim()) {
-                    // TODO: Send message
-                    console.log('Send message:', e.target.value);
-                    e.target.value = '';
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSendChatMessage();
                   }
                 }}
+                disabled={chatSending}
               />
-              <button className="chat-send">Send</button>
+              <button className="chat-send" onClick={handleSendChatMessage} disabled={chatSending || !chatMessage.trim()}>
+                {chatSending ? 'Sending...' : 'Send'}
+              </button>
             </div>
           </div>
         </div>
