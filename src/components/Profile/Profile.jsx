@@ -633,6 +633,15 @@ export default function Profile() {
         languages: aboutForm.languages
       });
 
+      console.log('saveAboutInfo - result.user:', result.user);
+      
+      // Always clear cache to ensure fresh data on reload
+      setProfileCache((prev) => {
+        const copy = { ...prev };
+        delete copy[resolvedAddress];
+        return copy;
+      });
+
       // If API returns updated user, use it; otherwise reload from server
       if (result.user) {
         setProfile(result.user);
@@ -643,12 +652,6 @@ export default function Profile() {
         if (data.user) {
           setProfile(data.user);
           setUser(data.user);
-          // Clear cache so next load gets fresh data
-          setProfileCache((prev) => {
-            const copy = { ...prev };
-            delete copy[resolvedAddress];
-            return copy;
-          });
         }
       }
       setIsEditingAbout(false);
