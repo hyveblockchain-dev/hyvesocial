@@ -172,7 +172,7 @@ export default function CreatePost({ onPostCreated }) {
           </div>
         )}
 
-        {error && <div className="error-text">{error}</div>}
+        {error && <div className="inline-error">{error}</div>}
 
         <div className="create-post-actions">
           <div className="post-options">

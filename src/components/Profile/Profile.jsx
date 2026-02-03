@@ -29,6 +29,7 @@ export default function Profile() {
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [aboutSaving, setAboutSaving] = useState(false);
+  const [profileMessage, setProfileMessage] = useState('');
   const [aboutForm, setAboutForm] = useState({
     bio: '',
     location: '',
@@ -46,6 +47,7 @@ export default function Profile() {
   const [captionDraft, setCaptionDraft] = useState('');
   const [captionSaving, setCaptionSaving] = useState(false);
   const [resolvedAddress, setResolvedAddress] = useState(null);
+  const [profileCache, setProfileCache] = useState({});
   
   const isOwnProfile = user?.walletAddress && user?.walletAddress === resolvedAddress;
   const friendCount = profile?.friendCount || profile?.friendsCount || friends.length || 0;
@@ -155,8 +157,14 @@ export default function Profile() {
   async function loadProfile(address) {
     try {
       setLoading(true);
+      const cached = profileCache[address];
+      if (cached) {
+        setProfile(cached);
+        setLoading(false);
+      }
       const data = await api.getUserProfile(address);
       setProfile(data.user);
+      setProfileCache((prev) => ({ ...prev, [address]: data.user }));
       
       // Update user context if viewing own profile
       if (isOwnProfile) {
@@ -513,7 +521,7 @@ export default function Profile() {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('Image too large. Max 5MB.');
+      setProfileMessage('Image too large. Max 5MB.');
       return;
     }
 
@@ -539,9 +547,10 @@ export default function Profile() {
       // Reload everything to ensure consistency
       await loadProfile();
       await loadAlbums();
+      setProfileMessage('Profile picture updated.');
     } catch (error) {
       console.error('Update profile picture error:', error);
-      alert('Failed to update profile picture. Please try a smaller image.');
+      setProfileMessage('Failed to update profile picture. Please try a smaller image.');
     } finally {
       setUploading(false);
     }
@@ -552,7 +561,7 @@ export default function Profile() {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('Image too large. Max 5MB.');
+      setProfileMessage('Image too large. Max 5MB.');
       return;
     }
 
@@ -578,9 +587,10 @@ export default function Profile() {
       // Reload everything to ensure consistency
       await loadProfile();
       await loadAlbums();
+      setProfileMessage('Cover photo updated.');
     } catch (error) {
       console.error('Update cover photo error:', error);
-      alert('Failed to update cover photo. Please try a smaller image.');
+      setProfileMessage('Failed to update cover photo. Please try a smaller image.');
     } finally {
       setUploading(false);
     }
@@ -646,6 +656,11 @@ export default function Profile() {
 
   return (
     <div className="profile-page">
+      {profileMessage && (
+        <div className={profileMessage.startsWith('Failed') ? 'inline-error' : 'inline-success'}>
+          {profileMessage}
+        </div>
+      )}
       {/* Cover Photo */}
       <div className="cover-photo">
         {profile.coverImage ? (
