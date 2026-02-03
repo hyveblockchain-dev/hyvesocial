@@ -20,6 +20,7 @@ export default function Layout({ children }) {
   const [suggestedUsers, setSuggestedUsers] = useState([]);
   const [postCount, setPostCount] = useState(0);
   const [friendCount, setFriendCount] = useState(0);
+  const [onlineFriends, setOnlineFriends] = useState([]);
   const [isLightMode, setIsLightMode] = useState(() => localStorage.getItem('theme') === 'light');
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 
@@ -39,6 +40,7 @@ export default function Layout({ children }) {
   useEffect(() => {
     loadSuggestedUsers();
     loadUserStats();
+    loadOnlineFriends();
   }, [user]);
 
   useEffect(() => {
@@ -115,6 +117,18 @@ export default function Layout({ children }) {
       }
     } catch (error) {
       console.error('Load user stats error:', error);
+    }
+  }
+
+  async function loadOnlineFriends() {
+    if (!api.getFriends) return;
+    try {
+      const data = await api.getFriends();
+      const friends = data.friends || data || [];
+      setOnlineFriends(friends);
+    } catch (error) {
+      console.error('Load online friends error:', error);
+      setOnlineFriends([]);
     }
   }
 
@@ -324,7 +338,29 @@ export default function Layout({ children }) {
 
           <div className="friends-section">
             <h4>FRIENDS</h4>
-            <p className="empty-msg">No friends yet. Start following users!</p>
+            {onlineFriends.length === 0 ? (
+              <p className="empty-msg">No friends currently online</p>
+            ) : (
+              <div className="friends-list">
+                {onlineFriends.slice(0, 5).map((friend) => (
+                  <Link
+                    key={friend.wallet_address || friend.walletAddress}
+                    to={profilePathFor(friend)}
+                    className="friend-item"
+                  >
+                    {friend.profile_image ? (
+                      <img src={friend.profile_image} alt={friend.username} className="friend-avatar" />
+                    ) : (
+                      <div className="friend-avatar">
+                        {friend.username?.charAt(0).toUpperCase() || '?'}
+                      </div>
+                    )}
+                    <span className="friend-name">{friend.username}</span>
+                    <span className="friend-status" />
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </aside>
 

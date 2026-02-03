@@ -413,6 +413,63 @@ body.light-mode .stat-num {
   margin-bottom: 12px;
 }
 
+.friends-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.friend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text-primary);
+  padding: 6px 8px;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+  position: relative;
+}
+
+.friend-item:hover {
+  background: var(--bg-hover);
+}
+
+.friend-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--gold-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.friend-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.friend-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.friend-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3ddc84;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.6);
+}
+
 .empty-msg {
   font-size: 13px;
   color: #666;
