@@ -13,11 +13,6 @@ export default function Friends() {
   const [suggestions, setSuggestions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chatPerson, setChatPerson] = useState(null);
-  const [chatMessage, setChatMessage] = useState('');
-  const [chatSending, setChatSending] = useState(false);
-  const [chatNotice, setChatNotice] = useState('');
   const [mutualCounts, setMutualCounts] = useState({});
   const [presenceMap, setPresenceMap] = useState({});
 
@@ -197,50 +192,24 @@ export default function Friends() {
   }
 
   function openChat(person) {
-    setChatPerson(person);
-    setChatOpen(true);
-    setChatMessage('');
-    setChatNotice('');
-  }
-
-  function closeChat() {
-    setChatOpen(false);
-    setChatPerson(null);
-    setChatMessage('');
-    setChatNotice('');
-  }
-
-  async function handleSendChatMessage() {
-    const message = chatMessage.trim();
-    if (!message) return;
-
     const address =
-      chatPerson?.wallet_address ||
-      chatPerson?.walletAddress ||
-      chatPerson?.address ||
+      person?.wallet_address ||
+      person?.walletAddress ||
+      person?.address ||
       '';
+    const username = person?.username || person?.name || 'User';
+    const profileImage = person?.profile_image || person?.profileImage || '';
 
     if (!address) {
-      setChatNotice('Missing wallet address for this user.');
+      alert('Missing wallet address for this user.');
       return;
     }
 
-    try {
-      setChatSending(true);
-      setChatNotice('');
-      const data = await api.sendMessage(address, message);
-      if (data?.error) {
-        setChatNotice(data.error);
-        return;
-      }
-      setChatMessage('');
-      setChatNotice('Message sent.');
-    } catch (error) {
-      console.error('Send message error:', error);
-      setChatNotice('Failed to send message.');
-    } finally {
-      setChatSending(false);
-    }
+    window.dispatchEvent(
+      new CustomEvent('open-chat', {
+        detail: { address, username, profileImage }
+      })
+    );
   }
 
   function getFilteredList() {
@@ -440,64 +409,6 @@ export default function Friends() {
         )}
       </div>
 
-      {/* Chat Modal */}
-      {chatOpen && chatPerson && (
-        <div className="chat-modal-overlay" onClick={closeChat}>
-          <div className="chat-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="chat-modal-header">
-              <div className="chat-modal-user">
-                <div className="chat-modal-avatar">
-                  {chatPerson.profile_image ? (
-                    <img src={chatPerson.profile_image} alt={chatPerson.username} />
-                  ) : (
-                    <div className="avatar-placeholder-small">
-                      {chatPerson.username?.[0]?.toUpperCase() || '?'}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <h4>{chatPerson.username}</h4>
-                  <span className="chat-status">
-                    {(() => {
-                      const address = (chatPerson.wallet_address || chatPerson.walletAddress || chatPerson.address || '').toLowerCase?.() || (chatPerson.wallet_address || chatPerson.walletAddress || chatPerson.address);
-                      const entry = address ? presenceMap[address] : null;
-                      if (entry?.online) return 'Active now';
-                      if (entry?.lastSeen) return 'Offline';
-                      return 'Offline';
-                    })()}
-                  </span>
-                </div>
-              </div>
-              <button className="chat-close" onClick={closeChat}>✕</button>
-            </div>
-            <div className="chat-modal-body">
-              <div className="chat-empty">
-                <div className="chat-empty-icon">💬</div>
-                <p>Start a conversation with {chatPerson.username}</p>
-                {chatNotice && <div className="chat-muted">{chatNotice}</div>}
-              </div>
-            </div>
-            <div className="chat-modal-footer">
-              <input
-                type="text"
-                placeholder="Type a message..."
-                value={chatMessage}
-                onChange={(e) => setChatMessage(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSendChatMessage();
-                  }
-                }}
-                disabled={chatSending}
-              />
-              <button className="chat-send" onClick={handleSendChatMessage} disabled={chatSending || !chatMessage.trim()}>
-                {chatSending ? 'Sending...' : 'Send'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
