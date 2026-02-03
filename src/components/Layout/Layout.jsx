@@ -262,10 +262,6 @@ export default function Layout({ children }) {
               <span className="nav-icon">📰</span>
               <span>Feed</span>
             </Link>
-            <Link to="/videos" className={location.pathname === '/videos' ? 'nav-item active' : 'nav-item'}>
-              <span className="nav-icon">🎥</span>
-              <span>Videos</span>
-            </Link>
             <Link to="/profile/me" className={location.pathname.startsWith('/profile') ? 'nav-item active' : 'nav-item'}>
               <span className="nav-icon">👤</span>
               <span>My Profile</span>
@@ -340,9 +336,6 @@ export default function Layout({ children }) {
       <nav className="mobile-nav">
         <Link to="/" className={location.pathname === '/' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
           📰
-        </Link>
-        <Link to="/videos" className={location.pathname === '/videos' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
-          🎥
         </Link>
         <Link to="/profile/me" className={location.pathname.startsWith('/profile') ? 'mobile-nav-item active' : 'mobile-nav-item'}>
           👤
