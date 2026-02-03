@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import EthereumProvider from '@walletconnect/ethereum-provider';
 import api from '../services/api';
+import socketService from '../services/socket';
 import { API_URL, WALLETCONNECT_PROJECT_ID } from '../utils/env';
 
 const AuthContext = createContext(null);
@@ -9,6 +10,7 @@ let walletConnectProvider;
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     checkAuth();
@@ -25,6 +27,10 @@ export function AuthProvider({ children }) {
       const data = await api.getCurrentUser();
       if (data && data.user) {
         setUser(data.user);
+        if (data.user.walletAddress) {
+          socketService.connect(data.user.walletAddress);
+          setSocket(socketService.socket);
+        }
       } else {
         localStorage.removeItem('token');
       }
@@ -105,6 +111,10 @@ export function AuthProvider({ children }) {
     
     if (data.userExists && data.user) {
       setUser(data.user);
+      if (data.user.walletAddress) {
+        socketService.connect(data.user.walletAddress);
+        setSocket(socketService.socket);
+      }
       return { needsRegistration: false };
     } else {
       return { needsRegistration: true };
@@ -124,6 +134,10 @@ export function AuthProvider({ children }) {
     
     if (data.user) {
       setUser(data.user);
+      if (data.user.walletAddress) {
+        socketService.connect(data.user.walletAddress);
+        setSocket(socketService.socket);
+      }
     }
     
     return data;
@@ -132,10 +146,12 @@ export function AuthProvider({ children }) {
   function logout() {
     localStorage.removeItem('token');
     setUser(null);
+    socketService.disconnect();
+    setSocket(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, checkAuth, connectWallet }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, checkAuth, connectWallet, socket }}>
       {children}
     </AuthContext.Provider>
   );

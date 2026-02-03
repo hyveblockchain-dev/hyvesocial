@@ -159,6 +159,7 @@ body.light-mode .page-header {
   align-items: center;
   justify-content: center;
   line-height: 1;
+  position: relative;
 }
 
 .mobile-search-btn {
@@ -167,6 +168,96 @@ body.light-mode .page-header {
 
 .icon-btn:hover {
   background: #2a2a2a;
+}
+
+.notification-menu {
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 999px;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1.2;
+  border: 2px solid var(--bg-secondary);
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  width: 320px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  z-index: 200;
+  overflow: hidden;
+}
+
+.notification-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.notification-dropdown-header a {
+  font-size: 12px;
+  color: var(--gold-primary);
+}
+
+.notification-empty {
+  padding: 16px;
+  color: var(--text-secondary);
+  text-align: center;
+  font-size: 13px;
+}
+
+.notification-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.notification-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px;
+  text-decoration: none;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.notification-item:hover {
+  background: var(--bg-hover);
+}
+
+.notification-item img,
+.notification-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--gold-primary);
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .user-menu {
@@ -557,6 +648,11 @@ body.light-mode .stat-num {
     overflow: hidden;
     max-height: 240px;
     overflow-y: auto;
+  }
+
+  .notification-dropdown {
+    right: 0;
+    width: min(90vw, 320px);
   }
 
   .left-column,

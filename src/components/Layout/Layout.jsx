@@ -8,12 +8,14 @@ import api from '../../services/api';
 import './Layout.css';
 
 export default function Layout({ children }) {
-  const { user, logout } = useAuth();
+  const { user, logout, socket } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [selectedChat, setSelectedChat] = useState(null);
+  const [showNotificationsMenu, setShowNotificationsMenu] = useState(false);
+  const [notificationItems, setNotificationItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -41,7 +43,22 @@ export default function Layout({ children }) {
     loadSuggestedUsers();
     loadUserStats();
     loadOnlineFriends();
+    loadNotifications();
   }, [user]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleFriendRequest = () => {
+      loadNotifications();
+    };
+
+    socket.on('friend_request', handleFriendRequest);
+
+    return () => {
+      socket.off('friend_request', handleFriendRequest);
+    };
+  }, [socket]);
 
   useEffect(() => {
     document.body.classList.toggle('light-mode', isLightMode);
@@ -129,6 +146,18 @@ export default function Layout({ children }) {
     } catch (error) {
       console.error('Load online friends error:', error);
       setOnlineFriends([]);
+    }
+  }
+
+  async function loadNotifications() {
+    if (!api.getFriendRequests) return;
+    try {
+      const data = await api.getFriendRequests();
+      const requests = data.requests || [];
+      setNotificationItems(requests);
+    } catch (error) {
+      console.error('Load notifications error:', error);
+      setNotificationItems([]);
     }
   }
 
@@ -228,7 +257,57 @@ export default function Layout({ children }) {
           >
             {isLightMode ? '🌙' : '🌞'}
           </button>
-          <button className="icon-btn">🔔</button>
+          <div className="notification-menu">
+            <button
+              className="icon-btn"
+              onClick={() => setShowNotificationsMenu((prev) => !prev)}
+              aria-label="Notifications"
+              title="Notifications"
+            >
+              🔔
+              {notificationItems.length > 0 && (
+                <span className="notification-badge">
+                  {notificationItems.length > 9 ? '9+' : notificationItems.length}
+                </span>
+              )}
+            </button>
+            {showNotificationsMenu && (
+              <div className="notification-dropdown">
+                <div className="notification-dropdown-header">
+                  <span>Notifications</span>
+                  <Link to="/notifications" onClick={() => setShowNotificationsMenu(false)}>
+                    View all
+                  </Link>
+                </div>
+                {notificationItems.length === 0 ? (
+                  <div className="notification-empty">No new notifications</div>
+                ) : (
+                  <div className="notification-items">
+                    {notificationItems.slice(0, 3).map((request) => (
+                      <Link
+                        key={request.id}
+                        to="/notifications"
+                        className="notification-item"
+                        onClick={() => setShowNotificationsMenu(false)}
+                      >
+                        {request.profile_image ? (
+                          <img src={request.profile_image} alt={request.username} />
+                        ) : (
+                          <div className="notification-avatar">
+                            {request.username?.charAt(0).toUpperCase() || '?'}
+                          </div>
+                        )}
+                        <div>
+                          <strong>{request.username}</strong>
+                          <span> sent you a friend request</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
