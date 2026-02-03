@@ -93,6 +93,11 @@ export default function Layout({ children }) {
     return () => window.removeEventListener('open-chat', handleOpenChat);
   }, []);
 
+  useEffect(() => {
+    setShowChat(false);
+    setSelectedChat(null);
+  }, [location.pathname]);
+
   async function loadSuggestedUsers() {
     try {
       // Check if getUsers function exists
