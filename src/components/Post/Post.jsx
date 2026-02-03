@@ -232,6 +232,150 @@ export default function Post({ post, onDelete, onUpdate }) {
     }
   }
 
+  function renderReplies(parentId, depth) {
+    return comments
+      .filter((reply) => reply.parent_comment_id === parentId)
+      .map((reply) => renderCommentItem(reply, depth));
+  }
+
+  function renderCommentItem(comment, depth = 0) {
+    const isReply = depth > 0;
+    const indentStyle = depth > 1 ? { marginLeft: depth * 24 } : undefined;
+
+    return (
+      <div key={comment.id} className={`comment${isReply ? ' reply' : ''}`} style={indentStyle}>
+        {getAvatar(comment.profile_image, comment.username, 'comment-avatar')}
+        <div className="comment-content">
+          <div className="comment-header">
+            <span className="comment-author">{comment.username}</span>
+            <span className="comment-time">{formatDate(comment.created_at)}</span>
+          </div>
+          <p>{comment.content}</p>
+          {comment.media_url && (
+            <div className="comment-media">
+              <img src={comment.media_url} alt="Comment media" />
+            </div>
+          )}
+          <div className="comment-actions">
+            <div className="reaction-wrapper">
+              <button
+                className={`action-button ${commentReactions[comment.id] != null ? 'liked' : ''}`}
+                onClick={() => handleCommentReact(comment.id, commentReactions[comment.id] ?? 0)}
+              >
+                {commentReactions[comment.id] != null ? (
+                  <>
+                    {getReactionDisplay(commentReactions[comment.id]).emoji}{' '}
+                    {getReactionDisplay(commentReactions[comment.id]).label}
+                  </>
+                ) : (
+                  <>👍 Like</>
+                )}
+              </button>
+              <div className="reaction-menu">
+                {reactionOptions.map((option) => (
+                  <button
+                    key={option.type}
+                    className="reaction-item"
+                    onClick={() => handleCommentReact(comment.id, option.type)}
+                    title={option.label}
+                  >
+                    {option.emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button
+              className="comment-reply-btn"
+              onClick={() => setReplyOpen((prev) => ({ ...prev, [comment.id]: !prev[comment.id] }))}
+            >
+              Reply
+            </button>
+            {commentReactionCounts[comment.id] > 0 && (
+              <span className="comment-reaction-count">
+                {commentReactionCounts[comment.id]} reactions
+              </span>
+            )}
+          </div>
+
+          {replyOpen[comment.id] && (
+            <div className="reply-box">
+              <div className="reply-input">
+                <input
+                  type="text"
+                  placeholder="Write a reply..."
+                  value={replyText[comment.id] || ''}
+                  onChange={(e) =>
+                    setReplyText((prev) => ({ ...prev, [comment.id]: e.target.value }))
+                  }
+                />
+                <div className="reply-actions">
+                  <button
+                    type="button"
+                    className="emoji-btn"
+                    onClick={() =>
+                      setReplyEmojiOpen((prev) => ({ ...prev, [comment.id]: !prev[comment.id] }))
+                    }
+                  >
+                    😊
+                  </button>
+                  <label className="upload-btn">
+                    📷
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setReplyImage((prev) => ({ ...prev, [comment.id]: file }));
+                        setReplyPreview((prev) => ({
+                          ...prev,
+                          [comment.id]: URL.createObjectURL(file)
+                        }));
+                      }}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                  <button type="button" className="btn-primary" onClick={() => handleReply(comment.id)}>
+                    Reply
+                  </button>
+                </div>
+              </div>
+              {replyEmojiOpen[comment.id] && (
+                <div className="emoji-picker">
+                  {emojiOptions.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      className="emoji-btn"
+                      onClick={() => {
+                        setReplyText((prev) => ({
+                          ...prev,
+                          [comment.id]: `${prev[comment.id] || ''}${emoji}`
+                        }));
+                        setReplyEmojiOpen((prev) => ({ ...prev, [comment.id]: false }));
+                      }}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {replyPreview[comment.id] && (
+                <div className="comment-media">
+                  <img src={replyPreview[comment.id]} alt="Reply preview" />
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="reply-list">
+            {renderReplies(comment.id, depth + 1)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="post-card">
       <div className="post-header">
@@ -309,190 +453,7 @@ export default function Post({ post, onDelete, onUpdate }) {
             <>
               {comments
                 .filter((comment) => !comment.parent_comment_id)
-                .map((comment) => (
-                  <div key={comment.id} className="comment">
-                    {getAvatar(comment.profile_image, comment.username, 'comment-avatar')}
-                    <div className="comment-content">
-                      <div className="comment-header">
-                        <span className="comment-author">{comment.username}</span>
-                        <span className="comment-time">{formatDate(comment.created_at)}</span>
-                      </div>
-                      <p>{comment.content}</p>
-                      {comment.media_url && (
-                        <div className="comment-media">
-                          <img src={comment.media_url} alt="Comment media" />
-                        </div>
-                      )}
-                      <div className="comment-actions">
-                        <div className="reaction-wrapper">
-                          <button
-                            className={`action-button ${commentReactions[comment.id] != null ? 'liked' : ''}`}
-                            onClick={() => handleCommentReact(comment.id, commentReactions[comment.id] ?? 0)}
-                          >
-                            {commentReactions[comment.id] != null ? (
-                              <>
-                                {getReactionDisplay(commentReactions[comment.id]).emoji}{' '}
-                                {getReactionDisplay(commentReactions[comment.id]).label}
-                              </>
-                            ) : (
-                              <>👍 Like</>
-                            )}
-                          </button>
-                          <div className="reaction-menu">
-                            {reactionOptions.map((option) => (
-                              <button
-                                key={option.type}
-                                className="reaction-item"
-                                onClick={() => handleCommentReact(comment.id, option.type)}
-                                title={option.label}
-                              >
-                                {option.emoji}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        <button
-                          className="comment-reply-btn"
-                          onClick={() => setReplyOpen((prev) => ({ ...prev, [comment.id]: !prev[comment.id] }))}
-                        >
-                          Reply
-                        </button>
-                        {commentReactionCounts[comment.id] > 0 && (
-                          <span className="comment-reaction-count">
-                            {commentReactionCounts[comment.id]} reactions
-                          </span>
-                        )}
-                      </div>
-
-                      {replyOpen[comment.id] && (
-                        <div className="reply-box">
-                          <div className="reply-input">
-                            <input
-                              type="text"
-                              placeholder="Write a reply..."
-                              value={replyText[comment.id] || ''}
-                              onChange={(e) =>
-                                setReplyText((prev) => ({ ...prev, [comment.id]: e.target.value }))
-                              }
-                            />
-                            <div className="reply-actions">
-                              <button
-                                type="button"
-                                className="emoji-btn"
-                                onClick={() =>
-                                  setReplyEmojiOpen((prev) => ({ ...prev, [comment.id]: !prev[comment.id] }))
-                                }
-                              >
-                                😊
-                              </button>
-                              <label className="upload-btn">
-                                📷
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (!file) return;
-                                    setReplyImage((prev) => ({ ...prev, [comment.id]: file }));
-                                    setReplyPreview((prev) => ({
-                                      ...prev,
-                                      [comment.id]: URL.createObjectURL(file)
-                                    }));
-                                  }}
-                                  style={{ display: 'none' }}
-                                />
-                              </label>
-                              <button type="button" className="btn-primary" onClick={() => handleReply(comment.id)}>
-                                Reply
-                              </button>
-                            </div>
-                          </div>
-                          {replyEmojiOpen[comment.id] && (
-                            <div className="emoji-picker">
-                              {emojiOptions.map((emoji) => (
-                                <button
-                                  key={emoji}
-                                  type="button"
-                                  className="emoji-btn"
-                                  onClick={() => {
-                                    setReplyText((prev) => ({
-                                      ...prev,
-                                      [comment.id]: `${prev[comment.id] || ''}${emoji}`
-                                    }));
-                                    setReplyEmojiOpen((prev) => ({ ...prev, [comment.id]: false }));
-                                  }}
-                                >
-                                  {emoji}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                          {replyPreview[comment.id] && (
-                            <div className="comment-media">
-                              <img src={replyPreview[comment.id]} alt="Reply preview" />
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="reply-list">
-                        {comments
-                          .filter((reply) => reply.parent_comment_id === comment.id)
-                          .map((reply) => (
-                            <div key={reply.id} className="comment reply">
-                              {getAvatar(reply.profile_image, reply.username, 'comment-avatar')}
-                              <div className="comment-content">
-                                <div className="comment-header">
-                                  <span className="comment-author">{reply.username}</span>
-                                  <span className="comment-time">{formatDate(reply.created_at)}</span>
-                                </div>
-                                <p>{reply.content}</p>
-                                {reply.media_url && (
-                                  <div className="comment-media">
-                                    <img src={reply.media_url} alt="Reply media" />
-                                  </div>
-                                )}
-                                <div className="comment-actions">
-                                  <div className="reaction-wrapper">
-                                    <button
-                                      className={`action-button ${commentReactions[reply.id] != null ? 'liked' : ''}`}
-                                      onClick={() => handleCommentReact(reply.id, commentReactions[reply.id] ?? 0)}
-                                    >
-                                      {commentReactions[reply.id] != null ? (
-                                        <>
-                                          {getReactionDisplay(commentReactions[reply.id]).emoji}{' '}
-                                          {getReactionDisplay(commentReactions[reply.id]).label}
-                                        </>
-                                      ) : (
-                                        <>👍 Like</>
-                                      )}
-                                    </button>
-                                    <div className="reaction-menu">
-                                      {reactionOptions.map((option) => (
-                                        <button
-                                          key={option.type}
-                                          className="reaction-item"
-                                          onClick={() => handleCommentReact(reply.id, option.type)}
-                                          title={option.label}
-                                        >
-                                          {option.emoji}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </div>
-                                  {commentReactionCounts[reply.id] > 0 && (
-                                    <span className="comment-reaction-count">
-                                      {commentReactionCounts[reply.id]} reactions
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                .map((comment) => renderCommentItem(comment, 0))}
             </>
           )}
 
