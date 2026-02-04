@@ -71,6 +71,21 @@ export default function Chat({ onSelectChat, unreadMap = {}, onlineMap = {} }) {
     }
   }
 
+  async function prefetchMessages(username) {
+    if (!username || !api.getMessages) return;
+    const cacheKey = `chat_messages_${username}`;
+    if (sessionStorage.getItem(cacheKey)) return;
+    try {
+      const data = await api.getMessages(username);
+      const loaded = data.messages || [];
+      if (loaded.length > 0) {
+        sessionStorage.setItem(cacheKey, JSON.stringify(loaded));
+      }
+    } catch (error) {
+      // ignore prefetch errors
+    }
+  }
+
   function handleSelectChat(conversation) {
     if (onSelectChat) {
       const username = conversation.username || 'Anonymous';
@@ -117,6 +132,7 @@ export default function Chat({ onSelectChat, unreadMap = {}, onlineMap = {} }) {
                 key={username}
                 className="conversation-item"
                 onClick={() => handleSelectChat(conversation)}
+                onMouseEnter={() => prefetchMessages(username)}
               >
                 <div className="conversation-avatar-wrapper">
                   {profileImage ? (

@@ -53,6 +53,7 @@ export default function ChatWindow({ conversation, onClose }) {
     if (!conversationUsername) return;
     
     try {
+      let hadCache = false;
       if (cacheKey) {
         const cached = sessionStorage.getItem(cacheKey);
         if (cached) {
@@ -61,6 +62,7 @@ export default function ChatWindow({ conversation, onClose }) {
             if (Array.isArray(parsed) && parsed.length > 0) {
               setMessages(parsed);
               setLoading(false);
+              hadCache = true;
             }
           } catch {
             // ignore cache errors
@@ -68,7 +70,7 @@ export default function ChatWindow({ conversation, onClose }) {
         }
       }
 
-      if (messages.length === 0) {
+      if (!hadCache && messages.length === 0) {
         setLoading(true);
       }
       const data = await api.getMessages(conversationUsername);
