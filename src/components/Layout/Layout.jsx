@@ -968,7 +968,7 @@ export default function Layout({ children }) {
             <button className="close-chat" onClick={() => setShowChat(false)}>✕</button>
           </div>
           <div className="chat-list-body">
-            <Chat onSelectChat={handleChatSelect} />
+            <Chat onSelectChat={handleChatSelect} unreadMap={unreadMessages} />
           </div>
         </div>
       )}

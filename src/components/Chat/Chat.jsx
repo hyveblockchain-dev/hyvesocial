@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import './Chat.css';
 
-export default function Chat({ onSelectChat }) {
+export default function Chat({ onSelectChat, unreadMap = {} }) {
   const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -109,6 +109,7 @@ export default function Chat({ onSelectChat }) {
           {conversations.map(conversation => {
             const username = conversation.username || 'Anonymous';
             const profileImage = conversation.profile_image || conversation.profileImage;
+            const unreadCount = Number(unreadMap?.[String(username).toLowerCase()] || 0);
             
             return (
               <div
@@ -131,6 +132,11 @@ export default function Chat({ onSelectChat }) {
                   <div className="conversation-name">{username}</div>
                   <div className="conversation-preview">Start a conversation...</div>
                 </div>
+                {unreadCount > 0 && (
+                  <span className="conversation-badge">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </div>
             );
           })}
