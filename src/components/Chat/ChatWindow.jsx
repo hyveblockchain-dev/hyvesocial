@@ -1,9 +1,6 @@
 // src/components/Chat/ChatWindow.jsx
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-// src/components/Chat/ChatWindow.jsx
-import { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import './Chat.css';
 import { formatDateTime } from '../../utils/date';
