@@ -9,6 +9,7 @@ export default function ChatWindow({ conversation, onClose }) {
   const { user, socket } = useAuth();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
   const conversationUsername = conversation?.username;
@@ -37,6 +38,8 @@ export default function ChatWindow({ conversation, onClose }) {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const emojiOptions = ['😀','😄','😁','😅','😂','😍','🥳','😎','😮','😢','😡','👍','❤️','🔥','🎉'];
 
   function handleNewMessage(message) {
     const fromUsername = message.from_username || message.fromUsername || message.sender_username || message.from || message.sender || message.username;
@@ -117,6 +120,7 @@ export default function ChatWindow({ conversation, onClose }) {
       };
       setMessages((prev) => [...prev, withDefaults]);
       setNewMessage('');
+      setShowEmojiPicker(false);
     } catch (error) {
       console.error('Send message error:', error);
     }
@@ -177,8 +181,34 @@ export default function ChatWindow({ conversation, onClose }) {
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
         />
+        <button
+          type="button"
+          className="emoji-toggle"
+          onClick={() => setShowEmojiPicker((prev) => !prev)}
+          aria-label="Add emoji"
+          title="Add emoji"
+        >
+          😊
+        </button>
         <button type="submit">Send</button>
       </form>
+      {showEmojiPicker && (
+        <div className="chat-emoji-picker">
+          {emojiOptions.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              className="emoji-option"
+              onClick={() => {
+                setNewMessage((prev) => `${prev}${emoji}`);
+                setShowEmojiPicker(false);
+              }}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
