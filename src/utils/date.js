@@ -2,6 +2,21 @@ export function parseDateValue(value) {
   if (!value) return null;
 
   if (typeof value === 'object') {
+    if (value.$date !== undefined) {
+      const rawDate = value.$date;
+      if (rawDate && typeof rawDate === 'object') {
+        const longValue = rawDate.$numberLong ?? rawDate.$numberInt;
+        if (longValue !== undefined) {
+          return parseDateValue(longValue);
+        }
+      }
+      return parseDateValue(rawDate);
+    }
+
+    if (value.date !== undefined) {
+      return parseDateValue(value.date);
+    }
+
     if (typeof value.toDate === 'function') {
       const date = value.toDate();
       return date instanceof Date && !Number.isNaN(date.getTime()) ? date : null;

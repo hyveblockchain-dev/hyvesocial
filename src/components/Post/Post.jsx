@@ -55,6 +55,10 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
       item.created ||
       item.created_on ||
       item.createdOn ||
+      item.updated_at ||
+      item.updatedAt ||
+      item.updated_on ||
+      item.updatedOn ||
       item.posted_at ||
       item.postedAt ||
       item.published_at ||
