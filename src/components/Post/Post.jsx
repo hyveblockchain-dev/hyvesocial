@@ -480,7 +480,7 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
           </div>
         </Link>
         {isOwner && (
-          <button className="delete-button" onClick={handleDelete}>🗑️</button>
+          <button className="delete-button" onClick={handleDelete}>✕</button>
         )}
       </div>
 
