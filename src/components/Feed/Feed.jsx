@@ -96,7 +96,15 @@ export default function Feed() {
         post.user?.username ||
         post.authorName ||
         post.name;
-      const isOwner = ownerName === user?.username;
+      const authorName = (authorUsername || '').toLowerCase();
+
+      if (!authorName) return true;
+      if (currentUsername && authorName === currentUsername) return true;
+      if (authorName && friendUsernameSet.has(authorName)) return true;
+      return false;
+    });
+  }, [posts, friendUsernameSet, user]);
+
   const visibleStories = useMemo(() => {
     return (stories || []).filter((story) => {
       const ownerUsername = (story.user?.username || story.username || '').toLowerCase();
