@@ -78,44 +78,40 @@ export default function Feed() {
     }
   }
 
-  const friendAddressSet = useMemo(() => {
+  const friendUsernameSet = useMemo(() => {
     return new Set(
       friends
-        .map((friend) => friend.wallet_address || friend.walletAddress || friend.address)
+        .map((friend) => friend.username || friend.user?.username || friend.name)
         .filter(Boolean)
+        .map((name) => name.toLowerCase())
     );
   }, [friends]);
 
   const visiblePosts = useMemo(() => {
-    const currentAddress = user?.walletAddress || user?.wallet_address;
+    const currentUsername = user?.username?.toLowerCase();
     return posts.filter((post) => {
-      const authorAddress =
-        post.author_address ||
-        post.wallet_address ||
-        post.user?.walletAddress ||
-        post.user?.wallet_address ||
-        post.address;
-      if (currentAddress && authorAddress === currentAddress) return true;
-      if (authorAddress && friendAddressSet.has(authorAddress)) return true;
+      const authorUsername =
+        post.username ||
+        post.author_username ||
+        post.user?.username ||
+        post.authorName ||
+        post.name;
+      const normalizedAuthor = authorUsername?.toLowerCase?.();
+      if (currentUsername && normalizedAuthor === currentUsername) return true;
+      if (normalizedAuthor && friendUsernameSet.has(normalizedAuthor)) return true;
       return false;
     });
-  }, [posts, friendAddressSet, user]);
+  }, [posts, friendUsernameSet, user]);
 
   const visibleStories = useMemo(() => {
     return (stories || []).filter((story) => {
-      const ownerAddress =
-        story.user?.walletAddress ||
-        story.user?.wallet_address ||
-        story.owner_address ||
-        story.wallet_address ||
-        story.address;
-      const ownerUsername = story.user?.username || story.username || '';
-      if (ownerUsername && ownerUsername === user?.username) return true;
-      if (ownerAddress && ownerAddress === user?.walletAddress) return true;
-      if (ownerAddress && friendAddressSet.has(ownerAddress)) return true;
+      const ownerUsername = (story.user?.username || story.username || '').toLowerCase();
+      const currentUsername = user?.username?.toLowerCase();
+      if (ownerUsername && ownerUsername === currentUsername) return true;
+      if (ownerUsername && friendUsernameSet.has(ownerUsername)) return true;
       return false;
     });
-  }, [stories, friendAddressSet, user]);
+  }, [stories, friendUsernameSet, user]);
 
   async function handleCreateStory() {
     if (!storyFile) {
