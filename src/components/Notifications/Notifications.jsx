@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
+import { normalizeNotification } from '../../utils/notifications';
 import './Notifications.css';
 
 export default function Notifications() {
@@ -66,6 +67,45 @@ export default function Notifications() {
     };
   }, [socket]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const events = [
+      'notification',
+      'new_notification',
+      'post_comment',
+      'comment',
+      'comment_created',
+      'reply',
+      'reply_created',
+      'comment_reply',
+      'post_reply',
+      'post_reaction',
+      'comment_reaction',
+      'reaction',
+      'follow'
+    ];
+
+    const handlers = events.map((eventName) => {
+      const handler = (payload) => {
+        const normalized = normalizeNotification(payload, eventName);
+        if (!normalized) return;
+
+        setNotifications((prev) => {
+          if (prev.some((item) => item.id === normalized.id)) return prev;
+          return [normalized, ...prev];
+        });
+      };
+
+      socket.on(eventName, handler);
+      return { eventName, handler };
+    });
+
+    return () => {
+      handlers.forEach(({ eventName, handler }) => socket.off(eventName, handler));
+    };
+  }, [socket]);
+
   async function loadFriendRequests() {
     try {
       setLoading(true);
@@ -76,10 +116,10 @@ export default function Notifications() {
       const requestNotifications = requests
         .filter((request) => !read.has(`request-${request.id}`))
         .map((request) => ({
-        id: `request-${request.id}`,
-        type: 'friend_request',
-        createdAt: request.created_at || new Date().toISOString(),
-        request
+          id: `request-${request.id}`,
+          type: 'friend_request',
+          createdAt: request.created_at || new Date().toISOString(),
+          request
         }));
       setNotifications((prev) => {
         const existingIds = new Set(prev.map((item) => item.id));
@@ -222,6 +262,43 @@ export default function Notifications() {
                       <strong>{user.username || 'Someone'}</strong> accepted your friend request
                     </p>
                     <div className="notification-meta">Now you’re friends</div>
+                  </div>
+                </div>
+              );
+            }
+
+            if (['post_comment', 'comment_reply', 'reaction', 'follow', 'notification'].includes(item.type)) {
+              const user = item.user || {};
+              const username = user.username || 'Someone';
+              const message =
+                item.type === 'post_comment'
+                  ? 'commented on your post'
+                  : item.type === 'comment_reply'
+                  ? 'replied to your comment'
+                  : item.type === 'reaction'
+                  ? 'reacted to your post'
+                  : item.type === 'follow'
+                  ? 'started following you'
+                  : 'sent you a notification';
+
+              const snippet = item.commentContent || item.postContent || '';
+
+              return (
+                <div key={item.id} className="notification-card">
+                  <div className="notification-avatar">
+                    {user.profileImage || user.profile_image ? (
+                      <img src={user.profileImage || user.profile_image} alt={username} />
+                    ) : (
+                      <div className="avatar-placeholder">
+                        {username?.charAt(0).toUpperCase() || '?'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="notification-content">
+                    <p>
+                      <strong>{username}</strong> {message}
+                    </p>
+                    {snippet && <div className="notification-meta">{snippet}</div>}
                   </div>
                 </div>
               );

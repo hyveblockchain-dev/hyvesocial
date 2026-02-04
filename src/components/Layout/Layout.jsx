@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import Chat from '../Chat/Chat';
 import ChatWindow from '../Chat/ChatWindow';
 import api from '../../services/api';
+import { normalizeNotification } from '../../utils/notifications';
 import './Layout.css';
 
 export default function Layout({ children }) {
@@ -55,6 +56,21 @@ export default function Layout({ children }) {
     return (userObj?.username || userObj?.user?.username || '').toLowerCase();
   }
 
+  function getActivityLabel(item) {
+    switch (item.type) {
+      case 'post_comment':
+        return 'commented on your post';
+      case 'comment_reply':
+        return 'replied to your comment';
+      case 'reaction':
+        return 'reacted to your post';
+      case 'follow':
+        return 'started following you';
+      default:
+        return 'sent you a notification';
+    }
+  }
+
   useEffect(() => {
     loadSuggestedUsers();
     loadUserStats();
@@ -93,6 +109,56 @@ export default function Layout({ children }) {
       socket.off('presence:update', handlePresenceUpdate);
     };
   }, [socket]);
+
+  useEffect(() => {
+    if (!socket || !user?.username) return;
+
+    const currentHandle = String(user.username || '').toLowerCase();
+    const events = [
+      'notification',
+      'new_notification',
+      'post_comment',
+      'comment',
+      'comment_created',
+      'reply',
+      'reply_created',
+      'comment_reply',
+      'post_reply',
+      'post_reaction',
+      'comment_reaction',
+      'reaction',
+      'follow'
+    ];
+
+    const handlers = events.map((eventName) => {
+      const handler = (payload) => {
+        const normalized = normalizeNotification(payload, eventName);
+        if (!normalized) return;
+
+        const actorHandle =
+          (normalized.user?.username || normalized.user?.user?.username || '').toLowerCase();
+        if (actorHandle && actorHandle === currentHandle) return;
+
+        const recipient = normalized.recipient ? String(normalized.recipient).toLowerCase() : '';
+        if (recipient && recipient !== currentHandle) return;
+
+        const read = getReadNotifications();
+        if (read.has(normalized.id)) return;
+
+        setNotificationItems((prev) => {
+          if (prev.some((item) => item.id === normalized.id)) return prev;
+          return [normalized, ...prev];
+        });
+      };
+
+      socket.on(eventName, handler);
+      return { eventName, handler };
+    });
+
+    return () => {
+      handlers.forEach(({ eventName, handler }) => socket.off(eventName, handler));
+    };
+  }, [socket, user]);
 
   useEffect(() => {
     if (!friendsList.length) {
@@ -265,7 +331,23 @@ export default function Layout({ children }) {
       });
       const read = getReadNotifications();
       const unreadRequests = requests.filter((request) => !read.has(`request-${request.id}`));
-      setNotificationItems(unreadRequests);
+      const requestNotifications = unreadRequests.map((request) => ({
+        id: `request-${request.id}`,
+        type: 'friend_request',
+        createdAt: request.created_at || new Date().toISOString(),
+        request
+      }));
+
+      setNotificationItems((prev) => {
+        const nonRequests = prev.filter((item) => item.type !== 'friend_request');
+        const merged = [...requestNotifications, ...nonRequests];
+        const seen = new Set();
+        return merged.filter((item) => {
+          if (!item?.id || seen.has(item.id)) return false;
+          seen.add(item.id);
+          return true;
+        });
+      });
     } catch (error) {
       console.error('Load notifications error:', error);
       setNotificationItems([]);
@@ -418,61 +500,98 @@ export default function Layout({ children }) {
                   <div className="notification-empty">No new notifications</div>
                 ) : (
                   <div className="notification-items">
-                    {notificationItems.slice(0, 5).map((request) => (
-                      <div key={request.id} className="notification-item">
-                        <Link
-                          to={profilePathFor(request)}
-                          className="notification-item-user"
-                          onClick={() => setShowNotificationsMenu(false)}
-                        >
-                          {request.profile_image ? (
-                            <img src={request.profile_image} alt={request.username} />
-                          ) : (
-                            <div className="notification-avatar">
-                              {request.username?.charAt(0).toUpperCase() || '?'}
+                    {notificationItems.slice(0, 5).map((item) => {
+                      if (item.type === 'friend_request') {
+                        const request = item.request;
+                        if (!request) return null;
+                        return (
+                          <div key={item.id} className="notification-item">
+                            <Link
+                              to={profilePathFor(request)}
+                              className="notification-item-user"
+                              onClick={() => setShowNotificationsMenu(false)}
+                            >
+                              {request.profile_image ? (
+                                <img src={request.profile_image} alt={request.username} />
+                              ) : (
+                                <div className="notification-avatar">
+                                  {request.username?.charAt(0).toUpperCase() || '?'}
+                                </div>
+                              )}
+                              <div className="notification-text">
+                                <strong>{request.username}</strong>
+                                <span> sent you a friend request</span>
+                              </div>
+                            </Link>
+                            <div className="notification-item-actions">
+                              <button
+                                className="btn-accept-small"
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    await api.acceptFriendRequest(request.id);
+                                    markNotificationRead(`request-${request.id}`);
+                                    setNotificationItems((prev) =>
+                                      prev.filter((entry) => entry.id !== `request-${request.id}`)
+                                    );
+                                  } catch (err) {
+                                    console.error('Accept friend request error:', err);
+                                  }
+                                }}
+                                title="Accept"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                className="btn-decline-small"
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    await api.declineFriendRequest(request.id);
+                                    markNotificationRead(`request-${request.id}`);
+                                    setNotificationItems((prev) =>
+                                      prev.filter((entry) => entry.id !== `request-${request.id}`)
+                                    );
+                                  } catch (err) {
+                                    console.error('Decline friend request error:', err);
+                                  }
+                                }}
+                                title="Decline"
+                              >
+                                ✕
+                              </button>
                             </div>
-                          )}
-                          <div className="notification-text">
-                            <strong>{request.username}</strong>
-                            <span> sent you a friend request</span>
                           </div>
-                        </Link>
-                        <div className="notification-item-actions">
-                          <button
-                            className="btn-accept-small"
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              try {
-                                await api.acceptFriendRequest(request.id);
-                                markNotificationRead(`request-${request.id}`);
-                                setNotificationItems((prev) => prev.filter((item) => item.id !== request.id));
-                              } catch (err) {
-                                console.error('Accept friend request error:', err);
-                              }
-                            }}
-                            title="Accept"
+                        );
+                      }
+
+                      const actor = item.user || {};
+                      const actorName = actor.username || 'Someone';
+                      return (
+                        <div key={item.id} className="notification-item">
+                          <Link
+                            to={profilePathFor(actor)}
+                            className="notification-item-user"
+                            onClick={() => setShowNotificationsMenu(false)}
                           >
-                            ✓
-                          </button>
-                          <button
-                            className="btn-decline-small"
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              try {
-                                await api.declineFriendRequest(request.id);
-                                markNotificationRead(`request-${request.id}`);
-                                setNotificationItems((prev) => prev.filter((item) => item.id !== request.id));
-                              } catch (err) {
-                                console.error('Decline friend request error:', err);
-                              }
-                            }}
-                            title="Decline"
-                          >
-                            ✕
-                          </button>
+                            {actor.profileImage || actor.profile_image ? (
+                              <img
+                                src={actor.profileImage || actor.profile_image}
+                                alt={actorName}
+                              />
+                            ) : (
+                              <div className="notification-avatar">
+                                {actorName?.charAt(0).toUpperCase() || '?'}
+                              </div>
+                            )}
+                            <div className="notification-text">
+                              <strong>{actorName}</strong>
+                              <span> {getActivityLabel(item)}</span>
+                            </div>
+                          </Link>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

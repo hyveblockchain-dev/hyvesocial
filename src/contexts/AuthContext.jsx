@@ -16,12 +16,21 @@ export function AuthProvider({ children }) {
     checkAuth();
   }, []);
 
+  useEffect(() => {
+    if (!socket || !user?.username) return;
+    socket.emit('join', user.username);
+  }, [user, socket]);
+
   async function checkAuth() {
     try {
       const token = localStorage.getItem('auth_token');
       if (!token) {
         setLoading(false);
         return;
+      }
+
+      if (!localStorage.getItem('token')) {
+        localStorage.setItem('token', token);
       }
 
       const data = await api.getCurrentUser();
@@ -48,6 +57,9 @@ export function AuthProvider({ children }) {
       socket.on('connect', () => console.log('✅ Socket connected'));
       socket.on('disconnect', () => console.log('❌ Socket disconnected'));
       socket.on('connect_error', (error) => console.error('Socket error:', error));
+      socket.onAny((event, payload) => {
+        console.log('📡 Socket event:', event, payload);
+      });
     } catch (error) {
       console.error('Socket setup error:', error);
     }
@@ -62,6 +74,7 @@ export function AuthProvider({ children }) {
       }
       
       localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('token', data.token);
       setUser(data.user);
       connectSocket(data.token);
       
@@ -76,6 +89,7 @@ export function AuthProvider({ children }) {
     try {
       const data = await api.register(walletAddress, username);
       localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('token', data.token);
       setUser(data.user);
       connectSocket(data.token);
       return data;
@@ -87,6 +101,7 @@ export function AuthProvider({ children }) {
 
   function logout() {
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('token');
     setUser(null);
     if (socket) {
       socket.disconnect();
