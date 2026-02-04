@@ -22,10 +22,18 @@ export function parseDateValue(value) {
       return Number.isNaN(date.getTime()) ? null : date;
     }
 
-    const date = new Date(trimmed);
-    if (!Number.isNaN(date.getTime())) return date;
+    const direct = new Date(trimmed);
+    if (!Number.isNaN(direct.getTime())) return direct;
 
-    const normalized = trimmed.replace(' ', 'T');
+    let normalized = trimmed.replace(' ', 'T');
+
+    normalized = normalized.replace(/\.(\d{3})\d+/, '.$1');
+
+    normalized = normalized.replace(/([+-]\d{2})(\d{2})$/, '$1:$2');
+    normalized = normalized.replace(/([+-]\d{2})$/, '$1:00');
+
+    normalized = normalized.replace(/\s*(UTC|GMT)$/i, 'Z');
+
     const normalizedDate = new Date(normalized);
     return Number.isNaN(normalizedDate.getTime()) ? null : normalizedDate;
   }
