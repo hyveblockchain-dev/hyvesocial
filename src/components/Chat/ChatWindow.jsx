@@ -1,5 +1,5 @@
 // src/components/Chat/ChatWindow.jsx
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import './Chat.css';
@@ -12,6 +12,7 @@ export default function ChatWindow({ conversation, onClose }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
+  const hasInitialScrollRef = useRef(false);
   const conversationUsername = conversation?.username;
   const cacheKey = conversationUsername ? `chat_messages_${conversationUsername}` : null;
 
@@ -35,8 +36,14 @@ export default function ChatWindow({ conversation, onClose }) {
     };
   }, [conversationUsername, socket]);
 
-  useEffect(() => {
-    scrollToBottom();
+  useLayoutEffect(() => {
+    if (!messages.length) return;
+    if (!hasInitialScrollRef.current) {
+      scrollToBottom('auto');
+      hasInitialScrollRef.current = true;
+      return;
+    }
+    scrollToBottom('smooth');
   }, [messages]);
 
   const emojiOptions = ['😀','😄','😁','😅','😂','😍','🥳','😎','😮','😢','😡','👍','❤️','🔥','🎉'];
@@ -60,6 +67,7 @@ export default function ChatWindow({ conversation, onClose }) {
           try {
             const parsed = JSON.parse(cached);
             if (Array.isArray(parsed) && parsed.length > 0) {
+              hasInitialScrollRef.current = false;
               setMessages(parsed);
               setLoading(false);
               hadCache = true;
@@ -75,6 +83,7 @@ export default function ChatWindow({ conversation, onClose }) {
       }
       const data = await api.getMessages(conversationUsername);
       const loaded = data.messages || [];
+      hasInitialScrollRef.current = false;
       setMessages((prev) => {
         if (!prev.length) return loaded;
         const toKey = (m) =>
@@ -133,8 +142,8 @@ export default function ChatWindow({ conversation, onClose }) {
     return formatDateTime(raw, { dateStyle: 'medium', timeStyle: 'short' }, '');
   }
 
-  function scrollToBottom() {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  function scrollToBottom(behavior = 'smooth') {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   }
 
   return (
