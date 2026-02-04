@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import './Chat.css';
+import { formatTime } from '../../utils/date';
 
 export default function ChatWindow({ conversation, onClose }) {
   const { user, socket } = useAuth();
@@ -123,10 +124,7 @@ export default function ChatWindow({ conversation, onClose }) {
 
   function formatMessageTime(message) {
     const raw = message?.created_at || message?.createdAt || message?.timestamp || message?.sent_at || message?.sentAt;
-    if (!raw) return '';
-    const date = new Date(raw);
-    if (Number.isNaN(date.getTime())) return '';
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return formatTime(raw, { hour: '2-digit', minute: '2-digit' }, '');
   }
 
   function scrollToBottom() {

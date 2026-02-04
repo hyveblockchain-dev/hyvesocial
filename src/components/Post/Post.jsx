@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { parseDateValue, formatDate } from '../../utils/date';
 import api from '../../services/api';
 import './Post.css';
 
@@ -46,10 +47,9 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
 
   const isOwner = (post.username || post.author_username || post.user?.username) === user?.username;
 
-  function formatDate(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) return '';
+  function formatRelativeTime(value) {
+    const date = parseDateValue(value);
+    if (!date) return '';
     const now = new Date();
     const diff = now - date;
     const minutes = Math.floor(diff / 60000);
@@ -60,7 +60,7 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
-    return date.toLocaleDateString();
+    return formatDate(date);
   }
 
   const reactionOptions = [
@@ -305,7 +305,7 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
         <div className="comment-content">
           <div className="comment-header">
             <span className="comment-author">{comment.username}</span>
-            <span className="comment-time">{formatDate(comment.created_at || comment.createdAt)}</span>
+            <span className="comment-time">{formatRelativeTime(comment.created_at || comment.createdAt)}</span>
           </div>
           {contentText && <p>{contentText}</p>}
           {comment.media_url && (
@@ -444,7 +444,7 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
           {getAvatar(post.profile_image, post.username, 'author-avatar')}
           <div className="author-info">
             <div className="author-name">{post.username || 'Anonymous'}</div>
-            <div className="post-time">{formatDate(post.created_at || post.createdAt)}</div>
+            <div className="post-time">{formatRelativeTime(post.created_at || post.createdAt)}</div>
           </div>
         </Link>
         {isOwner && (
