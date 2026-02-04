@@ -31,6 +31,7 @@ export default function Layout({ children }) {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   const READ_NOTIFICATIONS_KEY = 'read_notifications';
+  const RECENT_NOTIFICATIONS_KEY = 'recent_notifications';
 
   function getReadNotifications() {
     try {
@@ -45,6 +46,33 @@ export default function Layout({ children }) {
     const current = getReadNotifications();
     current.add(id);
     localStorage.setItem(READ_NOTIFICATIONS_KEY, JSON.stringify([...current]));
+  }
+
+  function getRecentNotifications() {
+    try {
+      const stored = localStorage.getItem(RECENT_NOTIFICATIONS_KEY);
+      const parsed = stored ? JSON.parse(stored) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveRecentNotifications(list) {
+    const trimmed = Array.isArray(list) ? list.slice(0, 20) : [];
+    localStorage.setItem(RECENT_NOTIFICATIONS_KEY, JSON.stringify(trimmed));
+    setNotificationItems(trimmed);
+  }
+
+  function upsertRecentNotification(entry) {
+    if (!entry?.id) return;
+    setNotificationItems((prev) => {
+      const existing = prev || [];
+      const filtered = existing.filter((item) => item?.id !== entry.id);
+      const next = [entry, ...filtered].slice(0, 20);
+      localStorage.setItem(RECENT_NOTIFICATIONS_KEY, JSON.stringify(next));
+      return next;
+    });
   }
 
   function profilePathFor(userObj) {
@@ -102,6 +130,7 @@ export default function Layout({ children }) {
     loadOnlineFriends();
     loadNotifications();
     loadBlockedUsers();
+    setNotificationItems(getRecentNotifications());
   }, [user]);
 
   useEffect(() => {
@@ -170,10 +199,7 @@ export default function Layout({ children }) {
         const read = getReadNotifications();
         if (read.has(normalized.id)) return;
 
-        setNotificationItems((prev) => {
-          if (prev.some((item) => item.id === normalized.id)) return prev;
-          return [normalized, ...prev];
-        });
+        upsertRecentNotification(normalized);
       };
 
       socket.on(eventName, handler);
@@ -363,16 +389,14 @@ export default function Layout({ children }) {
         request
       }));
 
-      setNotificationItems((prev) => {
-        const nonRequests = prev.filter((item) => item.type !== 'friend_request');
-        const merged = [...requestNotifications, ...nonRequests];
-        const seen = new Set();
-        return merged.filter((item) => {
-          if (!item?.id || seen.has(item.id)) return false;
-          seen.add(item.id);
-          return true;
-        });
+      const merged = [...requestNotifications, ...getRecentNotifications()];
+      const seen = new Set();
+      const deduped = merged.filter((item) => {
+        if (!item?.id || seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
       });
+      saveRecentNotifications(deduped);
     } catch (error) {
       console.error('Load notifications error:', error);
       setNotificationItems([]);
@@ -556,9 +580,6 @@ export default function Layout({ children }) {
                                   try {
                                     await api.acceptFriendRequest(request.id);
                                     markNotificationRead(`request-${request.id}`);
-                                    setNotificationItems((prev) =>
-                                      prev.filter((entry) => entry.id !== `request-${request.id}`)
-                                    );
                                   } catch (err) {
                                     console.error('Accept friend request error:', err);
                                   }
@@ -574,9 +595,6 @@ export default function Layout({ children }) {
                                   try {
                                     await api.declineFriendRequest(request.id);
                                     markNotificationRead(`request-${request.id}`);
-                                    setNotificationItems((prev) =>
-                                      prev.filter((entry) => entry.id !== `request-${request.id}`)
-                                    );
                                   } catch (err) {
                                     console.error('Decline friend request error:', err);
                                   }
