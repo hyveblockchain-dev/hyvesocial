@@ -90,8 +90,9 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
   function getPostTimeLabel(item) {
     const timestamp = extractTimestamp(item);
     const relative = formatRelativeTime(timestamp);
-    if (relative) return relative;
-    return formatDateTime(timestamp, { dateStyle: 'medium', timeStyle: 'short' }, '');
+    const absolute = formatDateTime(timestamp, { dateStyle: 'medium', timeStyle: 'short' }, '');
+    if (relative && absolute) return `${relative} · ${absolute}`;
+    return relative || absolute;
   }
 
   const reactionOptions = [
