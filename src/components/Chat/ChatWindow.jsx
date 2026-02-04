@@ -37,11 +37,10 @@ export default function ChatWindow({ conversation, onClose }) {
   }, [messages]);
 
   function handleNewMessage(message) {
-    if (
-      message.from_username === conversationUsername ||
-      message.to_username === conversationUsername
-    ) {
-      setMessages(prev => [...prev, message]);
+    const fromUsername = message.from_username || message.fromUsername || message.sender_username || message.from || message.sender || message.username;
+    const toUsername = message.to_username || message.toUsername || message.recipient_username || message.to || message.recipient;
+    if (fromUsername === conversationUsername || toUsername === conversationUsername) {
+      setMessages((prev) => [...prev, message]);
     }
   }
 
@@ -65,12 +64,28 @@ export default function ChatWindow({ conversation, onClose }) {
     if (!newMessage.trim()) return;
 
     try {
-      const message = await api.sendMessage(conversationUsername, newMessage);
-      setMessages(prev => [...prev, message.message]);
+      const response = await api.sendMessage(conversationUsername, newMessage);
+      const sentMessage = response?.message || response;
+      const withDefaults = {
+        ...sentMessage,
+        content: sentMessage?.content ?? newMessage,
+        from_username: sentMessage?.from_username ?? user?.username,
+        to_username: sentMessage?.to_username ?? conversationUsername,
+        created_at: sentMessage?.created_at ?? new Date().toISOString()
+      };
+      setMessages((prev) => [...prev, withDefaults]);
       setNewMessage('');
     } catch (error) {
       console.error('Send message error:', error);
     }
+  }
+
+  function formatMessageTime(message) {
+    const raw = message?.created_at || message?.createdAt || message?.timestamp || message?.sent_at || message?.sentAt;
+    if (!raw) return '';
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
   function scrollToBottom() {
@@ -100,16 +115,14 @@ export default function ChatWindow({ conversation, onClose }) {
           <div className="no-messages">No messages yet. Start the conversation!</div>
         ) : (
           messages.map((message, index) => {
-            const currentUsername = user?.username;
-            const isOwn = message.from_username === currentUsername;
+            const currentUsername = user?.username?.toLowerCase?.();
+            const fromUsername = (message.from_username || message.fromUsername || message.sender_username || message.from || message.sender || message.username || '').toLowerCase();
+            const isOwn = !!currentUsername && fromUsername === currentUsername;
             return (
               <div key={index} className={`message ${isOwn ? 'own' : 'other'}`}>
                 <div className="message-content">{message.content}</div>
                 <div className="message-time">
-                  {new Date(message.created_at).toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
+                  {formatMessageTime(message)}
                 </div>
               </div>
             );
