@@ -603,6 +603,7 @@ body.light-mode .stat-num {
   font-size: 11px;
   color: #888;
   margin-bottom: 12px;
+  text-align: center;
 }
 
 .friends-list {
