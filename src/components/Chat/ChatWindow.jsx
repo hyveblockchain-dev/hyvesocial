@@ -1,6 +1,9 @@
 // src/components/Chat/ChatWindow.jsx
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+// src/components/Chat/ChatWindow.jsx
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import './Chat.css';
 import { formatDateTime } from '../../utils/date';
@@ -12,12 +15,12 @@ export default function ChatWindow({ conversation, onClose }) {
   const [newMessage, setNewMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [e2eeReady, setE2eeReady] = useState(false);
+  const [e2eeError, setE2eeError] = useState('');
   const messagesEndRef = useRef(null);
   const hasInitialScrollRef = useRef(false);
   const conversationUsername = conversation?.username;
   const cacheKey = conversationUsername ? `chat_messages_${conversationUsername}` : null;
-  const [e2eeReady, setE2eeReady] = useState(false);
-  const [e2eeError, setE2eeError] = useState('');
 
   useEffect(() => {
     if (!conversationUsername) {
@@ -27,7 +30,6 @@ export default function ChatWindow({ conversation, onClose }) {
 
     initE2EE().then(loadMessages);
 
-    // Listen for new messages
     if (socket) {
       socket.on('new_message', handleNewMessage);
     }
@@ -51,17 +53,45 @@ export default function ChatWindow({ conversation, onClose }) {
 
   const emojiOptions = ['😀','😄','😁','😅','😂','😍','🥳','😎','😮','😢','😡','👍','❤️','🔥','🎉'];
 
-  function handleNewMessage(message) {
+  async function initE2EE() {
+    try {
+      const { publicKey, isNew } = await ensureKeypair();
+      setE2eeReady(true);
+      setE2eeError('');
+      if (isNew) {
+        await api.setPublicKey(publicKey);
+      }
+    } catch (error) {
+      setE2eeError(error?.message || 'E2EE unavailable');
+    }
+  }
+
+  async function hydrateMessage(message) {
+    const raw = message?.content;
+    if (typeof raw === 'string' && raw.startsWith('ENC:')) {
+      const cipher = raw.slice(4);
+      try {
+        const plain = await decryptMessageContent(cipher);
+        return { ...message, content: plain, _encrypted: true };
+      } catch (error) {
+        return { ...message, content: '[Encrypted message]', _decryptError: true };
+      }
+    }
+    return message;
+  }
+
+  async function handleNewMessage(message) {
     const fromUsername = message.from_username || message.fromUsername || message.sender_username || message.from || message.sender || message.username;
     const toUsername = message.to_username || message.toUsername || message.recipient_username || message.to || message.recipient;
     if (fromUsername === conversationUsername || toUsername === conversationUsername) {
-      setMessages((prev) => [...prev, message]);
+      const hydrated = await hydrateMessage(message);
+      setMessages((prev) => [...prev, hydrated]);
     }
   }
 
   async function loadMessages() {
     if (!conversationUsername) return;
-    
+
     try {
       let hadCache = false;
       if (cacheKey) {
@@ -84,46 +114,21 @@ export default function ChatWindow({ conversation, onClose }) {
       if (!hadCache && messages.length === 0) {
         setLoading(true);
       }
+
       const data = await api.getMessages(conversationUsername);
       const loaded = data.messages || [];
       hasInitialScrollRef.current = false;
+      const hydrated = await Promise.all(loaded.map(hydrateMessage));
 
-            async function initE2EE() {
-              try {
-                const { publicKey, isNew } = await ensureKeypair();
-                setE2eeReady(true);
-                setE2eeError('');
-                if (isNew) {
-                  await api.setPublicKey(publicKey);
-                }
-              } catch (error) {
-                setE2eeError(error?.message || 'E2EE unavailable');
-              }
-            }
-
-            async function hydrateMessage(message) {
-              const raw = message?.content;
-              if (typeof raw === 'string' && raw.startsWith('ENC:')) {
-                const cipher = raw.slice(4);
-                try {
-                  const plain = await decryptMessageContent(cipher);
-                  return { ...message, content: plain, _encrypted: true };
-                } catch (error) {
-                  return { ...message, content: '[Encrypted message]', _decryptError: true };
-                }
-              }
-              return message;
-            }
       setMessages((prev) => {
         if (!prev.length) return hydrated;
         const toKey = (m) =>
           m.id ||
           m.message_id ||
-                const hydrated = await hydrateMessage(message);
-                setMessages((prev) => [...prev, hydrated]);
+          `${m.from_username || m.fromUsername || ''}-${m.to_username || m.toUsername || ''}-${m.created_at || m.createdAt || ''}-${m.content || ''}`;
         const map = new Map();
         prev.forEach((m) => map.set(toKey(m), m));
-        loaded.forEach((m) => map.set(toKey(m), m));
+        hydrated.forEach((m) => map.set(toKey(m), m));
         const merged = Array.from(map.values()).sort((a, b) => {
           const aTime = new Date(a.created_at || a.createdAt || 0).getTime();
           const bTime = new Date(b.created_at || b.createdAt || 0).getTime();
@@ -147,15 +152,26 @@ export default function ChatWindow({ conversation, onClose }) {
 
   async function handleSendMessage(e) {
     e.preventDefault();
-    
+
     if (!newMessage.trim()) return;
 
     try {
-      const response = await api.sendMessage(conversationUsername, newMessage);
+      if (!e2eeReady) {
+        await initE2EE();
+      }
+      const keyResponse = await api.getUserKey(conversationUsername);
+      const recipientKey = keyResponse?.publicKey;
+      if (!recipientKey) {
+        alert('This user has not enabled encrypted chat yet.');
+        return;
+      }
+
+      const cipher = await encryptMessageForRecipient(recipientKey, newMessage);
+      const response = await api.sendMessage(conversationUsername, `ENC:${cipher}`);
       const sentMessage = response?.message || response;
       const withDefaults = {
         ...sentMessage,
-        content: sentMessage?.content ?? newMessage,
+        content: newMessage,
         from_username: sentMessage?.from_username ?? user?.username,
         to_username: sentMessage?.to_username ?? conversationUsername,
         created_at: sentMessage?.created_at ?? new Date().toISOString()
@@ -189,22 +205,14 @@ export default function ChatWindow({ conversation, onClose }) {
             </div>
           )}
           <span>{conversation.username}</span>
-                if (!e2eeReady) {
-                  await initE2EE();
-                }
-                const keyResponse = await api.getUserKey(conversationUsername);
-                const recipientKey = keyResponse?.publicKey;
-                if (!recipientKey) {
-                  alert('This user has not enabled encrypted chat yet.');
-                  return;
-                }
-
-                const cipher = await encryptMessageForRecipient(recipientKey, newMessage);
         </div>
         <button className="close-button" onClick={onClose}>✕</button>
       </div>
 
-                  content: newMessage,
+      <div className="chat-messages">
+        {e2eeError && (
+          <div className="chat-loading">Encrypted chat unavailable: {e2eeError}</div>
+        )}
         {loading ? (
           <div className="chat-loading">Loading messages...</div>
         ) : messages.length === 0 ? (
@@ -243,9 +251,6 @@ export default function ChatWindow({ conversation, onClose }) {
         >
           😊
         </button>
-                  {e2eeError && (
-                    <div className="chat-loading">Encrypted chat unavailable: {e2eeError}</div>
-                  )}
         <button type="submit">Send</button>
       </form>
       {showEmojiPicker && (
