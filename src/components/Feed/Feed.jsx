@@ -431,7 +431,7 @@ export default function Feed() {
             <p>No posts yet. Add friends to see their posts!</p>
           </div>
         ) : (
-          {visiblePosts.map((post) => (
+          visiblePosts.map((post) => (
             <Post
               key={post.id}
               post={post}
