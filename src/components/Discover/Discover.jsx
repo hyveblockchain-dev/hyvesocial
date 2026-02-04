@@ -1,11 +1,13 @@
 // src/components/Discover/Discover.jsx
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import './Discover.css';
 
 export default function Discover() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState([]);
@@ -113,30 +115,50 @@ export default function Discover() {
               <div className="users-grid">
                 {filteredUsers.map((person) => {
                   const username = person.username || person.name || 'User';
+                  const profileHandle = person.username || person.name || '';
                   const isFriend = friendHandleSet.has(username.toLowerCase());
                   return (
-                    <div key={username} className="user-card">
-                    <div className="user-card-info">
-                      <div className="user-avatar">
-                        {person.profile_image ? (
-                          <img src={person.profile_image} alt={person.username} />
-                        ) : (
-                          <div className="avatar-placeholder">
-                            {person.username?.charAt(0).toUpperCase() || '?'}
-                          </div>
-                        )}
+                    <div
+                      key={username}
+                      className="user-card"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => {
+                        if (!profileHandle) return;
+                        navigate(`/profile/${encodeURIComponent(profileHandle)}`);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          if (!profileHandle) return;
+                          navigate(`/profile/${encodeURIComponent(profileHandle)}`);
+                        }
+                      }}
+                    >
+                      <div className="user-card-info">
+                        <div className="user-avatar">
+                          {person.profile_image ? (
+                            <img src={person.profile_image} alt={person.username} />
+                          ) : (
+                            <div className="avatar-placeholder">
+                              {person.username?.charAt(0).toUpperCase() || '?'}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="user-name">{person.username}</div>
+                          {person.bio && <div className="user-bio">{person.bio}</div>}
+                        </div>
                       </div>
-                      <div>
-                        <div className="user-name">{person.username}</div>
-                        {person.bio && <div className="user-bio">{person.bio}</div>}
-                      </div>
-                    </div>
                       {isFriend ? (
                         <span className="friend-badge">Friends</span>
                       ) : (
                         <button
                           className="btn-primary"
-                          onClick={() => handleSendRequest(username)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSendRequest(username);
+                          }}
                           disabled={pendingRequests[username]}
                         >
                           {pendingRequests[username] ? 'Requested' : 'Add Friend'}
