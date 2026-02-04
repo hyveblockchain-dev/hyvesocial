@@ -65,7 +65,9 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
       item.publishedAt ||
       item.timestamp ||
       item.time ||
-      item.date
+      item.date ||
+      item._id ||
+      item.id
     );
   }
 

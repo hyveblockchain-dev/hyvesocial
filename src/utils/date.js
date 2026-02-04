@@ -51,6 +51,14 @@ export function parseDateValue(value) {
     const trimmed = value.trim();
     if (!trimmed) return null;
 
+    if (/^[a-fA-F0-9]{24}$/.test(trimmed)) {
+      const seconds = parseInt(trimmed.slice(0, 8), 16);
+      if (!Number.isNaN(seconds)) {
+        const date = new Date(seconds * 1000);
+        return Number.isNaN(date.getTime()) ? null : date;
+      }
+    }
+
     const numeric = Number(trimmed);
     if (!Number.isNaN(numeric) && String(numeric) === trimmed) {
       const ms = numeric < 1e12 ? numeric * 1000 : numeric;
