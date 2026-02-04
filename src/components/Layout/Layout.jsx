@@ -25,6 +25,7 @@ export default function Layout({ children }) {
   const [friendsList, setFriendsList] = useState([]);
   const [presenceMap, setPresenceMap] = useState({});
   const [onlineFriends, setOnlineFriends] = useState([]);
+  const [blockedUsers, setBlockedUsers] = useState([]);
   const [isLightMode, setIsLightMode] = useState(() => localStorage.getItem('theme') === 'light');
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 
@@ -58,11 +59,16 @@ export default function Layout({ children }) {
     return (userObj?.username || userObj?.user?.username || '').toLowerCase();
   }
 
+  function normalizeAddress(value) {
+    return value?.toLowerCase?.() || value;
+  }
+
   useEffect(() => {
     loadSuggestedUsers();
     loadUserStats();
     loadOnlineFriends();
     loadNotifications();
+    loadBlockedUsers();
   }, [user]);
 
   useEffect(() => {
@@ -141,9 +147,9 @@ export default function Layout({ children }) {
       const blockedData = api.getBlockedUsers ? await api.getBlockedUsers() : { blocked: [] };
       const friendList = friendsData.friends || friendsData || [];
       const blockedList = blockedData.blocks || blockedData.blocked || blockedData.users || [];
-      const friendAddressSet = new Set(friendList.map(getUserAddress).filter(Boolean));
+      const friendAddressSet = new Set(friendList.map(getUserAddress).map(normalizeAddress).filter(Boolean));
       const friendHandleSet = new Set(friendList.map(getUserHandle).filter(Boolean));
-      const blockedAddressSet = new Set(Array.isArray(blockedList) ? blockedList.map(getUserAddress).filter(Boolean) : []);
+      const blockedAddressSet = new Set(Array.isArray(blockedList) ? blockedList.map(getUserAddress).map(normalizeAddress).filter(Boolean) : []);
       const blockedHandleSet = new Set(Array.isArray(blockedList) ? blockedList.map(getUserHandle).filter(Boolean) : []);
       
       if (!data || !data.users) {
@@ -152,7 +158,7 @@ export default function Layout({ children }) {
       
       // Filter out current user and get random 5
       const others = data.users.filter(u => {
-        const address = getUserAddress(u);
+        const address = normalizeAddress(getUserAddress(u));
         const handle = getUserHandle(u);
         if (address && address === user?.walletAddress) return false;
         if (address && friendAddressSet.has(address)) return false;
@@ -166,6 +172,21 @@ export default function Layout({ children }) {
     } catch (error) {
       console.error('Load suggested users error:', error);
       // Don't block the app if this fails
+    }
+  }
+
+  async function loadBlockedUsers() {
+    if (!api.getBlockedUsers) {
+      setBlockedUsers([]);
+      return;
+    }
+    try {
+      const data = await api.getBlockedUsers();
+      const blockedList = data.blocks || data.blocked || data.users || data || [];
+      setBlockedUsers(Array.isArray(blockedList) ? blockedList : []);
+    } catch (error) {
+      console.error('Load blocked users error:', error);
+      setBlockedUsers([]);
     }
   }
 
@@ -192,11 +213,31 @@ export default function Layout({ children }) {
   async function loadOnlineFriends() {
     if (!api.getFriends) return;
     try {
-      const [friendsData, presenceData] = await Promise.all([
+      const [friendsData, presenceData, blockedData] = await Promise.all([
         api.getFriends(),
-        api.getPresence ? api.getPresence() : Promise.resolve({ presence: [] })
+        api.getPresence ? api.getPresence() : Promise.resolve({ presence: [] }),
+        api.getBlockedUsers ? api.getBlockedUsers() : Promise.resolve({ blocked: [] })
       ]);
       const friends = friendsData.friends || friendsData || [];
+      const blockedList = blockedData.blocks || blockedData.blocked || blockedData.users || blockedData || [];
+      const blockedAddressSet = new Set(
+        (Array.isArray(blockedList) ? blockedList : [])
+          .map(getUserAddress)
+          .map(normalizeAddress)
+          .filter(Boolean)
+      );
+      const blockedHandleSet = new Set(
+        (Array.isArray(blockedList) ? blockedList : [])
+          .map(getUserHandle)
+          .filter(Boolean)
+      );
+      const filteredFriends = friends.filter((friend) => {
+        const address = normalizeAddress(getUserAddress(friend));
+        const handle = getUserHandle(friend);
+        if (address && blockedAddressSet.has(address)) return false;
+        if (handle && blockedHandleSet.has(handle)) return false;
+        return true;
+      });
       const presenceList = presenceData?.presence || [];
 
       const nextPresence = {};
@@ -211,7 +252,7 @@ export default function Layout({ children }) {
         }
       });
 
-      setFriendsList(friends);
+      setFriendsList(filteredFriends);
       setPresenceMap(nextPresence);
     } catch (error) {
       console.error('Load online friends error:', error);
@@ -225,7 +266,30 @@ export default function Layout({ children }) {
     if (!api.getFriendRequests) return;
     try {
       const data = await api.getFriendRequests();
-      const requests = data.requests || [];
+      let blockedList = blockedUsers;
+      if (!blockedList.length && api.getBlockedUsers) {
+        const blockedData = await api.getBlockedUsers();
+        blockedList = blockedData.blocks || blockedData.blocked || blockedData.users || blockedData || [];
+      }
+      const blockedAddressSet = new Set(
+        (Array.isArray(blockedList) ? blockedList : [])
+          .map(getUserAddress)
+          .map(normalizeAddress)
+          .filter(Boolean)
+      );
+      const blockedHandleSet = new Set(
+        (Array.isArray(blockedList) ? blockedList : [])
+          .map(getUserHandle)
+          .filter(Boolean)
+      );
+
+      const requests = (data.requests || []).filter((request) => {
+        const address = normalizeAddress(getUserAddress(request));
+        const handle = getUserHandle(request);
+        if (address && blockedAddressSet.has(address)) return false;
+        if (handle && blockedHandleSet.has(handle)) return false;
+        return true;
+      });
       const read = getReadNotifications();
       const unreadRequests = requests.filter((request) => !read.has(`request-${request.id}`));
       setNotificationItems(unreadRequests);
@@ -247,9 +311,33 @@ export default function Layout({ children }) {
         console.log('searchUsers not available');
         return;
       }
-      
+
       const data = await api.searchUsers(query);
-      setSearchResults(data.users || []);
+      let blockedList = blockedUsers;
+      if (!blockedList.length && api.getBlockedUsers) {
+        const blockedData = await api.getBlockedUsers();
+        blockedList = blockedData.blocks || blockedData.blocked || blockedData.users || blockedData || [];
+      }
+      const blockedAddressSet = new Set(
+        (Array.isArray(blockedList) ? blockedList : [])
+          .map(getUserAddress)
+          .map(normalizeAddress)
+          .filter(Boolean)
+      );
+      const blockedHandleSet = new Set(
+        (Array.isArray(blockedList) ? blockedList : [])
+          .map(getUserHandle)
+          .filter(Boolean)
+      );
+
+      const filteredResults = (data.users || []).filter((candidate) => {
+        const address = normalizeAddress(getUserAddress(candidate));
+        const handle = getUserHandle(candidate);
+        if (address && blockedAddressSet.has(address)) return false;
+        if (handle && blockedHandleSet.has(handle)) return false;
+        return true;
+      });
+      setSearchResults(filteredResults);
       setShowSearchResults(true);
     } catch (error) {
       console.error('Search error:', error);

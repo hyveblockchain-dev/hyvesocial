@@ -27,6 +27,8 @@ export default function Profile() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [friends, setFriends] = useState([]);
   const [friendsLoading, setFriendsLoading] = useState(false);
+  const [blockedUsers, setBlockedUsers] = useState([]);
+  const [blockedLoading, setBlockedLoading] = useState(false);
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [aboutSaving, setAboutSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
@@ -73,9 +75,61 @@ export default function Profile() {
   const isProfilePhotoAlbum = /profile/i.test(selectedAlbum?.name || selectedAlbum?.title || '');
   const isCoverPhotoAlbum = /cover/i.test(selectedAlbum?.name || selectedAlbum?.title || '');
 
+  function getUserAddress(userObj) {
+    return userObj?.walletAddress || userObj?.wallet_address || userObj?.address || userObj?.user?.walletAddress || userObj?.user?.wallet_address || userObj?.user?.address;
+  }
+
+  function normalizeAddress(value) {
+    return value?.toLowerCase?.() || value;
+  }
+
+  function getUserHandle(userObj) {
+    return (userObj?.username || userObj?.name || userObj?.user?.username || '').toLowerCase();
+  }
+
+  function getFriendProfilePath(friend) {
+    const username = friend?.username || friend?.name || friend?.user?.username;
+    const address =
+      friend?.walletAddress ||
+      friend?.wallet_address ||
+      friend?.address ||
+      friend?.user?.walletAddress ||
+      friend?.user?.wallet_address ||
+      friend?.user?.address;
+
+    if (username) {
+      return `/profile/${encodeURIComponent(username)}`;
+    }
+
+    if (address) {
+      return `/profile/${encodeURIComponent(address)}`;
+    }
+
+    return null;
+  }
+
   function isWalletAddress(value) {
     return /^0x[a-fA-F0-9]{40}$/.test(value || '');
   }
+
+  const blockedAddressSet = new Set(
+    blockedUsers
+      .map(getUserAddress)
+      .map(normalizeAddress)
+      .filter(Boolean)
+  );
+  const blockedHandleSet = new Set(
+    blockedUsers
+      .map(getUserHandle)
+      .filter(Boolean)
+  );
+  const visibleFriends = friends.filter((friend) => {
+    const address = normalizeAddress(getUserAddress(friend));
+    const handle = getUserHandle(friend);
+    if (address && blockedAddressSet.has(address)) return false;
+    if (handle && blockedHandleSet.has(handle)) return false;
+    return true;
+  });
 
   useEffect(() => {
     resolveProfileHandle();
@@ -91,6 +145,14 @@ export default function Profile() {
       checkFriendshipStatus(resolvedAddress);
     }
   }, [resolvedAddress, handle]);
+
+  useEffect(() => {
+    if (isOwnProfile) {
+      loadBlockedUsers();
+    } else {
+      setBlockedUsers([]);
+    }
+  }, [isOwnProfile]);
 
   useEffect(() => {
     if (!socket || !resolvedAddress) return;
@@ -168,6 +230,24 @@ export default function Profile() {
       setFriends([]);
     } finally {
       setFriendsLoading(false);
+    }
+  }
+
+  async function loadBlockedUsers() {
+    if (!api.getBlockedUsers) {
+      setBlockedUsers([]);
+      return;
+    }
+    try {
+      setBlockedLoading(true);
+      const data = await api.getBlockedUsers();
+      const blockedList = data.blocks || data.blocked || data.users || data || [];
+      setBlockedUsers(Array.isArray(blockedList) ? blockedList : []);
+    } catch (error) {
+      console.error('Load blocked users error:', error);
+      setBlockedUsers([]);
+    } finally {
+      setBlockedLoading(false);
     }
   }
 
@@ -306,6 +386,9 @@ export default function Profile() {
       await api.blockUser(resolvedAddress);
       setFriendshipStatus('blocked');
       setRequestId(null);
+      if (isOwnProfile) {
+        loadBlockedUsers();
+      }
     } catch (error) {
       console.error('Block user error:', error);
       alert('Failed to block user');
@@ -322,6 +405,9 @@ export default function Profile() {
         await api.unblockUser(resolvedAddress);
       }
       setFriendshipStatus('none');
+      if (isOwnProfile) {
+        loadBlockedUsers();
+      }
     } catch (error) {
       console.error('Unblock user error:', error);
       alert('Failed to unblock user');
@@ -898,6 +984,14 @@ export default function Profile() {
           >
             Photos
           </button>
+          {isOwnProfile && (
+            <button
+              className={activeTab === 'blocked' ? 'tab active' : 'tab'}
+              onClick={() => setActiveTab('blocked')}
+            >
+              Blocked
+            </button>
+          )}
         </div>
       </div>
 
@@ -1130,7 +1224,7 @@ export default function Profile() {
             <h2>Friends</h2>
             {friendsLoading ? (
               <div className="loading-container"><div className="spinner"></div></div>
-            ) : friends.length === 0 ? (
+            ) : visibleFriends.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-state-icon">👥</div>
                 <div className="empty-state-title">No friends to show</div>
@@ -1138,7 +1232,7 @@ export default function Profile() {
               </div>
             ) : (
               <div className="friends-grid">
-                {friends.map(friend => {
+                {visibleFriends.map(friend => {
                   const username = friend.username || friend.name || friend.user?.username || 'User';
                   const image = friend.profileImage || friend.profile_image || friend.user?.profileImage;
                   const friendKey =
@@ -1148,8 +1242,27 @@ export default function Profile() {
                     friend.address ||
                     username;
 
+                  const friendProfilePath = getFriendProfilePath(friend);
+
                   return (
-                    <div key={friendKey} className="friend-card">
+                    <div
+                      key={friendKey}
+                      className="friend-card"
+                      role={friendProfilePath ? 'button' : undefined}
+                      tabIndex={friendProfilePath ? 0 : undefined}
+                      onClick={() => {
+                        if (friendProfilePath) {
+                          navigate(friendProfilePath);
+                        }
+                      }}
+                      onKeyDown={(event) => {
+                        if (!friendProfilePath) return;
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          navigate(friendProfilePath);
+                        }
+                      }}
+                    >
                       <div className="friend-avatar">
                         {image ? (
                           <img src={image} alt={username} />
@@ -1165,12 +1278,80 @@ export default function Profile() {
                       {!isOwnProfile && (
                         <button
                           className="btn-message"
-                          onClick={() => handleMessageUser(friend)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleMessageUser(friend);
+                          }}
                           disabled={actionLoading}
                         >
                           💬 Message
                         </button>
                       )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'blocked' && isOwnProfile && (
+          <div className="profile-card">
+            <h2>Blocked Users</h2>
+            {blockedLoading ? (
+              <div className="loading-container"><div className="spinner"></div></div>
+            ) : blockedUsers.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">🚫</div>
+                <div className="empty-state-title">No blocked users</div>
+                <div className="empty-state-description">Users you block will appear here.</div>
+              </div>
+            ) : (
+              <div className="friends-grid">
+                {blockedUsers.map((blockedUser) => {
+                  const username = blockedUser?.username || blockedUser?.name || blockedUser?.user?.username || 'User';
+                  const image = blockedUser?.profileImage || blockedUser?.profile_image || blockedUser?.user?.profileImage;
+                  const blockedKey =
+                    blockedUser?.id ||
+                    blockedUser?.wallet_address ||
+                    blockedUser?.walletAddress ||
+                    blockedUser?.address ||
+                    username;
+                  const blockedAddress = getUserAddress(blockedUser);
+
+                  return (
+                    <div key={blockedKey} className="friend-card blocked-card">
+                      <div className="friend-avatar">
+                        {image ? (
+                          <img src={image} alt={username} />
+                        ) : (
+                          <div className="friend-avatar-placeholder">
+                            {username.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="friend-info">
+                        <div className="friend-name">{username}</div>
+                      </div>
+                      <button
+                        className="btn-secondary"
+                        onClick={async () => {
+                          if (!blockedAddress) return;
+                          try {
+                            setActionLoading(true);
+                            await api.unblockUser(blockedAddress);
+                            loadBlockedUsers();
+                          } catch (error) {
+                            console.error('Unblock user error:', error);
+                            alert('Failed to unblock user');
+                          } finally {
+                            setActionLoading(false);
+                          }
+                        }}
+                        disabled={actionLoading}
+                      >
+                        ✅ Unblock
+                      </button>
                     </div>
                   );
                 })}

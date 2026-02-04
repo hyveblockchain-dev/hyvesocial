@@ -160,7 +160,8 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
     if (!commentText.trim() && !commentImage) return;
 
     try {
-      const data = await api.addComment(post.id, commentText, { imageFile: commentImage });
+      const contentToSend = commentText.trim() ? commentText : (commentImage ? ' ' : '');
+      const data = await api.addComment(post.id, contentToSend, { imageFile: commentImage });
       const newComment = {
         ...data.comment,
         username: user.username,
@@ -182,7 +183,8 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
     if (!text.trim() && !imageFile) return;
 
     try {
-      const data = await api.addComment(post.id, text, { parentCommentId: commentId, imageFile });
+      const contentToSend = text.trim() ? text : (imageFile ? ' ' : '');
+      const data = await api.addComment(post.id, contentToSend, { parentCommentId: commentId, imageFile });
       const newReply = {
         ...data.comment,
         username: user.username,
@@ -293,6 +295,7 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
   function renderCommentItem(comment, depth = 0) {
     const isReply = depth > 0;
     const indentStyle = depth > 1 ? { marginLeft: depth * 24 } : undefined;
+    const contentText = comment?.content?.trim?.() ? comment.content : '';
 
     return (
       <div key={comment.id} className={`comment${isReply ? ' reply' : ''}`} style={indentStyle}>
@@ -302,7 +305,7 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
             <span className="comment-author">{comment.username}</span>
             <span className="comment-time">{formatDate(comment.created_at)}</span>
           </div>
-          <p>{comment.content}</p>
+          {contentText && <p>{contentText}</p>}
           {comment.media_url && (
             <div className="comment-media">
               <img src={comment.media_url} alt="Comment media" />

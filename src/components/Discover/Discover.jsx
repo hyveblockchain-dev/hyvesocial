@@ -12,6 +12,18 @@ export default function Discover() {
   const [friends, setFriends] = useState([]);
   const [pendingRequests, setPendingRequests] = useState({});
 
+  function getUserAddress(userObj) {
+    return userObj?.wallet_address || userObj?.walletAddress || userObj?.address || userObj?.user?.wallet_address || userObj?.user?.walletAddress || userObj?.user?.address;
+  }
+
+  function getUserHandle(userObj) {
+    return (userObj?.username || userObj?.user?.username || userObj?.name || '').toLowerCase();
+  }
+
+  function normalizeAddress(value) {
+    return value?.toLowerCase?.() || value;
+  }
+
   useEffect(() => {
     loadDiscover();
   }, []);
@@ -28,14 +40,29 @@ export default function Discover() {
       const friendList = friendsData.friends || friendsData || [];
       setFriends(friendList);
 
+      const blockedList = blockedData?.blocks || blockedData?.blocked || blockedData?.users || blockedData || [];
       const blockedAddresses = new Set(
-        (blockedData.blocked || []).map((blocked) => blocked.wallet_address).filter(Boolean)
+        (Array.isArray(blockedList) ? blockedList : [])
+          .map(getUserAddress)
+          .map(normalizeAddress)
+          .filter(Boolean)
+      );
+      const blockedHandles = new Set(
+        (Array.isArray(blockedList) ? blockedList : [])
+          .map(getUserHandle)
+          .filter(Boolean)
       );
 
       const allUsers = usersData.users || usersData || [];
       const filtered = allUsers
         .filter((u) => u.wallet_address !== user?.walletAddress)
-        .filter((u) => !blockedAddresses.has(u.wallet_address));
+        .filter((u) => {
+          const address = normalizeAddress(getUserAddress(u));
+          const handle = getUserHandle(u);
+          if (address && blockedAddresses.has(address)) return false;
+          if (handle && blockedHandles.has(handle)) return false;
+          return true;
+        });
 
       setUsers(filtered);
     } catch (error) {

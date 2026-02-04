@@ -10,6 +10,18 @@ export default function Chat({ onSelectChat }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  function getUserAddress(userObj) {
+    return userObj?.wallet_address || userObj?.walletAddress || userObj?.address || userObj?.user?.wallet_address || userObj?.user?.walletAddress || userObj?.user?.address;
+  }
+
+  function getUserHandle(userObj) {
+    return (userObj?.username || userObj?.user?.username || userObj?.name || '').toLowerCase();
+  }
+
+  function normalizeAddress(value) {
+    return value?.toLowerCase?.() || value;
+  }
+
   useEffect(() => {
     loadConversations();
   }, []);
@@ -28,7 +40,10 @@ export default function Chat({ onSelectChat }) {
       }
       
       console.log('Loading users...');
-      const data = await api.getUsers();
+      const [data, blockedData] = await Promise.all([
+        api.getUsers(),
+        api.getBlockedUsers ? api.getBlockedUsers() : Promise.resolve({ blocked: [] })
+      ]);
       console.log('Users data:', data);
       
       if (!data || !data.users || !Array.isArray(data.users)) {
@@ -39,10 +54,27 @@ export default function Chat({ onSelectChat }) {
       }
       
       // Filter out current user
+      const blockedList = blockedData?.blocks || blockedData?.blocked || blockedData?.users || blockedData || [];
+      const blockedAddressSet = new Set(
+        (Array.isArray(blockedList) ? blockedList : [])
+          .map(getUserAddress)
+          .map(normalizeAddress)
+          .filter(Boolean)
+      );
+      const blockedHandleSet = new Set(
+        (Array.isArray(blockedList) ? blockedList : [])
+          .map(getUserHandle)
+          .filter(Boolean)
+      );
+
       const otherUsers = data.users.filter(u => {
-        const userAddress = u.wallet_address || u.walletAddress;
-        const currentAddress = user?.walletAddress || user?.wallet_address;
-        return userAddress !== currentAddress;
+        const userAddress = normalizeAddress(getUserAddress(u));
+        const currentAddress = normalizeAddress(user?.walletAddress || user?.wallet_address);
+        const handle = getUserHandle(u);
+        if (userAddress && userAddress === currentAddress) return false;
+        if (userAddress && blockedAddressSet.has(userAddress)) return false;
+        if (handle && blockedHandleSet.has(handle)) return false;
+        return true;
       });
       
       console.log('Filtered users:', otherUsers);

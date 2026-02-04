@@ -529,6 +529,22 @@
   border: 1px solid var(--border-color);
   border-radius: 12px;
   background: var(--bg-secondary);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.friend-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+.friend-card.blocked-card {
+  cursor: default;
+}
+
+.friend-card.blocked-card:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .friend-avatar {

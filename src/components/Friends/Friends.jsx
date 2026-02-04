@@ -15,6 +15,19 @@ export default function Friends() {
   const [loading, setLoading] = useState(true);
   const [mutualCounts, setMutualCounts] = useState({});
   const [presenceMap, setPresenceMap] = useState({});
+  const [blockedUsers, setBlockedUsers] = useState([]);
+
+  function getUserAddress(userObj) {
+    return userObj?.wallet_address || userObj?.walletAddress || userObj?.address || userObj?.user?.wallet_address || userObj?.user?.walletAddress || userObj?.user?.address;
+  }
+
+  function getUserHandle(userObj) {
+    return (userObj?.username || userObj?.user?.username || userObj?.name || '').toLowerCase();
+  }
+
+  function normalizeAddress(value) {
+    return value?.toLowerCase?.() || value;
+  }
 
   useEffect(() => {
     loadData();
@@ -104,22 +117,61 @@ export default function Friends() {
   async function loadData() {
     try {
       setLoading(true);
-      
-      const friendsData = await api.getFriends();
-      setFriends(friendsData.friends || friendsData || []);
+
+      const [friendsData, requestsData, usersData, blockedData] = await Promise.all([
+        api.getFriends(),
+        api.getFriendRequests(),
+        api.getUsers(),
+        api.getBlockedUsers ? api.getBlockedUsers() : Promise.resolve({ blocked: [] })
+      ]);
+
+      const blockedList = blockedData.blocks || blockedData.blocked || blockedData.users || blockedData || [];
+      const blockedAddressSet = new Set(
+        (Array.isArray(blockedList) ? blockedList : [])
+          .map(getUserAddress)
+          .map(normalizeAddress)
+          .filter(Boolean)
+      );
+      const blockedHandleSet = new Set(
+        (Array.isArray(blockedList) ? blockedList : [])
+          .map(getUserHandle)
+          .filter(Boolean)
+      );
+      setBlockedUsers(Array.isArray(blockedList) ? blockedList : []);
+
+      const filteredFriends = (friendsData.friends || friendsData || []).filter((friend) => {
+        const address = normalizeAddress(getUserAddress(friend));
+        const handle = getUserHandle(friend);
+        if (address && blockedAddressSet.has(address)) return false;
+        if (handle && blockedHandleSet.has(handle)) return false;
+        return true;
+      });
+      setFriends(filteredFriends);
 
       await loadPresence();
 
-      const requestsData = await api.getFriendRequests();
-      setFriendRequests(requestsData.requests || []);
+      const filteredRequests = (requestsData.requests || []).filter((request) => {
+        const address = normalizeAddress(getUserAddress(request));
+        const handle = getUserHandle(request);
+        if (address && blockedAddressSet.has(address)) return false;
+        if (handle && blockedHandleSet.has(handle)) return false;
+        return true;
+      });
+      setFriendRequests(filteredRequests);
 
-      const usersData = await api.getUsers();
-      const currentFriendAddresses = (friendsData.friends || friendsData || []).map(f => f.wallet_address);
-      const requestAddresses = (requestsData.requests || []).map(r => r.from_address || r.wallet_address);
+      const currentFriendAddresses = filteredFriends.map((f) => getUserAddress(f)).filter(Boolean);
+      const requestAddresses = filteredRequests.map((r) => r.from_address || r.wallet_address).filter(Boolean);
       const filtered = (usersData.users || [])
-        .filter(u => u.wallet_address !== user?.walletAddress)
-        .filter(u => !currentFriendAddresses.includes(u.wallet_address))
-        .filter(u => !requestAddresses.includes(u.wallet_address))
+        .filter((u) => u.wallet_address !== user?.walletAddress)
+        .filter((u) => !currentFriendAddresses.includes(u.wallet_address))
+        .filter((u) => !requestAddresses.includes(u.wallet_address))
+        .filter((u) => {
+          const address = normalizeAddress(getUserAddress(u));
+          const handle = getUserHandle(u);
+          if (address && blockedAddressSet.has(address)) return false;
+          if (handle && blockedHandleSet.has(handle)) return false;
+          return true;
+        })
         .slice(0, 20);
       setSuggestions(filtered);
     } catch (error) {
