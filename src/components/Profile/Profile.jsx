@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import Post from '../Post/Post';
+import { formatDate } from '../../utils/date';
 import { compressImage } from '../../utils/imageCompression';
 import './Profile.css';
 
@@ -957,7 +958,7 @@ export default function Profile() {
                 <ul className="profile-details-list">
                   <li>📍 Location: <span>{profile.location || 'Not set'}</span></li>
                   <li>🌐 Website: <span>{profile.website || 'Not set'}</span></li>
-                  <li>🗓️ Joined: <span>{profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'Not set'}</span></li>
+                  <li>🗓️ Joined: <span>{formatDate(profile.createdAt, undefined, 'Not set')}</span></li>
                 </ul>
               </div>
 
@@ -1143,7 +1144,7 @@ export default function Profile() {
                   <li>🎂 Birthday: <span>{profile.birthday || 'Not set'}</span></li>
                   <li>⚧ Gender: <span>{profile.gender || 'Not set'}</span></li>
                   <li>🗣️ Languages: <span>{profile.languages || 'Not set'}</span></li>
-                  <li>🗓️ Joined: <span>{profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'Not set'}</span></li>
+                  <li>🗓️ Joined: <span>{formatDate(profile.createdAt, undefined, 'Not set')}</span></li>
                 </ul>
               </>
             )}

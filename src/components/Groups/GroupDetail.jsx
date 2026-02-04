@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import CreatePost from '../Feed/CreatePost';
 import Post from '../Post/Post';
 import { compressImage } from '../../utils/imageCompression';
+import { formatDate, formatDateTime } from '../../utils/date';
 import './GroupDetail.css';
 
 export default function GroupDetail() {
@@ -108,7 +109,7 @@ export default function GroupDetail() {
     const actor = it.actor_username || 'Someone';
     const target = it.target_username || '';
     const type = String(it.action_type || '').toLowerCase();
-    const when = it.created_at ? new Date(it.created_at).toLocaleString() : '';
+    const when = formatDateTime(it.created_at);
     const meta = it.meta || {};
 
     let text = type || 'activity';
@@ -688,7 +689,7 @@ export default function GroupDetail() {
   const isLocked = privacy === 'private' && !isMember && !isOwner;
   const postingLabel = effectivePostingPermission === 'admins' ? 'Admins can post' : 'Members can post';
   const createdAtRaw = group.created_at || group.createdAt;
-  const createdAt = createdAtRaw ? new Date(createdAtRaw).toLocaleDateString() : null;
+  const createdAt = formatDate(createdAtRaw);
   const ownerUsernameRaw = group.owner_username || group.ownerUsername || '';
   const ownerUsername = ownerUsernameRaw ? ownerUsernameRaw.toLowerCase() : '';
   const ownerRow = ownerUsername
@@ -1143,7 +1144,7 @@ export default function GroupDetail() {
                         <div className="group-pending-title">{it.author_username || 'Member'}</div>
                         <div className="group-muted">
                           <span className={`group-status-badge ${badgeClass}`}>{label}</span>
-                          {' '}· {who ? `by ${who}` : ''}{when ? ` · ${new Date(when).toLocaleString()}` : ''}
+                          {' '}· {who ? `by ${who}` : ''}{when ? ` · ${formatDateTime(when)}` : ''}
                         </div>
                         <div className="group-muted">{(it.content || '').slice(0, 160)}{(it.content || '').length > 160 ? '…' : ''}</div>
                       </div>
