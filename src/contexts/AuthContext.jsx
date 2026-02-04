@@ -11,15 +11,16 @@ let socket = null;
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [socketInstance, setSocketInstance] = useState(null);
 
   useEffect(() => {
     checkAuth();
   }, []);
 
   useEffect(() => {
-    if (!socket || !user?.username) return;
-    socket.emit('join', user.username);
-  }, [user, socket]);
+    if (!socketInstance || !user?.username) return;
+    socketInstance.emit('join', user.username);
+  }, [user, socketInstance]);
 
   async function checkAuth() {
     try {
@@ -49,6 +50,8 @@ export function AuthProvider({ children }) {
 
   function connectSocket(token) {
     try {
+      if (socket?.connected) return socket;
+
       socket = io(SOCKET_URL, {
         auth: { token },
         transports: ['websocket', 'polling']
@@ -60,9 +63,13 @@ export function AuthProvider({ children }) {
       socket.onAny((event, payload) => {
         console.log('📡 Socket event:', event, payload);
       });
+
+      setSocketInstance(socket);
+      return socket;
     } catch (error) {
       console.error('Socket setup error:', error);
     }
+    return null;
   }
 
   async function login(walletAddress, signature) {
@@ -107,6 +114,7 @@ export function AuthProvider({ children }) {
       socket.disconnect();
       socket = null;
     }
+    setSocketInstance(null);
   }
 
   async function connectWallet() {
@@ -147,7 +155,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, connectWallet, socket }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, connectWallet, socket: socketInstance }}>
       {children}
     </AuthContext.Provider>
   );
