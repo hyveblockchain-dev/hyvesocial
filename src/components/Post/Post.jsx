@@ -1,5 +1,5 @@
 // src/components/Post/Post.jsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { parseDateValue, formatDate, formatDateTime } from '../../utils/date';
@@ -18,7 +18,7 @@ function getAvatar(imageUrl, username, className) {
   );
 }
 
-export default function Post({ post, onDelete, onUpdate, onShare }) {
+export default function Post({ post, onDelete, onUpdate, onShare, autoOpenComments, focusCommentId }) {
   const { user } = useAuth();
   const initialReaction = Number.isFinite(Number(post.user_reaction))
     ? Number(post.user_reaction)
@@ -158,9 +158,14 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
     return handleReact(0);
   }
 
-  async function loadComments() {
+  async function loadComments(options = {}) {
+    const { forceOpen = false } = options;
     if (comments.length > 0) {
-      setShowComments(!showComments);
+      if (forceOpen) {
+        setShowComments(true);
+      } else {
+        setShowComments(!showComments);
+      }
       return;
     }
 
@@ -188,6 +193,13 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
       setLoadingComments(false);
     }
   }
+
+  useEffect(() => {
+    if (!autoOpenComments) return;
+    if (!showComments) {
+      loadComments({ forceOpen: true });
+    }
+  }, [autoOpenComments]);
 
   async function handleAddComment(e) {
     e.preventDefault();
@@ -330,9 +342,16 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
     const isReply = depth > 0;
     const indentStyle = depth > 1 ? { marginLeft: depth * 24 } : undefined;
     const contentText = comment?.content?.trim?.() ? comment.content : '';
+    const isFocused =
+      focusCommentId &&
+      (comment.id === focusCommentId || comment.parent_comment_id === focusCommentId);
 
     return (
-      <div key={comment.id} className={`comment${isReply ? ' reply' : ''}`} style={indentStyle}>
+      <div
+        key={comment.id}
+        className={`comment${isReply ? ' reply' : ''}${isFocused ? ' highlight' : ''}`}
+        style={indentStyle}
+      >
         {getAvatar(comment.profile_image, comment.username, 'comment-avatar')}
         <div className="comment-content">
           <div className="comment-header">
@@ -470,7 +489,7 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
   }
 
   return (
-    <div className="post-card">
+    <div className="post-card" id={`post-${post.id}`}>
       <div className="post-header">
         <Link to={`/profile/${encodeURIComponent(post.username || 'unknown')}`} className="post-author">
           {getAvatar(post.profile_image, post.username, 'author-avatar')}

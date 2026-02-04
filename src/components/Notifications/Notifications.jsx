@@ -1,5 +1,6 @@
 // src/components/Notifications/Notifications.jsx
 import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import { normalizeNotification } from '../../utils/notifications';
@@ -27,6 +28,34 @@ export default function Notifications() {
     const current = getReadNotifications();
     current.add(id);
     localStorage.setItem(READ_NOTIFICATIONS_KEY, JSON.stringify([...current]));
+  }
+
+  function notificationTargetPath(item, fallbackUser) {
+    if (!item) return '/';
+    if (item.type === 'friend_request') {
+      const request = item.request || fallbackUser;
+      return request?.username ? `/profile/${encodeURIComponent(request.username)}` : '/';
+    }
+    if (item.type === 'friend_accepted') {
+      const user = item.user || fallbackUser;
+      return user?.username ? `/profile/${encodeURIComponent(user.username)}` : '/';
+    }
+
+    const postId = item.postId || item.post_id || item.raw?.postId || item.raw?.post_id;
+    const commentId = item.commentId || item.comment_id || item.raw?.commentId || item.raw?.comment_id;
+    const parentCommentId =
+      item.parentCommentId || item.parent_comment_id || item.raw?.parentCommentId || item.raw?.parent_comment_id;
+
+    if (postId) {
+      const params = new URLSearchParams();
+      params.set('postId', String(postId));
+      if (commentId) params.set('commentId', String(commentId));
+      if (parentCommentId) params.set('parentCommentId', String(parentCommentId));
+      return `/?${params.toString()}`;
+    }
+
+    const user = item.user || fallbackUser;
+    return user?.username ? `/profile/${encodeURIComponent(user.username)}` : '/';
   }
 
   useEffect(() => {
@@ -283,8 +312,9 @@ export default function Notifications() {
 
               const snippet = item.commentContent || item.postContent || '';
 
+              const target = notificationTargetPath(item, user);
               return (
-                <div key={item.id} className="notification-card">
+                <Link key={item.id} to={target} className="notification-card">
                   <div className="notification-avatar">
                     {user.profileImage || user.profile_image ? (
                       <img src={user.profileImage || user.profile_image} alt={username} />
@@ -300,7 +330,7 @@ export default function Notifications() {
                     </p>
                     {snippet && <div className="notification-meta">{snippet}</div>}
                   </div>
-                </div>
+                </Link>
               );
             }
 

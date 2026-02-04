@@ -1,5 +1,6 @@
 // src/components/Feed/Feed.jsx
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import CreatePost from './CreatePost';
@@ -9,6 +10,7 @@ import './Feed.css';
 
 export default function Feed() {
   const { user } = useAuth();
+  const location = useLocation();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [friends, setFriends] = useState([]);
@@ -20,6 +22,10 @@ export default function Feed() {
   const [storyPosting, setStoryPosting] = useState(false);
   const [showStoryViewer, setShowStoryViewer] = useState(false);
   const [activeStory, setActiveStory] = useState(null);
+  const [focusedPostId, setFocusedPostId] = useState(null);
+  const [focusedCommentId, setFocusedCommentId] = useState(null);
+  const [focusedParentCommentId, setFocusedParentCommentId] = useState(null);
+  const hasScrolledRef = useRef(false);
 
   const MAX_STORY_IMAGE_MB = 5;
 
@@ -46,6 +52,29 @@ export default function Feed() {
     loadFriends();
     loadStories();
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search || '');
+    const postId = params.get('postId');
+    const commentId = params.get('commentId');
+    const parentCommentId = params.get('parentCommentId');
+
+    setFocusedPostId(postId ? Number(postId) : null);
+    setFocusedCommentId(commentId ? Number(commentId) : null);
+    setFocusedParentCommentId(parentCommentId ? Number(parentCommentId) : null);
+    hasScrolledRef.current = false;
+  }, [location.search]);
+
+  useEffect(() => {
+    if (!focusedPostId || loading) return;
+    if (hasScrolledRef.current) return;
+    const target = document.getElementById(`post-${focusedPostId}`);
+    if (!target) return;
+    hasScrolledRef.current = true;
+    setTimeout(() => {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
+  }, [focusedPostId, loading, posts]);
 
   useEffect(() => {
     function handleOpenStoryCreator() {
@@ -402,13 +431,15 @@ export default function Feed() {
             <p>No posts yet. Add friends to see their posts!</p>
           </div>
         ) : (
-          visiblePosts.map(post => (
+          {visiblePosts.map((post) => (
             <Post
               key={post.id}
               post={post}
               onDelete={handlePostDeleted}
               onUpdate={handlePostUpdated}
               onShare={handlePostCreated}
+              autoOpenComments={focusedPostId === post.id}
+              focusCommentId={focusedCommentId || focusedParentCommentId}
             />
           ))
         )}

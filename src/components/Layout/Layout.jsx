@@ -71,6 +71,31 @@ export default function Layout({ children }) {
     }
   }
 
+  function notificationTargetPath(item, fallbackUser) {
+    if (!item) return '/';
+    if (item.type === 'friend_request') {
+      return profilePathFor(item.request || fallbackUser || item.user);
+    }
+    if (item.type === 'friend_accepted') {
+      return profilePathFor(item.user || fallbackUser);
+    }
+
+    const postId = item.postId || item.post_id || item.raw?.postId || item.raw?.post_id;
+    const commentId = item.commentId || item.comment_id || item.raw?.commentId || item.raw?.comment_id;
+    const parentCommentId =
+      item.parentCommentId || item.parent_comment_id || item.raw?.parentCommentId || item.raw?.parent_comment_id;
+
+    if (postId) {
+      const params = new URLSearchParams();
+      params.set('postId', String(postId));
+      if (commentId) params.set('commentId', String(commentId));
+      if (parentCommentId) params.set('parentCommentId', String(parentCommentId));
+      return `/?${params.toString()}`;
+    }
+
+    return profilePathFor(fallbackUser || item.user || item.request);
+  }
+
   useEffect(() => {
     loadSuggestedUsers();
     loadUserStats();
@@ -570,7 +595,7 @@ export default function Layout({ children }) {
                       return (
                         <div key={item.id} className="notification-item">
                           <Link
-                            to={profilePathFor(actor)}
+                            to={notificationTargetPath(item, actor)}
                             className="notification-item-user"
                             onClick={() => setShowNotificationsMenu(false)}
                           >
