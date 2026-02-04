@@ -219,11 +219,13 @@ export default function Profile() {
       setFriends([]);
       return;
     }
+    if (!isOwnProfile) {
+      setFriends([]);
+      return;
+    }
     try {
       setFriendsLoading(true);
-      const data = isOwnProfile
-        ? await api.getFriends()
-        : await api.getFriendsByAddress(address);
+      const data = await api.getFriends();
       setFriends(data.friends || data || []);
     } catch (error) {
       console.error('Load friends error:', error);
@@ -256,7 +258,6 @@ export default function Profile() {
       setLoading(true);
       // Skip cache - always load fresh from server
       const data = await api.getUserProfile(address);
-      console.log('loadProfile - loaded from server:', data.user);
       setProfile(data.user);
       setProfileCache((prev) => ({ ...prev, [address]: data.user }));
       
@@ -302,8 +303,9 @@ export default function Profile() {
       if (api.getBlockedUsers) {
         const blockedData = await api.getBlockedUsers();
         const blockedList = blockedData.blocked || blockedData.users || blockedData || [];
+        const normalizedBlockedList = Array.isArray(blockedList) ? blockedList : [];
         const blockedAddresses = new Set(
-          blockedList
+          normalizedBlockedList
             .map((item) => item.wallet_address || item.walletAddress || item.address)
             .filter(Boolean)
         );
@@ -479,9 +481,7 @@ export default function Profile() {
       setUploading(true);
       
       // Compress image before upload
-      console.log('Original size:', (selectedFile.size / 1024 / 1024).toFixed(2), 'MB');
       const compressedFile = await compressImage(selectedFile, 2, 1920);
-      console.log('Compressed size:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
       
       const formData = new FormData();
       formData.append('image', compressedFile);
@@ -629,9 +629,7 @@ export default function Profile() {
       setUploading(true);
       
       // Compress image before upload
-      console.log('Original size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
       const compressedFile = await compressImage(file, 2, 1920);
-      console.log('Compressed size:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
       
       const formData = new FormData();
       formData.append('profileImage', compressedFile);
@@ -669,9 +667,7 @@ export default function Profile() {
       setUploading(true);
       
       // Compress image before upload
-      console.log('Original size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
       const compressedFile = await compressImage(file, 2, 1920);
-      console.log('Compressed size:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
       
       const formData = new FormData();
       formData.append('coverImage', compressedFile);
@@ -697,7 +693,6 @@ export default function Profile() {
   }
 
   function startEditAbout() {
-    console.log('startEditAbout called - profile:', profile);
     const newForm = {
       bio: profile?.bio || '',
       location: profile?.location || '',
@@ -710,7 +705,6 @@ export default function Profile() {
       gender: profile?.gender || '',
       languages: profile?.languages || ''
     };
-    console.log('startEditAbout - setting form to:', newForm);
     setAboutForm(newForm);
     setIsEditingAbout(true);
   }
@@ -740,15 +734,9 @@ export default function Profile() {
         languages: currentForm.languages
       };
       
-      console.log('saveAboutInfo - aboutFormRef.current:', currentForm);
-      console.log('saveAboutInfo - sending to API:', dataToSend);
       
       const result = await api.updateProfile(dataToSend);
 
-      console.log('saveAboutInfo - result.user:', result.user);
-      console.log('saveAboutInfo - result.user.bio:', result.user?.bio);
-      console.log('saveAboutInfo - result.user.location:', result.user?.location);
-      console.log('saveAboutInfo - result.user.relationshipStatus:', result.user?.relationshipStatus);
       
       // Always clear cache to ensure fresh data on reload
       setProfileCache((prev) => {
@@ -1102,7 +1090,6 @@ export default function Profile() {
                   <textarea
                     value={aboutForm.bio}
                     onChange={(e) => {
-                      console.log('Bio changed to:', e.target.value);
                       setAboutForm(prev => ({ ...prev, bio: e.target.value }));
                     }}
                     rows={4}
@@ -1114,7 +1101,6 @@ export default function Profile() {
                     type="text"
                     value={aboutForm.location}
                     onChange={(e) => {
-                      console.log('Location changed to:', e.target.value);
                       setAboutForm(prev => ({ ...prev, location: e.target.value }));
                     }}
                   />
@@ -1157,7 +1143,6 @@ export default function Profile() {
                     type="text"
                     value={aboutForm.relationshipStatus}
                     onChange={(e) => {
-                      console.log('Relationship changed to:', e.target.value);
                       setAboutForm(prev => ({ ...prev, relationshipStatus: e.target.value }));
                     }}
                   />
