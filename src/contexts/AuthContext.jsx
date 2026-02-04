@@ -1,6 +1,7 @@
 // src/contexts/AuthContext.jsx
 import { createContext, useState, useEffect } from 'react';
 import api from '../services/api';
+import { ensureKeypair } from '../utils/e2ee';
 import io from 'socket.io-client';
 import { API_URL, SOCKET_URL } from '../utils/env';
 
@@ -39,6 +40,13 @@ export function AuthProvider({ children }) {
       
       if (!socket) {
         connectSocket(token);
+      }
+
+      try {
+        const { publicKey } = await ensureKeypair();
+        await api.setPublicKey(publicKey);
+      } catch (error) {
+        console.error('E2EE key setup failed:', error);
       }
     } catch (error) {
       console.error('Auth check failed:', error);
@@ -84,6 +92,13 @@ export function AuthProvider({ children }) {
       localStorage.setItem('token', data.token);
       setUser(data.user);
       connectSocket(data.token);
+
+      try {
+        const { publicKey } = await ensureKeypair();
+        await api.setPublicKey(publicKey);
+      } catch (error) {
+        console.error('E2EE key setup failed:', error);
+      }
       
       return { success: true };
     } catch (error) {
@@ -99,6 +114,12 @@ export function AuthProvider({ children }) {
       localStorage.setItem('token', data.token);
       setUser(data.user);
       connectSocket(data.token);
+      try {
+        const { publicKey } = await ensureKeypair();
+        await api.setPublicKey(publicKey);
+      } catch (error) {
+        console.error('E2EE key setup failed:', error);
+      }
       return data;
     } catch (error) {
       console.error('Register error:', error);
