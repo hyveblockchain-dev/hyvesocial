@@ -17,16 +17,8 @@ export default function Friends() {
   const [presenceMap, setPresenceMap] = useState({});
   const [blockedUsers, setBlockedUsers] = useState([]);
 
-  function getUserAddress(userObj) {
-    return userObj?.wallet_address || userObj?.walletAddress || userObj?.address || userObj?.user?.wallet_address || userObj?.user?.walletAddress || userObj?.user?.address;
-  }
-
   function getUserHandle(userObj) {
     return (userObj?.username || userObj?.user?.username || userObj?.name || '').toLowerCase();
-  }
-
-  function normalizeAddress(value) {
-    return value?.toLowerCase?.() || value;
   }
 
   useEffect(() => {
@@ -38,44 +30,7 @@ export default function Friends() {
   }, []);
 
   useEffect(() => {
-    if (!friends.length || !api.getFriendsByAddress) return;
-    const myFriendAddresses = new Set(
-      friends
-        .map((f) => f.wallet_address || f.walletAddress || f.address)
-        .filter(Boolean)
-    );
-
-    let cancelled = false;
-
-    async function loadMutuals() {
-      const nextCounts = {};
-      for (const friend of friends) {
-        const address = friend.wallet_address || friend.walletAddress || friend.address;
-        if (!address) continue;
-        try {
-          const data = await api.getFriendsByAddress(address);
-          const friendList = data.friends || data || [];
-          const count = friendList.reduce((total, item) => {
-            const itemAddress = item.wallet_address || item.walletAddress || item.address;
-            if (itemAddress && myFriendAddresses.has(itemAddress)) {
-              return total + 1;
-            }
-            return total;
-          }, 0);
-          nextCounts[address] = count;
-        } catch (error) {
-          console.error('Failed to load mutual friends:', error);
-        }
-      }
-      if (!cancelled) {
-        setMutualCounts(nextCounts);
-      }
-    }
-
-    loadMutuals();
-    return () => {
-      cancelled = true;
-    };
+    setMutualCounts({});
   }, [friends]);
 
   useEffect(() => {
@@ -90,15 +45,15 @@ export default function Friends() {
     };
 
     const handlePresenceUpdate = (payload) => {
-      const address = payload?.address?.toLowerCase?.() || payload?.address;
-      if (!address) return;
+      const username = payload?.username;
+      if (!username) return;
 
       setPresenceMap((prev) => ({
         ...prev,
-        [address]: {
-          address,
+        [username.toLowerCase()]: {
+          username,
           online: payload?.status === 'online',
-          lastSeen: payload?.lastSeen || prev?.[address]?.lastSeen || null
+          lastSeen: payload?.lastSeen || prev?.[username.toLowerCase()]?.lastSeen || null
         }
       }));
     };
@@ -126,12 +81,6 @@ export default function Friends() {
       ]);
 
       const blockedList = blockedData.blocks || blockedData.blocked || blockedData.users || blockedData || [];
-      const blockedAddressSet = new Set(
-        (Array.isArray(blockedList) ? blockedList : [])
-          .map(getUserAddress)
-          .map(normalizeAddress)
-          .filter(Boolean)
-      );
       const blockedHandleSet = new Set(
         (Array.isArray(blockedList) ? blockedList : [])
           .map(getUserHandle)
@@ -140,9 +89,7 @@ export default function Friends() {
       setBlockedUsers(Array.isArray(blockedList) ? blockedList : []);
 
       const filteredFriends = (friendsData.friends || friendsData || []).filter((friend) => {
-        const address = normalizeAddress(getUserAddress(friend));
         const handle = getUserHandle(friend);
-        if (address && blockedAddressSet.has(address)) return false;
         if (handle && blockedHandleSet.has(handle)) return false;
         return true;
       });
@@ -151,24 +98,20 @@ export default function Friends() {
       await loadPresence();
 
       const filteredRequests = (requestsData.requests || []).filter((request) => {
-        const address = normalizeAddress(getUserAddress(request));
         const handle = getUserHandle(request);
-        if (address && blockedAddressSet.has(address)) return false;
         if (handle && blockedHandleSet.has(handle)) return false;
         return true;
       });
       setFriendRequests(filteredRequests);
 
-      const currentFriendAddresses = filteredFriends.map((f) => getUserAddress(f)).filter(Boolean);
-      const requestAddresses = filteredRequests.map((r) => r.from_address || r.wallet_address).filter(Boolean);
+      const currentFriendHandles = filteredFriends.map((f) => getUserHandle(f)).filter(Boolean);
+      const requestHandles = filteredRequests.map((r) => getUserHandle(r)).filter(Boolean);
       const filtered = (usersData.users || [])
-        .filter((u) => u.wallet_address !== user?.walletAddress)
-        .filter((u) => !currentFriendAddresses.includes(u.wallet_address))
-        .filter((u) => !requestAddresses.includes(u.wallet_address))
+        .filter((u) => getUserHandle(u) !== user?.username?.toLowerCase?.())
+        .filter((u) => !currentFriendHandles.includes(getUserHandle(u)))
+        .filter((u) => !requestHandles.includes(getUserHandle(u)))
         .filter((u) => {
-          const address = normalizeAddress(getUserAddress(u));
           const handle = getUserHandle(u);
-          if (address && blockedAddressSet.has(address)) return false;
           if (handle && blockedHandleSet.has(handle)) return false;
           return true;
         })
@@ -188,10 +131,11 @@ export default function Friends() {
       const presenceList = data?.presence || [];
       const nextMap = {};
       presenceList.forEach((entry) => {
-        const address = entry?.address?.toLowerCase?.() || entry?.address;
-        if (address) {
-          nextMap[address] = {
-            address,
+        const username = entry?.username;
+        if (username) {
+          const key = username.toLowerCase();
+          nextMap[key] = {
+            username,
             online: !!entry?.online,
             lastSeen: entry?.lastSeen || null
           };
@@ -204,21 +148,21 @@ export default function Friends() {
     }
   }
 
-  async function handleUnfriend(address) {
+  async function handleUnfriend(username) {
     if (!confirm('Are you sure you want to remove this friend?')) return;
     
     try {
-      await api.removeFriend(address);
-      setFriends(friends.filter(f => f.wallet_address !== address));
+      await api.removeFriend(username);
+      setFriends(friends.filter(f => getUserHandle(f) !== username.toLowerCase()));
     } catch (error) {
       console.error('Failed to unfriend:', error);
     }
   }
 
-  async function handleAddFriend(address) {
+  async function handleAddFriend(username) {
     try {
-      await api.sendFriendRequest(address);
-      setSuggestions(suggestions.filter(s => s.wallet_address !== address));
+      await api.sendFriendRequest(username);
+      setSuggestions(suggestions.filter(s => getUserHandle(s) !== username.toLowerCase()));
       await loadData();
     } catch (error) {
       console.error('Failed to add friend:', error);
@@ -244,22 +188,12 @@ export default function Friends() {
   }
 
   function openChat(person) {
-    const address =
-      person?.wallet_address ||
-      person?.walletAddress ||
-      person?.address ||
-      '';
     const username = person?.username || person?.name || 'User';
     const profileImage = person?.profile_image || person?.profileImage || '';
 
-    if (!address) {
-      alert('Missing wallet address for this user.');
-      return;
-    }
-
     window.dispatchEvent(
       new CustomEvent('open-chat', {
-        detail: { address, username, profileImage }
+        detail: { username, profileImage }
       })
     );
   }
@@ -348,38 +282,41 @@ export default function Friends() {
           </div>
         ) : (
           <div className="friends-grid">
-            {filteredList.map((person) => (
-              <div key={person.wallet_address || person.id} className="friend-card">
+            {filteredList.map((person) => {
+              const username = person.username || person.name || 'User';
+              const presenceKey = username.toLowerCase();
+              return (
+              <div key={person.id || username} className="friend-card">
                 <div 
                   className="friend-card-clickable"
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate(`/profile/${encodeURIComponent(person.username || 'unknown')}`);
+                    navigate(`/profile/${encodeURIComponent(username || 'unknown')}`);
                   }}
                 >
                   <div className="friend-card-header">
                     <div className="friend-avatar">
                       {person.profile_image ? (
-                        <img src={person.profile_image} alt={person.username} />
+                        <img src={person.profile_image} alt={username} />
                       ) : (
                         <div className="avatar-placeholder">
-                          {person.username?.[0]?.toUpperCase() || '?'}
+                          {username?.[0]?.toUpperCase() || '?'}
                         </div>
                       )}
                     </div>
-                    {(presenceMap[(person.wallet_address || person.walletAddress || person.address || '').toLowerCase?.() || (person.wallet_address || person.walletAddress || person.address)]?.online) && (
+                    {presenceMap[presenceKey]?.online && (
                       <div className="online-indicator"></div>
                     )}
                   </div>
 
                   <div className="friend-card-body">
                     <h3 className="friend-name">
-                      {person.username}
+                      {username}
                     </h3>
                     {person.bio && <p className="friend-bio">{person.bio}</p>}
                     {activeTab === 'all' && (
                       <p className="friend-mutual">
-                        {(mutualCounts[person.wallet_address || person.walletAddress || person.address] || 0)} mutual friends
+                        {(mutualCounts[username.toLowerCase()] || 0)} mutual friends
                       </p>
                     )}
                   </div>
@@ -401,7 +338,7 @@ export default function Friends() {
                         className="btn-secondary"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleUnfriend(person.wallet_address);
+                          handleUnfriend(username);
                         }}
                       >
                         Unfriend
@@ -438,7 +375,7 @@ export default function Friends() {
                         className="btn-primary"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleAddFriend(person.wallet_address);
+                          handleAddFriend(username);
                         }}
                       >
                         Add Friend
@@ -447,7 +384,7 @@ export default function Friends() {
                         className="btn-secondary"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSuggestions(suggestions.filter(s => s.wallet_address !== person.wallet_address));
+                          setSuggestions(suggestions.filter(s => getUserHandle(s) !== username.toLowerCase()));
                         }}
                       >
                         Remove
@@ -456,7 +393,7 @@ export default function Friends() {
                   )}
                 </div>
               </div>
-            ))}
+            );})}
           </div>
         )}
       </div>

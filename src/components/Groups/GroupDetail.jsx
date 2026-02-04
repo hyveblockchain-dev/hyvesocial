@@ -42,17 +42,19 @@ export default function GroupDetail() {
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [bannedMembers, setBannedMembers] = useState([]);
 
-  const myAddress = (user?.walletAddress || '').toLowerCase();
+  const myUsername = (user?.username || '').toLowerCase();
 
   const isOwner = useMemo(() => {
-    const owner = (group?.owner_address || group?.ownerAddress || '').toLowerCase();
-    return !!owner && !!myAddress && owner === myAddress;
-  }, [group, myAddress]);
+    const ownerName =
+      (group?.owner_username || group?.ownerUsername || '').toLowerCase() ||
+      (members.find((m) => String(m.role || '').toLowerCase() === 'owner')?.username || '').toLowerCase();
+    return !!ownerName && !!myUsername && ownerName === myUsername;
+  }, [group, members, myUsername]);
 
   const myRole = useMemo(() => {
-    const row = members.find((m) => (m.member_address || '').toLowerCase() === myAddress);
+    const row = members.find((m) => (m.username || '').toLowerCase() === myUsername);
     return row?.role || null;
-  }, [members, myAddress]);
+  }, [members, myUsername]);
 
   const isAdmin = isOwner || myRole === 'admin' || myRole === 'owner';
   const adminEnabled = isAdmin && !viewAsMember;
@@ -103,8 +105,8 @@ export default function GroupDetail() {
   }
 
   function formatActivity(it) {
-    const actor = it.actor_username || it.actor_address || 'Someone';
-    const target = it.target_username || it.target_address || '';
+    const actor = it.actor_username || 'Someone';
+    const target = it.target_username || '';
     const type = String(it.action_type || '').toLowerCase();
     const when = it.created_at ? new Date(it.created_at).toLocaleString() : '';
     const meta = it.meta || {};
@@ -355,10 +357,10 @@ export default function GroupDetail() {
     setPosts((prev) => prev.filter((p) => String(p.id) !== String(postId)));
   }
 
-  async function handleApprove(requesterAddress) {
+  async function handleApprove(requesterUsername) {
     try {
       setBusy(true);
-      const data = await api.approveGroupJoinRequest(groupId, requesterAddress);
+      const data = await api.approveGroupJoinRequest(groupId, requesterUsername);
       if (data?.error) {
         setNotice(data.error);
         return;
@@ -371,10 +373,10 @@ export default function GroupDetail() {
     }
   }
 
-  async function handleDecline(requesterAddress) {
+  async function handleDecline(requesterUsername) {
     try {
       setBusy(true);
-      const data = await api.declineGroupJoinRequest(groupId, requesterAddress);
+      const data = await api.declineGroupJoinRequest(groupId, requesterUsername);
       if (data?.error) {
         setNotice(data.error);
         return;
@@ -385,10 +387,10 @@ export default function GroupDetail() {
     }
   }
 
-  async function handleRemove(memberAddress) {
+  async function handleRemove(memberUsername) {
     try {
       setBusy(true);
-      const data = await api.removeGroupMember(groupId, memberAddress);
+      const data = await api.removeGroupMember(groupId, memberUsername);
       if (data?.error) {
         setNotice(data.error);
         return;
@@ -400,11 +402,11 @@ export default function GroupDetail() {
     }
   }
 
-  async function handleBan(memberAddress) {
+  async function handleBan(memberUsername) {
     if (!confirm('Ban this member? They will be removed and cannot rejoin.')) return;
     try {
       setBusy(true);
-      const data = await api.banGroupMember(groupId, memberAddress);
+      const data = await api.banGroupMember(groupId, memberUsername);
       if (data?.error) {
         setNotice(data.error);
         return;
@@ -418,10 +420,10 @@ export default function GroupDetail() {
     }
   }
 
-  async function handleUnban(memberAddress) {
+  async function handleUnban(memberUsername) {
     try {
       setBusy(true);
-      const data = await api.unbanGroupMember(groupId, memberAddress);
+      const data = await api.unbanGroupMember(groupId, memberUsername);
       if (data?.error) {
         setNotice(data.error);
         return;
@@ -447,10 +449,10 @@ export default function GroupDetail() {
     }
   }
 
-  async function handleRoleChange(memberAddress, role) {
+  async function handleRoleChange(memberUsername, role) {
     try {
       setBusy(true);
-      const data = await api.setGroupMemberRole(groupId, memberAddress, role);
+      const data = await api.setGroupMemberRole(groupId, memberUsername, role);
       if (data?.error) {
         setNotice(data.error);
         return;
@@ -687,10 +689,10 @@ export default function GroupDetail() {
   const postingLabel = effectivePostingPermission === 'admins' ? 'Admins can post' : 'Members can post';
   const createdAtRaw = group.created_at || group.createdAt;
   const createdAt = createdAtRaw ? new Date(createdAtRaw).toLocaleDateString() : null;
-  const ownerAddressRaw = group.owner_address || group.ownerAddress || '';
-  const ownerAddress = ownerAddressRaw ? ownerAddressRaw.toLowerCase() : '';
-  const ownerRow = ownerAddress
-    ? members.find((m) => String(m.member_address || '').toLowerCase() === ownerAddress)
+  const ownerUsernameRaw = group.owner_username || group.ownerUsername || '';
+  const ownerUsername = ownerUsernameRaw ? ownerUsernameRaw.toLowerCase() : '';
+  const ownerRow = ownerUsername
+    ? members.find((m) => String(m.username || m.handle || '').toLowerCase() === ownerUsername)
     : null;
 
   function avatarForMember(m) {
@@ -708,7 +710,7 @@ export default function GroupDetail() {
   }
 
   function profileHandleForMember(m) {
-    return m?.username || m?.handle || m?.member_address || '';
+    return m?.username || m?.handle || '';
   }
 
   return (
@@ -872,7 +874,7 @@ export default function GroupDetail() {
             </div>
             <div className="group-about-item">
               <div className="group-about-k">Owner</div>
-              <div className="group-about-v">{ownerRow?.username || ownerAddressRaw || '—'}</div>
+              <div className="group-about-v">{ownerRow?.username || ownerRow?.handle || ownerUsernameRaw || '—'}</div>
             </div>
             <div className="group-about-item">
               <div className="group-about-k">Created</div>
@@ -909,17 +911,23 @@ export default function GroupDetail() {
             <div className="group-muted">No members to show.</div>
           ) : (
             <div className="group-members">
-              {members.map((m) => {
-                const addr = (m.member_address || '').toLowerCase();
-                const isMe = addr && addr === myAddress;
-                const isMemberOwner = addr && addr === (group.owner_address || group.ownerAddress || '').toLowerCase();
+              {members.map((m, index) => {
+                const memberName = (m.username || '').toLowerCase();
+                const isMe = memberName && memberName === myUsername;
+                const ownerName =
+                  (group?.owner_username || group?.ownerUsername || '').toLowerCase() ||
+                  (members.find((row) => String(row.role || '').toLowerCase() === 'owner')?.username || '').toLowerCase();
+                const isMemberOwner = memberName && ownerName && memberName === ownerName;
                 const canRemove = adminEnabled && !isMemberOwner && !isMe;
                 const canPromote = isOwner && !isMemberOwner;
                 const handle = profileHandleForMember(m);
                 const avatarUrl = avatarForMember(m);
+                const memberDisplay = m.username || m.handle || 'Member';
+                const memberKey = `${m.username || m.handle || 'member'}-${index}`;
+                const memberIdentifier = m.username || m.handle || '';
 
                 return (
-                  <div key={m.member_address} className="group-member">
+                  <div key={memberKey} className="group-member">
                     <button
                       type="button"
                       className="group-member-main"
@@ -932,12 +940,12 @@ export default function GroupDetail() {
                         {avatarUrl ? (
                           <img className="group-member-avatar-img" src={avatarUrl} alt="" loading="lazy" />
                         ) : (
-                          (m.username || m.member_address || '?').slice(0, 1).toUpperCase()
+                          memberDisplay.slice(0, 1).toUpperCase()
                         )}
                       </div>
                       <div>
                         <div className="group-member-name">
-                          {m.username || m.member_address}
+                          {memberDisplay}
                           {isMe ? ' (you)' : ''}
                         </div>
                         <div className="group-member-meta">
@@ -949,22 +957,22 @@ export default function GroupDetail() {
                     {adminEnabled && (
                       <div className="group-member-actions">
                         {canPromote && m.role !== 'admin' && m.role !== 'owner' && (
-                          <button className="group-btn tiny" onClick={() => handleRoleChange(m.member_address, 'admin')} disabled={busy}>
+                          <button className="group-btn tiny" onClick={() => memberIdentifier && handleRoleChange(memberIdentifier, 'admin')} disabled={busy || !memberIdentifier}>
                             Make admin
                           </button>
                         )}
                         {canPromote && m.role === 'admin' && (
-                          <button className="group-btn tiny" onClick={() => handleRoleChange(m.member_address, 'member')} disabled={busy}>
+                          <button className="group-btn tiny" onClick={() => memberIdentifier && handleRoleChange(memberIdentifier, 'member')} disabled={busy || !memberIdentifier}>
                             Remove admin
                           </button>
                         )}
                         {canRemove && (
-                          <button className="group-btn tiny" onClick={() => handleRemove(m.member_address)} disabled={busy}>
+                          <button className="group-btn tiny" onClick={() => memberIdentifier && handleRemove(memberIdentifier)} disabled={busy || !memberIdentifier}>
                             Remove
                           </button>
                         )}
                         {canRemove && (
-                          <button className="group-btn tiny danger" onClick={() => handleBan(m.member_address)} disabled={busy}>
+                          <button className="group-btn tiny danger" onClick={() => memberIdentifier && handleBan(memberIdentifier)} disabled={busy || !memberIdentifier}>
                             Ban
                           </button>
                         )}
@@ -1087,7 +1095,7 @@ export default function GroupDetail() {
                   {pendingPosts.map((p) => (
                     <div key={p.id} className="group-pending-item">
                       <div className="group-pending-meta">
-                        <div className="group-pending-title">{p.username || p.author_address}</div>
+                        <div className="group-pending-title">{p.author_username || p.username || 'Member'}</div>
                         <div className="group-muted">{(p.content || '').slice(0, 140)}{(p.content || '').length > 140 ? '…' : ''}</div>
                       </div>
                       <div className="group-request-actions">
@@ -1132,7 +1140,7 @@ export default function GroupDetail() {
                   return (
                     <div key={it.id} className="group-pending-item">
                       <div className="group-pending-meta">
-                        <div className="group-pending-title">{it.author_username || it.author_address}</div>
+                        <div className="group-pending-title">{it.author_username || 'Member'}</div>
                         <div className="group-muted">
                           <span className={`group-status-badge ${badgeClass}`}>{label}</span>
                           {' '}· {who ? `by ${who}` : ''}{when ? ` · ${new Date(when).toLocaleString()}` : ''}
@@ -1200,23 +1208,24 @@ export default function GroupDetail() {
               <div className="group-muted" style={{ marginTop: 12 }}>No banned members.</div>
             ) : (
               <div className="group-members" style={{ marginTop: 12 }}>
-                {bannedMembers.map((b) => {
-                  const addr = b.member_address || b.address || '';
+                {bannedMembers.map((b, index) => {
+                  const banName = b.username || b.handle || b.member_username || '';
+                  const banKey = `${banName || 'banned'}-${index}`;
                   return (
-                    <div key={addr} className="group-member">
+                    <div key={banKey} className="group-member">
                       <div className="group-member-main">
                         <div className="group-member-avatar" aria-hidden="true">
-                          {(b.username || addr || '?').slice(0, 1).toUpperCase()}
+                          {(banName || 'B').slice(0, 1).toUpperCase()}
                         </div>
                         <div>
-                          <div className="group-member-name">{b.username || addr}</div>
+                          <div className="group-member-name">{banName || 'Banned member'}</div>
                           <div className="group-member-meta">
                             <span className="badge danger">Banned</span>
                           </div>
                         </div>
                       </div>
                       <div className="group-member-actions">
-                        <button className="group-btn tiny" onClick={() => handleUnban(addr)} disabled={busy}>
+                        <button className="group-btn tiny" onClick={() => banName && handleUnban(banName)} disabled={busy || !banName}>
                           Unban
                         </button>
                       </div>
@@ -1233,15 +1242,19 @@ export default function GroupDetail() {
               <div className="group-muted">No pending requests.</div>
             ) : (
               <div className="group-requests">
-                {requests.map((r) => (
-                  <div key={r.requester_address} className="group-request">
-                    <div className="group-request-name">{r.username || r.requester_address}</div>
-                    <div className="group-request-actions">
-                      <button className="group-btn tiny" onClick={() => handleApprove(r.requester_address)} disabled={busy}>Approve</button>
-                      <button className="group-btn tiny danger" onClick={() => handleDecline(r.requester_address)} disabled={busy}>Decline</button>
+                {requests.map((r, index) => {
+                  const requesterName = r.username || r.requester_username || r.handle || '';
+                  const requesterKey = `${requesterName || 'request'}-${index}`;
+                  return (
+                    <div key={requesterKey} className="group-request">
+                      <div className="group-request-name">{requesterName || 'Member'}</div>
+                      <div className="group-request-actions">
+                        <button className="group-btn tiny" onClick={() => requesterName && handleApprove(requesterName)} disabled={busy || !requesterName}>Approve</button>
+                        <button className="group-btn tiny danger" onClick={() => requesterName && handleDecline(requesterName)} disabled={busy || !requesterName}>Decline</button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -1281,7 +1294,7 @@ export default function GroupDetail() {
                   {posts.map((p) => {
                     const isPinned = pinnedPostId !== null && String(p.id) === String(pinnedPostId);
                     const status = String(p.moderation_status || 'published').toLowerCase();
-                    const isMine = (p.author_address || '').toLowerCase() === myAddress;
+                    const isMine = (p.author_username || p.username || '').toLowerCase() === myUsername;
                     const showStatus = status !== 'published' && (isMine || adminEnabled);
 
                     return (

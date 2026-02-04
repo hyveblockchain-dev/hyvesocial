@@ -44,7 +44,7 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
 
   const MAX_COMMENT_IMAGE_MB = 5;
 
-  const isOwner = user?.walletAddress === post.author_address;
+  const isOwner = (post.username || post.author_username || post.user?.username) === user?.username;
 
   function formatDate(dateString) {
     const date = new Date(dateString);

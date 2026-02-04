@@ -96,13 +96,7 @@ export default function Feed() {
         post.user?.username ||
         post.authorName ||
         post.name;
-      const normalizedAuthor = authorUsername?.toLowerCase?.();
-      if (currentUsername && normalizedAuthor === currentUsername) return true;
-      if (normalizedAuthor && friendUsernameSet.has(normalizedAuthor)) return true;
-      return false;
-    });
-  }, [posts, friendUsernameSet, user]);
-
+      const isOwner = ownerName === user?.username;
   const visibleStories = useMemo(() => {
     return (stories || []).filter((story) => {
       const ownerUsername = (story.user?.username || story.username || '').toLowerCase();
@@ -245,13 +239,7 @@ export default function Feed() {
           const ownerName = story.user?.username || story.username || 'User';
           const ownerAvatar = story.user?.profileImage || story.user?.profile_image || story.profile_image || '';
           const imageUrl = story.media_url || story.mediaUrl || story.image_url || story.imageUrl || '';
-          const ownerAddress =
-            story.user?.walletAddress ||
-            story.user?.wallet_address ||
-            story.owner_address ||
-            story.wallet_address ||
-            story.address;
-          const isOwner = ownerAddress ? ownerAddress === user?.walletAddress : ownerName === user?.username;
+          const isOwner = ownerName === user?.username;
           const fallbackColor = [
             'linear-gradient(135deg, #fbbf24, #f59e0b)',
             'linear-gradient(135deg, #06b6d4, #0891b2)',
@@ -386,15 +374,7 @@ export default function Feed() {
               <div className="story-viewer-text">{activeStory.text || activeStory.caption}</div>
             )}
             {(() => {
-              const ownerAddress =
-                activeStory.user?.walletAddress ||
-                activeStory.user?.wallet_address ||
-                activeStory.owner_address ||
-                activeStory.wallet_address ||
-                activeStory.address;
-              const isOwner = ownerAddress
-                ? ownerAddress === user?.walletAddress
-                : (activeStory.user?.username || activeStory.username) === user?.username;
+              const isOwner = (activeStory.user?.username || activeStory.username) === user?.username;
               return isOwner ? (
                 <div className="story-viewer-actions">
                   <button type="button" onClick={() => handleDeleteStory(activeStory.id)}>

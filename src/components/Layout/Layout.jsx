@@ -51,16 +51,8 @@ export default function Layout({ children }) {
     return handle ? `/profile/${encodeURIComponent(handle)}` : '/profile/unknown';
   }
 
-  function getUserAddress(userObj) {
-    return userObj?.wallet_address || userObj?.walletAddress || userObj?.address;
-  }
-
   function getUserHandle(userObj) {
     return (userObj?.username || userObj?.user?.username || '').toLowerCase();
-  }
-
-  function normalizeAddress(value) {
-    return value?.toLowerCase?.() || value;
   }
 
   useEffect(() => {
@@ -79,15 +71,16 @@ export default function Layout({ children }) {
     };
 
     const handlePresenceUpdate = (payload) => {
-      const address = payload?.address?.toLowerCase?.() || payload?.address;
-      if (!address) return;
+      const username = payload?.username;
+      if (!username) return;
+      const key = username.toLowerCase();
 
       setPresenceMap((prev) => ({
         ...prev,
-        [address]: {
-          address,
+        [key]: {
+          username,
           online: payload?.status === 'online',
-          lastSeen: payload?.lastSeen || prev?.[address]?.lastSeen || null
+          lastSeen: payload?.lastSeen || prev?.[key]?.lastSeen || null
         }
       }));
     };
@@ -107,8 +100,8 @@ export default function Layout({ children }) {
       return;
     }
     const nextOnline = friendsList.filter((friend) => {
-      const address = getUserAddress(friend)?.toLowerCase?.() || getUserAddress(friend);
-      return address && presenceMap[address]?.online;
+      const handle = getUserHandle(friend);
+      return handle && presenceMap[handle]?.online;
     });
     setOnlineFriends(nextOnline);
   }, [friendsList, presenceMap]);
@@ -147,9 +140,7 @@ export default function Layout({ children }) {
       const blockedData = api.getBlockedUsers ? await api.getBlockedUsers() : { blocked: [] };
       const friendList = friendsData.friends || friendsData || [];
       const blockedList = blockedData.blocks || blockedData.blocked || blockedData.users || [];
-      const friendAddressSet = new Set(friendList.map(getUserAddress).map(normalizeAddress).filter(Boolean));
       const friendHandleSet = new Set(friendList.map(getUserHandle).filter(Boolean));
-      const blockedAddressSet = new Set(Array.isArray(blockedList) ? blockedList.map(getUserAddress).map(normalizeAddress).filter(Boolean) : []);
       const blockedHandleSet = new Set(Array.isArray(blockedList) ? blockedList.map(getUserHandle).filter(Boolean) : []);
       
       if (!data || !data.users) {
@@ -158,12 +149,9 @@ export default function Layout({ children }) {
       
       // Filter out current user and get random 5
       const others = data.users.filter(u => {
-        const address = normalizeAddress(getUserAddress(u));
         const handle = getUserHandle(u);
-        if (address && address === user?.walletAddress) return false;
-        if (address && friendAddressSet.has(address)) return false;
+        if (handle && handle === user?.username?.toLowerCase?.()) return false;
         if (handle && friendHandleSet.has(handle)) return false;
-        if (address && blockedAddressSet.has(address)) return false;
         if (handle && blockedHandleSet.has(handle)) return false;
         return true;
       });
@@ -191,12 +179,12 @@ export default function Layout({ children }) {
   }
 
   async function loadUserStats() {
-    if (!user?.walletAddress) return;
+    if (!user?.username) return;
     
     try {
       // Load post count
       if (api.getUserPosts) {
-        const postsData = await api.getUserPosts(user.walletAddress);
+        const postsData = await api.getUserPosts(user.username);
         setPostCount(postsData.posts?.length || 0);
       }
       
@@ -220,21 +208,13 @@ export default function Layout({ children }) {
       ]);
       const friends = friendsData.friends || friendsData || [];
       const blockedList = blockedData.blocks || blockedData.blocked || blockedData.users || blockedData || [];
-      const blockedAddressSet = new Set(
-        (Array.isArray(blockedList) ? blockedList : [])
-          .map(getUserAddress)
-          .map(normalizeAddress)
-          .filter(Boolean)
-      );
       const blockedHandleSet = new Set(
         (Array.isArray(blockedList) ? blockedList : [])
           .map(getUserHandle)
           .filter(Boolean)
       );
       const filteredFriends = friends.filter((friend) => {
-        const address = normalizeAddress(getUserAddress(friend));
         const handle = getUserHandle(friend);
-        if (address && blockedAddressSet.has(address)) return false;
         if (handle && blockedHandleSet.has(handle)) return false;
         return true;
       });
@@ -242,10 +222,11 @@ export default function Layout({ children }) {
 
       const nextPresence = {};
       presenceList.forEach((entry) => {
-        const address = entry?.address?.toLowerCase?.() || entry?.address;
-        if (address) {
-          nextPresence[address] = {
-            address,
+        const username = entry?.username;
+        if (username) {
+          const key = username.toLowerCase();
+          nextPresence[key] = {
+            username,
             online: !!entry?.online,
             lastSeen: entry?.lastSeen || null
           };
@@ -271,12 +252,6 @@ export default function Layout({ children }) {
         const blockedData = await api.getBlockedUsers();
         blockedList = blockedData.blocks || blockedData.blocked || blockedData.users || blockedData || [];
       }
-      const blockedAddressSet = new Set(
-        (Array.isArray(blockedList) ? blockedList : [])
-          .map(getUserAddress)
-          .map(normalizeAddress)
-          .filter(Boolean)
-      );
       const blockedHandleSet = new Set(
         (Array.isArray(blockedList) ? blockedList : [])
           .map(getUserHandle)
@@ -284,9 +259,7 @@ export default function Layout({ children }) {
       );
 
       const requests = (data.requests || []).filter((request) => {
-        const address = normalizeAddress(getUserAddress(request));
         const handle = getUserHandle(request);
-        if (address && blockedAddressSet.has(address)) return false;
         if (handle && blockedHandleSet.has(handle)) return false;
         return true;
       });
@@ -318,12 +291,6 @@ export default function Layout({ children }) {
         const blockedData = await api.getBlockedUsers();
         blockedList = blockedData.blocks || blockedData.blocked || blockedData.users || blockedData || [];
       }
-      const blockedAddressSet = new Set(
-        (Array.isArray(blockedList) ? blockedList : [])
-          .map(getUserAddress)
-          .map(normalizeAddress)
-          .filter(Boolean)
-      );
       const blockedHandleSet = new Set(
         (Array.isArray(blockedList) ? blockedList : [])
           .map(getUserHandle)
@@ -331,9 +298,7 @@ export default function Layout({ children }) {
       );
 
       const filteredResults = (data.users || []).filter((candidate) => {
-        const address = normalizeAddress(getUserAddress(candidate));
         const handle = getUserHandle(candidate);
-        if (address && blockedAddressSet.has(address)) return false;
         if (handle && blockedHandleSet.has(handle)) return false;
         return true;
       });
@@ -382,7 +347,7 @@ export default function Layout({ children }) {
               ) : (
                 searchResults.map(user => (
                   <Link 
-                    key={user.wallet_address}
+                    key={user.username}
                     to={profilePathFor(user)}
                     className="search-result"
                     onClick={() => setShowSearchResults(false)}
@@ -546,7 +511,7 @@ export default function Layout({ children }) {
               ) : (
                 searchResults.map((user) => (
                   <Link
-                    key={user.wallet_address}
+                    key={user.username}
                     to={profilePathFor(user)}
                     className="search-result"
                     onClick={() => {
@@ -632,7 +597,7 @@ export default function Layout({ children }) {
               <div className="friends-list">
                 {onlineFriends.slice(0, 5).map((friend) => (
                   <Link
-                    key={friend.wallet_address || friend.walletAddress}
+                    key={friend.username}
                     to={profilePathFor(friend)}
                     className="friend-item"
                   >
@@ -667,7 +632,7 @@ export default function Layout({ children }) {
               <div className="suggested-list">
                 {suggestedUsers.map(suggestedUser => (
                   <Link 
-                    key={suggestedUser.wallet_address}
+                    key={suggestedUser.username}
                     to={profilePathFor(suggestedUser)}
                     className="suggested-user"
                   >

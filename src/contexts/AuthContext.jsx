@@ -109,20 +109,16 @@ export function AuthProvider({ children }) {
       }
 
       const address = accounts[0];
-      console.log('Connected address:', address);
 
       // Get nonce from backend
       const nonceResponse = await fetch(`${API_URL}/api/auth/nonce/${address}`);
       const { nonce } = await nonceResponse.json();
-      console.log('Got nonce:', nonce);
 
       // Sign the nonce
       const signature = await window.ethereum.request({
         method: 'personal_sign',
         params: [nonce, address]
       });
-
-      console.log('Signature obtained');
       return { address, signature };
     } catch (error) {
       console.error('Wallet connection error:', error);

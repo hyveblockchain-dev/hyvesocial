@@ -100,8 +100,9 @@ export function AuthProvider({ children }) {
       const data = await api.getCurrentUser();
       if (data && data.user) {
         setUser(data.user);
-        if (data.user.walletAddress) {
-          socketService.connect(data.user.walletAddress);
+        const socketUser = data.user.username || data.user.handle;
+        if (socketUser) {
+          socketService.connect(socketUser);
           setSocket(socketService.socket);
         }
       } else {
@@ -153,7 +154,6 @@ export function AuthProvider({ children }) {
       });
 
       const address = accounts[0];
-      console.log('Connected address:', address);
 
       // Ensure user is on the correct chain (Hyve Network)
       await ensureCorrectChain(provider);
@@ -161,14 +161,12 @@ export function AuthProvider({ children }) {
       // Get nonce from backend
       const nonceResponse = await fetch(`${API_URL}/api/auth/nonce/${address}`);
       const { nonce } = await nonceResponse.json();
-      console.log('Got nonce:', nonce);
 
       // Sign the nonce
       const signature = await provider.request({
         method: 'personal_sign',
         params: [nonce, address]
       });
-      console.log('Signature obtained');
 
       return { address, signature };
     } catch (error) {
@@ -187,8 +185,9 @@ export function AuthProvider({ children }) {
     
     if (data.userExists && data.user) {
       setUser(data.user);
-      if (data.user.walletAddress) {
-        socketService.connect(data.user.walletAddress);
+      const socketUser = data.user.username || data.user.handle;
+      if (socketUser) {
+        socketService.connect(socketUser);
         setSocket(socketService.socket);
       }
       return { needsRegistration: false };
@@ -210,8 +209,9 @@ export function AuthProvider({ children }) {
     
     if (data.user) {
       setUser(data.user);
-      if (data.user.walletAddress) {
-        socketService.connect(data.user.walletAddress);
+      const socketUser = data.user.username || data.user.handle;
+      if (socketUser) {
+        socketService.connect(socketUser);
         setSocket(socketService.socket);
       }
     }

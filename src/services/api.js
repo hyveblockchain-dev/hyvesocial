@@ -432,9 +432,9 @@ export async function removeCommentReaction(commentId) {
 // FOLLOW FUNCTIONS
 // ========================================
 
-export async function followUser(address) {
+export async function followUser(username) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/follow/${address}`, {
+  const response = await fetch(`${API_URL}/api/follow/${username}`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -443,9 +443,9 @@ export async function followUser(address) {
   return response.json();
 }
 
-export async function unfollowUser(address) {
+export async function unfollowUser(username) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/follow/${address}`, {
+  const response = await fetch(`${API_URL}/api/follow/${username}`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -467,11 +467,11 @@ export async function getFollowing() {
   if (!userResponse.ok) return { following: [] };
   
   const userData = await userResponse.json();
-  const address = userData.user?.walletAddress;
+  const username = userData.user?.username;
   
-  if (!address) return { following: [] };
+  if (!username) return { following: [] };
   
-  const response = await fetch(`${API_URL}/api/following/${address}`, {
+  const response = await fetch(`${API_URL}/api/following/${username}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -479,9 +479,9 @@ export async function getFollowing() {
   return response.json();
 }
 
-export async function getFollowers(address) {
+export async function getFollowers(username) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/followers/${address}`, {
+  const response = await fetch(`${API_URL}/api/followers/${username}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -1029,9 +1029,9 @@ export async function getBlockedUsers() {
 // ALBUM FUNCTIONS
 // ========================================
 
-export async function getAlbums(walletAddress) {
+export async function getAlbums(identifier) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/api/albums/user/${walletAddress}`, {
+  const response = await fetch(`${API_URL}/api/albums/user/${identifier}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },

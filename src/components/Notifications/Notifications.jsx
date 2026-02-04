@@ -41,12 +41,12 @@ export default function Notifications() {
 
     const handleFriendAccepted = async (payload) => {
       try {
-        const address = payload?.from;
-        if (!address) return;
-        const data = await api.getUserProfile(address);
+        const username = payload?.fromUsername || payload?.from;
+        if (!username) return;
+        const data = await api.getUserProfile(username);
         const user = data?.user || {};
         const entry = {
-          id: `accepted-${address}-${Date.now()}`,
+          id: `accepted-${username}-${Date.now()}`,
           type: 'friend_accepted',
           createdAt: new Date().toISOString(),
           user

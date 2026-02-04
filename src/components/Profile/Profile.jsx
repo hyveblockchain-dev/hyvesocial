@@ -68,20 +68,19 @@ export default function Profile() {
   const [resolvedAddress, setResolvedAddress] = useState(null);
   const [profileCache, setProfileCache] = useState({});
   
-  const isOwnProfile = user?.walletAddress && user?.walletAddress === resolvedAddress;
+  const isOwnProfile = (() => {
+    const resolved = resolvedAddress?.toLowerCase?.();
+    const userName = user?.username?.toLowerCase?.();
+    const profileName = profile?.username?.toLowerCase?.();
+    if (resolved && userName && resolved === userName) return true;
+    if (profileName && userName && profileName === userName) return true;
+    return false;
+  })();
   const friendCount = profile?.friendCount || profile?.friendsCount || friends.length || 0;
   const canViewPrivateContent = isOwnProfile || friendshipStatus === 'friends';
   const currentPhoto = selectedAlbum?.photos?.[lightboxIndex];
   const isProfilePhotoAlbum = /profile/i.test(selectedAlbum?.name || selectedAlbum?.title || '');
   const isCoverPhotoAlbum = /cover/i.test(selectedAlbum?.name || selectedAlbum?.title || '');
-
-  function getUserAddress(userObj) {
-    return userObj?.walletAddress || userObj?.wallet_address || userObj?.address || userObj?.user?.walletAddress || userObj?.user?.wallet_address || userObj?.user?.address;
-  }
-
-  function normalizeAddress(value) {
-    return value?.toLowerCase?.() || value;
-  }
 
   function getUserHandle(userObj) {
     return (userObj?.username || userObj?.name || userObj?.user?.username || '').toLowerCase();
@@ -89,51 +88,26 @@ export default function Profile() {
 
   function getFriendProfilePath(friend) {
     const username = friend?.username || friend?.name || friend?.user?.username;
-    const address =
-      friend?.walletAddress ||
-      friend?.wallet_address ||
-      friend?.address ||
-      friend?.user?.walletAddress ||
-      friend?.user?.wallet_address ||
-      friend?.user?.address;
-
     if (username) {
       return `/profile/${encodeURIComponent(username)}`;
     }
-
-    if (address) {
-      return `/profile/${encodeURIComponent(address)}`;
-    }
-
     return null;
   }
 
-  function isWalletAddress(value) {
-    return /^0x[a-fA-F0-9]{40}$/.test(value || '');
-  }
-
-  const blockedAddressSet = new Set(
-    blockedUsers
-      .map(getUserAddress)
-      .map(normalizeAddress)
-      .filter(Boolean)
-  );
   const blockedHandleSet = new Set(
     blockedUsers
       .map(getUserHandle)
       .filter(Boolean)
   );
   const visibleFriends = friends.filter((friend) => {
-    const address = normalizeAddress(getUserAddress(friend));
     const handle = getUserHandle(friend);
-    if (address && blockedAddressSet.has(address)) return false;
     if (handle && blockedHandleSet.has(handle)) return false;
     return true;
   });
 
   useEffect(() => {
     resolveProfileHandle();
-  }, [handle, user?.walletAddress]);
+  }, [handle, user?.username]);
 
   useEffect(() => {
     if (!resolvedAddress) return;
@@ -158,9 +132,9 @@ export default function Profile() {
     if (!socket || !resolvedAddress) return;
 
     const handleFriendAccepted = (payload) => {
-      const fromAddress = payload?.from || payload?.address;
-      if (!fromAddress) return;
-      if (fromAddress === resolvedAddress) {
+      const fromUsername = payload?.fromUsername || payload?.from;
+      if (!fromUsername) return;
+      if (String(fromUsername).toLowerCase() === String(resolvedAddress || '').toLowerCase()) {
         setFriendshipStatus('friends');
       }
     };
@@ -174,13 +148,10 @@ export default function Profile() {
   async function resolveProfileHandle() {
     if (!handle) return;
 
-    if (handle === 'me' && user?.walletAddress) {
-      setResolvedAddress((prev) => (prev === user.walletAddress ? prev : user.walletAddress));
-      return;
-    }
-
-    if (isWalletAddress(handle)) {
-      setResolvedAddress((prev) => (prev === handle ? prev : handle));
+    if (handle === 'me') {
+      if (user?.username) {
+        setResolvedAddress((prev) => (prev === user.username ? prev : user.username));
+      }
       return;
     }
 
@@ -189,18 +160,14 @@ export default function Profile() {
       const data = await api.searchUsers(handle);
       const users = data.users || data || [];
       const match = users.find((u) => u.username?.toLowerCase() === handle.toLowerCase());
-      if (match?.wallet_address) {
-        setResolvedAddress((prev) => (prev === match.wallet_address ? prev : match.wallet_address));
+      if (match?.username) {
+        setResolvedAddress((prev) => (prev === match.username ? prev : match.username));
       } else {
-        setResolvedAddress(null);
-        setProfile(null);
-        setLoading(false);
+        setResolvedAddress((prev) => (prev === handle ? prev : handle));
       }
     } catch (error) {
       console.error('Resolve profile error:', error);
-      setResolvedAddress(null);
-      setProfile(null);
-      setLoading(false);
+      setResolvedAddress((prev) => (prev === handle ? prev : handle));
     }
   }
 
@@ -266,9 +233,6 @@ export default function Profile() {
         setUser(data.user);
       }
 
-      if (isWalletAddress(handle) && data.user?.username) {
-        navigate(`/profile/${data.user.username}`, { replace: true });
-      }
     } catch (error) {
       console.error('Load profile error:', error);
     } finally {
@@ -304,12 +268,13 @@ export default function Profile() {
         const blockedData = await api.getBlockedUsers();
         const blockedList = blockedData.blocked || blockedData.users || blockedData || [];
         const normalizedBlockedList = Array.isArray(blockedList) ? blockedList : [];
-        const blockedAddresses = new Set(
+        const blockedHandles = new Set(
           normalizedBlockedList
-            .map((item) => item.wallet_address || item.walletAddress || item.address)
+            .map((item) => item.username || item.name)
             .filter(Boolean)
+            .map((name) => name.toLowerCase())
         );
-        if (blockedAddresses.has(address)) {
+        if (blockedHandles.has(String(address || '').toLowerCase())) {
           nextStatus = 'blocked';
         }
       }
@@ -419,24 +384,12 @@ export default function Profile() {
   }
 
   function handleMessageUser(targetUser) {
-    const address =
-      targetUser?.walletAddress ||
-      targetUser?.wallet_address ||
-      targetUser?.address ||
-      targetUser?.user?.walletAddress ||
-      targetUser?.user?.wallet_address ||
-      targetUser?.user?.address ||
-      profile?.walletAddress ||
-      profile?.wallet_address ||
-      profile?.address ||
-      resolvedAddress ||
-      (isWalletAddress(handle) ? handle : null);
-
     const username =
       targetUser?.username ||
       targetUser?.name ||
       targetUser?.user?.username ||
       profile?.username ||
+      resolvedAddress ||
       'User';
 
     const profileImage =
@@ -448,14 +401,9 @@ export default function Profile() {
       profile?.profile_image ||
       '';
 
-    if (!address) {
-      alert('Missing wallet address for this user.');
-      return;
-    }
-
     window.dispatchEvent(
       new CustomEvent('open-chat', {
-        detail: { address, username, profileImage }
+        detail: { username, profileImage }
       })
     );
   }
@@ -1220,12 +1168,7 @@ export default function Profile() {
                 {visibleFriends.map(friend => {
                   const username = friend.username || friend.name || friend.user?.username || 'User';
                   const image = friend.profileImage || friend.profile_image || friend.user?.profileImage;
-                  const friendKey =
-                    friend.id ||
-                    friend.wallet_address ||
-                    friend.walletAddress ||
-                    friend.address ||
-                    username;
+                  const friendKey = friend.id || username;
 
                   const friendProfilePath = getFriendProfilePath(friend);
 
@@ -1296,13 +1239,7 @@ export default function Profile() {
                 {blockedUsers.map((blockedUser) => {
                   const username = blockedUser?.username || blockedUser?.name || blockedUser?.user?.username || 'User';
                   const image = blockedUser?.profileImage || blockedUser?.profile_image || blockedUser?.user?.profileImage;
-                  const blockedKey =
-                    blockedUser?.id ||
-                    blockedUser?.wallet_address ||
-                    blockedUser?.walletAddress ||
-                    blockedUser?.address ||
-                    username;
-                  const blockedAddress = getUserAddress(blockedUser);
+                  const blockedKey = blockedUser?.id || username;
 
                   return (
                     <div key={blockedKey} className="friend-card blocked-card">
@@ -1321,10 +1258,10 @@ export default function Profile() {
                       <button
                         className="btn-secondary"
                         onClick={async () => {
-                          if (!blockedAddress) return;
+                          if (!username) return;
                           try {
                             setActionLoading(true);
-                            await api.unblockUser(blockedAddress);
+                            await api.unblockUser(username);
                             loadBlockedUsers();
                           } catch (error) {
                             console.error('Unblock user error:', error);

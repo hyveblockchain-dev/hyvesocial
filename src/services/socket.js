@@ -8,7 +8,7 @@ class SocketService {
     this.connected = false;
   }
 
-  connect(userAddress) {
+  connect(userIdentifier) {
     if (this.socket?.connected) return;
 
     this.socket = io(SOCKET_URL, {
@@ -21,8 +21,8 @@ class SocketService {
     this.socket.on('connect', () => {
       console.log('✅ Socket connected');
       this.connected = true;
-      if (userAddress) {
-        this.socket.emit('join', userAddress);
+      if (userIdentifier) {
+        this.socket.emit('join', userIdentifier);
       }
     });
 

@@ -10,10 +10,10 @@ export default function ChatWindow({ conversation, onClose }) {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
-  const conversationAddress = conversation?.address || conversation?.wallet_address || conversation?.walletAddress;
+  const conversationUsername = conversation?.username;
 
   useEffect(() => {
-    if (!conversationAddress) {
+    if (!conversationUsername) {
       setLoading(false);
       return;
     }
@@ -30,7 +30,7 @@ export default function ChatWindow({ conversation, onClose }) {
         socket.off('new_message', handleNewMessage);
       }
     };
-  }, [conversationAddress, socket]);
+  }, [conversationUsername, socket]);
 
   useEffect(() => {
     scrollToBottom();
@@ -38,19 +38,19 @@ export default function ChatWindow({ conversation, onClose }) {
 
   function handleNewMessage(message) {
     if (
-      message.from_address === conversationAddress ||
-      message.to_address === conversationAddress
+      message.from_username === conversationUsername ||
+      message.to_username === conversationUsername
     ) {
       setMessages(prev => [...prev, message]);
     }
   }
 
   async function loadMessages() {
-    if (!conversationAddress) return;
+    if (!conversationUsername) return;
     
     try {
       setLoading(true);
-      const data = await api.getMessages(conversationAddress);
+      const data = await api.getMessages(conversationUsername);
       setMessages(data.messages || []);
     } catch (error) {
       console.error('Load messages error:', error);
@@ -65,7 +65,7 @@ export default function ChatWindow({ conversation, onClose }) {
     if (!newMessage.trim()) return;
 
     try {
-      const message = await api.sendMessage(conversationAddress, newMessage);
+      const message = await api.sendMessage(conversationUsername, newMessage);
       setMessages(prev => [...prev, message.message]);
       setNewMessage('');
     } catch (error) {
@@ -100,8 +100,8 @@ export default function ChatWindow({ conversation, onClose }) {
           <div className="no-messages">No messages yet. Start the conversation!</div>
         ) : (
           messages.map((message, index) => {
-            const currentAddress = user?.walletAddress || user?.wallet_address;
-            const isOwn = message.from_address === currentAddress;
+            const currentUsername = user?.username;
+            const isOwn = message.from_username === currentUsername;
             return (
               <div key={index} className={`message ${isOwn ? 'own' : 'other'}`}>
                 <div className="message-content">{message.content}</div>

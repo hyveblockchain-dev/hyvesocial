@@ -12,16 +12,8 @@ export default function Discover() {
   const [friends, setFriends] = useState([]);
   const [pendingRequests, setPendingRequests] = useState({});
 
-  function getUserAddress(userObj) {
-    return userObj?.wallet_address || userObj?.walletAddress || userObj?.address || userObj?.user?.wallet_address || userObj?.user?.walletAddress || userObj?.user?.address;
-  }
-
   function getUserHandle(userObj) {
     return (userObj?.username || userObj?.user?.username || userObj?.name || '').toLowerCase();
-  }
-
-  function normalizeAddress(value) {
-    return value?.toLowerCase?.() || value;
   }
 
   useEffect(() => {
@@ -41,12 +33,6 @@ export default function Discover() {
       setFriends(friendList);
 
       const blockedList = blockedData?.blocks || blockedData?.blocked || blockedData?.users || blockedData || [];
-      const blockedAddresses = new Set(
-        (Array.isArray(blockedList) ? blockedList : [])
-          .map(getUserAddress)
-          .map(normalizeAddress)
-          .filter(Boolean)
-      );
       const blockedHandles = new Set(
         (Array.isArray(blockedList) ? blockedList : [])
           .map(getUserHandle)
@@ -55,11 +41,9 @@ export default function Discover() {
 
       const allUsers = usersData.users || usersData || [];
       const filtered = allUsers
-        .filter((u) => u.wallet_address !== user?.walletAddress)
+        .filter((u) => getUserHandle(u) !== user?.username?.toLowerCase?.())
         .filter((u) => {
-          const address = normalizeAddress(getUserAddress(u));
           const handle = getUserHandle(u);
-          if (address && blockedAddresses.has(address)) return false;
           if (handle && blockedHandles.has(handle)) return false;
           return true;
         });
@@ -72,13 +56,13 @@ export default function Discover() {
     }
   }
 
-  async function handleSendRequest(address) {
+  async function handleSendRequest(username) {
     try {
-      setPendingRequests((prev) => ({ ...prev, [address]: true }));
-      await api.sendFriendRequest(address);
+      setPendingRequests((prev) => ({ ...prev, [username]: true }));
+      await api.sendFriendRequest(username);
     } catch (error) {
       console.error('Send friend request error:', error);
-      setPendingRequests((prev) => ({ ...prev, [address]: false }));
+      setPendingRequests((prev) => ({ ...prev, [username]: false }));
       alert('Failed to send friend request');
     }
   }
@@ -88,11 +72,12 @@ export default function Discover() {
     return users.filter((u) => u.username?.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [users, searchQuery]);
 
-  const friendAddressSet = useMemo(() => {
+  const friendHandleSet = useMemo(() => {
     return new Set(
       (friends || [])
-        .map((friend) => friend.wallet_address || friend.walletAddress || friend.address)
+        .map((friend) => friend.username || friend.user?.username || friend.name)
         .filter(Boolean)
+        .map((name) => name.toLowerCase())
     );
   }, [friends]);
 
@@ -127,9 +112,10 @@ export default function Discover() {
             ) : (
               <div className="users-grid">
                 {filteredUsers.map((person) => {
-                  const isFriend = friendAddressSet.has(person.wallet_address);
+                  const username = person.username || person.name || 'User';
+                  const isFriend = friendHandleSet.has(username.toLowerCase());
                   return (
-                    <div key={person.wallet_address} className="user-card">
+                    <div key={username} className="user-card">
                     <div className="user-card-info">
                       <div className="user-avatar">
                         {person.profile_image ? (
@@ -150,10 +136,10 @@ export default function Discover() {
                       ) : (
                         <button
                           className="btn-primary"
-                          onClick={() => handleSendRequest(person.wallet_address)}
-                          disabled={pendingRequests[person.wallet_address]}
+                          onClick={() => handleSendRequest(username)}
+                          disabled={pendingRequests[username]}
                         >
-                          {pendingRequests[person.wallet_address] ? 'Requested' : 'Add Friend'}
+                          {pendingRequests[username] ? 'Requested' : 'Add Friend'}
                         </button>
                       )}
                     </div>
