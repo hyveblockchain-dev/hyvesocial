@@ -11,6 +11,7 @@ export default function ChatWindow({ conversation, onClose }) {
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
   const conversationUsername = conversation?.username;
+  const cacheKey = conversationUsername ? `chat_messages_${conversationUsername}` : null;
 
   useEffect(() => {
     if (!conversationUsername) {
@@ -48,9 +49,49 @@ export default function ChatWindow({ conversation, onClose }) {
     if (!conversationUsername) return;
     
     try {
-      setLoading(true);
+      if (cacheKey) {
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setMessages(parsed);
+              setLoading(false);
+            }
+          } catch {
+            // ignore cache errors
+          }
+        }
+      }
+
+      if (messages.length === 0) {
+        setLoading(true);
+      }
       const data = await api.getMessages(conversationUsername);
-      setMessages(data.messages || []);
+      const loaded = data.messages || [];
+      setMessages((prev) => {
+        if (!prev.length) return loaded;
+        const toKey = (m) =>
+          m.id ||
+          m.message_id ||
+          `${m.from_username || m.fromUsername || ''}-${m.to_username || m.toUsername || ''}-${m.created_at || m.createdAt || ''}-${m.content || ''}`;
+        const map = new Map();
+        prev.forEach((m) => map.set(toKey(m), m));
+        loaded.forEach((m) => map.set(toKey(m), m));
+        const merged = Array.from(map.values()).sort((a, b) => {
+          const aTime = new Date(a.created_at || a.createdAt || 0).getTime();
+          const bTime = new Date(b.created_at || b.createdAt || 0).getTime();
+          return aTime - bTime;
+        });
+        if (cacheKey) {
+          try {
+            sessionStorage.setItem(cacheKey, JSON.stringify(merged));
+          } catch {
+            // ignore cache errors
+          }
+        }
+        return merged;
+      });
     } catch (error) {
       console.error('Load messages error:', error);
     } finally {
