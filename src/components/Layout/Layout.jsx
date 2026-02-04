@@ -68,6 +68,15 @@ export default function Layout({ children }) {
     setNotificationItems(trimmed);
   }
 
+  function persistNotificationItems(updater) {
+    setNotificationItems((prev) => {
+      const next = typeof updater === 'function' ? updater(prev || []) : updater;
+      const trimmed = Array.isArray(next) ? next.slice(0, 20) : [];
+      localStorage.setItem(RECENT_NOTIFICATIONS_KEY, JSON.stringify(trimmed));
+      return trimmed;
+    });
+  }
+
   function upsertRecentNotification(entry) {
     if (!entry?.id) return;
     setNotificationItems((prev) => {
@@ -672,6 +681,13 @@ export default function Layout({ children }) {
                                   try {
                                     await api.acceptFriendRequest(request.id);
                                     markNotificationRead(`request-${request.id}`);
+                                    persistNotificationItems((prev) =>
+                                      prev.map((entry) =>
+                                        entry.id === item.id
+                                          ? { ...entry, type: 'friend_request_handled', handledAction: 'accepted' }
+                                          : entry
+                                      )
+                                    );
                                   } catch (err) {
                                     console.error('Accept friend request error:', err);
                                   }
@@ -687,6 +703,13 @@ export default function Layout({ children }) {
                                   try {
                                     await api.declineFriendRequest(request.id);
                                     markNotificationRead(`request-${request.id}`);
+                                    persistNotificationItems((prev) =>
+                                      prev.map((entry) =>
+                                        entry.id === item.id
+                                          ? { ...entry, type: 'friend_request_handled', handledAction: 'declined' }
+                                          : entry
+                                      )
+                                    );
                                   } catch (err) {
                                     console.error('Decline friend request error:', err);
                                   }
@@ -696,6 +719,38 @@ export default function Layout({ children }) {
                                 ✕
                               </button>
                             </div>
+                          </div>
+                        );
+                      }
+
+                      if (item.type === 'friend_request_handled') {
+                        const request = item.request;
+                        const actionLabel =
+                          item.handledAction === 'accepted'
+                            ? 'accepted the request'
+                            : 'declined the request';
+                        return (
+                          <div key={item.id} className="notification-item">
+                            <Link
+                              to={profilePathFor(request)}
+                              className="notification-item-user"
+                              onClick={() => {
+                                markNotificationRead(item.id);
+                                setShowNotificationsMenu(false);
+                              }}
+                            >
+                              {request?.profile_image ? (
+                                <img src={request.profile_image} alt={request.username} />
+                              ) : (
+                                <div className="notification-avatar">
+                                  {request?.username?.charAt(0).toUpperCase() || '?'}
+                                </div>
+                              )}
+                              <div className="notification-text">
+                                <strong>{request?.username || 'Someone'}</strong>
+                                <span> {actionLabel}</span>
+                              </div>
+                            </Link>
                           </div>
                         );
                       }
