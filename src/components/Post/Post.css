@@ -160,7 +160,7 @@
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
   opacity: 0;
   transform: translateY(8px);
-  pointer-events: auto;
+  pointer-events: none;
   transition: all 0.25s ease;
   z-index: 5;
   backdrop-filter: blur(20px);
@@ -180,6 +180,7 @@
 .reaction-menu:focus-within {
   opacity: 1;
   transform: translateY(-8px);
+  pointer-events: auto;
 }
 
 .reaction-item {
