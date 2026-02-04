@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import './Chat.css';
 
-export default function Chat({ onSelectChat, unreadMap = {} }) {
+export default function Chat({ onSelectChat, unreadMap = {}, onlineMap = {} }) {
   const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -110,6 +110,7 @@ export default function Chat({ onSelectChat, unreadMap = {} }) {
             const username = conversation.username || 'Anonymous';
             const profileImage = conversation.profile_image || conversation.profileImage;
             const unreadCount = Number(unreadMap?.[String(username).toLowerCase()] || 0);
+            const isOnline = !!onlineMap?.[String(username).toLowerCase()]?.online;
             
             return (
               <div
@@ -117,17 +118,20 @@ export default function Chat({ onSelectChat, unreadMap = {} }) {
                 className="conversation-item"
                 onClick={() => handleSelectChat(conversation)}
               >
-                {profileImage ? (
-                  <img 
-                    src={profileImage} 
-                    alt={username} 
-                    className="conversation-avatar" 
-                  />
-                ) : (
-                  <div className="conversation-avatar">
-                    {username?.charAt(0).toUpperCase() || '?'}
-                  </div>
-                )}
+                <div className="conversation-avatar-wrapper">
+                  {profileImage ? (
+                    <img 
+                      src={profileImage} 
+                      alt={username} 
+                      className="conversation-avatar" 
+                    />
+                  ) : (
+                    <div className="conversation-avatar">
+                      {username?.charAt(0).toUpperCase() || '?'}
+                    </div>
+                  )}
+                  {isOnline && <span className="conversation-online" />}
+                </div>
                 <div className="conversation-info">
                   <div className="conversation-name">{username}</div>
                   <div className="conversation-preview">Start a conversation...</div>
