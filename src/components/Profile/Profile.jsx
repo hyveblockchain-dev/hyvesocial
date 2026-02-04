@@ -71,10 +71,8 @@ export default function Profile() {
   const isOwnProfile = (() => {
     const resolved = resolvedAddress?.toLowerCase?.();
     const userName = user?.username?.toLowerCase?.();
-    const profileName = profile?.username?.toLowerCase?.();
-    if (resolved && userName && resolved === userName) return true;
-    if (profileName && userName && profileName === userName) return true;
-    return false;
+    if (!resolved || !userName) return false;
+    return resolved === userName;
   })();
   const friendCount = profile?.friendCount || profile?.friendsCount || friends.length || 0;
   const canViewPrivateContent = isOwnProfile || friendshipStatus === 'friends';
@@ -118,7 +116,7 @@ export default function Profile() {
     if (!isOwnProfile && user) {
       checkFriendshipStatus(resolvedAddress);
     }
-  }, [resolvedAddress, handle]);
+  }, [resolvedAddress]);
 
   useEffect(() => {
     if (isOwnProfile) {

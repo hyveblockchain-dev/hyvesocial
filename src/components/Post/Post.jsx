@@ -47,7 +47,9 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
   const isOwner = (post.username || post.author_username || post.user?.username) === user?.username;
 
   function formatDate(dateString) {
+    if (!dateString) return '';
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '';
     const now = new Date();
     const diff = now - date;
     const minutes = Math.floor(diff / 60000);
@@ -303,7 +305,7 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
         <div className="comment-content">
           <div className="comment-header">
             <span className="comment-author">{comment.username}</span>
-            <span className="comment-time">{formatDate(comment.created_at)}</span>
+            <span className="comment-time">{formatDate(comment.created_at || comment.createdAt)}</span>
           </div>
           {contentText && <p>{contentText}</p>}
           {comment.media_url && (
@@ -442,7 +444,7 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
           {getAvatar(post.profile_image, post.username, 'author-avatar')}
           <div className="author-info">
             <div className="author-name">{post.username || 'Anonymous'}</div>
-            <div className="post-time">{formatDate(post.created_at)}</div>
+            <div className="post-time">{formatDate(post.created_at || post.createdAt)}</div>
           </div>
         </Link>
         {isOwner && (
