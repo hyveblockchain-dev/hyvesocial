@@ -75,6 +75,11 @@ export default function Layout({ children }) {
     });
   }
 
+  function getUnreadCount() {
+    const read = getReadNotifications();
+    return notificationItems.filter((item) => item?.id && !read.has(item.id)).length;
+  }
+
   function profilePathFor(userObj) {
     const handle = userObj?.username || userObj?.user?.username;
     return handle ? `/profile/${encodeURIComponent(handle)}` : '/profile/unknown';
@@ -531,9 +536,9 @@ export default function Layout({ children }) {
               title="Notifications"
             >
               🔔
-              {notificationItems.length > 0 && (
+              {getUnreadCount() > 0 && (
                 <span className="notification-badge">
-                  {notificationItems.length > 9 ? '9+' : notificationItems.length}
+                  {getUnreadCount() > 9 ? '9+' : getUnreadCount()}
                 </span>
               )}
             </button>
@@ -558,7 +563,10 @@ export default function Layout({ children }) {
                             <Link
                               to={profilePathFor(request)}
                               className="notification-item-user"
-                              onClick={() => setShowNotificationsMenu(false)}
+                              onClick={() => {
+                                markNotificationRead(item.id);
+                                setShowNotificationsMenu(false);
+                              }}
                             >
                               {request.profile_image ? (
                                 <img src={request.profile_image} alt={request.username} />
@@ -615,7 +623,10 @@ export default function Layout({ children }) {
                           <Link
                             to={notificationTargetPath(item, actor)}
                             className="notification-item-user"
-                            onClick={() => setShowNotificationsMenu(false)}
+                            onClick={() => {
+                              markNotificationRead(item.id);
+                              setShowNotificationsMenu(false);
+                            }}
                           >
                             {actor.profileImage || actor.profile_image ? (
                               <img
