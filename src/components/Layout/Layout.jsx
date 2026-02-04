@@ -29,9 +29,13 @@ export default function Layout({ children }) {
   const [blockedUsers, setBlockedUsers] = useState([]);
   const [isLightMode, setIsLightMode] = useState(() => localStorage.getItem('theme') === 'light');
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState({});
 
   const READ_NOTIFICATIONS_KEY = 'read_notifications';
   const RECENT_NOTIFICATIONS_KEY = 'recent_notifications';
+  const unreadMessagesKey = user?.username
+    ? `unread_messages_${String(user.username).toLowerCase()}`
+    : 'unread_messages';
 
   function getReadNotifications() {
     try {
@@ -78,6 +82,42 @@ export default function Layout({ children }) {
   function getUnreadCount() {
     const read = getReadNotifications();
     return notificationItems.filter((item) => item?.id && !read.has(item.id)).length;
+  }
+
+  function loadUnreadMessages(key = unreadMessagesKey) {
+    try {
+      const stored = localStorage.getItem(key);
+      const parsed = stored ? JSON.parse(stored) : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveUnreadMessages(next, key = unreadMessagesKey) {
+    localStorage.setItem(key, JSON.stringify(next));
+    setUnreadMessages(next);
+  }
+
+  function getUnreadMessageCount() {
+    return Object.values(unreadMessages || {}).reduce((sum, value) => sum + Number(value || 0), 0);
+  }
+
+  function bumpUnreadFor(username) {
+    if (!username) return;
+    const key = String(username).toLowerCase();
+    saveUnreadMessages({
+      ...(unreadMessages || {}),
+      [key]: Number(unreadMessages?.[key] || 0) + 1
+    });
+  }
+
+  function clearUnreadFor(username) {
+    if (!username) return;
+    const key = String(username).toLowerCase();
+    const next = { ...(unreadMessages || {}) };
+    delete next[key];
+    saveUnreadMessages(next);
   }
 
   function profilePathFor(userObj) {
@@ -139,6 +179,10 @@ export default function Layout({ children }) {
   }, [user]);
 
   useEffect(() => {
+    setUnreadMessages(loadUnreadMessages());
+  }, [unreadMessagesKey]);
+
+  useEffect(() => {
     if (!socket) return;
 
     const handleFriendRequest = () => {
@@ -168,6 +212,43 @@ export default function Layout({ children }) {
       socket.off('presence:update', handlePresenceUpdate);
     };
   }, [socket]);
+
+  useEffect(() => {
+    if (!socket || !user?.username) return;
+
+    const currentHandle = String(user.username).toLowerCase();
+    const handleMessage = (message) => {
+      const fromUsername =
+        message?.from_username ||
+        message?.fromUsername ||
+        message?.sender_username ||
+        message?.from ||
+        message?.sender ||
+        message?.username ||
+        '';
+      const toUsername =
+        message?.to_username ||
+        message?.toUsername ||
+        message?.recipient_username ||
+        message?.to ||
+        message?.recipient ||
+        '';
+
+      if (String(toUsername).toLowerCase() !== currentHandle) return;
+
+      const fromHandle = String(fromUsername || '').toLowerCase();
+      const activeHandle = String(selectedChat?.username || '').toLowerCase();
+      if (activeHandle && activeHandle === fromHandle) {
+        clearUnreadFor(fromHandle);
+        return;
+      }
+
+      bumpUnreadFor(fromHandle || 'unknown');
+    };
+
+    socket.on('new_message', handleMessage);
+    return () => socket.off('new_message', handleMessage);
+  }, [socket, user, selectedChat, unreadMessages]);
 
   useEffect(() => {
     if (!socket || !user?.username) return;
@@ -456,6 +537,9 @@ export default function Layout({ children }) {
   function handleChatSelect(conversation) {
     setSelectedChat(conversation);
     setShowChat(false);
+    if (conversation?.username) {
+      clearUnreadFor(conversation.username);
+    }
   }
 
   return (
@@ -826,6 +910,11 @@ export default function Layout({ children }) {
           {/* Chat Button */}
           <button className="chat-fab-bottom" onClick={() => setShowChat(!showChat)}>
             💬
+            {getUnreadMessageCount() > 0 && (
+              <span className="chat-badge">
+                {getUnreadMessageCount() > 9 ? '9+' : getUnreadMessageCount()}
+              </span>
+            )}
           </button>
         </aside>
       </div>
@@ -860,6 +949,11 @@ export default function Layout({ children }) {
           title="Chat"
         >
           💬
+          {getUnreadMessageCount() > 0 && (
+            <span className="mobile-chat-badge">
+              {getUnreadMessageCount() > 9 ? '9+' : getUnreadMessageCount()}
+            </span>
+          )}
         </button>
         <Link to="/profile/me" className={location.pathname.startsWith('/profile') ? 'mobile-nav-item active' : 'mobile-nav-item'}>
           👤

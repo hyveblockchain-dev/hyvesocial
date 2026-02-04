@@ -856,6 +856,23 @@ body.light-mode .stat-num {
   .mobile-nav-item:active::before {
     background: rgba(255, 215, 0, 0.2);
   }
+
+  .mobile-chat-badge {
+    position: absolute;
+    top: 2px;
+    right: 8px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 12px;
+    min-width: 16px;
+    text-align: center;
+    line-height: 1;
+    border: 1px solid var(--bg-secondary);
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+  }
 }
 
 @media (max-width: 600px) {
@@ -993,6 +1010,7 @@ body.light-mode .widget h3 {
 
 /* === CHAT BUTTON === */
 .chat-fab-bottom {
+  position: relative;
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -1012,6 +1030,23 @@ body.light-mode .widget h3 {
 .chat-fab-bottom:hover {
   background: var(--gold-light);
   transform: scale(1.1);
+}
+
+.chat-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 20px;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1;
+  border: 2px solid var(--bg-secondary);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
 }
 
 /* === CHAT POPUPS === */
