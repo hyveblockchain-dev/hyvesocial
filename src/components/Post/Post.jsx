@@ -47,6 +47,24 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
 
   const isOwner = (post.username || post.author_username || post.user?.username) === user?.username;
 
+  function extractTimestamp(item) {
+    if (!item) return null;
+    return (
+      item.created_at ||
+      item.createdAt ||
+      item.created ||
+      item.created_on ||
+      item.createdOn ||
+      item.posted_at ||
+      item.postedAt ||
+      item.published_at ||
+      item.publishedAt ||
+      item.timestamp ||
+      item.time ||
+      item.date
+    );
+  }
+
   function formatRelativeTime(value) {
     const date = parseDateValue(value);
     if (!date) return '';
@@ -305,7 +323,7 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
         <div className="comment-content">
           <div className="comment-header">
             <span className="comment-author">{comment.username}</span>
-            <span className="comment-time">{formatRelativeTime(comment.created_at || comment.createdAt)}</span>
+            <span className="comment-time">{formatRelativeTime(extractTimestamp(comment))}</span>
           </div>
           {contentText && <p>{contentText}</p>}
           {comment.media_url && (
@@ -444,7 +462,7 @@ export default function Post({ post, onDelete, onUpdate, onShare }) {
           {getAvatar(post.profile_image, post.username, 'author-avatar')}
           <div className="author-info">
             <div className="author-name">{post.username || 'Anonymous'}</div>
-            <div className="post-time">{formatRelativeTime(post.created_at || post.createdAt)}</div>
+            <div className="post-time">{formatRelativeTime(extractTimestamp(post))}</div>
           </div>
         </Link>
         {isOwner && (

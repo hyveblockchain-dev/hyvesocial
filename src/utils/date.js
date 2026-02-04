@@ -1,6 +1,27 @@
 export function parseDateValue(value) {
   if (!value) return null;
 
+  if (typeof value === 'object') {
+    if (typeof value.toDate === 'function') {
+      const date = value.toDate();
+      return date instanceof Date && !Number.isNaN(date.getTime()) ? date : null;
+    }
+
+    const seconds =
+      value.seconds ??
+      value._seconds ??
+      value.secs ??
+      value.epochSeconds ??
+      value.epoch_seconds;
+    const nanos = value.nanoseconds ?? value._nanoseconds ?? value.nanos;
+
+    if (typeof seconds === 'number') {
+      const ms = seconds * 1000 + (typeof nanos === 'number' ? Math.floor(nanos / 1e6) : 0);
+      const date = new Date(ms);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+  }
+
   if (value instanceof Date) {
     return Number.isNaN(value.getTime()) ? null : value;
   }
