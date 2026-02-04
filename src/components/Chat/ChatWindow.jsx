@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import './Chat.css';
 import { formatDateTime } from '../../utils/date';
+import { ensureKeypair, encryptMessageForRecipient, decryptMessageContent } from '../../utils/e2ee';
 
 export default function ChatWindow({ conversation, onClose }) {
   const { user, socket } = useAuth();
@@ -15,6 +16,8 @@ export default function ChatWindow({ conversation, onClose }) {
   const hasInitialScrollRef = useRef(false);
   const conversationUsername = conversation?.username;
   const cacheKey = conversationUsername ? `chat_messages_${conversationUsername}` : null;
+  const [e2eeReady, setE2eeReady] = useState(false);
+  const [e2eeError, setE2eeError] = useState('');
 
   useEffect(() => {
     if (!conversationUsername) {
@@ -22,7 +25,7 @@ export default function ChatWindow({ conversation, onClose }) {
       return;
     }
 
-    loadMessages();
+    initE2EE().then(loadMessages);
 
     // Listen for new messages
     if (socket) {
@@ -84,12 +87,40 @@ export default function ChatWindow({ conversation, onClose }) {
       const data = await api.getMessages(conversationUsername);
       const loaded = data.messages || [];
       hasInitialScrollRef.current = false;
+
+            async function initE2EE() {
+              try {
+                const { publicKey, isNew } = await ensureKeypair();
+                setE2eeReady(true);
+                setE2eeError('');
+                if (isNew) {
+                  await api.setPublicKey(publicKey);
+                }
+              } catch (error) {
+                setE2eeError(error?.message || 'E2EE unavailable');
+              }
+            }
+
+            async function hydrateMessage(message) {
+              const raw = message?.content;
+              if (typeof raw === 'string' && raw.startsWith('ENC:')) {
+                const cipher = raw.slice(4);
+                try {
+                  const plain = await decryptMessageContent(cipher);
+                  return { ...message, content: plain, _encrypted: true };
+                } catch (error) {
+                  return { ...message, content: '[Encrypted message]', _decryptError: true };
+                }
+              }
+              return message;
+            }
       setMessages((prev) => {
-        if (!prev.length) return loaded;
+        if (!prev.length) return hydrated;
         const toKey = (m) =>
           m.id ||
           m.message_id ||
-          `${m.from_username || m.fromUsername || ''}-${m.to_username || m.toUsername || ''}-${m.created_at || m.createdAt || ''}-${m.content || ''}`;
+                const hydrated = await hydrateMessage(message);
+                setMessages((prev) => [...prev, hydrated]);
         const map = new Map();
         prev.forEach((m) => map.set(toKey(m), m));
         loaded.forEach((m) => map.set(toKey(m), m));
@@ -158,11 +189,22 @@ export default function ChatWindow({ conversation, onClose }) {
             </div>
           )}
           <span>{conversation.username}</span>
+                if (!e2eeReady) {
+                  await initE2EE();
+                }
+                const keyResponse = await api.getUserKey(conversationUsername);
+                const recipientKey = keyResponse?.publicKey;
+                if (!recipientKey) {
+                  alert('This user has not enabled encrypted chat yet.');
+                  return;
+                }
+
+                const cipher = await encryptMessageForRecipient(recipientKey, newMessage);
         </div>
         <button className="close-button" onClick={onClose}>✕</button>
       </div>
 
-      <div className="chat-messages">
+                  content: newMessage,
         {loading ? (
           <div className="chat-loading">Loading messages...</div>
         ) : messages.length === 0 ? (
@@ -201,6 +243,9 @@ export default function ChatWindow({ conversation, onClose }) {
         >
           😊
         </button>
+                  {e2eeError && (
+                    <div className="chat-loading">Encrypted chat unavailable: {e2eeError}</div>
+                  )}
         <button type="submit">Send</button>
       </form>
       {showEmojiPicker && (
