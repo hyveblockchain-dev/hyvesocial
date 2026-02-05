@@ -253,6 +253,7 @@ export default function ChatWindow({ conversation, onClose }) {
     if (!newMessage.trim()) return;
 
     try {
+      const shouldOptimistic = !socket?.connected;
       if (!e2eeEnabled) {
         const outboxKey = `${conversationUsername || ''}|${newMessage}`;
         pendingOutboxRef.current.push({ key: outboxKey, ts: Date.now() });
@@ -266,7 +267,9 @@ export default function ChatWindow({ conversation, onClose }) {
           created_at: sentMessage?.created_at ?? new Date().toISOString(),
           _optimisticKey: outboxKey
         };
-        setMessages((prev) => [...prev, withDefaults]);
+        if (shouldOptimistic) {
+          setMessages((prev) => [...prev, withDefaults]);
+        }
         setNewMessage('');
         setShowEmojiPicker(false);
         return;
@@ -290,7 +293,9 @@ export default function ChatWindow({ conversation, onClose }) {
           created_at: sentMessage?.created_at ?? new Date().toISOString(),
           _optimisticKey: outboxKey
         };
-        setMessages((prev) => [...prev, withDefaults]);
+        if (shouldOptimistic) {
+          setMessages((prev) => [...prev, withDefaults]);
+        }
         setNewMessage('');
         setShowEmojiPicker(false);
         return;
@@ -312,7 +317,9 @@ export default function ChatWindow({ conversation, onClose }) {
         created_at: sentMessage?.created_at ?? new Date().toISOString(),
         _optimisticKey: outboxKey
       };
-      setMessages((prev) => [...prev, withDefaults]);
+      if (shouldOptimistic) {
+        setMessages((prev) => [...prev, withDefaults]);
+      }
       setNewMessage('');
       setShowEmojiPicker(false);
     } catch (error) {
