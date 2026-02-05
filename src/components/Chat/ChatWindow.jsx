@@ -13,12 +13,13 @@ export default function ChatWindow({ conversation, onClose }) {
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
   const hasInitialScrollRef = useRef(false);
-  const conversationUsername =
+  const conversationUsernameRaw =
     conversation?.username ||
     conversation?.handle ||
     conversation?.user?.username ||
     conversation?.name ||
     null;
+  const conversationUsername = conversationUsernameRaw ? String(conversationUsernameRaw).toLowerCase() : null;
   const cacheKey = conversationUsername ? `chat_messages_${conversationUsername}` : null;
   const getMessageKey = (message) =>
     message?.id ||
@@ -57,8 +58,8 @@ export default function ChatWindow({ conversation, onClose }) {
   const emojiOptions = ['😀','😄','😁','😅','😂','😍','🥳','😎','😮','😢','😡','👍','❤️','🔥','🎉'];
 
   async function handleNewMessage(message) {
-    const fromUsername = message.from_username || message.fromUsername || message.sender_username || message.from || message.sender || message.username;
-    const toUsername = message.to_username || message.toUsername || message.recipient_username || message.to || message.recipient;
+    const fromUsername = (message.from_username || message.fromUsername || message.sender_username || message.from || message.sender || message.username || '').toLowerCase();
+    const toUsername = (message.to_username || message.toUsername || message.recipient_username || message.to || message.recipient || '').toLowerCase();
     if (conversationUsername && (fromUsername === conversationUsername || toUsername === conversationUsername)) {
       const hydrated = message;
       setMessages((prev) => {

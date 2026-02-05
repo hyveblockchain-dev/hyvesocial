@@ -246,7 +246,7 @@ export default function Layout({ children }) {
       if (String(toUsername).toLowerCase() !== currentHandle) return;
 
       const fromHandle = String(fromUsername || '').toLowerCase();
-      const activeHandle = String(selectedChat?.username || '').toLowerCase();
+      const activeHandle = String(selectedChat?.username || selectedChat?.handle || '').toLowerCase();
       if (activeHandle && activeHandle === fromHandle) {
         clearUnreadFor(fromHandle);
         return;

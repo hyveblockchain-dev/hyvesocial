@@ -72,12 +72,13 @@ export default function Chat({ onSelectChat, unreadMap = {}, onlineMap = {} }) {
   }
 
   async function prefetchMessages(conversation) {
-    const username =
+    const usernameRaw =
       conversation?.username ||
       conversation?.handle ||
       conversation?.user?.username ||
       conversation?.name ||
       null;
+    const username = usernameRaw ? String(usernameRaw).toLowerCase() : null;
     if (!username || !api.getMessages) return;
     const cacheKey = `chat_messages_${username}`;
     if (sessionStorage.getItem(cacheKey)) return;
