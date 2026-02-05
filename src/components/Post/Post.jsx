@@ -95,6 +95,16 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
     return relative || absolute;
   }
 
+  function normalizeSharedContent(content) {
+    if (typeof content !== 'string') return content;
+    const marker = 'Shared from @';
+    const lastIndex = content.lastIndexOf(marker);
+    if (lastIndex > 0) {
+      return content.slice(lastIndex);
+    }
+    return content;
+  }
+
   const reactionOptions = [
     { type: 0, label: 'Like', emoji: '👍' },
     { type: 1, label: 'Love', emoji: '❤️' },
@@ -304,7 +314,7 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
     }
 
     try {
-      const baseText = post.content?.trim();
+      const baseText = normalizeSharedContent(post.content?.trim());
       const sharedContent = baseText
         ? `Shared from @${post.username || 'user'}: ${baseText}`
         : `Shared a post from @${post.username || 'user'}`;
@@ -503,7 +513,7 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
         )}
       </div>
 
-      <div className="post-content">{post.content}</div>
+      <div className="post-content">{normalizeSharedContent(post.content)}</div>
 
       {post.image_url && (
         <div className="post-image">
