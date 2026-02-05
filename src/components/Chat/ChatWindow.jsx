@@ -125,7 +125,7 @@ export default function ChatWindow({ conversation, onClose }) {
       }
 
       if (!hadCache && messages.length === 0) {
-        setLoading(true);
+        setLoading(false);
       }
 
       const data = await api.getMessages(conversationUsername);
@@ -229,9 +229,7 @@ export default function ChatWindow({ conversation, onClose }) {
         {e2eeError && (
           <div className="chat-loading">Encrypted chat unavailable: {e2eeError}</div>
         )}
-        {loading ? (
-          <div className="chat-loading">Loading messages...</div>
-        ) : messages.length === 0 ? (
+        {messages.length === 0 ? (
           <div className="no-messages">No messages yet. Start the conversation!</div>
         ) : (
           messages.map((message, index) => {
