@@ -66,10 +66,25 @@ export default function ChatWindow({ conversation, onClose }) {
   async function hydrateMessage(message) {
     const raw = message?.content;
     if (typeof raw === 'string' && raw.startsWith('ENC:')) {
-      const cipher = raw.slice(4);
+      const cipherPayload = raw.slice(4);
       try {
         await ensureKeypair();
-        const plain = await decryptMessageContent(cipher);
+        try {
+          const parsed = JSON.parse(cipherPayload);
+          const candidates = [parsed?.s, parsed?.r].filter(Boolean);
+          for (const candidate of candidates) {
+            try {
+              const plain = await decryptMessageContent(candidate);
+              return { ...message, content: plain, _encrypted: true };
+            } catch {
+              // try next candidate
+            }
+          }
+        } catch {
+          // legacy format
+        }
+
+        const plain = await decryptMessageContent(cipherPayload);
         return { ...message, content: plain, _encrypted: true };
       } catch (error) {
         return { ...message, content: '[Encrypted message]', _decryptError: true };
@@ -164,8 +179,11 @@ export default function ChatWindow({ conversation, onClose }) {
         return;
       }
 
-      const cipher = await encryptMessageForRecipient(recipientKey, newMessage);
-      const response = await api.sendMessage(conversationUsername, `ENC:${cipher}`);
+      const { publicKey: senderPublicKey } = await ensureKeypair();
+      const cipherToRecipient = await encryptMessageForRecipient(recipientKey, newMessage);
+      const cipherToSelf = await encryptMessageForRecipient(senderPublicKey, newMessage);
+      const payload = JSON.stringify({ v: 1, r: cipherToRecipient, s: cipherToSelf });
+      const response = await api.sendMessage(conversationUsername, `ENC:${payload}`);
       const sentMessage = response?.message || response;
       const withDefaults = {
         ...sentMessage,
