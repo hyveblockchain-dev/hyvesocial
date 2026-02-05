@@ -109,7 +109,39 @@ export async function ensureKeypair() {
   cachedPublicKey = keyPair.publicKey;
   cachedSecretKey = keyPair.privateKey;
 
-  return { publicKey: toBase64(keyPair.publicKey), isNew: true };
+  return {
+    publicKey: toBase64(keyPair.publicKey),
+    encryptedPrivateKey: toBase64(encryptedSecretKey),
+    encryptedPrivateKeyNonce: toBase64(nonce),
+    isNew: true
+  };
+}
+
+export function getEncryptedKeyPayload() {
+  const publicKey = localStorage.getItem(PUBLIC_KEY_KEY);
+  const encryptedPrivateKey = localStorage.getItem(PRIVATE_KEY_KEY);
+  const encryptedPrivateKeyNonce = localStorage.getItem(PRIVATE_KEY_NONCE_KEY);
+  if (!publicKey || !encryptedPrivateKey || !encryptedPrivateKeyNonce) return null;
+  return { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce };
+}
+
+export async function restoreKeypairFromServer(payload) {
+  if (!payload?.publicKey || !payload?.encryptedPrivateKey || !payload?.encryptedPrivateKeyNonce) {
+    return false;
+  }
+  await sodium.ready;
+  const unlockKey = await getUnlockKey();
+  const secret = sodium.crypto_secretbox_open_easy(
+    fromBase64(payload.encryptedPrivateKey),
+    fromBase64(payload.encryptedPrivateKeyNonce),
+    unlockKey
+  );
+  localStorage.setItem(PUBLIC_KEY_KEY, payload.publicKey);
+  localStorage.setItem(PRIVATE_KEY_KEY, payload.encryptedPrivateKey);
+  localStorage.setItem(PRIVATE_KEY_NONCE_KEY, payload.encryptedPrivateKeyNonce);
+  cachedPublicKey = fromBase64(payload.publicKey);
+  cachedSecretKey = secret;
+  return true;
 }
 
 export async function encryptMessageForRecipient(recipientPublicKeyBase64, message) {

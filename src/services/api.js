@@ -1125,7 +1125,7 @@ export async function deleteAlbum(albumId) {
 // CHAT/MESSAGES FUNCTIONS
 // ========================================
 
-export async function setPublicKey(publicKey) {
+export async function setPublicKey(publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce) {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_URL}/api/keys`, {
     method: 'POST',
@@ -1133,7 +1133,7 @@ export async function setPublicKey(publicKey) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ publicKey }),
+    body: JSON.stringify({ publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce }),
   });
   return response.json();
 }
@@ -1141,6 +1141,16 @@ export async function setPublicKey(publicKey) {
 export async function getUserKey(username) {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_URL}/api/keys/${encodeURIComponent(username)}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
+export async function getMyKey() {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/keys/self`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -1264,4 +1274,5 @@ export default {
   sendMessage,
   setPublicKey,
   getUserKey,
+  getMyKey,
 };

@@ -4,7 +4,12 @@ import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import './Chat.css';
 import { formatDateTime } from '../../utils/date';
-import { ensureKeypair, encryptMessageForRecipient, decryptMessageContent } from '../../utils/e2ee';
+import {
+  ensureKeypair,
+  encryptMessageForRecipient,
+  decryptMessageContent,
+  getEncryptedKeyPayload
+} from '../../utils/e2ee';
 
 export default function ChatWindow({ conversation, onClose }) {
   const { user, socket } = useAuth();
@@ -53,11 +58,17 @@ export default function ChatWindow({ conversation, onClose }) {
 
   async function initE2EE() {
     try {
-      const { publicKey, isNew } = await ensureKeypair();
+      const { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce, isNew } = await ensureKeypair();
       setE2eeReady(true);
       setE2eeError('');
       if (isNew) {
-        await api.setPublicKey(publicKey);
+        const payload =
+          encryptedPrivateKey && encryptedPrivateKeyNonce
+            ? { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce }
+            : getEncryptedKeyPayload();
+        if (payload?.publicKey) {
+          await api.setPublicKey(payload.publicKey, payload.encryptedPrivateKey, payload.encryptedPrivateKeyNonce);
+        }
       }
     } catch (error) {
       setE2eeError(error?.message || 'E2EE unavailable');
