@@ -210,6 +210,15 @@ export function resetE2EESession() {
   sessionStorage.removeItem(SIGNATURE_SESSION_KEY);
 }
 
+export function clearE2EEUnlock(persist = true) {
+  cachedUnlockKey = null;
+  sessionStorage.removeItem(UNLOCK_KEY_SESSION);
+  sessionStorage.removeItem(SIGNATURE_SESSION_KEY);
+  if (persist) {
+    localStorage.removeItem(UNLOCK_KEY_PERSIST);
+  }
+}
+
 export function setE2EESignature(signature) {
   if (!signature) return;
   sessionStorage.setItem(SIGNATURE_SESSION_KEY, signature);

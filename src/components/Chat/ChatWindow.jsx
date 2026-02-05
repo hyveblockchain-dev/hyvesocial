@@ -8,7 +8,8 @@ import {
   ensureKeypair,
   encryptMessageForRecipient,
   decryptMessageContent,
-  getEncryptedKeyPayload
+  getEncryptedKeyPayload,
+  clearE2EEUnlock
 } from '../../utils/e2ee';
 
 export default function ChatWindow({ conversation, onClose }) {
@@ -354,8 +355,20 @@ export default function ChatWindow({ conversation, onClose }) {
             <input
               type="checkbox"
               checked={e2eeEnabled}
-              onChange={(e) => {
+              onChange={async (e) => {
                 const next = e.target.checked;
+                if (next) {
+                  try {
+                    clearE2EEUnlock(true);
+                    await initE2EE();
+                  } catch (error) {
+                    setE2eeError(error?.message || 'E2EE unavailable');
+                    e.target.checked = false;
+                    localStorage.setItem('e2ee_enabled', 'false');
+                    setE2eeEnabled(false);
+                    return;
+                  }
+                }
                 localStorage.setItem('e2ee_enabled', next ? 'true' : 'false');
                 setE2eeEnabled(next);
               }}
