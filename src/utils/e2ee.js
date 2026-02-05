@@ -4,6 +4,7 @@ import sodium from 'libsodium-wrappers';
 const PUBLIC_KEY_KEY = 'e2ee_public_key';
 const PRIVATE_KEY_KEY = 'e2ee_private_key_encrypted';
 const PRIVATE_KEY_NONCE_KEY = 'e2ee_private_key_nonce';
+const UNLOCK_KEY_SESSION = 'e2ee_unlock_key_session';
 
 let cachedPublicKey = null;
 let cachedSecretKey = null;
@@ -12,6 +13,11 @@ let cachedUnlockKey = null;
 async function getUnlockKey() {
   if (cachedUnlockKey) return cachedUnlockKey;
   await sodium.ready;
+  const storedUnlock = sessionStorage.getItem(UNLOCK_KEY_SESSION);
+  if (storedUnlock) {
+    cachedUnlockKey = fromBase64(storedUnlock);
+    return cachedUnlockKey;
+  }
   if (!window.ethereum) {
     throw new Error('Wallet not available');
   }
@@ -27,6 +33,7 @@ async function getUnlockKey() {
   });
   const key = sodium.crypto_generichash(32, signature);
   cachedUnlockKey = key;
+  sessionStorage.setItem(UNLOCK_KEY_SESSION, toBase64(key));
   return key;
 }
 
@@ -105,4 +112,5 @@ export function resetE2EESession() {
   cachedUnlockKey = null;
   cachedSecretKey = null;
   cachedPublicKey = null;
+  sessionStorage.removeItem(UNLOCK_KEY_SESSION);
 }

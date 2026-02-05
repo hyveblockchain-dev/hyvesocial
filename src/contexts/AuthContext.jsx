@@ -1,7 +1,7 @@
 // src/contexts/AuthContext.jsx
 import { createContext, useState, useEffect } from 'react';
 import api from '../services/api';
-import { ensureKeypair } from '../utils/e2ee';
+import { ensureKeypair, resetE2EESession } from '../utils/e2ee';
 import io from 'socket.io-client';
 import { API_URL, SOCKET_URL } from '../utils/env';
 
@@ -136,6 +136,7 @@ export function AuthProvider({ children }) {
       socket = null;
     }
     setSocketInstance(null);
+    resetE2EESession();
   }
 
   async function connectWallet() {
