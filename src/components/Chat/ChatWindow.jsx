@@ -9,7 +9,8 @@ import {
   encryptMessageForRecipient,
   decryptMessageContent,
   getEncryptedKeyPayload,
-  clearE2EEUnlock
+  clearE2EEUnlock,
+  resetE2EESession
 } from '../../utils/e2ee';
 
 export default function ChatWindow({ conversation, onClose }) {
@@ -359,6 +360,7 @@ export default function ChatWindow({ conversation, onClose }) {
                 const next = e.target.checked;
                 if (next) {
                   try {
+                    resetE2EESession();
                     clearE2EEUnlock(true);
                     await initE2EE();
                   } catch (error) {
@@ -368,6 +370,8 @@ export default function ChatWindow({ conversation, onClose }) {
                     setE2eeEnabled(false);
                     return;
                   }
+                } else {
+                  resetE2EESession();
                 }
                 localStorage.setItem('e2ee_enabled', next ? 'true' : 'false');
                 setE2eeEnabled(next);
