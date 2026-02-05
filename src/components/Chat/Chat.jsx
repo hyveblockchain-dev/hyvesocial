@@ -71,7 +71,13 @@ export default function Chat({ onSelectChat, unreadMap = {}, onlineMap = {} }) {
     }
   }
 
-  async function prefetchMessages(username) {
+  async function prefetchMessages(conversation) {
+    const username =
+      conversation?.username ||
+      conversation?.handle ||
+      conversation?.user?.username ||
+      conversation?.name ||
+      null;
     if (!username || !api.getMessages) return;
     const cacheKey = `chat_messages_${username}`;
     if (sessionStorage.getItem(cacheKey)) return;
@@ -88,7 +94,12 @@ export default function Chat({ onSelectChat, unreadMap = {}, onlineMap = {} }) {
 
   function handleSelectChat(conversation) {
     if (onSelectChat) {
-      const username = conversation.username || 'Anonymous';
+      const username =
+        conversation?.username ||
+        conversation?.handle ||
+        conversation?.user?.username ||
+        conversation?.name ||
+        'Anonymous';
       const profileImage = conversation.profile_image || conversation.profileImage || '';
 
       onSelectChat({
@@ -132,7 +143,7 @@ export default function Chat({ onSelectChat, unreadMap = {}, onlineMap = {} }) {
                 key={username}
                 className="conversation-item"
                 onClick={() => handleSelectChat(conversation)}
-                onMouseEnter={() => prefetchMessages(username)}
+                onMouseEnter={() => prefetchMessages(conversation)}
               >
                 <div className="conversation-avatar-wrapper">
                   {profileImage ? (

@@ -13,7 +13,12 @@ export default function ChatWindow({ conversation, onClose }) {
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
   const hasInitialScrollRef = useRef(false);
-  const conversationUsername = conversation?.username;
+  const conversationUsername =
+    conversation?.username ||
+    conversation?.handle ||
+    conversation?.user?.username ||
+    conversation?.name ||
+    null;
   const cacheKey = conversationUsername ? `chat_messages_${conversationUsername}` : null;
   const getMessageKey = (message) =>
     message?.id ||
@@ -54,7 +59,7 @@ export default function ChatWindow({ conversation, onClose }) {
   async function handleNewMessage(message) {
     const fromUsername = message.from_username || message.fromUsername || message.sender_username || message.from || message.sender || message.username;
     const toUsername = message.to_username || message.toUsername || message.recipient_username || message.to || message.recipient;
-    if (fromUsername === conversationUsername || toUsername === conversationUsername) {
+    if (conversationUsername && (fromUsername === conversationUsername || toUsername === conversationUsername)) {
       const hydrated = message;
       setMessages((prev) => {
         const key = getMessageKey(hydrated);
@@ -174,7 +179,9 @@ export default function ChatWindow({ conversation, onClose }) {
       </div>
 
       <div className="chat-messages">
-        {messages.length === 0 ? (
+        {loading ? (
+          <div className="chat-loading">Loading messages...</div>
+        ) : messages.length === 0 ? (
           <div className="no-messages">No messages yet. Start the conversation!</div>
         ) : (
           messages.map((message, index) => {
