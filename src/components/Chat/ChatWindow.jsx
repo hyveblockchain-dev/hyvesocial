@@ -96,10 +96,6 @@ export default function ChatWindow({ conversation, onClose }) {
       const hydrated = loaded;
 
       setMessages((prev) => {
-        if (lastE2eeEnabledRef.current !== e2eeEnabled) {
-          lastE2eeEnabledRef.current = e2eeEnabled;
-          return hydrated;
-        }
         if (!prev.length) return hydrated;
         const toKey = getMessageKey;
         const map = new Map();
