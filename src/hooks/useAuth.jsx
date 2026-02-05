@@ -3,7 +3,6 @@ import EthereumProvider from '@walletconnect/ethereum-provider';
 import api from '../services/api';
 import socketService from '../services/socket';
 import { API_URL, WALLETCONNECT_PROJECT_ID } from '../utils/env';
-import { setE2EEProvider } from '../utils/e2ee';
 
 const AuthContext = createContext(null);
 let walletConnectProvider;
@@ -148,11 +147,6 @@ export function AuthProvider({ children }) {
         if (!provider.connected) {
           await provider.connect();
         }
-        setE2EEProvider(provider);
-      }
-
-      if (hasInjected) {
-        setE2EEProvider(provider);
       }
 
       const accounts = await provider.request({

@@ -6,8 +6,7 @@ import {
   resetE2EESession,
   setE2EESignature,
   getEncryptedKeyPayload,
-  restoreKeypairFromServer,
-  setE2EEProvider
+  restoreKeypairFromServer
 } from '../utils/e2ee';
 import io from 'socket.io-client';
 import { API_URL, SOCKET_URL } from '../utils/env';
@@ -191,7 +190,6 @@ export function AuthProvider({ children }) {
       if (!window.ethereum) {
         throw new Error('Please install MetaMask');
       }
-      setE2EEProvider(window.ethereum);
 
       const accounts = await window.ethereum.request({ 
         method: 'eth_requestAccounts' 
