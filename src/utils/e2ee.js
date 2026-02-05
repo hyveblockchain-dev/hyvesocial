@@ -6,6 +6,7 @@ const PRIVATE_KEY_KEY = 'e2ee_private_key_encrypted';
 const PRIVATE_KEY_NONCE_KEY = 'e2ee_private_key_nonce';
 const UNLOCK_KEY_SESSION = 'e2ee_unlock_key_session';
 const SIGNATURE_SESSION_KEY = 'e2ee_unlock_signature';
+const UNLOCK_KEY_PERSIST = 'e2ee_unlock_key_persist';
 
 let cachedPublicKey = null;
 let cachedSecretKey = null;
@@ -14,6 +15,11 @@ let cachedUnlockKey = null;
 async function getUnlockKey() {
   if (cachedUnlockKey) return cachedUnlockKey;
   await sodium.ready;
+  const storedPersist = localStorage.getItem(UNLOCK_KEY_PERSIST);
+  if (storedPersist) {
+    cachedUnlockKey = fromBase64(storedPersist);
+    return cachedUnlockKey;
+  }
   const storedUnlock = sessionStorage.getItem(UNLOCK_KEY_SESSION);
   if (storedUnlock) {
     cachedUnlockKey = fromBase64(storedUnlock);
@@ -42,6 +48,7 @@ async function getUnlockKey() {
   const key = sodium.crypto_generichash(32, signature);
   cachedUnlockKey = key;
   sessionStorage.setItem(UNLOCK_KEY_SESSION, toBase64(key));
+  localStorage.setItem(UNLOCK_KEY_PERSIST, toBase64(key));
   return key;
 }
 
@@ -72,13 +79,21 @@ export async function ensureKeypair() {
 
   if (encryptedSecret && encryptedNonce && cachedPublicKey) {
     const unlockKey = await getUnlockKey();
-    const secret = sodium.crypto_secretbox_open_easy(
-      fromBase64(encryptedSecret),
-      fromBase64(encryptedNonce),
-      unlockKey
-    );
-    cachedSecretKey = secret;
-    return { publicKey: toBase64(cachedPublicKey), isNew: false };
+    try {
+      const secret = sodium.crypto_secretbox_open_easy(
+        fromBase64(encryptedSecret),
+        fromBase64(encryptedNonce),
+        unlockKey
+      );
+      cachedSecretKey = secret;
+      return { publicKey: toBase64(cachedPublicKey), isNew: false };
+    } catch (error) {
+      localStorage.removeItem(PUBLIC_KEY_KEY);
+      localStorage.removeItem(PRIVATE_KEY_KEY);
+      localStorage.removeItem(PRIVATE_KEY_NONCE_KEY);
+      cachedPublicKey = null;
+      cachedSecretKey = null;
+    }
   }
 
   const keyPair = sodium.crypto_box_keypair();
@@ -89,6 +104,7 @@ export async function ensureKeypair() {
   localStorage.setItem(PUBLIC_KEY_KEY, toBase64(keyPair.publicKey));
   localStorage.setItem(PRIVATE_KEY_KEY, toBase64(encryptedSecretKey));
   localStorage.setItem(PRIVATE_KEY_NONCE_KEY, toBase64(nonce));
+  localStorage.setItem(UNLOCK_KEY_PERSIST, toBase64(unlockKey));
 
   cachedPublicKey = keyPair.publicKey;
   cachedSecretKey = keyPair.privateKey;
