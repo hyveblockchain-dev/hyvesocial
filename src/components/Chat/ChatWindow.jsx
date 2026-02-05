@@ -68,6 +68,7 @@ export default function ChatWindow({ conversation, onClose }) {
     if (typeof raw === 'string' && raw.startsWith('ENC:')) {
       const cipher = raw.slice(4);
       try {
+        await ensureKeypair();
         const plain = await decryptMessageContent(cipher);
         return { ...message, content: plain, _encrypted: true };
       } catch (error) {
