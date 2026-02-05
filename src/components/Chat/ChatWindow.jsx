@@ -17,13 +17,15 @@ export default function ChatWindow({ conversation, onClose }) {
   const [newMessage, setNewMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [e2eeEnabled, setE2eeEnabled] = useState(() => localStorage.getItem('e2ee_enabled') === 'true');
   const [e2eeReady, setE2eeReady] = useState(false);
   const [e2eeError, setE2eeError] = useState('');
   const messagesEndRef = useRef(null);
   const hasInitialScrollRef = useRef(false);
+  const lastE2eeEnabledRef = useRef(e2eeEnabled);
   const conversationUsername = conversation?.username;
   const cacheKey = conversationUsername ? `chat_messages_${conversationUsername}` : null;
-  const decryptedCacheKey = conversationUsername ? `chat_messages_${conversationUsername}_decrypted` : null;
+  const decryptedCacheKey = conversationUsername && e2eeEnabled ? `chat_messages_${conversationUsername}_decrypted` : null;
 
   useEffect(() => {
     if (!conversationUsername) {
@@ -31,7 +33,11 @@ export default function ChatWindow({ conversation, onClose }) {
       return;
     }
 
-    initE2EE().then(loadMessages);
+    if (e2eeEnabled) {
+      initE2EE().then(loadMessages);
+    } else {
+      loadMessages();
+    }
 
     if (socket) {
       socket.on('new_message', handleNewMessage);
@@ -42,7 +48,14 @@ export default function ChatWindow({ conversation, onClose }) {
         socket.off('new_message', handleNewMessage);
       }
     };
-  }, [conversationUsername, socket]);
+  }, [conversationUsername, socket, e2eeEnabled]);
+
+  useEffect(() => {
+    if (!e2eeEnabled) {
+      setE2eeReady(false);
+      setE2eeError('');
+    }
+  }, [e2eeEnabled]);
 
   useLayoutEffect(() => {
     if (!messages.length) return;
@@ -73,9 +86,12 @@ export default function ChatWindow({ conversation, onClose }) {
     }
   }
 
-  async function hydrateMessage(message) {
+  async function hydrateMessage(message, { allowDecrypt = true } = {}) {
     const raw = message?.content;
     if (typeof raw === 'string' && raw.startsWith('ENC:')) {
+      if (!allowDecrypt) {
+        return { ...message, content: '[Encrypted message]', _encrypted: true, _locked: true };
+      }
       const cipherPayload = raw.slice(4);
       try {
         await ensureKeypair();
@@ -107,7 +123,7 @@ export default function ChatWindow({ conversation, onClose }) {
     const fromUsername = message.from_username || message.fromUsername || message.sender_username || message.from || message.sender || message.username;
     const toUsername = message.to_username || message.toUsername || message.recipient_username || message.to || message.recipient;
     if (fromUsername === conversationUsername || toUsername === conversationUsername) {
-      const hydrated = await hydrateMessage(message);
+      const hydrated = await hydrateMessage(message, { allowDecrypt: e2eeEnabled });
       setMessages((prev) => [...prev, hydrated]);
     }
   }
@@ -158,9 +174,13 @@ export default function ChatWindow({ conversation, onClose }) {
       const data = await api.getMessages(conversationUsername);
       const loaded = data.messages || [];
       hasInitialScrollRef.current = false;
-      const hydrated = await Promise.all(loaded.map(hydrateMessage));
+      const hydrated = await Promise.all(loaded.map((message) => hydrateMessage(message, { allowDecrypt: e2eeEnabled })));
 
       setMessages((prev) => {
+        if (lastE2eeEnabledRef.current !== e2eeEnabled) {
+          lastE2eeEnabledRef.current = e2eeEnabled;
+          return hydrated;
+        }
         if (!prev.length) return hydrated;
         const toKey = (m) =>
           m.id ||
@@ -203,13 +223,40 @@ export default function ChatWindow({ conversation, onClose }) {
     if (!newMessage.trim()) return;
 
     try {
+      if (!e2eeEnabled) {
+        const response = await api.sendMessage(conversationUsername, newMessage);
+        const sentMessage = response?.message || response;
+        const withDefaults = {
+          ...sentMessage,
+          content: newMessage,
+          from_username: sentMessage?.from_username ?? user?.username,
+          to_username: sentMessage?.to_username ?? conversationUsername,
+          created_at: sentMessage?.created_at ?? new Date().toISOString()
+        };
+        setMessages((prev) => [...prev, withDefaults]);
+        setNewMessage('');
+        setShowEmojiPicker(false);
+        return;
+      }
+
       if (!e2eeReady) {
         await initE2EE();
       }
       const keyResponse = await api.getUserKey(conversationUsername);
       const recipientKey = keyResponse?.publicKey;
       if (!recipientKey) {
-        alert('This user has not enabled encrypted chat yet.');
+        const response = await api.sendMessage(conversationUsername, newMessage);
+        const sentMessage = response?.message || response;
+        const withDefaults = {
+          ...sentMessage,
+          content: newMessage,
+          from_username: sentMessage?.from_username ?? user?.username,
+          to_username: sentMessage?.to_username ?? conversationUsername,
+          created_at: sentMessage?.created_at ?? new Date().toISOString()
+        };
+        setMessages((prev) => [...prev, withDefaults]);
+        setNewMessage('');
+        setShowEmojiPicker(false);
         return;
       }
 
@@ -256,11 +303,25 @@ export default function ChatWindow({ conversation, onClose }) {
           )}
           <span>{conversation.username}</span>
         </div>
-        <button className="close-button" onClick={onClose}>✕</button>
+        <div className="chat-header-actions">
+          <label className="chat-e2ee-toggle">
+            <input
+              type="checkbox"
+              checked={e2eeEnabled}
+              onChange={(e) => {
+                const next = e.target.checked;
+                localStorage.setItem('e2ee_enabled', next ? 'true' : 'false');
+                setE2eeEnabled(next);
+              }}
+            />
+            <span>Encrypt</span>
+          </label>
+          <button className="close-button" onClick={onClose}>✕</button>
+        </div>
       </div>
 
       <div className="chat-messages">
-        {e2eeError && (
+        {e2eeEnabled && e2eeError && (
           <div className="chat-loading">Encrypted chat unavailable: {e2eeError}</div>
         )}
         {messages.length === 0 ? (

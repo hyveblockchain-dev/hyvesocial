@@ -19,6 +19,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [socketInstance, setSocketInstance] = useState(null);
+  const isE2EEEnabled = () => localStorage.getItem('e2ee_enabled') === 'true';
 
   useEffect(() => {
     checkAuth();
@@ -48,24 +49,26 @@ export function AuthProvider({ children }) {
         connectSocket(token);
       }
 
-      try {
-        const serverKey = await api.getMyKey();
-        await restoreKeypairFromServer(serverKey);
-      } catch (error) {
-        // ignore restore errors
-      }
-
-      try {
-        const { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce } = await ensureKeypair();
-        const payload =
-          encryptedPrivateKey && encryptedPrivateKeyNonce
-            ? { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce }
-            : getEncryptedKeyPayload();
-        if (payload?.publicKey) {
-          await api.setPublicKey(payload.publicKey, payload.encryptedPrivateKey, payload.encryptedPrivateKeyNonce);
+      if (isE2EEEnabled()) {
+        try {
+          const serverKey = await api.getMyKey();
+          await restoreKeypairFromServer(serverKey);
+        } catch (error) {
+          // ignore restore errors
         }
-      } catch (error) {
-        console.error('E2EE key setup failed:', error);
+
+        try {
+          const { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce } = await ensureKeypair();
+          const payload =
+            encryptedPrivateKey && encryptedPrivateKeyNonce
+              ? { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce }
+              : getEncryptedKeyPayload();
+          if (payload?.publicKey) {
+            await api.setPublicKey(payload.publicKey, payload.encryptedPrivateKey, payload.encryptedPrivateKeyNonce);
+          }
+        } catch (error) {
+          console.error('E2EE key setup failed:', error);
+        }
       }
     } catch (error) {
       console.error('Auth check failed:', error);
@@ -113,24 +116,26 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       connectSocket(data.token);
 
-      try {
-        const serverKey = await api.getMyKey();
-        await restoreKeypairFromServer(serverKey);
-      } catch (error) {
-        // ignore restore errors
-      }
-
-      try {
-        const { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce } = await ensureKeypair();
-        const payload =
-          encryptedPrivateKey && encryptedPrivateKeyNonce
-            ? { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce }
-            : getEncryptedKeyPayload();
-        if (payload?.publicKey) {
-          await api.setPublicKey(payload.publicKey, payload.encryptedPrivateKey, payload.encryptedPrivateKeyNonce);
+      if (isE2EEEnabled()) {
+        try {
+          const serverKey = await api.getMyKey();
+          await restoreKeypairFromServer(serverKey);
+        } catch (error) {
+          // ignore restore errors
         }
-      } catch (error) {
-        console.error('E2EE key setup failed:', error);
+
+        try {
+          const { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce } = await ensureKeypair();
+          const payload =
+            encryptedPrivateKey && encryptedPrivateKeyNonce
+              ? { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce }
+              : getEncryptedKeyPayload();
+          if (payload?.publicKey) {
+            await api.setPublicKey(payload.publicKey, payload.encryptedPrivateKey, payload.encryptedPrivateKeyNonce);
+          }
+        } catch (error) {
+          console.error('E2EE key setup failed:', error);
+        }
       }
       
       return { success: true };
@@ -147,17 +152,19 @@ export function AuthProvider({ children }) {
       localStorage.setItem('token', data.token);
       setUser(data.user);
       connectSocket(data.token);
-      try {
-        const { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce } = await ensureKeypair();
-        const payload =
-          encryptedPrivateKey && encryptedPrivateKeyNonce
-            ? { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce }
-            : getEncryptedKeyPayload();
-        if (payload?.publicKey) {
-          await api.setPublicKey(payload.publicKey, payload.encryptedPrivateKey, payload.encryptedPrivateKeyNonce);
+      if (isE2EEEnabled()) {
+        try {
+          const { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce } = await ensureKeypair();
+          const payload =
+            encryptedPrivateKey && encryptedPrivateKeyNonce
+              ? { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce }
+              : getEncryptedKeyPayload();
+          if (payload?.publicKey) {
+            await api.setPublicKey(payload.publicKey, payload.encryptedPrivateKey, payload.encryptedPrivateKeyNonce);
+          }
+        } catch (error) {
+          console.error('E2EE key setup failed:', error);
         }
-      } catch (error) {
-        console.error('E2EE key setup failed:', error);
       }
       return data;
     } catch (error) {
