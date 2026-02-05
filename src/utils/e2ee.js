@@ -11,6 +11,11 @@ const UNLOCK_KEY_PERSIST = 'e2ee_unlock_key_persist';
 let cachedPublicKey = null;
 let cachedSecretKey = null;
 let cachedUnlockKey = null;
+let e2eeProvider = null;
+
+export function setE2EEProvider(provider) {
+  e2eeProvider = provider || null;
+}
 
 async function getUnlockKey() {
   if (cachedUnlockKey) return cachedUnlockKey;
@@ -32,16 +37,17 @@ async function getUnlockKey() {
     sessionStorage.setItem(UNLOCK_KEY_SESSION, toBase64(key));
     return key;
   }
-  if (!window.ethereum) {
+  const provider = e2eeProvider || (typeof window !== 'undefined' ? window.ethereum : null);
+  if (!provider?.request) {
     throw new Error('Wallet not available');
   }
-  const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+  const accounts = await provider.request({ method: 'eth_requestAccounts' });
   const address = accounts?.[0];
   if (!address) {
     throw new Error('Wallet not connected');
   }
   const message = 'Hyve Social E2EE Key Access v1';
-  const signature = await window.ethereum.request({
+  const signature = await provider.request({
     method: 'personal_sign',
     params: [message, address]
   });
