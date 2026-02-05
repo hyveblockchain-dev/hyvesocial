@@ -10,7 +10,8 @@ import {
   decryptMessageContent,
   getEncryptedKeyPayload,
   clearE2EEUnlock,
-  resetE2EESession
+  resetE2EESession,
+  restoreKeypairFromServer
 } from '../../utils/e2ee';
 
 export default function ChatWindow({ conversation, onClose }) {
@@ -78,6 +79,12 @@ export default function ChatWindow({ conversation, onClose }) {
 
   async function initE2EE() {
     try {
+      try {
+        const serverKey = await api.getMyKey();
+        await restoreKeypairFromServer(serverKey);
+      } catch {
+        // ignore restore errors
+      }
       const { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce } = await ensureKeypair();
       setE2eeReady(true);
       setE2eeError('');
