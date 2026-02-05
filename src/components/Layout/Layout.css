@@ -196,6 +196,10 @@ body.light-mode .page-header {
   display: none;
 }
 
+.mobile-disconnect-btn {
+  display: none;
+}
+
 .icon-btn:hover {
   background: var(--bg-hover);
   border-color: rgba(255, 215, 0, 0.3);
@@ -716,6 +720,10 @@ body.light-mode .stat-num {
   }
 
   .mobile-search-btn {
+    display: inline-flex;
+  }
+
+  .mobile-disconnect-btn {
     display: inline-flex;
   }
 

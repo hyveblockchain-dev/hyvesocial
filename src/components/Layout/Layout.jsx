@@ -610,6 +610,14 @@ export default function Layout({ children }) {
             🔍
           </button>
           <button
+            className="icon-btn mobile-disconnect-btn"
+            onClick={handleLogout}
+            aria-label="Disconnect wallet"
+            title="Disconnect wallet"
+          >
+            🔌
+          </button>
+          <button
             className="light-toggle-btn"
             onClick={() => setIsLightMode((prev) => !prev)}
             aria-label="Toggle light mode"
