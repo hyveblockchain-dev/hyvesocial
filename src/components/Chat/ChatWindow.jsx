@@ -23,6 +23,7 @@ export default function ChatWindow({ conversation, onClose }) {
   const messagesEndRef = useRef(null);
   const hasInitialScrollRef = useRef(false);
   const lastE2eeEnabledRef = useRef(e2eeEnabled);
+  const pendingOutboxRef = useRef([]);
   const conversationUsername = conversation?.username;
   const cacheKey = conversationUsername ? `chat_messages_${conversationUsername}` : null;
   const decryptedCacheKey = conversationUsername && e2eeEnabled ? `chat_messages_${conversationUsername}_decrypted` : null;
@@ -124,11 +125,35 @@ export default function ChatWindow({ conversation, onClose }) {
   }
 
   async function handleNewMessage(message) {
+    const currentUsername = user?.username?.toLowerCase?.();
     const fromUsername = message.from_username || message.fromUsername || message.sender_username || message.from || message.sender || message.username;
     const toUsername = message.to_username || message.toUsername || message.recipient_username || message.to || message.recipient;
     if (fromUsername === conversationUsername || toUsername === conversationUsername) {
+      const rawContent = message?.content;
+      const fromSelf = !!currentUsername && (fromUsername || '').toLowerCase?.() === currentUsername;
+      const outboxKey = `${toUsername || ''}|${rawContent || ''}`;
+      if (fromSelf) {
+        const now = Date.now();
+        const matchIndex = pendingOutboxRef.current.findIndex(
+          (entry) => entry.key === outboxKey && now - entry.ts < 15000
+        );
+        if (matchIndex !== -1) {
+          pendingOutboxRef.current.splice(matchIndex, 1);
+        }
+      }
       const hydrated = await hydrateMessage(message, { allowDecrypt: e2eeEnabled });
       setMessages((prev) => {
+        if (fromSelf) {
+          const replaced = prev.map((existing) =>
+            existing?._optimisticKey && existing._optimisticKey === outboxKey
+              ? { ...hydrated, _optimisticKey: existing._optimisticKey }
+              : existing
+          );
+          const didReplace = replaced.some(
+            (existing) => existing?._optimisticKey && existing._optimisticKey === outboxKey
+          );
+          if (didReplace) return replaced;
+        }
         const key = getMessageKey(hydrated);
         if (prev.some((existing) => getMessageKey(existing) === key)) return prev;
         return [...prev, hydrated];
@@ -229,6 +254,8 @@ export default function ChatWindow({ conversation, onClose }) {
 
     try {
       if (!e2eeEnabled) {
+        const outboxKey = `${conversationUsername || ''}|${newMessage}`;
+        pendingOutboxRef.current.push({ key: outboxKey, ts: Date.now() });
         const response = await api.sendMessage(conversationUsername, newMessage);
         const sentMessage = response?.message || response;
         const withDefaults = {
@@ -236,7 +263,8 @@ export default function ChatWindow({ conversation, onClose }) {
           content: newMessage,
           from_username: sentMessage?.from_username ?? user?.username,
           to_username: sentMessage?.to_username ?? conversationUsername,
-          created_at: sentMessage?.created_at ?? new Date().toISOString()
+          created_at: sentMessage?.created_at ?? new Date().toISOString(),
+          _optimisticKey: outboxKey
         };
         setMessages((prev) => [...prev, withDefaults]);
         setNewMessage('');
@@ -250,6 +278,8 @@ export default function ChatWindow({ conversation, onClose }) {
       const keyResponse = await api.getUserKey(conversationUsername);
       const recipientKey = keyResponse?.publicKey;
       if (!recipientKey) {
+        const outboxKey = `${conversationUsername || ''}|${newMessage}`;
+        pendingOutboxRef.current.push({ key: outboxKey, ts: Date.now() });
         const response = await api.sendMessage(conversationUsername, newMessage);
         const sentMessage = response?.message || response;
         const withDefaults = {
@@ -257,7 +287,8 @@ export default function ChatWindow({ conversation, onClose }) {
           content: newMessage,
           from_username: sentMessage?.from_username ?? user?.username,
           to_username: sentMessage?.to_username ?? conversationUsername,
-          created_at: sentMessage?.created_at ?? new Date().toISOString()
+          created_at: sentMessage?.created_at ?? new Date().toISOString(),
+          _optimisticKey: outboxKey
         };
         setMessages((prev) => [...prev, withDefaults]);
         setNewMessage('');
@@ -269,6 +300,8 @@ export default function ChatWindow({ conversation, onClose }) {
       const cipherToRecipient = await encryptMessageForRecipient(recipientKey, newMessage);
       const cipherToSelf = await encryptMessageForRecipient(senderPublicKey, newMessage);
       const payload = JSON.stringify({ v: 1, r: cipherToRecipient, s: cipherToSelf });
+      const outboxKey = `${conversationUsername || ''}|ENC:${payload}`;
+      pendingOutboxRef.current.push({ key: outboxKey, ts: Date.now() });
       const response = await api.sendMessage(conversationUsername, `ENC:${payload}`);
       const sentMessage = response?.message || response;
       const withDefaults = {
@@ -276,7 +309,8 @@ export default function ChatWindow({ conversation, onClose }) {
         content: newMessage,
         from_username: sentMessage?.from_username ?? user?.username,
         to_username: sentMessage?.to_username ?? conversationUsername,
-        created_at: sentMessage?.created_at ?? new Date().toISOString()
+        created_at: sentMessage?.created_at ?? new Date().toISOString(),
+        _optimisticKey: outboxKey
       };
       setMessages((prev) => [...prev, withDefaults]);
       setNewMessage('');
