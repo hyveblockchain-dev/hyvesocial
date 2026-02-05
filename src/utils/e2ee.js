@@ -109,6 +109,25 @@ export async function ensureKeypair() {
     }
   }
 
+  if (cachedPublicKey && (!encryptedSecret || !encryptedNonce) && !cachedSecretKey) {
+    const keyPair = sodium.crypto_box_keypair();
+    const unlockKey = await getUnlockKey();
+    const nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
+    const encryptedSecretKey = sodium.crypto_secretbox_easy(keyPair.privateKey, nonce, unlockKey);
+    localStorage.setItem(PUBLIC_KEY_KEY, toBase64(keyPair.publicKey));
+    localStorage.setItem(PRIVATE_KEY_KEY, toBase64(encryptedSecretKey));
+    localStorage.setItem(PRIVATE_KEY_NONCE_KEY, toBase64(nonce));
+    localStorage.setItem(UNLOCK_KEY_PERSIST, toBase64(unlockKey));
+    cachedPublicKey = keyPair.publicKey;
+    cachedSecretKey = keyPair.privateKey;
+    return {
+      publicKey: toBase64(keyPair.publicKey),
+      encryptedPrivateKey: toBase64(encryptedSecretKey),
+      encryptedPrivateKeyNonce: toBase64(nonce),
+      isNew: true
+    };
+  }
+
   const keyPair = sodium.crypto_box_keypair();
   const unlockKey = await getUnlockKey();
   const nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
