@@ -18,6 +18,7 @@ export default function ChatWindow({ conversation, onClose }) {
   const hasInitialScrollRef = useRef(false);
   const conversationUsername = conversation?.username;
   const cacheKey = conversationUsername ? `chat_messages_${conversationUsername}` : null;
+  const decryptedCacheKey = conversationUsername ? `chat_messages_${conversationUsername}_decrypted` : null;
 
   useEffect(() => {
     if (!conversationUsername) {
@@ -107,7 +108,24 @@ export default function ChatWindow({ conversation, onClose }) {
 
     try {
       let hadCache = false;
-      if (cacheKey) {
+      if (decryptedCacheKey) {
+        const cachedDecrypted = sessionStorage.getItem(decryptedCacheKey);
+        if (cachedDecrypted) {
+          try {
+            const parsed = JSON.parse(cachedDecrypted);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              hasInitialScrollRef.current = false;
+              setMessages(parsed);
+              setLoading(false);
+              hadCache = true;
+            }
+          } catch {
+            // ignore cache errors
+          }
+        }
+      }
+
+      if (!hadCache && cacheKey) {
         const cached = sessionStorage.getItem(cacheKey);
         if (cached) {
           try {
@@ -150,6 +168,13 @@ export default function ChatWindow({ conversation, onClose }) {
         if (cacheKey) {
           try {
             sessionStorage.setItem(cacheKey, JSON.stringify(merged));
+          } catch {
+            // ignore cache errors
+          }
+        }
+        if (decryptedCacheKey) {
+          try {
+            sessionStorage.setItem(decryptedCacheKey, JSON.stringify(merged));
           } catch {
             // ignore cache errors
           }
