@@ -58,17 +58,15 @@ export default function ChatWindow({ conversation, onClose }) {
 
   async function initE2EE() {
     try {
-      const { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce, isNew } = await ensureKeypair();
+      const { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce } = await ensureKeypair();
       setE2eeReady(true);
       setE2eeError('');
-      if (isNew) {
-        const payload =
-          encryptedPrivateKey && encryptedPrivateKeyNonce
-            ? { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce }
-            : getEncryptedKeyPayload();
-        if (payload?.publicKey) {
-          await api.setPublicKey(payload.publicKey, payload.encryptedPrivateKey, payload.encryptedPrivateKeyNonce);
-        }
+      const payload =
+        encryptedPrivateKey && encryptedPrivateKeyNonce
+          ? { publicKey, encryptedPrivateKey, encryptedPrivateKeyNonce }
+          : getEncryptedKeyPayload();
+      if (payload?.publicKey) {
+        await api.setPublicKey(payload.publicKey, payload.encryptedPrivateKey, payload.encryptedPrivateKeyNonce);
       }
     } catch (error) {
       setE2eeError(error?.message || 'E2EE unavailable');
