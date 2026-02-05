@@ -26,6 +26,10 @@ export default function ChatWindow({ conversation, onClose }) {
   const conversationUsername = conversation?.username;
   const cacheKey = conversationUsername ? `chat_messages_${conversationUsername}` : null;
   const decryptedCacheKey = conversationUsername && e2eeEnabled ? `chat_messages_${conversationUsername}_decrypted` : null;
+  const getMessageKey = (message) =>
+    message?.id ||
+    message?.message_id ||
+    `${message?.from_username || message?.fromUsername || ''}-${message?.to_username || message?.toUsername || ''}-${message?.created_at || message?.createdAt || ''}`;
 
   useEffect(() => {
     if (!conversationUsername) {
@@ -124,7 +128,11 @@ export default function ChatWindow({ conversation, onClose }) {
     const toUsername = message.to_username || message.toUsername || message.recipient_username || message.to || message.recipient;
     if (fromUsername === conversationUsername || toUsername === conversationUsername) {
       const hydrated = await hydrateMessage(message, { allowDecrypt: e2eeEnabled });
-      setMessages((prev) => [...prev, hydrated]);
+      setMessages((prev) => {
+        const key = getMessageKey(hydrated);
+        if (prev.some((existing) => getMessageKey(existing) === key)) return prev;
+        return [...prev, hydrated];
+      });
     }
   }
 
@@ -182,10 +190,7 @@ export default function ChatWindow({ conversation, onClose }) {
           return hydrated;
         }
         if (!prev.length) return hydrated;
-        const toKey = (m) =>
-          m.id ||
-          m.message_id ||
-          `${m.from_username || m.fromUsername || ''}-${m.to_username || m.toUsername || ''}-${m.created_at || m.createdAt || ''}-${m.content || ''}`;
+        const toKey = getMessageKey;
         const map = new Map();
         prev.forEach((m) => map.set(toKey(m), m));
         hydrated.forEach((m) => map.set(toKey(m), m));
