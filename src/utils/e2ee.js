@@ -5,6 +5,7 @@ const PUBLIC_KEY_KEY = 'e2ee_public_key';
 const PRIVATE_KEY_KEY = 'e2ee_private_key_encrypted';
 const PRIVATE_KEY_NONCE_KEY = 'e2ee_private_key_nonce';
 const UNLOCK_KEY_SESSION = 'e2ee_unlock_key_session';
+const SIGNATURE_SESSION_KEY = 'e2ee_unlock_signature';
 
 let cachedPublicKey = null;
 let cachedSecretKey = null;
@@ -17,6 +18,13 @@ async function getUnlockKey() {
   if (storedUnlock) {
     cachedUnlockKey = fromBase64(storedUnlock);
     return cachedUnlockKey;
+  }
+  const storedSignature = sessionStorage.getItem(SIGNATURE_SESSION_KEY);
+  if (storedSignature) {
+    const key = sodium.crypto_generichash(32, storedSignature);
+    cachedUnlockKey = key;
+    sessionStorage.setItem(UNLOCK_KEY_SESSION, toBase64(key));
+    return key;
   }
   if (!window.ethereum) {
     throw new Error('Wallet not available');
@@ -113,4 +121,11 @@ export function resetE2EESession() {
   cachedSecretKey = null;
   cachedPublicKey = null;
   sessionStorage.removeItem(UNLOCK_KEY_SESSION);
+  sessionStorage.removeItem(SIGNATURE_SESSION_KEY);
+}
+
+export function setE2EESignature(signature) {
+  if (!signature) return;
+  sessionStorage.setItem(SIGNATURE_SESSION_KEY, signature);
+  cachedUnlockKey = null;
 }

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { setE2EESignature } from '../../utils/e2ee';
 import './Login.css';
 
 export default function Login() {
@@ -21,6 +22,7 @@ export default function Login() {
       console.log('Connecting wallet...');
       const { address, signature } = await connectWallet();
       setWalletAddress(address);
+      setE2EESignature(signature);
       
       console.log('Attempting login...');
       const result = await login(address, signature);

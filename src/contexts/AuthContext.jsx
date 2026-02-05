@@ -1,7 +1,7 @@
 // src/contexts/AuthContext.jsx
 import { createContext, useState, useEffect } from 'react';
 import api from '../services/api';
-import { ensureKeypair, resetE2EESession } from '../utils/e2ee';
+import { ensureKeypair, resetE2EESession, setE2EESignature } from '../utils/e2ee';
 import io from 'socket.io-client';
 import { API_URL, SOCKET_URL } from '../utils/env';
 
@@ -82,6 +82,7 @@ export function AuthProvider({ children }) {
 
   async function login(walletAddress, signature) {
     try {
+      setE2EESignature(signature);
       const data = await api.login(walletAddress, signature);
       
       if (!data.userExists) {
