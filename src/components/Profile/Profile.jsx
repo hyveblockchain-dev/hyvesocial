@@ -1871,8 +1871,9 @@ export default function Profile() {
               <button className="btn-secondary" onClick={() => { setShowBanConfirm(false); setBanReason(''); }}>Cancel</button>
               <button
                 className="btn-danger"
-                onClick={handleBanDeleteUser}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleBanDeleteUser(); }}
                 disabled={banning}
+                style={{ position: 'relative', zIndex: 10 }}
               >
                 {banning ? 'Banning...' : 'Permanently Ban & Delete'}
               </button>
