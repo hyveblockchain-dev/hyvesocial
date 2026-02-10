@@ -856,6 +856,28 @@ body.light-mode .stat-num {
 
   body.light-mode .mobile-nav {
     background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
+    border-top-color: rgba(0, 0, 0, 0.08);
+  }
+
+  body.light-mode .mobile-nav-item {
+    color: var(--text-secondary);
+  }
+
+  body.light-mode .mobile-nav-item:hover::before {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  body.light-mode .mobile-nav-item.active {
+    color: var(--gold-primary);
+  }
+
+  body.light-mode .mobile-nav-item.active::before {
+    background: rgba(255, 215, 0, 0.10);
+  }
+
+  body.light-mode .mobile-nav-item:active::before {
+    background: rgba(255, 215, 0, 0.18);
   }
 
   .mobile-nav-item {
