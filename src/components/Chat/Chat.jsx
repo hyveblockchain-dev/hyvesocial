@@ -15,37 +15,22 @@ export default function Chat({ onSelectChat, unreadMap = {}, onlineMap = {} }) {
   }
 
   useEffect(() => {
-    loadConversations();
+    loadChatList();
   }, []);
 
-  async function loadConversations() {
+  async function loadChatList() {
     try {
       setLoading(true);
       setError(null);
-      
-      // Check if API method exists
-      if (!api.getUsers) {
-        console.error('getUsers method not available on api');
-        setError('Chat feature not available');
-        setLoading(false);
-        return;
-      }
-      
-      console.log('Loading users...');
-      const [data, blockedData] = await Promise.all([
-        api.getUsers(),
+
+      // Load friends + active conversations + blocked list in parallel
+      const [friendsData, convoData, blockedData] = await Promise.all([
+        api.getFriends ? api.getFriends() : Promise.resolve({ friends: [] }),
+        api.getConversations ? api.getConversations() : Promise.resolve({ conversations: [] }),
         api.getBlockedUsers ? api.getBlockedUsers() : Promise.resolve({ blocked: [] })
       ]);
-      console.log('Users data:', data);
-      
-      if (!data || !data.users || !Array.isArray(data.users)) {
-        console.error('Invalid response format:', data);
-        setConversations([]);
-        setLoading(false);
-        return;
-      }
-      
-      // Filter out current user
+
+      // Build blocked set
       const blockedList = blockedData?.blocks || blockedData?.blocked || blockedData?.users || blockedData || [];
       const blockedHandleSet = new Set(
         (Array.isArray(blockedList) ? blockedList : [])
@@ -53,18 +38,59 @@ export default function Chat({ onSelectChat, unreadMap = {}, onlineMap = {} }) {
           .filter(Boolean)
       );
 
-      const otherUsers = data.users.filter(u => {
-        const handle = getUserHandle(u);
-        if (handle && handle === user?.username?.toLowerCase?.()) return false;
-        if (handle && blockedHandleSet.has(handle)) return false;
-        return true;
+      const myHandle = user?.username?.toLowerCase?.() || '';
+
+      // Normalize friends list
+      const friends = Array.isArray(friendsData?.friends) ? friendsData.friends : [];
+      // Normalize conversations list (people you've exchanged messages with)
+      const convos = Array.isArray(convoData?.conversations) ? convoData.conversations : [];
+
+      // Merge into a single deduped map keyed by lowercase username
+      const userMap = new Map();
+
+      for (const f of friends) {
+        const handle = getUserHandle(f);
+        if (!handle || handle === myHandle || blockedHandleSet.has(handle)) continue;
+        userMap.set(handle, {
+          username: f.username || f.name || handle,
+          profile_image: f.profile_image || f.profileImage || '',
+          isFriend: true,
+          hasMessages: false,
+          lastMessageTime: null,
+        });
+      }
+
+      for (const c of convos) {
+        const handle = getUserHandle(c);
+        if (!handle || handle === myHandle || blockedHandleSet.has(handle)) continue;
+        const existing = userMap.get(handle);
+        if (existing) {
+          existing.hasMessages = true;
+          existing.lastMessageTime = c.last_message_time || c.lastMessageTime || null;
+        } else {
+          userMap.set(handle, {
+            username: c.username || c.name || handle,
+            profile_image: c.profile_image || c.profileImage || '',
+            isFriend: false,
+            hasMessages: true,
+            lastMessageTime: c.last_message_time || c.lastMessageTime || null,
+          });
+        }
+      }
+
+      // Sort: users with unread messages first, then by friend status, then alphabetically
+      const sorted = [...userMap.values()].sort((a, b) => {
+        const aUnread = Number(unreadMap?.[a.username.toLowerCase()] || 0);
+        const bUnread = Number(unreadMap?.[b.username.toLowerCase()] || 0);
+        if (aUnread !== bUnread) return bUnread - aUnread;
+        if (a.hasMessages !== b.hasMessages) return a.hasMessages ? -1 : 1;
+        return a.username.localeCompare(b.username);
       });
-      
-      console.log('Filtered users:', otherUsers);
-      setConversations(otherUsers);
-    } catch (error) {
-      console.error('Load conversations error:', error);
-      setError('Failed to load users');
+
+      setConversations(sorted);
+    } catch (err) {
+      console.error('Load chat list error:', err);
+      setError('Failed to load chat list');
       setConversations([]);
     } finally {
       setLoading(false);
@@ -130,7 +156,7 @@ export default function Chat({ onSelectChat, unreadMap = {}, onlineMap = {} }) {
   return (
     <div className="chat-container">
       {conversations.length === 0 ? (
-        <div className="chat-empty">No users available</div>
+        <div className="chat-empty">No conversations yet. Add friends or visit a profile to start chatting!</div>
       ) : (
         <div className="conversation-list">
           {conversations.map(conversation => {
@@ -162,7 +188,9 @@ export default function Chat({ onSelectChat, unreadMap = {}, onlineMap = {} }) {
                 </div>
                 <div className="conversation-info">
                   <div className="conversation-name">{username}</div>
-                  <div className="conversation-preview">Start a conversation...</div>
+                  <div className="conversation-preview">
+                    {conversation.hasMessages ? 'Tap to continue chat' : 'Start a conversation...'}
+                  </div>
                 </div>
                 {unreadCount > 0 && (
                   <span className="conversation-badge">

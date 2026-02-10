@@ -1234,6 +1234,16 @@ export async function getMyKey() {
   return response.json();
 }
 
+export async function getConversations() {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/conversations`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
 export async function getMessages(address) {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_URL}/api/messages/${address}`, {
@@ -1351,6 +1361,7 @@ export default {
   deleteAccount,
 
   // Chat/Messages
+  getConversations,
   getMessages,
   sendMessage,
   setPublicKey,
