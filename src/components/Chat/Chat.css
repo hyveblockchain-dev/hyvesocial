@@ -333,7 +333,7 @@
   box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.08);
 }
 
-.chat-input button {
+.chat-input button[type="submit"] {
   padding: 12px 24px;
   border: none;
   border-radius: 50px;
@@ -345,12 +345,12 @@
   box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
 }
 
-.chat-input button:hover {
+.chat-input button[type="submit"]:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
 }
 
-.chat-input button:disabled {
+.chat-input button[type="submit"]:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
