@@ -490,10 +490,19 @@ export default function Profile() {
   }
 
   async function handleBanDeleteUser() {
-    if (!profile?.walletAddress) return;
+    const targetAddress = profile?.walletAddress || profile?.wallet_address;
+    if (!targetAddress) {
+      console.error('Ban user error: no wallet address found on profile object', profile);
+      alert('Error: Could not determine wallet address for this user. Please refresh and try again.');
+      return;
+    }
     try {
       setBanning(true);
-      const result = await api.adminBanDeleteUser(profile.walletAddress, banReason || 'Banned by admin');
+      console.log('Banning user:', targetAddress);
+      const result = await api.adminBanDeleteUser(targetAddress, banReason || 'Banned by admin');
+      if (result.error) {
+        throw new Error(result.error);
+      }
       alert(result.message || 'User has been permanently banned and deleted.');
       setShowBanConfirm(false);
       setBanReason('');
