@@ -336,12 +336,14 @@ export default function GroupDetail() {
       setNotice('');
       const data = await api.deleteGroup(groupId);
       if (data?.error) {
-        setNotice(data.error);
+        console.error('[GroupDetail] deleteGroup error:', data);
+        setNotice(typeof data.error === 'string' ? data.error : 'Failed to delete group.');
         return;
       }
       navigate('/groups');
-    } catch {
-      setNotice('Failed to delete group.');
+    } catch (err) {
+      console.error('[GroupDetail] deleteGroup exception:', err);
+      setNotice('Failed to delete group: ' + (err?.message || 'Unknown error'));
     } finally {
       setBusy(false);
     }
@@ -378,13 +380,15 @@ export default function GroupDetail() {
       setNotice('');
       const data = await api.inviteToGroup(groupId, username);
       if (data?.error) {
-        setNotice(data.error);
+        console.error('[GroupDetail] inviteToGroup error:', data);
+        setNotice(typeof data.error === 'string' ? data.error : 'Failed to send invitation.');
         return;
       }
       setInviteSent((prev) => new Set(prev).add(username.toLowerCase()));
       setNotice(`Invitation sent to ${username}.`);
-    } catch {
-      setNotice('Failed to send invitation.');
+    } catch (err) {
+      console.error('[GroupDetail] inviteToGroup exception:', err);
+      setNotice('Failed to send invitation: ' + (err?.message || 'Unknown error'));
     } finally {
       setBusy(false);
     }
