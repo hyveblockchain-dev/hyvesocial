@@ -1,5 +1,6 @@
 // src/components/Profile/Profile.jsx
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
@@ -1825,7 +1826,7 @@ export default function Profile() {
       </div>
 
       {/* Admin Ban & Delete Confirmation Modal */}
-      {showBanConfirm && (
+      {showBanConfirm && createPortal(
         <div className="report-modal-overlay" onClick={() => setShowBanConfirm(false)}>
           <div className="report-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '460px' }}>
             <div className="report-modal-header">
@@ -1868,7 +1869,8 @@ export default function Profile() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
