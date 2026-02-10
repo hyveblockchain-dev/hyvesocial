@@ -29,6 +29,17 @@ body.light-mode .page-header {
   background: rgba(255, 255, 255, 0.88);
 }
 
+body.light-mode .logo-text {
+  background: linear-gradient(135deg, #b8860b 0%, #8b6914 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+body.light-mode .logo-icon-img {
+  filter: brightness(0.65) saturate(1.2);
+}
+
 .logo {
   display: flex;
   align-items: center;
