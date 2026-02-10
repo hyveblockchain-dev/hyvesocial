@@ -6,6 +6,7 @@ import CreatePost from '../Feed/CreatePost';
 import Post from '../Post/Post';
 import { compressImage } from '../../utils/imageCompression';
 import { formatDate, formatDateTime } from '../../utils/date';
+import { IconArrowLeft } from '../Icons/Icons';
 import './GroupDetail.css';
 
 export default function GroupDetail() {
@@ -20,6 +21,7 @@ export default function GroupDetail() {
   const [viewAsMember, setViewAsMember] = useState(false);
   const [activeTab, setActiveTab] = useState('discussion');
   const [members, setMembers] = useState([]);
+  const [membersLoading, setMembersLoading] = useState(false);
   const [requests, setRequests] = useState([]);
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
@@ -161,10 +163,14 @@ export default function GroupDetail() {
   async function refreshMembers(nextGroupId = groupId) {
     if (!api.getGroupMembers) return;
     try {
+      setMembersLoading(true);
       const data = await api.getGroupMembers(nextGroupId);
       setMembers(data?.members || []);
-    } catch {
+    } catch (err) {
+      console.error('Failed to load members:', err);
       setMembers([]);
+    } finally {
+      setMembersLoading(false);
     }
   }
 
@@ -261,6 +267,12 @@ export default function GroupDetail() {
       setActiveTab('discussion');
     }
   }, [adminEnabled, activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'members' && groupId) {
+      refreshMembers(groupId);
+    }
+  }, [activeTab, groupId]);
 
   useEffect(() => {
     if (!groupId) return;
@@ -806,6 +818,9 @@ export default function GroupDetail() {
 
   return (
     <div className="group-page">
+      <button className="group-back-btn" onClick={() => navigate('/groups')}>
+        <IconArrowLeft size={18} /> Back to Groups
+      </button>
       <div className="group-hero">
         <div
           className="group-hero-cover"
@@ -1047,7 +1062,9 @@ export default function GroupDetail() {
             </div>
           )}
 
-          {members.length === 0 ? (
+          {membersLoading ? (
+            <div className="group-muted">Loading members...</div>
+          ) : members.length === 0 ? (
             <div className="group-muted">No members to show.</div>
           ) : (
             <div className="group-members">

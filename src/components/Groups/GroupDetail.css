@@ -4,6 +4,29 @@
   gap: 14px;
 }
 
+.group-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 2px;
+  transition: color 0.2s;
+  align-self: flex-start;
+}
+
+.group-back-btn:hover {
+  color: var(--gold-primary, #FFD700);
+}
+
+.group-back-btn svg {
+  flex-shrink: 0;
+}
+
 .group-page.error {
   color: #fca5a5;
 }
