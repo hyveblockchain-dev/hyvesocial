@@ -29,6 +29,10 @@ export default function Moderation() {
   const [adminNotes, setAdminNotes] = useState('');
   const [processing, setProcessing] = useState(false);
   const [message, setMessage] = useState('');
+  const [activeTab, setActiveTab] = useState('reports');
+  const [bannedWallets, setBannedWallets] = useState([]);
+  const [bannedLoading, setBannedLoading] = useState(false);
+  const [unbanningWallet, setUnbanningWallet] = useState(null);
 
   useEffect(() => {
     checkAdmin();
@@ -40,6 +44,12 @@ export default function Moderation() {
       loadCounts();
     }
   }, [isAdmin, statusFilter]);
+
+  useEffect(() => {
+    if (isAdmin && activeTab === 'banned') {
+      loadBannedWallets();
+    }
+  }, [isAdmin, activeTab]);
 
   async function checkAdmin() {
     try {
@@ -67,6 +77,32 @@ export default function Moderation() {
       setCounts(data);
     } catch (err) {
       console.error('Load counts error:', err);
+    }
+  }
+
+  async function loadBannedWallets() {
+    try {
+      setBannedLoading(true);
+      const data = await api.adminGetBannedWallets();
+      setBannedWallets(data.banned || []);
+    } catch (err) {
+      console.error('Load banned wallets error:', err);
+    } finally {
+      setBannedLoading(false);
+    }
+  }
+
+  async function handleUnban(walletAddress) {
+    if (!confirm(`Are you sure you want to unban wallet ${walletAddress}? They will be able to create a new account.`)) return;
+    try {
+      setUnbanningWallet(walletAddress);
+      await api.adminUnbanWallet(walletAddress);
+      setBannedWallets((prev) => prev.filter((b) => b.wallet_address !== walletAddress));
+    } catch (err) {
+      console.error('Unban error:', err);
+      alert(err.message || 'Failed to unban wallet');
+    } finally {
+      setUnbanningWallet(null);
     }
   }
 
@@ -124,10 +160,26 @@ export default function Moderation() {
 
   return (
     <div className="moderation-page">
+      <div className="moderation-tabs">
+        <button
+          className={`mod-tab${activeTab === 'reports' ? ' active' : ''}`}
+          onClick={() => setActiveTab('reports')}
+        >
+          <FlagIcon size={16} /> Reports
+        </button>
+        <button
+          className={`mod-tab${activeTab === 'banned' ? ' active' : ''}`}
+          onClick={() => setActiveTab('banned')}
+        >
+          <ShieldIcon size={16} /> Banned Wallets{bannedWallets.length > 0 ? ` (${bannedWallets.length})` : ''}
+        </button>
+      </div>
+
+      {activeTab === 'reports' && (<>
       <div className="moderation-header">
         <div className="moderation-title">
-          <ShieldIcon size={24} />
-          <h1>Content Moderation</h1>
+          <FlagIcon size={24} />
+          <h1>Content Reports</h1>
         </div>
         <div className="moderation-counts">
           <button
@@ -185,6 +237,54 @@ export default function Moderation() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      </>)}
+
+      {activeTab === 'banned' && (
+        <div className="banned-wallets-section">
+          <div className="moderation-header">
+            <div className="moderation-title">
+              <ShieldIcon size={24} />
+              <h1>Banned Wallets</h1>
+            </div>
+          </div>
+          {bannedLoading ? (
+            <div className="moderation-loading">Loading banned wallets...</div>
+          ) : bannedWallets.length === 0 ? (
+            <div className="moderation-empty">
+              <ShieldIcon size={40} />
+              <p>No banned wallets.</p>
+            </div>
+          ) : (
+            <div className="banned-list">
+              {bannedWallets.map((ban) => (
+                <div key={ban.wallet_address} className="banned-card">
+                  <div className="banned-card-info">
+                    <div className="banned-wallet-address">
+                      {ban.wallet_address}
+                    </div>
+                    <div className="banned-meta">
+                      Banned by <strong>{ban.banned_by_username || ban.banned_by || 'Admin'}</strong>
+                      {' · '}
+                      {formatDate(ban.banned_at)}
+                    </div>
+                    {ban.reason && (
+                      <div className="banned-reason">{ban.reason}</div>
+                    )}
+                  </div>
+                  <button
+                    className="btn-unban"
+                    onClick={() => handleUnban(ban.wallet_address)}
+                    disabled={unbanningWallet === ban.wallet_address}
+                  >
+                    {unbanningWallet === ban.wallet_address ? 'Unbanning...' : 'Remove Ban'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
