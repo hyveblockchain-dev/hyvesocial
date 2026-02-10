@@ -2,7 +2,7 @@
 
 .create-post-box {
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 2px solid rgba(255, 215, 0, 0.25);
   border-radius: var(--radius-xl);
   padding: 24px;
   margin-bottom: 20px;
@@ -55,7 +55,7 @@
   width: 100%;
   min-height: 110px;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-color);
+  border: 2px solid rgba(255, 215, 0, 0.25);
   color: var(--text-primary);
   padding: 16px 18px;
   border-radius: 16px;
@@ -140,7 +140,7 @@
   flex-wrap: wrap;
   gap: 6px;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 2px solid rgba(255, 215, 0, 0.25);
   padding: 12px;
   border-radius: 16px;
   z-index: 5;
@@ -170,7 +170,7 @@
 .option-button {
   padding: 10px 18px;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-color);
+  border: 2px solid rgba(255, 215, 0, 0.25);
   color: var(--text-secondary);
   border-radius: 12px;
   cursor: pointer;

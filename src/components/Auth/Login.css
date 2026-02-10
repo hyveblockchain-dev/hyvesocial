@@ -44,7 +44,7 @@
 
 .login-hero-content {
   background: var(--glass-bg);
-  border: 1px solid var(--border-color);
+  border: 2px solid rgba(255, 215, 0, 0.25);
   border-radius: var(--radius-xl);
   padding: 28px 24px;
   box-shadow: var(--card-shadow);
@@ -58,7 +58,7 @@
   gap: 14px;
   margin-bottom: 20px;
   padding-bottom: 20px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 2px solid rgba(255, 215, 0, 0.25);
 }
 
 .login-logo {
@@ -121,7 +121,7 @@
 /* ── Login Box ── */
 .login-box {
   background: var(--glass-bg);
-  border: 1px solid var(--border-color);
+  border: 2px solid rgba(255, 215, 0, 0.25);
   border-radius: var(--radius-xl);
   padding: 28px 24px;
   margin-bottom: 24px;
@@ -209,7 +209,7 @@
 /* ── Register Form ── */
 .register-form {
   background: var(--glass-bg);
-  border: 1px solid var(--border-color);
+  border: 2px solid rgba(255, 215, 0, 0.25);
   border-radius: var(--radius-xl);
   padding: 28px 24px;
   margin-bottom: 24px;
@@ -230,7 +230,7 @@
   width: 100%;
   padding: 14px 18px;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-color);
+  border: 2px solid rgba(255, 215, 0, 0.25);
   border-radius: var(--radius-lg);
   color: var(--text-primary);
   font-size: 15px;
@@ -282,7 +282,7 @@
   padding: 13px 32px;
   background: transparent;
   color: var(--text-secondary);
-  border: 1px solid var(--border-color);
+  border: 2px solid rgba(255, 215, 0, 0.25);
   border-radius: 50px;
   font-size: 15px;
   font-weight: 600;
@@ -305,7 +305,7 @@
 
 .feature {
   background: var(--glass-bg);
-  border: 1px solid var(--border-color);
+  border: 2px solid rgba(255, 215, 0, 0.25);
   border-radius: var(--radius-lg);
   padding: 18px 14px;
   display: flex;
@@ -327,7 +327,7 @@
   height: 38px;
   border-radius: var(--radius-md);
   background: rgba(255, 215, 0, 0.08);
-  border: 1px solid rgba(255, 215, 0, 0.15);
+  border: 2px solid rgba(255, 215, 0, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;

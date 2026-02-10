@@ -66,7 +66,7 @@
 
 .inline-success {
   background: rgba(34, 197, 94, 0.06);
-  border: 1px solid rgba(34, 197, 94, 0.15);
+  border: 2px solid rgba(255, 215, 0, 0.25);
   color: #86efac;
   padding: 0.75rem 1rem;
   border-radius: var(--radius-sm);
@@ -81,7 +81,7 @@
 
 .success-message {
   background: rgba(34, 197, 94, 0.06);
-  border: 1px solid rgba(34, 197, 94, 0.15);
+  border: 2px solid rgba(255, 215, 0, 0.25);
   color: #86efac;
   padding: 0.875rem 1.125rem;
   border-radius: var(--radius-md);
@@ -144,7 +144,7 @@
 .btn-secondary {
   background: var(--glass-bg);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
+  border: 2px solid rgba(255, 215, 0, 0.25);
   padding: 0.75rem 1.5rem;
   border-radius: var(--radius-md);
   font-weight: 600;
@@ -174,7 +174,7 @@ input[type="search"],
 textarea {
   width: 100%;
   background: var(--bg-input);
-  border: 1px solid var(--border-color);
+  border: 2px solid rgba(255, 215, 0, 0.25);
   color: var(--text-primary);
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);
@@ -220,7 +220,7 @@ a:hover {
 .profile-card,
 .widget {
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 2px solid rgba(255, 215, 0, 0.25);
   border-radius: var(--radius-lg);
   padding: 24px;
   backdrop-filter: blur(24px);
@@ -303,7 +303,7 @@ a:hover {
   justify-content: center;
   min-height: 400px;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 2px solid rgba(255, 215, 0, 0.25);
   border-radius: var(--radius-lg);
   padding: 40px;
   text-align: center;
