@@ -8,13 +8,15 @@
 let model = null;
 let modelPromise = null;
 
-// Thresholds — an image is blocked if ANY of these are exceeded
-// Kept aggressive to catch suggestive/implied content
+// Thresholds — an image is blocked if ANY single category exceeds its threshold
 const THRESHOLDS = {
-  Porn: 0.20,
-  Hentai: 0.20,
-  Sexy: 0.35
+  Porn: 0.15,
+  Hentai: 0.15,
+  Sexy: 0.30
 };
+
+// Combined threshold — if (Porn + Hentai + Sexy) combined exceeds this, block
+const COMBINED_THRESHOLD = 0.40;
 
 // How many frames to sample from animated GIFs
 const GIF_FRAMES_TO_CHECK = 8;
@@ -32,8 +34,9 @@ async function loadModel() {
       const tf = await import('@tensorflow/tfjs');
       tf.enableProdMode();
       const nsfwjs = await import('nsfwjs');
-      model = await nsfwjs.load();
-      console.log('NSFW model loaded');
+      // Use InceptionV3 model for significantly better accuracy on borderline content
+      model = await nsfwjs.load('InceptionV3');
+      console.log('NSFW model loaded (InceptionV3)');
       return model;
     } catch (err) {
       console.error('Failed to load NSFW model:', err);
@@ -217,12 +220,22 @@ function checkPredictions(predictions) {
     scores[p.className] = p.probability;
   }
 
+  // Check individual category thresholds
   for (const [category, threshold] of Object.entries(THRESHOLDS)) {
     if ((scores[category] || 0) > threshold) {
       const pct = Math.round((scores[category] || 0) * 100);
       return { safe: false, category, confidence: scores[category], pct, scores };
     }
   }
+
+  // Check combined score — catches suggestive content that doesn't trip any single threshold
+  const combinedScore = (scores.Porn || 0) + (scores.Hentai || 0) + (scores.Sexy || 0);
+  if (combinedScore > COMBINED_THRESHOLD) {
+    const pct = Math.round(combinedScore * 100);
+    const topCategory = ['Porn', 'Hentai', 'Sexy'].reduce((a, b) => (scores[a] || 0) > (scores[b] || 0) ? a : b);
+    return { safe: false, category: topCategory + ' (combined)', confidence: combinedScore, pct, scores };
+  }
+
   return { safe: true, scores };
 }
 
