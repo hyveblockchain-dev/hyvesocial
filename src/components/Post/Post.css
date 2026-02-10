@@ -150,7 +150,8 @@
 .reaction-menu {
   position: absolute;
   bottom: 100%;
-  left: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
   display: flex;
   gap: 6px;
   padding: 10px 14px;
@@ -159,11 +160,11 @@
   border-radius: 50px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
   opacity: 0;
-  transform: translateY(8px);
   pointer-events: none;
   transition: all 0.25s ease;
   z-index: 5;
   backdrop-filter: blur(20px);
+  white-space: nowrap;
 }
 
 .reaction-menu::after {
@@ -179,7 +180,7 @@
 .reaction-menu:hover,
 .reaction-menu:focus-within {
   opacity: 1;
-  transform: translateY(-8px);
+  transform: translateX(-50%) translateY(-8px);
   pointer-events: auto;
 }
 
@@ -578,9 +579,12 @@
 
   .reaction-menu {
     left: 50%;
-    transform: translateX(-50%) translateY(-8px);
+    right: auto;
+    transform: translateX(-50%) translateY(8px);
     bottom: 100%;
-    max-width: 90vw;
+    max-width: 92vw;
+    gap: 4px;
+    padding: 8px 10px;
   }
 
   .reaction-wrapper.open .reaction-menu {
