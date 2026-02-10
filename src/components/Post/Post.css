@@ -668,3 +668,59 @@ body.light-mode .reaction-menu {
   background: #ffffff;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
+
+body.light-mode .reaction-summary {
+  color: #475569;
+}
+
+body.light-mode .no-comments {
+  color: #64748b;
+}
+
+body.light-mode .loading-comments {
+  color: #64748b;
+}
+
+body.light-mode .comment-reaction-count {
+  color: #64748b;
+}
+
+body.light-mode .emoji-btn {
+  color: #475569;
+}
+
+body.light-mode .upload-btn {
+  color: #475569;
+}
+
+body.light-mode .emoji-picker {
+  background: #ffffff;
+}
+
+body.light-mode .post-card * {
+  color: inherit;
+}
+
+body.light-mode .post-card .post-content {
+  color: #1e293b;
+}
+
+body.light-mode .post-card .author-name {
+  color: #0f172a;
+}
+
+body.light-mode .post-card .post-time {
+  color: #64748b;
+}
+
+body.light-mode .post-card .post-stats {
+  color: #64748b;
+}
+
+body.light-mode .post-card .action-button {
+  color: #475569;
+}
+
+body.light-mode .post-card .action-button.liked {
+  color: #b8860b;
+}

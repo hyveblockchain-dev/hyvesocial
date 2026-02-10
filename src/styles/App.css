@@ -247,6 +247,14 @@ body.light-mode a:hover {
   border-radius: inherit;
   background: var(--card-gradient);
   pointer-events: none;
+  z-index: 0;
+}
+
+.card > *,
+.post-card > *,
+.widget > * {
+  position: relative;
+  z-index: 1;
 }
 
 .card:hover,
