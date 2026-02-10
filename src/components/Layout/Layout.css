@@ -469,8 +469,8 @@ body.light-mode .profile-card {
 }
 
 .profile-avatar {
-  width: 64px;
-  height: 64px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   background: var(--gold-primary);
   color: #000;
@@ -478,7 +478,7 @@ body.light-mode .profile-card {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 28px;
+  font-size: 35px;
   margin: 0 auto 12px;
   overflow: hidden;
 }
