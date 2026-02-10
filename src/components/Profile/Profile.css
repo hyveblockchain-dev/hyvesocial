@@ -209,6 +209,98 @@
   letter-spacing: -0.02em;
 }
 
+/* ─── Username Editing ─────────────────────── */
+.profile-display-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-edit-username {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  opacity: 0.4;
+  padding: 2px 4px;
+  transition: opacity var(--transition-fast);
+  line-height: 1;
+}
+
+.btn-edit-username:hover {
+  opacity: 1;
+}
+
+.username-edit-inline {
+  margin-bottom: 8px;
+}
+
+.username-edit-input {
+  font-size: 26px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border: 2px solid var(--gold-primary);
+  border-radius: var(--radius-md, 8px);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  width: 100%;
+  max-width: 320px;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.username-edit-input:focus {
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+}
+
+.username-edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-save-username {
+  background: var(--gold-primary);
+  color: #000;
+  border: none;
+  padding: 6px 16px;
+  border-radius: var(--radius-md, 8px);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-save-username:hover:not(:disabled) {
+  background: #e6c200;
+}
+
+.btn-save-username:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-cancel-username {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  padding: 6px 12px;
+  border-radius: var(--radius-md, 8px);
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-cancel-username:hover:not(:disabled) {
+  background: var(--bg-hover);
+}
+
+.username-error {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 6px;
+}
+
 .profile-wallet {
   font-size: 14px;
   color: var(--text-tertiary);

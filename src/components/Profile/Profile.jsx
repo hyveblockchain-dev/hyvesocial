@@ -33,6 +33,10 @@ export default function Profile() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [usernameInput, setUsernameInput] = useState('');
+  const [usernameSaving, setUsernameSaving] = useState(false);
+  const [usernameError, setUsernameError] = useState('');
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [aboutSaving, setAboutSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
@@ -408,6 +412,54 @@ export default function Profile() {
         detail: { username, profileImage }
       })
     );
+  }
+
+  async function handleSaveUsername() {
+    const trimmed = usernameInput.trim();
+    if (!trimmed || trimmed.length < 2) {
+      setUsernameError('Username must be at least 2 characters');
+      return;
+    }
+    if (trimmed.length > 30) {
+      setUsernameError('Username must be 30 characters or less');
+      return;
+    }
+    if (!/^[a-zA-Z0-9_.-]+$/.test(trimmed)) {
+      setUsernameError('Only letters, numbers, underscores, hyphens, and dots');
+      return;
+    }
+    if (trimmed.toLowerCase() === profile.username?.toLowerCase()) {
+      setIsEditingUsername(false);
+      setUsernameError('');
+      return;
+    }
+    try {
+      setUsernameSaving(true);
+      setUsernameError('');
+      const result = await api.updateProfile({ username: trimmed });
+      if (result.error) {
+        setUsernameError(result.error);
+        setUsernameSaving(false);
+        return;
+      }
+      // Update local state
+      setProfile((prev) => ({ ...prev, username: trimmed }));
+      if (user) setUser({ ...user, username: trimmed });
+      setIsEditingUsername(false);
+      // Navigate to new username URL
+      navigate(`/profile/${encodeURIComponent(trimmed)}`, { replace: true });
+    } catch (error) {
+      const msg = error?.message || 'Failed to update username';
+      // Try to parse JSON error from backend
+      try {
+        const parsed = JSON.parse(msg);
+        setUsernameError(parsed.error || msg);
+      } catch {
+        setUsernameError(msg);
+      }
+    } finally {
+      setUsernameSaving(false);
+    }
   }
 
   async function handleDeleteAccount() {
@@ -861,7 +913,42 @@ export default function Profile() {
         </div>
 
         <div className="profile-info">
-          <h1>{profile.username || 'Anonymous'}</h1>
+          {isEditingUsername ? (
+            <div className="username-edit-inline">
+              <input
+                type="text"
+                className="username-edit-input"
+                value={usernameInput}
+                onChange={(e) => { setUsernameInput(e.target.value); setUsernameError(''); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSaveUsername(); if (e.key === 'Escape') { setIsEditingUsername(false); setUsernameError(''); } }}
+                disabled={usernameSaving}
+                autoFocus
+                maxLength={30}
+              />
+              <div className="username-edit-actions">
+                <button className="btn-save-username" onClick={handleSaveUsername} disabled={usernameSaving}>
+                  {usernameSaving ? 'Saving...' : '✓ Save'}
+                </button>
+                <button className="btn-cancel-username" onClick={() => { setIsEditingUsername(false); setUsernameError(''); }} disabled={usernameSaving}>
+                  ✕
+                </button>
+              </div>
+              {usernameError && <div className="username-error">{usernameError}</div>}
+            </div>
+          ) : (
+            <h1 className="profile-display-name">
+              {profile.username || 'Anonymous'}
+              {isOwnProfile && (
+                <button
+                  className="btn-edit-username"
+                  title="Edit username"
+                  onClick={() => { setUsernameInput(profile.username || ''); setIsEditingUsername(true); setUsernameError(''); }}
+                >
+                  ✏️
+                </button>
+              )}
+            </h1>
+          )}
           {profile.bio && <p className="profile-bio">{profile.bio}</p>}
           <div className="profile-stats">
             <span><strong>{friendCount}</strong> Friends</span>
