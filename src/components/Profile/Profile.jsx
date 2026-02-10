@@ -424,8 +424,8 @@ export default function Profile() {
       setUsernameError('Username must be 30 characters or less');
       return;
     }
-    if (!/^[a-zA-Z0-9_.-]+$/.test(trimmed)) {
-      setUsernameError('Only letters, numbers, underscores, hyphens, and dots');
+    if (!/^[a-zA-Z0-9 _.-]+$/.test(trimmed)) {
+      setUsernameError('Only letters, numbers, spaces, underscores, hyphens, and dots');
       return;
     }
     if (trimmed.toLowerCase() === profile.username?.toLowerCase()) {
