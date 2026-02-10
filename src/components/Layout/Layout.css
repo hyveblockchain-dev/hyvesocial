@@ -1178,6 +1178,7 @@ body.light-mode .widget h3 {
   bottom: 150px;
   width: 360px;
   height: 500px;
+  max-height: 80vh;
   background: var(--bg-card);
   border: 2px solid var(--trim-color);
   border-radius: var(--radius-xl);
@@ -1239,6 +1240,9 @@ body.light-mode .widget h3 {
 .chat-window-body {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
 }
 
 .chat-window-body {
