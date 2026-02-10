@@ -485,3 +485,36 @@ small {
     font-size: 16px; /* Prevents iOS zoom */
   }
 }
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.25rem; }
+  h2 { font-size: 1.125rem; }
+
+  .card, .post-card, .profile-card, .widget {
+    padding: 14px;
+    border-radius: var(--radius-sm);
+  }
+
+  .btn-primary, .btn-secondary {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+
+  .empty-state {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .empty-state-title {
+    font-size: 15px;
+  }
+
+  .empty-state-description {
+    font-size: 13px;
+  }
+
+  .coming-soon {
+    min-height: 200px;
+    font-size: 16px;
+    padding: 20px;
+  }
+}

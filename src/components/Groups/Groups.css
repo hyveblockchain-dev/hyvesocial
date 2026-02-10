@@ -49,6 +49,13 @@
 .groups-tabs {
   display: flex;
   gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.groups-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .groups-tab {

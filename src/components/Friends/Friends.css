@@ -57,6 +57,13 @@
   border: 1px solid var(--border-color);
   border-radius: 20px;
   backdrop-filter: blur(12px);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.friends-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .friends-tabs .tab {
@@ -270,7 +277,7 @@
 
 @media (max-width: 520px) {
   .friend-card-actions {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .friend-card-actions .btn-primary,

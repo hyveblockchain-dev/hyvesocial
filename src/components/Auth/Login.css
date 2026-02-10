@@ -406,3 +406,55 @@
     align-items: flex-start;
   }
 }
+
+@media (max-width: 380px) {
+  .login-page {
+    padding: 12px;
+    padding-top: 32px;
+  }
+
+  .login-hero-content {
+    padding: 18px 14px;
+  }
+
+  .login-brand h1 {
+    font-size: 22px;
+  }
+
+  .login-hero-copy h2 {
+    font-size: 17px;
+  }
+
+  .login-hero-copy p {
+    font-size: 13px;
+  }
+
+  .login-box {
+    padding: 20px 14px;
+  }
+
+  .connect-button {
+    font-size: 15px;
+    padding: 14px 24px;
+  }
+
+  .register-form {
+    padding: 20px 14px;
+  }
+
+  .register-form input {
+    font-size: 16px; /* prevent iOS zoom */
+  }
+
+  .feature {
+    padding: 12px 14px;
+  }
+
+  .feature-title {
+    font-size: 12px;
+  }
+
+  .feature-desc {
+    font-size: 11px;
+  }
+}

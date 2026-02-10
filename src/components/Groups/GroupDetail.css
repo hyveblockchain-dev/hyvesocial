@@ -803,3 +803,92 @@
     flex-direction: column;
   }
 }
+
+@media (max-width: 600px) {
+  .group-hero-cover {
+    height: 160px;
+  }
+
+  .group-hero-bar {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .group-avatar {
+    width: 52px;
+    height: 52px;
+    font-size: 18px;
+  }
+
+  .group-title {
+    font-size: 18px;
+  }
+
+  .group-hero-stats {
+    gap: 14px;
+    font-size: 13px;
+    flex-wrap: wrap;
+  }
+
+  .group-tab-bar {
+    gap: 4px;
+    padding: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .group-tab {
+    padding: 10px 14px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .group-feed-area {
+    gap: 12px;
+  }
+
+  .group-sidebar-card {
+    padding: 16px;
+  }
+
+  .group-member-card {
+    padding: 12px;
+  }
+
+  .group-member-avatar {
+    width: 42px;
+    height: 42px;
+  }
+
+  .group-member-name {
+    font-size: 14px;
+  }
+
+  .group-settings-form input,
+  .group-settings-form textarea {
+    font-size: 16px; /* prevent iOS zoom */
+  }
+}
+
+@media (max-width: 480px) {
+  .group-hero-cover {
+    height: 130px;
+  }
+
+  .group-title {
+    font-size: 16px;
+  }
+
+  .group-hero-bar {
+    padding: 12px;
+  }
+
+  .group-member-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .group-member-actions button {
+    width: 100%;
+  }
+}

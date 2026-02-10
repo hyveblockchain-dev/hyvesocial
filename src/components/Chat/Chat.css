@@ -355,7 +355,7 @@
 @media (max-width: 768px) {
   .chat-container {
     border-radius: 0;
-    height: 100vh;
+    height: 100%;
   }
   
   .chat-header {
@@ -372,28 +372,46 @@
   }
   
   .message {
-    max-width: 85%;
+    max-width: 88%;
   }
   
   .chat-input {
     padding: 12px 14px;
   }
   
+  .chat-input input {
+    font-size: 16px; /* prevent iOS zoom */
+  }
+  
   .chat-input button {
     padding: 12px 18px;
+  }
+
+  .chat-emoji-picker {
+    max-width: 100%;
+    justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
   .chat-messages {
-    padding: 14px;
+    padding: 12px;
   }
   
   .message-content {
     padding: 10px 14px;
+    font-size: 14px;
   }
   
   .chat-input input {
     padding: 10px 14px;
+  }
+
+  .conversation-info h4 {
+    font-size: 14px;
+  }
+
+  .conversation-info p {
+    font-size: 12px;
   }
 }

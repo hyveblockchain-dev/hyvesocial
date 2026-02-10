@@ -407,3 +407,38 @@
     gap: 12px;
   }
 }
+
+@media (max-width: 480px) {
+  .stories-row {
+    grid-auto-columns: 100px;
+    gap: 8px;
+  }
+
+  .story-card {
+    height: 140px;
+    border-radius: 10px;
+  }
+
+  .story-avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .story-name {
+    font-size: 11px;
+  }
+
+  .story-viewer-content {
+    width: min(96vw, 360px);
+    border-radius: 12px;
+  }
+
+  .story-modal-content {
+    width: min(96vw, 360px);
+  }
+
+  .empty-feed {
+    padding: 1.5rem 0.75rem;
+    font-size: 14px;
+  }
+}

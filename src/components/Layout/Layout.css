@@ -931,6 +931,22 @@ body.light-mode .stat-num {
     border: 1px solid var(--bg-secondary);
     box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
   }
+
+  /* Chat popups on tablet / large-phone */
+  .chat-list-popup,
+  .chat-window-popup {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(92vw, 380px);
+    height: 70vh;
+    bottom: calc(78px + env(safe-area-inset-bottom));
+    border-radius: var(--radius-xl);
+  }
+
+  .chat-window-popup {
+    right: auto;
+  }
 }
 
 @media (max-width: 600px) {
@@ -991,9 +1007,9 @@ body.light-mode .stat-num {
     left: 50%;
     right: auto;
     transform: translateX(-50%);
-    width: min(94vw, 360px);
-    height: 75vh;
-    bottom: 80px;
+    width: min(96vw, 360px);
+    height: 70vh;
+    bottom: calc(72px + env(safe-area-inset-bottom));
   }
 }
 
@@ -1301,5 +1317,25 @@ body.light-mode .widget h3 {
   
   .search-box {
     display: none;
+  }
+}
+
+/* ─── Extra-small phones ─────────────────── */
+@media (max-width: 380px) {
+  .page-header {
+    padding: 0 8px;
+  }
+
+  .logo-text {
+    font-size: 16px;
+  }
+
+  .center-column {
+    padding: 8px;
+  }
+
+  .mobile-nav-item {
+    max-width: 56px;
+    font-size: 18px;
   }
 }

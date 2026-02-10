@@ -574,4 +574,21 @@
   .reaction-wrapper .action-button {
     width: 100%;
   }
+
+  .reaction-menu {
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    bottom: 100%;
+    max-width: 90vw;
+  }
+
+  .reaction-wrapper.open .reaction-menu {
+    transform: translateX(-50%) translateY(-8px);
+  }
+
+  .reaction-item {
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+  }
 }
