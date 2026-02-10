@@ -1,5 +1,6 @@
 // src/components/Post/Post.jsx
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { parseDateValue, formatDate, formatDateTime } from '../../utils/date';
@@ -636,7 +637,7 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
         </button>
       </div>
 
-      {showReportModal && (
+      {showReportModal && createPortal(
         <div className="report-modal-overlay" onClick={() => setShowReportModal(false)}>
           <div className="report-modal" onClick={(e) => e.stopPropagation()}>
             <div className="report-modal-header">
@@ -673,7 +674,8 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
               <button className="btn-danger" onClick={handleReport}>Submit Report</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {showComments && (

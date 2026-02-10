@@ -756,9 +756,10 @@ body.light-mode .post-card .action-button.liked {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
   padding: 20px;
   backdrop-filter: blur(4px);
+  overflow-y: auto;
 }
 
 .report-modal {
@@ -767,6 +768,9 @@ body.light-mode .post-card .action-button.liked {
   border-radius: 16px;
   width: 100%;
   max-width: 440px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   padding: 0;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   animation: fadeIn 0.2s ease-out;
@@ -804,6 +808,8 @@ body.light-mode .post-card .action-button.liked {
 
 .report-modal-body {
   padding: 20px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .report-reasons {
