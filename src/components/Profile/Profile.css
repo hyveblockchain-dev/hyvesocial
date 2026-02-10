@@ -1261,3 +1261,117 @@
   color: #ef4444;
   font-size: 18px;
 }
+
+/* ===== Settings / Danger Zone ===== */
+.settings-section h2 {
+  margin-bottom: 20px;
+}
+
+.danger-zone {
+  border: 2px solid #dc2626;
+  border-radius: var(--radius-lg, 12px);
+  overflow: hidden;
+}
+
+.danger-zone-header {
+  background: rgba(220, 38, 38, 0.1);
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(220, 38, 38, 0.25);
+}
+
+.danger-zone-header h3 {
+  margin: 0;
+  color: #dc2626;
+  font-size: 16px;
+}
+
+.danger-zone-content {
+  padding: 20px;
+}
+
+.danger-zone-info h4 {
+  margin: 0 0 8px;
+  color: var(--text-primary);
+  font-size: 15px;
+}
+
+.danger-zone-info p {
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-md, 8px);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.delete-confirm-box {
+  margin-top: 12px;
+  padding: 16px;
+  background: rgba(220, 38, 38, 0.06);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: var(--radius-md, 8px);
+}
+
+.delete-confirm-warning {
+  margin: 0 0 12px;
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.delete-confirm-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid rgba(220, 38, 38, 0.3);
+  border-radius: var(--radius-md, 8px);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 14px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.delete-confirm-input:focus {
+  outline: none;
+  border-color: #dc2626;
+}
+
+.delete-confirm-input::placeholder {
+  color: var(--text-muted, #888);
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.delete-confirm-actions .btn-danger {
+  flex: 1;
+  min-width: 180px;
+}
+
+.delete-confirm-actions .btn-secondary {
+  flex: 0;
+  white-space: nowrap;
+}

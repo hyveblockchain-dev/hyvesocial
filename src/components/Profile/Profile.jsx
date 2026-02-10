@@ -11,7 +11,7 @@ import './Profile.css';
 export default function Profile() {
   const { handle } = useParams();
   const navigate = useNavigate();
-  const { user, setUser, socket } = useAuth();
+  const { user, setUser, socket, logout } = useAuth();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [albums, setAlbums] = useState([]);
@@ -30,6 +30,9 @@ export default function Profile() {
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [blockedUsers, setBlockedUsers] = useState([]);
   const [blockedLoading, setBlockedLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [aboutSaving, setAboutSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
@@ -405,6 +408,26 @@ export default function Profile() {
         detail: { username, profileImage }
       })
     );
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteConfirmText !== 'DELETE') return;
+    try {
+      setDeletingAccount(true);
+      const result = await api.deleteAccount();
+      if (result.error) {
+        alert(result.error);
+        setDeletingAccount(false);
+        return;
+      }
+      // Account deleted — log out and redirect
+      logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Delete account error:', error);
+      alert('Failed to delete account. Please try again.');
+      setDeletingAccount(false);
+    }
   }
 
   async function handleCreateAlbum(e) {
@@ -988,6 +1011,14 @@ export default function Profile() {
               Blocked
             </button>
           )}
+          {isOwnProfile && (
+            <button
+              className={activeTab === 'settings' ? 'tab active' : 'tab'}
+              onClick={() => setActiveTab('settings')}
+            >
+              Settings
+            </button>
+          )}
         </div>
       </div>
 
@@ -1339,6 +1370,62 @@ export default function Profile() {
                 })}
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'settings' && isOwnProfile && (
+          <div className="profile-card settings-section">
+            <h2>Account Settings</h2>
+            <div className="danger-zone">
+              <div className="danger-zone-header">
+                <h3>⚠️ Danger Zone</h3>
+              </div>
+              <div className="danger-zone-content">
+                <div className="danger-zone-info">
+                  <h4>Delete Account</h4>
+                  <p>Permanently delete your account and all associated data. This includes your posts, comments, messages, photos, albums, stories, group memberships, and all other data. <strong>This action cannot be undone.</strong></p>
+                </div>
+                {!showDeleteConfirm ? (
+                  <button
+                    className="btn-danger"
+                    onClick={() => setShowDeleteConfirm(true)}
+                  >
+                    🗑️ Delete My Account
+                  </button>
+                ) : (
+                  <div className="delete-confirm-box">
+                    <p className="delete-confirm-warning">Are you absolutely sure? Type <strong>DELETE</strong> to confirm.</p>
+                    <input
+                      type="text"
+                      className="delete-confirm-input"
+                      placeholder="Type DELETE to confirm"
+                      value={deleteConfirmText}
+                      onChange={(e) => setDeleteConfirmText(e.target.value)}
+                      disabled={deletingAccount}
+                    />
+                    <div className="delete-confirm-actions">
+                      <button
+                        className="btn-danger"
+                        onClick={handleDeleteAccount}
+                        disabled={deleteConfirmText !== 'DELETE' || deletingAccount}
+                      >
+                        {deletingAccount ? 'Deleting...' : 'Permanently Delete Account'}
+                      </button>
+                      <button
+                        className="btn-secondary"
+                        onClick={() => {
+                          setShowDeleteConfirm(false);
+                          setDeleteConfirmText('');
+                        }}
+                        disabled={deletingAccount}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

@@ -966,6 +966,31 @@ export async function inviteToGroup(groupId, username) {
   }
 }
 
+export async function deleteAccount() {
+  const token = localStorage.getItem('token');
+  try {
+    const response = await fetch(`${API_URL}/api/account`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    const contentType = response.headers.get('content-type') || '';
+    if (!response.ok) {
+      if (contentType.includes('application/json')) {
+        try { return await response.json(); } catch { /* fall through */ }
+      }
+      return { error: `Failed to delete account (${response.status})` };
+    }
+    if (!contentType.includes('application/json')) return { success: true };
+    return response.json();
+  } catch (err) {
+    console.error('[api] deleteAccount fetch error:', err);
+    return { error: err?.message || 'Network error' };
+  }
+}
+
 export async function getPresence() {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_URL}/api/presence`, {
@@ -1321,6 +1346,9 @@ export default {
   getGroupBans,
   deleteGroup,
   inviteToGroup,
+
+  // Account
+  deleteAccount,
 
   // Chat/Messages
   getMessages,
