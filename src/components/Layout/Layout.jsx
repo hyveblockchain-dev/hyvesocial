@@ -9,7 +9,7 @@ import { normalizeNotification } from '../../utils/notifications';
 import {
   IconSearch, IconLogout, IconMoon, IconSun, IconBell,
   IconFeed, IconUser, IconUsers, IconChat, IconClose,
-  IconGroup, IconDiscover
+  IconGroup, IconDiscover, IconShield
 } from '../Icons/Icons';
 import './Layout.css';
 
@@ -28,6 +28,7 @@ export default function Layout({ children }) {
   const [suggestedUsers, setSuggestedUsers] = useState([]);
   const [postCount, setPostCount] = useState(0);
   const [friendCount, setFriendCount] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [friendsList, setFriendsList] = useState([]);
   const [presenceMap, setPresenceMap] = useState({});
   const [onlineFriends, setOnlineFriends] = useState([]);
@@ -190,6 +191,8 @@ export default function Layout({ children }) {
     loadNotifications();
     loadBlockedUsers();
     setNotificationItems(getRecentNotifications());
+    // Check admin status
+    api.checkIsAdmin().then(admin => setIsAdmin(admin)).catch(() => {});
   }, [user]);
 
   useEffect(() => {
@@ -901,6 +904,12 @@ export default function Layout({ children }) {
               <span className="nav-icon"><IconDiscover width={20} height={20} /></span>
               <span>Discover</span>
             </Link>
+            {isAdmin && (
+              <Link to="/moderation" className={location.pathname === '/moderation' ? 'nav-item active' : 'nav-item'}>
+                <span className="nav-icon"><IconShield width={20} height={20} /></span>
+                <span>Moderation</span>
+              </Link>
+            )}
           </nav>
 
           <div className="stats-section">

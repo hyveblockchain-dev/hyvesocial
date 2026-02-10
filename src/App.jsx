@@ -13,6 +13,7 @@ const Notifications = lazy(() => import('./components/Notifications/Notification
 const Discover = lazy(() => import('./components/Discover/Discover'));
 const Groups = lazy(() => import('./components/Groups/Groups'));
 const GroupDetail = lazy(() => import('./components/Groups/GroupDetail'));
+const Moderation = lazy(() => import('./components/Moderation/Moderation'));
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -130,6 +131,16 @@ function App() {
                 <PrivateRoute>
                   <Layout>
                     <GroupDetail />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/moderation"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <Moderation />
                   </Layout>
                 </PrivateRoute>
               }

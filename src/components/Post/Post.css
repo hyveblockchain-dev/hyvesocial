@@ -724,3 +724,197 @@ body.light-mode .post-card .action-button {
 body.light-mode .post-card .action-button.liked {
   color: #b8860b;
 }
+
+/* Report Button & Modal */
+.report-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 4px;
+  border-radius: 6px;
+  opacity: 0.5;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.report-button:hover {
+  opacity: 1;
+  color: #e53e3e;
+  background: rgba(229, 62, 62, 0.1);
+}
+
+.report-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.report-modal {
+  background: var(--bg-primary, #0a0a0a);
+  border: 1px solid var(--trim-color, rgba(255, 215, 0, 0.25));
+  border-radius: 16px;
+  width: 100%;
+  max-width: 440px;
+  padding: 0;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.report-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+}
+
+.report-modal-header h3 {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.report-modal-header button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.report-modal-header button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.report-modal-body {
+  padding: 20px;
+}
+
+.report-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.report-reason-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: transparent;
+}
+
+.report-reason-option:hover {
+  border-color: var(--gold-primary, #FFD700);
+  background: rgba(255, 215, 0, 0.04);
+}
+
+.report-reason-option.selected {
+  border-color: var(--gold-primary, #FFD700);
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.report-reason-option input[type="radio"] {
+  accent-color: var(--gold-primary, #FFD700);
+}
+
+.report-modal-body textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 10px;
+  background: var(--bg-secondary, rgba(255, 255, 255, 0.03));
+  color: var(--text-primary);
+  font-size: 14px;
+  resize: vertical;
+  font-family: inherit;
+  margin-bottom: 12px;
+}
+
+.report-modal-body textarea:focus {
+  outline: none;
+  border-color: var(--gold-primary, #FFD700);
+}
+
+.report-modal-body textarea::placeholder {
+  color: var(--text-secondary);
+}
+
+.report-status {
+  font-size: 13px;
+  text-align: center;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: rgba(255, 215, 0, 0.06);
+  border-radius: 8px;
+  color: var(--gold-primary, #FFD700);
+}
+
+.report-modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+}
+
+.report-modal-footer .btn-danger {
+  padding: 8px 20px;
+  background: #e53e3e;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.report-modal-footer .btn-danger:hover:not(:disabled) {
+  background: #c53030;
+}
+
+.report-modal-footer .btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.report-modal-footer .btn-secondary {
+  padding: 8px 20px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15));
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.report-modal-footer .btn-secondary:hover {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}

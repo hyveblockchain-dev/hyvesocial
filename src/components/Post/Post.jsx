@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { parseDateValue, formatDate, formatDateTime } from '../../utils/date';
-import { ThumbsUpIcon, ChatIcon, ShareIcon, SmileIcon, CameraIcon, CloseIcon } from '../Icons/Icons';
+import { ThumbsUpIcon, ChatIcon, ShareIcon, SmileIcon, CameraIcon, CloseIcon, FlagIcon } from '../Icons/Icons';
 import api from '../../services/api';
 import './Post.css';
 
@@ -43,10 +43,50 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
   const [commentReactions, setCommentReactions] = useState({});
   const [commentReactionCounts, setCommentReactionCounts] = useState({});
   const [showReactionMenu, setShowReactionMenu] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDetails, setReportDetails] = useState('');
+  const [reportStatus, setReportStatus] = useState('');
 
   const MAX_COMMENT_IMAGE_MB = 5;
 
   const isOwner = (post.username || post.author_username || post.user?.username) === user?.username;
+
+  const reportReasons = [
+    { value: 'inappropriate', label: 'Inappropriate Content' },
+    { value: 'nsfw', label: 'NSFW / Sexual Content' },
+    { value: 'spam', label: 'Spam' },
+    { value: 'harassment', label: 'Harassment / Bullying' },
+    { value: 'hate_speech', label: 'Hate Speech' },
+    { value: 'violence', label: 'Violence / Threats' },
+    { value: 'illegal', label: 'Illegal Content' },
+    { value: 'other', label: 'Other' },
+  ];
+
+  async function handleReport() {
+    if (!reportReason) {
+      setReportStatus('Please select a reason.');
+      return;
+    }
+    try {
+      setReportStatus('Submitting...');
+      await api.submitReport({
+        contentType: 'post',
+        contentId: post.id,
+        reason: reportReason,
+        details: reportDetails,
+      });
+      setReportStatus('Report submitted. Our team will review it shortly.');
+      setTimeout(() => {
+        setShowReportModal(false);
+        setReportReason('');
+        setReportDetails('');
+        setReportStatus('');
+      }, 2000);
+    } catch (error) {
+      setReportStatus(error.message || 'Failed to submit report');
+    }
+  }
 
   function extractTimestamp(item) {
     if (!item) return null;
@@ -519,6 +559,11 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
         {isOwner && (
           <button className="delete-button" onClick={handleDelete}><CloseIcon size={16} /></button>
         )}
+        {!isOwner && (
+          <button className="report-button" onClick={() => setShowReportModal(true)} title="Report post">
+            <FlagIcon size={14} />
+          </button>
+        )}
       </div>
 
       <div className="post-content">{normalizeSharedContent(post.content)}</div>
@@ -590,6 +635,46 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
           <ShareIcon size={16} /> Share
         </button>
       </div>
+
+      {showReportModal && (
+        <div className="report-modal-overlay" onClick={() => setShowReportModal(false)}>
+          <div className="report-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="report-modal-header">
+              <h3>Report Post</h3>
+              <button className="close-btn" onClick={() => setShowReportModal(false)}><CloseIcon size={16} /></button>
+            </div>
+            <div className="report-modal-body">
+              <p>Why are you reporting this post?</p>
+              <div className="report-reasons">
+                {reportReasons.map((r) => (
+                  <label key={r.value} className={`report-reason-option${reportReason === r.value ? ' selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="reportReason"
+                      value={r.value}
+                      checked={reportReason === r.value}
+                      onChange={() => setReportReason(r.value)}
+                    />
+                    {r.label}
+                  </label>
+                ))}
+              </div>
+              <textarea
+                placeholder="Additional details (optional)..."
+                value={reportDetails}
+                onChange={(e) => setReportDetails(e.target.value)}
+                rows="3"
+                maxLength="500"
+              />
+              {reportStatus && <div className="report-status">{reportStatus}</div>}
+            </div>
+            <div className="report-modal-footer">
+              <button className="btn-secondary" onClick={() => setShowReportModal(false)}>Cancel</button>
+              <button className="btn-danger" onClick={handleReport}>Submit Report</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showComments && (
         <div className="comments-section">

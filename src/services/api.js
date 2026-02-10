@@ -1268,6 +1268,73 @@ export async function sendMessage(toAddress, content) {
 }
 
 // ========================================
+// REPORTS & MODERATION
+// ========================================
+
+export async function submitReport({ contentType, contentId, reason, details }) {
+  const response = await fetch(`${API_URL}/api/reports`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+    body: JSON.stringify({ contentType, contentId, reason, details }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to submit report');
+  return data;
+}
+
+export async function checkIsAdmin() {
+  const response = await fetch(`${API_URL}/api/admin/check`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+  });
+  const data = await response.json();
+  return data.isAdmin;
+}
+
+export async function getReports(status = 'pending', limit = 50, offset = 0) {
+  const response = await fetch(`${API_URL}/api/admin/reports?status=${status}&limit=${limit}&offset=${offset}`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get reports');
+  return data;
+}
+
+export async function getReportDetail(reportId) {
+  const response = await fetch(`${API_URL}/api/admin/reports/${reportId}`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get report details');
+  return data;
+}
+
+export async function actionReport(reportId, action, adminNotes = '') {
+  const response = await fetch(`${API_URL}/api/admin/reports/${reportId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+    body: JSON.stringify({ action, adminNotes }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to process report');
+  return data;
+}
+
+export async function getReportCounts() {
+  const response = await fetch(`${API_URL}/api/admin/reports/counts`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get counts');
+  return data;
+}
+
+// ========================================
 // DEFAULT EXPORT
 // ========================================
 
@@ -1367,4 +1434,12 @@ export default {
   setPublicKey,
   getUserKey,
   getMyKey,
+
+  // Reports & Moderation
+  submitReport,
+  checkIsAdmin,
+  getReports,
+  getReportDetail,
+  actionReport,
+  getReportCounts,
 };

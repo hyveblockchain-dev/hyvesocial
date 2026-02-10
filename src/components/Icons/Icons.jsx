@@ -486,6 +486,15 @@ export function IconRefresh(props) {
   ));
 }
 
+export function IconFlag(props) {
+  return svg(props, (
+    <>
+      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" stroke="currentColor" strokeWidth="2" fill="none" strokeLinejoin="round" />
+      <line x1="4" y1="22" x2="4" y2="15" stroke="currentColor" strokeWidth="2" />
+    </>
+  ));
+}
+
 // ─── Convenience aliases (suffix-style naming) ──────────────────
 export const SearchIcon = IconSearch;
 export const BellIcon = IconBell;
@@ -511,3 +520,5 @@ export const MailIcon = IconMailbox;
 export const TrashIcon = IconTrash;
 export const PlusIcon = IconPlus;
 export const CommentIcon = IconComment;
+export const FlagIcon = IconFlag;
+export const ShieldIcon = IconShield;
