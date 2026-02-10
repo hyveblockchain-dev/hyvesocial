@@ -89,28 +89,32 @@
 
 .remove-avatar-btn {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 28px;
-  height: 28px;
+  top: 2px;
+  right: 2px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: rgba(220, 38, 38, 0.85);
+  background: #dc2626;
   backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 700;
   color: #fff;
   cursor: pointer;
   transition: all 0.25s ease;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 2px solid #fff;
   padding: 0;
   line-height: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  z-index: 2;
 }
 
 .remove-avatar-btn:hover {
-  background: rgba(220, 38, 38, 1);
+  background: #b91c1c;
   transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.5);
 }
 
 .remove-avatar-btn.disabled {
