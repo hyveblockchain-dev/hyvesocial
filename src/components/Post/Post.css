@@ -477,6 +477,7 @@
 @media (max-width: 768px) {
   .post-card {
     padding: 16px;
+    border: 1px solid rgba(255, 215, 0, 0.12);
   }
 
   .author-avatar {

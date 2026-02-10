@@ -758,6 +758,7 @@ body.light-mode .stat-num {
     transform: none;
     padding: 0 16px;
     height: 60px;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.18);
   }
 
   .page-footer {
@@ -841,7 +842,7 @@ body.light-mode .stat-num {
     background: rgba(12, 12, 20, 0.92);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 215, 0, 0.18);
     display: flex;
     justify-content: space-around;
     align-items: center;
