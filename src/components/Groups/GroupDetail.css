@@ -9,10 +9,11 @@
 }
 
 .group-hero {
-  border-radius: 18px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
+  box-shadow: var(--card-shadow);
 }
 
 .group-hero-cover {

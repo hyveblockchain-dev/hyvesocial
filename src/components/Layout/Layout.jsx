@@ -6,6 +6,11 @@ import Chat from '../Chat/Chat';
 import ChatWindow from '../Chat/ChatWindow';
 import api from '../../services/api';
 import { normalizeNotification } from '../../utils/notifications';
+import {
+  IconSearch, IconLogout, IconMoon, IconSun, IconBell,
+  IconFeed, IconUser, IconUsers, IconChat, IconClose,
+  IconGroup, IconDiscover
+} from '../Icons/Icons';
 import './Layout.css';
 
 export default function Layout({ children }) {
@@ -607,7 +612,7 @@ export default function Layout({ children }) {
             aria-label="Search"
             title="Search"
           >
-            🔍
+            <IconSearch width={20} height={20} />
           </button>
           <button
             className="icon-btn mobile-disconnect-btn"
@@ -615,7 +620,7 @@ export default function Layout({ children }) {
             aria-label="Disconnect wallet"
             title="Disconnect wallet"
           >
-            🔌
+            <IconLogout width={20} height={20} />
           </button>
           <button
             className="light-toggle-btn"
@@ -623,7 +628,7 @@ export default function Layout({ children }) {
             aria-label="Toggle light mode"
             title={isLightMode ? 'Switch to dark mode' : 'Switch to light mode'}
           >
-            {isLightMode ? '🌙' : '🌞'}
+            {isLightMode ? <IconMoon width={20} height={20} /> : <IconSun width={20} height={20} />}
           </button>
           <div className="notification-menu">
             <button
@@ -636,7 +641,7 @@ export default function Layout({ children }) {
               aria-label="Notifications"
               title="Notifications"
             >
-              🔔
+              <IconBell width={20} height={20} />
               {getUnreadCount() > 0 && (
                 <span className="notification-badge">
                   {getUnreadCount() > 9 ? '9+' : getUnreadCount()}
@@ -822,7 +827,7 @@ export default function Layout({ children }) {
             onClick={() => setShowMobileSearch(false)}
             aria-label="Close search"
           >
-            ✕
+            <IconClose width={18} height={18} />
           </button>
           {showSearchResults && (
             <div className="mobile-search-results">
@@ -877,23 +882,23 @@ export default function Layout({ children }) {
 
           <nav className="nav-menu">
             <Link to="/" className={location.pathname === '/' ? 'nav-item active' : 'nav-item'}>
-              <span className="nav-icon">📰</span>
+              <span className="nav-icon"><IconFeed width={20} height={20} /></span>
               <span>Feed</span>
             </Link>
             <Link to="/profile/me" className={location.pathname.startsWith('/profile') ? 'nav-item active' : 'nav-item'}>
-              <span className="nav-icon">👤</span>
+              <span className="nav-icon"><IconUser width={20} height={20} /></span>
               <span>My Profile</span>
             </Link>
             <Link to="/friends" className={location.pathname === '/friends' ? 'nav-item active' : 'nav-item'}>
-              <span className="nav-icon">👥</span>
+              <span className="nav-icon"><IconUsers width={20} height={20} /></span>
               <span>Friends</span>
             </Link>
             <Link to="/groups" className={location.pathname === '/groups' ? 'nav-item active' : 'nav-item'}>
-              <span className="nav-icon">G</span>
+              <span className="nav-icon"><IconGroup width={20} height={20} /></span>
               <span>Groups</span>
             </Link>
             <Link to="/discover" className={location.pathname === '/discover' ? 'nav-item active' : 'nav-item'}>
-              <span className="nav-icon">🔍</span>
+              <span className="nav-icon"><IconDiscover width={20} height={20} /></span>
               <span>Discover</span>
             </Link>
           </nav>
@@ -972,7 +977,7 @@ export default function Layout({ children }) {
 
           {/* Chat Button */}
           <button className="chat-fab-bottom" onClick={() => setShowChat(!showChat)}>
-            💬
+            <IconChat width={24} height={24} />
             {getUnreadMessageCount() > 0 && (
               <span className="chat-badge">
                 {getUnreadMessageCount() > 9 ? '9+' : getUnreadMessageCount()}
@@ -984,16 +989,16 @@ export default function Layout({ children }) {
 
       <nav className="mobile-nav">
         <Link to="/" className={location.pathname === '/' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
-          📰
+          <IconFeed width={22} height={22} />
         </Link>
         <Link to="/friends" className={location.pathname === '/friends' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
-          👥
+          <IconUsers width={22} height={22} />
         </Link>
         <Link to="/groups" className={location.pathname === '/groups' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
-          G
+          <IconGroup width={22} height={22} />
         </Link>
         <Link to="/discover" className={location.pathname === '/discover' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
-          🔍
+          <IconDiscover width={22} height={22} />
         </Link>
         <button
           type="button"
@@ -1011,7 +1016,7 @@ export default function Layout({ children }) {
           aria-label="Toggle chat"
           title="Chat"
         >
-          💬
+          <IconChat width={22} height={22} />
           {getUnreadMessageCount() > 0 && (
             <span className="mobile-chat-badge">
               {getUnreadMessageCount() > 9 ? '9+' : getUnreadMessageCount()}
@@ -1019,7 +1024,7 @@ export default function Layout({ children }) {
           )}
         </button>
         <Link to="/profile/me" className={location.pathname.startsWith('/profile') ? 'mobile-nav-item active' : 'mobile-nav-item'}>
-          👤
+          <IconUser width={22} height={22} />
         </Link>
       </nav>
 
@@ -1027,8 +1032,8 @@ export default function Layout({ children }) {
       {showChat && (
         <div className="chat-list-popup">
           <div className="chat-list-header">
-            <h3>💬 Messages</h3>
-            <button className="close-chat" onClick={() => setShowChat(false)}>✕</button>
+            <h3><IconChat width={20} height={20} /> Messages</h3>
+            <button className="close-chat" onClick={() => setShowChat(false)}><IconClose width={18} height={18} /></button>
           </div>
           <div className="chat-list-body">
             <Chat onSelectChat={handleChatSelect} unreadMap={unreadMessages} onlineMap={presenceMap} />

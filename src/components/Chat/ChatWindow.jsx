@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
+import { CloseIcon, SmileIcon } from '../Icons/Icons';
 import './Chat.css';
 import { formatDateTime } from '../../utils/date';
 
@@ -176,7 +177,7 @@ export default function ChatWindow({ conversation, onClose }) {
           )}
           <span>{conversation.username}</span>
         </div>
-        <button className="close-button" onClick={onClose}>✕</button>
+        <button className="close-button" onClick={onClose}><CloseIcon size={16} /></button>
       </div>
 
       <div className="chat-messages">
@@ -216,7 +217,7 @@ export default function ChatWindow({ conversation, onClose }) {
           aria-label="Add emoji"
           title="Add emoji"
         >
-          😊
+          <SmileIcon size={18} />
         </button>
         <button type="submit">Send</button>
       </form>

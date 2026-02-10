@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
+import { UsersIcon, MailIcon, StarIcon } from '../Icons/Icons';
 import './Friends.css';
 
 export default function Friends() {
@@ -232,7 +233,7 @@ export default function Friends() {
           className={`tab ${activeTab === 'all' ? 'active' : ''}`}
           onClick={() => setActiveTab('all')}
         >
-          <span className="tab-icon">👥</span>
+          <span className="tab-icon"><UsersIcon size={18} /></span>
           All Friends
           <span className="tab-count">{friends.length}</span>
         </button>
@@ -240,7 +241,7 @@ export default function Friends() {
           className={`tab ${activeTab === 'requests' ? 'active' : ''}`}
           onClick={() => setActiveTab('requests')}
         >
-          <span className="tab-icon">📬</span>
+          <span className="tab-icon"><MailIcon size={18} /></span>
           Friend Requests
           {friendRequests.length > 0 && (
             <span className="tab-count badge">{friendRequests.length}</span>
@@ -250,7 +251,7 @@ export default function Friends() {
           className={`tab ${activeTab === 'suggestions' ? 'active' : ''}`}
           onClick={() => setActiveTab('suggestions')}
         >
-          <span className="tab-icon">✨</span>
+          <span className="tab-icon"><StarIcon size={18} /></span>
           Suggestions
           <span className="tab-count">{suggestions.length}</span>
         </button>
@@ -265,9 +266,9 @@ export default function Friends() {
         ) : filteredList.length === 0 ? (
           <div className="friends-empty">
             <div className="empty-icon">
-              {activeTab === 'all' && '👥'}
-              {activeTab === 'requests' && '📬'}
-              {activeTab === 'suggestions' && '✨'}
+              {activeTab === 'all' && <UsersIcon size={48} />}
+              {activeTab === 'requests' && <MailIcon size={48} />}
+              {activeTab === 'suggestions' && <StarIcon size={48} />}
             </div>
             <h3>
               {activeTab === 'all' && 'No friends yet'}

@@ -1,44 +1,92 @@
 /* src/styles/index.css */
 
-/* Root Variables */
+/* ═══════════════════════════════════════════════
+   HYVE SOCIAL — Premium Design System
+   ═══════════════════════════════════════════════ */
+
 :root {
-  /* Gold/Yellow Palette */
+  /* Gold/Yellow Palette — Refined */
   --gold-primary: #FFD700;
   --gold-light: #FFE55C;
   --gold-dark: #DAA520;
+  --gold-deeper: #B8860B;
   --gold-glow: rgba(255, 215, 0, 0.5);
-  --gold-subtle: rgba(255, 215, 0, 0.1);
+  --gold-subtle: rgba(255, 215, 0, 0.08);
 
-  /* Background Colors */
-  --bg-primary: #080810;
-  --bg-secondary: #0f0f1a;
-  --bg-card: rgba(15, 15, 25, 0.85);
-  --bg-input: rgba(8, 8, 16, 0.7);
+  /* Background Colors — Deeper, richer */
+  --bg-primary: #06060e;
+  --bg-secondary: #0c0c18;
+  --bg-card: rgba(12, 12, 22, 0.88);
+  --bg-card-solid: #0d0d1a;
+  --bg-input: rgba(8, 8, 16, 0.6);
+  --bg-elevated: rgba(18, 18, 32, 0.92);
 
   /* Surface Colors */
-  --surface-border: rgba(255, 215, 0, 0.15);
-  --surface-hover: rgba(255, 215, 0, 0.05);
+  --surface-border: rgba(255, 215, 0, 0.12);
+  --surface-hover: rgba(255, 215, 0, 0.04);
   
-  /* Text Colors */
-  --text-primary: #f8f9fa;
-  --text-secondary: #a0a4a8;
-  --text-tertiary: #6c7580;
+  /* Text Colors — Better hierarchy */
+  --text-primary: #f0f2f5;
+  --text-secondary: #8b919a;
+  --text-tertiary: #565c66;
+  --text-gold: #FFD700;
   
-  --border-color: rgba(255, 255, 255, 0.08);
-  --bg-hover: rgba(255, 255, 255, 0.06);
+  /* Borders — More refined */
+  --border-color: rgba(255, 255, 255, 0.06);
+  --border-color-subtle: rgba(255, 255, 255, 0.03);
+  --border-color-strong: rgba(255, 255, 255, 0.12);
+  --bg-hover: rgba(255, 255, 255, 0.05);
   
-  /* New enhanced variables */
-  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  --card-shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.5);
-  --gold-gradient: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  /* Shadows — Layered for depth */
+  --card-shadow: 0 2px 4px rgba(0,0,0,0.1), 0 8px 24px rgba(0,0,0,0.3), 0 24px 48px rgba(0,0,0,0.15);
+  --card-shadow-hover: 0 4px 8px rgba(0,0,0,0.15), 0 16px 36px rgba(0,0,0,0.35), 0 32px 64px rgba(0,0,0,0.2);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.15);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4), 0 32px 80px rgba(0,0,0,0.25);
+  --shadow-gold: 0 4px 20px rgba(255, 215, 0, 0.15), 0 8px 32px rgba(255, 215, 0, 0.08);
+  --shadow-gold-lg: 0 8px 32px rgba(255, 215, 0, 0.2), 0 16px 48px rgba(255, 215, 0, 0.1);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  /* Gradients */
+  --gold-gradient: linear-gradient(135deg, #FFD700 0%, #DAA520 100%);
+  --gold-gradient-subtle: linear-gradient(135deg, rgba(255,215,0,0.12) 0%, rgba(218,165,32,0.04) 100%);
+  --card-gradient: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  --glass-bg: rgba(255, 255, 255, 0.025);
+
+  /* Radii — Generous, modern */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
   --radius-xl: 24px;
-  --transition-fast: 0.15s ease;
-  --transition-normal: 0.25s ease;
-  --transition-slow: 0.4s ease;
+  --radius-2xl: 32px;
+  --radius-full: 9999px;
+
+  /* Transitions — Smooth and consistent */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Spacing scale */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Typography */
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+
+  /* Z-Index scale */
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 500;
+  --z-modal: 1000;
+  --z-toast: 2000;
 }
 
 /* Reset and Base */
@@ -52,11 +100,11 @@ html {
   scroll-behavior: smooth;
   scrollbar-gutter: stable;
   -webkit-tap-highlight-color: transparent;
+  font-size: 16px;
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
-               'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-body);
   background: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.6;
@@ -64,52 +112,76 @@ body {
   overflow-y: scroll;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.011em;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
+/* Selection styling */
+::selection {
+  background: rgba(255, 215, 0, 0.25);
+  color: var(--text-primary);
+}
+
+/* Focus visible ring */
+:focus-visible {
+  outline: 2px solid rgba(255, 215, 0, 0.5);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Light Mode ─────────────────────────────── */
 body.light-mode {
   --bg-primary: #f5f7fa;
   --bg-secondary: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.95);
-  --bg-input: #f0f3f8;
-  --bg-hover: #e8ecf2;
+  --bg-card: rgba(255, 255, 255, 0.92);
+  --bg-card-solid: #ffffff;
+  --bg-input: rgba(0, 0, 0, 0.03);
+  --bg-elevated: rgba(255, 255, 255, 0.96);
+  --bg-hover: rgba(0, 0, 0, 0.04);
   --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-tertiary: #64748b;
-  --border-color: rgba(0, 0, 0, 0.08);
-  --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-  --card-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.12);
-  --glass-bg: rgba(255, 255, 255, 0.8);
+  --text-secondary: #475569;
+  --text-tertiary: #94a3b8;
+  --border-color: rgba(0, 0, 0, 0.06);
+  --border-color-subtle: rgba(0, 0, 0, 0.03);
+  --border-color-strong: rgba(0, 0, 0, 0.1);
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06);
+  --card-shadow-hover: 0 4px 8px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.08);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
+  --gold-gradient-subtle: linear-gradient(135deg, rgba(255,215,0,0.08) 0%, rgba(218,165,32,0.02) 100%);
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --card-gradient: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%);
+  --shadow-inset: inset 0 1px 0 rgba(255,255,255,0.8);
 }
 
 body.light-mode .bg-animation {
-  opacity: 1;
+  opacity: 0.8;
 }
 
 body.light-mode .orb {
-  opacity: 0.35;
+  opacity: 0.2;
 }
 
 body.light-mode .orb-1 {
-  background: radial-gradient(circle, rgba(24, 119, 242, 0.35) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(24, 119, 242, 0.25) 0%, transparent 70%);
 }
 
 body.light-mode .orb-2 {
-  background: radial-gradient(circle, rgba(255, 215, 0, 0.35) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.25) 0%, transparent 70%);
 }
 
 body.light-mode .orb-3 {
-  background: radial-gradient(circle, rgba(255, 168, 0, 0.25) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 168, 0, 0.15) 0%, transparent 70%);
 }
 
 body.light-mode .grid-overlay {
-  opacity: 0.25;
+  opacity: 0.15;
   background-image:
-    linear-gradient(rgba(24, 119, 242, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(24, 119, 242, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(24, 119, 242, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(24, 119, 242, 0.03) 1px, transparent 1px);
 }
 
-/* === ANIMATED BACKGROUND === */
+/* ═══ ANIMATED BACKGROUND ═══════════════════════ */
 .bg-animation {
   position: fixed;
   top: 0;
@@ -138,43 +210,44 @@ body.light-mode .grid-overlay {
 .orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(100px);
-  opacity: 0.3;
-  animation: orbFloat 20s ease-in-out infinite;
+  filter: blur(120px);
+  opacity: 0.25;
+  animation: orbFloat 25s ease-in-out infinite;
+  will-change: transform;
 }
 
 .orb-1 {
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, #FFD700 0%, transparent 70%);
-  top: -200px;
+  width: 650px;
+  height: 650px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, transparent 70%);
+  top: -250px;
   right: -200px;
 }
 
 .orb-2 {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, #DAA520 0%, transparent 70%);
-  bottom: -100px;
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(218, 165, 32, 0.5) 0%, transparent 70%);
+  bottom: -150px;
   left: -100px;
-  animation-delay: -7s;
+  animation-delay: -8s;
 }
 
 .orb-3 {
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, #FFE55C 0%, transparent 70%);
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(255, 229, 92, 0.4) 0%, transparent 70%);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  animation-delay: -14s;
+  animation-delay: -16s;
 }
 
 @keyframes orbFloat {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(30px, -30px) scale(1.05); }
-  50% { transform: translate(-20px, 20px) scale(0.95); }
-  75% { transform: translate(-30px, -20px) scale(1.02); }
+  25% { transform: translate(40px, -40px) scale(1.08); }
+  50% { transform: translate(-30px, 30px) scale(0.92); }
+  75% { transform: translate(-40px, -25px) scale(1.04); }
 }
 
 .grid-overlay {
@@ -182,33 +255,61 @@ body.light-mode .grid-overlay {
   width: 100%;
   height: 100%;
   background-image: 
-    linear-gradient(rgba(255, 215, 0, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 215, 0, 0.03) 1px, transparent 1px);
-  background-size: 50px 50px;
+    linear-gradient(rgba(255, 215, 0, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 215, 0, 0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
   opacity: 0.5;
 }
 
-/* Content should be above background */
+/* Content layer */
 #root {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-base);
 }
 
-/* Scrollbar Styling */
+/* ─── Premium Scrollbar ──────────────────────── */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  transition: background 0.2s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--gold-dark);
+  background: rgba(255, 215, 0, 0.3);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+/* ─── Premium Utility Animations ─────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.2); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 215, 0, 0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes glow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(255,215,0,0.2)); }
+  50% { filter: drop-shadow(0 0 12px rgba(255,215,0,0.4)); }
 }

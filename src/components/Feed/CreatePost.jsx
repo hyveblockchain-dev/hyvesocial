@@ -3,6 +3,7 @@ import { useState, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import { compressImage } from '../../utils/imageCompression';
+import { CameraIcon, VideoIcon, SmileIcon, CloseIcon } from '../Icons/Icons';
 import './CreatePost.css';
 
 export default function CreatePost({ onPostCreated, groupId = null, contextLabel = '' }) {
@@ -131,7 +132,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
                 setImagePreview('');
               }}
             >
-              ✕
+              <CloseIcon size={14} />
             </button>
           </div>
         )}
@@ -147,7 +148,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
                 setVideoPreview('');
               }}
             >
-              ✕
+              <CloseIcon size={14} />
             </button>
           </div>
         )}
@@ -191,21 +192,21 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
               className="option-button"
               onClick={() => fileInputRef.current?.click()}
             >
-              📷 Photo
+              <CameraIcon size={16} /> Photo
             </button>
             <button
               type="button"
               className="option-button"
               onClick={() => setShowVideoInput((prev) => !prev)}
             >
-              🎥 Video
+              <VideoIcon size={16} /> Video
             </button>
             <button
               type="button"
               className="option-button"
               onClick={() => setShowEmojiPicker((prev) => !prev)}
             >
-              😊 Emoji
+              <SmileIcon size={16} /> Emoji
             </button>
 
             <label className="option-toggle">

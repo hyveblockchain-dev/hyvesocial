@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import { normalizeNotification } from '../../utils/notifications';
+import { BellIcon, CheckIcon, CloseIcon } from '../Icons/Icons';
 import './Notifications.css';
 
 export default function Notifications() {
@@ -238,7 +239,7 @@ export default function Notifications() {
 
       {visibleNotifications.length === 0 ? (
         <div className="no-notifications">
-          <p>🔔 No new notifications</p>
+          <p><BellIcon size={18} /> No new notifications</p>
         </div>
       ) : (
         <div className="notifications-list">
@@ -262,10 +263,10 @@ export default function Notifications() {
                     </p>
                     <div className="notification-actions">
                       <button className="btn-accept" onClick={() => handleAccept(request.id)}>
-                        ✓ Accept
+                        <CheckIcon size={14} /> Accept
                       </button>
                       <button className="btn-decline" onClick={() => handleDecline(request.id)}>
-                        ✕ Decline
+                        <CloseIcon size={14} /> Decline
                       </button>
                     </div>
                   </div>

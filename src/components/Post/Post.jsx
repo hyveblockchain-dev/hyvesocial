@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { parseDateValue, formatDate, formatDateTime } from '../../utils/date';
+import { ThumbsUpIcon, ChatIcon, ShareIcon, SmileIcon, CameraIcon, CloseIcon } from '../Icons/Icons';
 import api from '../../services/api';
 import './Post.css';
 
@@ -386,7 +387,7 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
                     {getReactionDisplay(commentReactions[comment.id]).label}
                   </>
                 ) : (
-                  <>👍 Like</>
+                  <><ThumbsUpIcon size={16} /> Like</>
                 )}
               </button>
               <div className="reaction-menu">
@@ -434,10 +435,10 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
                       setReplyEmojiOpen((prev) => ({ ...prev, [comment.id]: !prev[comment.id] }))
                     }
                   >
-                    😊
+                    <SmileIcon size={16} />
                   </button>
                   <label className="upload-btn">
-                    📷
+                    <CameraIcon size={16} />
                     <input
                       type="file"
                       accept="image/*"
@@ -509,7 +510,7 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
           </div>
         </Link>
         {isOwner && (
-          <button className="delete-button" onClick={handleDelete}>✕</button>
+          <button className="delete-button" onClick={handleDelete}><CloseIcon size={16} /></button>
         )}
       </div>
 
@@ -571,7 +572,7 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
           </div>
         </div>
         <button className="action-button" onClick={loadComments}>
-          💬 Comment
+          <ChatIcon size={16} /> Comment
         </button>
         <button
           className="action-button"
@@ -579,7 +580,7 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
           disabled={!isShareable}
           title={!isShareable ? 'Sharing disabled' : 'Share post'}
         >
-          📤 Share
+          <ShareIcon size={16} /> Share
         </button>
       </div>
 
@@ -605,10 +606,10 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
               />
               <div className="comment-actions">
                 <button type="button" className="emoji-btn" onClick={() => setShowCommentEmoji((prev) => !prev)}>
-                  😊
+                  <SmileIcon size={16} />
                 </button>
                 <label className="upload-btn">
-                  📷
+                  <CameraIcon size={16} />
                   <input
                     type="file"
                     accept="image/*"
