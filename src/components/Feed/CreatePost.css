@@ -214,6 +214,7 @@
 @media (max-width: 768px) {
   .create-post-box {
     padding: 16px;
+    border: 2px solid rgba(255, 215, 0, 0.18);
   }
 
   .create-post-header .user-avatar {
