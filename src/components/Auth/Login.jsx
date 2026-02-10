@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { setE2EESignature } from '../../utils/e2ee';
+import { IconShield, IconZap, IconUsers, IconLock, IconChat, IconGlobe } from '../Icons/Icons';
 import './Login.css';
 
 export default function Login() {
@@ -73,25 +74,18 @@ export default function Login() {
         <div className="login-hero">
           <div className="login-hero-content">
             <div className="login-brand">
-              <img src="/hyve-logo.svg" alt="Hyve" className="login-logo" />
+              <img src="/hyvelogo.png" alt="Hyve" className="login-logo" />
               <div>
                 <h1>Hyve Social</h1>
-                <p>Decentralized social, built for modern communities.</p>
+                <p>The decentralized social layer</p>
               </div>
             </div>
             <div className="login-hero-copy">
-              <h2>Connect. Share. Grow.</h2>
+              <h2>Your Community. Your Rules.</h2>
               <p>
-                A secure, wallet-powered social layer with private feeds, rich profiles, and real-time conversations.
+                A wallet-powered social platform with encrypted messaging, rich profiles, and real-time conversations — all owned by you.
               </p>
             </div>
-          </div>
-          <div className="login-hero-media">
-            <img
-              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80"
-              alt="Community meeting"
-              loading="lazy"
-            />
           </div>
         </div>
 
@@ -108,9 +102,16 @@ export default function Login() {
               onClick={handleConnect}
               disabled={loading}
             >
-              {loading ? 'Connecting...' : 'Connect with MetaMask'}
+              {loading ? (
+                <span className="connect-loading">
+                  <span className="connect-spinner"></span>
+                  Connecting...
+                </span>
+              ) : (
+                'Connect with MetaMask'
+              )}
             </button>
-            <p className="login-subtitle">Connect your wallet to get started on Hyve Social</p>
+            <p className="login-subtitle">Connect your wallet to get started</p>
           </div>
         ) : (
           <form className="register-form" onSubmit={handleRegister}>
@@ -139,28 +140,31 @@ export default function Login() {
 
         <div className="login-features">
           <div className="feature">
-            <img
-              src="https://images.unsplash.com/photo-1523961131990-5ea7c61b2107?auto=format&fit=crop&w=300&q=80"
-              alt="Fast onboarding"
-              loading="lazy"
-            />
-            <span>Fast onboarding</span>
+            <div className="feature-icon">
+              <IconShield size={22} />
+            </div>
+            <div className="feature-text">
+              <span className="feature-title">End-to-End Encrypted</span>
+              <span className="feature-desc">Messages secured by your wallet</span>
+            </div>
           </div>
           <div className="feature">
-            <img
-              src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=300&q=80"
-              alt="Secure access"
-              loading="lazy"
-            />
-            <span>Secure access</span>
+            <div className="feature-icon">
+              <IconZap size={22} />
+            </div>
+            <div className="feature-text">
+              <span className="feature-title">Instant Onboarding</span>
+              <span className="feature-desc">One click, no passwords needed</span>
+            </div>
           </div>
           <div className="feature">
-            <img
-              src="https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=300&q=80"
-              alt="Community focus"
-              loading="lazy"
-            />
-            <span>Community first</span>
+            <div className="feature-icon">
+              <IconUsers size={22} />
+            </div>
+            <div className="feature-text">
+              <span className="feature-title">Community First</span>
+              <span className="feature-desc">Groups, feeds &amp; real-time chat</span>
+            </div>
           </div>
         </div>
       </div>
