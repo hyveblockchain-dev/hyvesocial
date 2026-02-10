@@ -1050,12 +1050,6 @@ export default function Layout({ children }) {
 
       {/* Footer */}
       <footer className="page-footer">
-        <div className="footer-links">
-          <a href="#">About</a>
-          <a href="#">Help</a>
-          <a href="#">Terms</a>
-          <a href="#">Privacy</a>
-        </div>
         <p className="copyright">© 2026 Hyve Social</p>
       </footer>
     </div>
