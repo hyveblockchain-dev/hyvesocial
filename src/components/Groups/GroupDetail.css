@@ -309,6 +309,74 @@
   white-space: nowrap;
 }
 
+.group-invite-section {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.group-invite-section h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.group-invite-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.group-invite-input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.group-invite-input:focus {
+  border-color: var(--gold-primary);
+}
+
+.group-invite-results {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.group-invite-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.group-invite-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.group-invite-username {
+  font-weight: 800;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
 .group-members {
   display: flex;
   flex-direction: column;
@@ -427,6 +495,38 @@
   border: 1px solid var(--border-color);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.02);
+}
+
+.group-danger-zone {
+  border-color: rgba(220, 38, 38, 0.35);
+  background: rgba(220, 38, 38, 0.04);
+}
+
+.group-danger-zone h3 {
+  color: #ef4444;
+}
+
+.group-btn.danger-delete {
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  background: rgba(220, 38, 38, 0.85);
+  color: #fff;
+  border: 1px solid rgba(220, 38, 38, 0.5);
+  transition: all 0.2s ease;
+}
+
+.group-btn.danger-delete:hover {
+  background: rgba(220, 38, 38, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.group-btn.danger-delete:disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .group-admin-row {

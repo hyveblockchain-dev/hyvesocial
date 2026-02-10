@@ -556,7 +556,7 @@ export default function Layout({ children }) {
       {/* Header */}
       <header className="page-header">
         <Link to="/" className="logo" aria-label="Go to home">
-          <span className="logo-icon">⚡</span>
+          <img src="/hyvelogo.png" alt="Hyve" className="logo-icon-img" />
           <span className="logo-text">Hyve Social</span>
         </Link>
 

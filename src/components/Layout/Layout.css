@@ -36,6 +36,13 @@ body.light-mode .page-header {
   font-size: 26px;
 }
 
+.logo-icon-img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
 .logo-text {
   font-size: 22px;
   font-weight: 800;
@@ -901,6 +908,11 @@ body.light-mode .stat-num {
 
   .logo-icon {
     font-size: 22px;
+  }
+
+  .logo-icon-img {
+    width: 28px;
+    height: 28px;
   }
 
   .light-toggle-btn,

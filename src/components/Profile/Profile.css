@@ -51,6 +51,73 @@
   transform: translateY(-2px);
 }
 
+.cover-photo-actions {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.cover-photo-actions .edit-cover-btn {
+  position: static;
+}
+
+.remove-cover-btn {
+  padding: 10px 20px;
+  background: rgba(220, 38, 38, 0.75);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.25s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.remove-cover-btn:hover {
+  background: rgba(220, 38, 38, 0.95);
+  transform: translateY(-2px);
+}
+
+.remove-cover-btn.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.remove-avatar-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(220, 38, 38, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0;
+  line-height: 1;
+}
+
+.remove-avatar-btn:hover {
+  background: rgba(220, 38, 38, 1);
+  transform: scale(1.15);
+}
+
+.remove-avatar-btn.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 /* Profile Header */
 .profile-header {
   display: flex;

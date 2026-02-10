@@ -601,6 +601,44 @@ export default function Profile() {
     }
   }
 
+  async function handleRemoveProfilePicture() {
+    if (!confirm('Remove your profile picture? This cannot be undone.')) return;
+    try {
+      setUploading(true);
+      const result = await api.updateProfile({ profileImage: '', removeProfileImage: true });
+      if (result.user) {
+        setProfile(result.user);
+        setUser(result.user);
+      }
+      await loadProfile();
+      setProfileMessage('Profile picture removed.');
+    } catch (error) {
+      console.error('Remove profile picture error:', error);
+      setProfileMessage('Failed to remove profile picture.');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleRemoveCoverPhoto() {
+    if (!confirm('Remove your cover photo? This cannot be undone.')) return;
+    try {
+      setUploading(true);
+      const result = await api.updateProfile({ coverImage: '', removeCoverImage: true });
+      if (result.user) {
+        setProfile(result.user);
+        setUser(result.user);
+      }
+      await loadProfile();
+      setProfileMessage('Cover photo removed.');
+    } catch (error) {
+      console.error('Remove cover photo error:', error);
+      setProfileMessage('Failed to remove cover photo.');
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function handleUpdateCoverPhoto(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -739,16 +777,27 @@ export default function Profile() {
           <div className="cover-placeholder"></div>
         )}
         {isOwnProfile && (
-          <label className={`edit-cover-btn ${uploading ? 'disabled' : ''}`}>
-            {uploading ? '⏳ Uploading...' : '📷 Change Cover'}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleUpdateCoverPhoto}
-              style={{ display: 'none' }}
-              disabled={uploading}
-            />
-          </label>
+          <div className="cover-photo-actions">
+            <label className={`edit-cover-btn ${uploading ? 'disabled' : ''}`}>
+              {uploading ? '⏳ Uploading...' : '📷 Change Cover'}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleUpdateCoverPhoto}
+                style={{ display: 'none' }}
+                disabled={uploading}
+              />
+            </label>
+            {profile.coverImage && (
+              <button
+                className={`remove-cover-btn ${uploading ? 'disabled' : ''}`}
+                onClick={handleRemoveCoverPhoto}
+                disabled={uploading}
+              >
+                🗑️ Remove Cover
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -763,16 +812,28 @@ export default function Profile() {
             </div>
           )}
           {isOwnProfile && (
-            <label className={`edit-avatar-btn ${uploading ? 'disabled' : ''}`}>
-              {uploading ? '⏳' : '📷'}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleUpdateProfilePicture}
-                style={{ display: 'none' }}
-                disabled={uploading}
-              />
-            </label>
+            <>
+              <label className={`edit-avatar-btn ${uploading ? 'disabled' : ''}`}>
+                {uploading ? '⏳' : '📷'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleUpdateProfilePicture}
+                  style={{ display: 'none' }}
+                  disabled={uploading}
+                />
+              </label>
+              {profile.profileImage && (
+                <button
+                  className={`remove-avatar-btn ${uploading ? 'disabled' : ''}`}
+                  onClick={handleRemoveProfilePicture}
+                  disabled={uploading}
+                  title="Remove profile picture"
+                >
+                  ✕
+                </button>
+              )}
+            </>
           )}
         </div>
 

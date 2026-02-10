@@ -915,6 +915,46 @@ export async function getGroupBans(groupId) {
   return response.json();
 }
 
+export async function deleteGroup(groupId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  const contentType = response.headers.get('content-type') || '';
+  if (!response.ok) {
+    if (contentType.includes('application/json')) {
+      try { return await response.json(); } catch { /* fall through */ }
+    }
+    return { error: 'Failed to delete group' };
+  }
+  if (!contentType.includes('application/json')) return { success: true };
+  return response.json();
+}
+
+export async function inviteToGroup(groupId, username) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/invite`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ username })
+  });
+  const contentType = response.headers.get('content-type') || '';
+  if (!response.ok) {
+    if (contentType.includes('application/json')) {
+      try { return await response.json(); } catch { /* fall through */ }
+    }
+    return { error: 'Failed to invite user' };
+  }
+  if (!contentType.includes('application/json')) return { success: true };
+  return response.json();
+}
+
 export async function getPresence() {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_URL}/api/presence`, {
@@ -1268,6 +1308,8 @@ export default {
   banGroupMember,
   unbanGroupMember,
   getGroupBans,
+  deleteGroup,
+  inviteToGroup,
 
   // Chat/Messages
   getMessages,

@@ -42,6 +42,11 @@ export default function GroupDetail() {
   const [coverPreview, setCoverPreview] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [bannedMembers, setBannedMembers] = useState([]);
+  const [inviteQuery, setInviteQuery] = useState('');
+  const [inviteResults, setInviteResults] = useState([]);
+  const [inviteSearching, setInviteSearching] = useState(false);
+  const [inviteSent, setInviteSent] = useState(new Set());
+  const inviteTimerRef = useRef(null);
 
   const myUsername = (user?.username || '').toLowerCase();
 
@@ -319,6 +324,67 @@ export default function GroupDetail() {
       if (adminEnabled) await refreshRequests(groupId);
     } catch {
       setNotice('Failed to join group.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleDeleteGroup() {
+    if (!confirm('Are you sure you want to permanently delete this group? All posts, members, and data will be lost. This cannot be undone.')) return;
+    try {
+      setBusy(true);
+      setNotice('');
+      const data = await api.deleteGroup(groupId);
+      if (data?.error) {
+        setNotice(data.error);
+        return;
+      }
+      navigate('/groups');
+    } catch {
+      setNotice('Failed to delete group.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function handleInviteSearch(value) {
+    setInviteQuery(value);
+    if (inviteTimerRef.current) clearTimeout(inviteTimerRef.current);
+    if (!value.trim()) {
+      setInviteResults([]);
+      return;
+    }
+    inviteTimerRef.current = setTimeout(async () => {
+      try {
+        setInviteSearching(true);
+        const data = await api.searchUsers(value.trim());
+        const users = data.users || data || [];
+        const memberSet = new Set(members.map((m) => (m.username || '').toLowerCase()));
+        const filtered = users.filter(
+          (u) => !(memberSet.has((u.username || '').toLowerCase())) && (u.username || '').toLowerCase() !== myUsername
+        );
+        setInviteResults(filtered.slice(0, 8));
+      } catch {
+        setInviteResults([]);
+      } finally {
+        setInviteSearching(false);
+      }
+    }, 350);
+  }
+
+  async function handleInviteUser(username) {
+    try {
+      setBusy(true);
+      setNotice('');
+      const data = await api.inviteToGroup(groupId, username);
+      if (data?.error) {
+        setNotice(data.error);
+        return;
+      }
+      setInviteSent((prev) => new Set(prev).add(username.toLowerCase()));
+      setNotice(`Invitation sent to ${username}.`);
+    } catch {
+      setNotice('Failed to send invitation.');
     } finally {
       setBusy(false);
     }
@@ -908,6 +974,55 @@ export default function GroupDetail() {
             <div className="group-muted">{memberCount} total</div>
           </div>
 
+          {isMember && (
+            <div className="group-invite-section">
+              <h3>Invite people</h3>
+              <div className="group-invite-search">
+                <input
+                  type="text"
+                  placeholder="Search by username..."
+                  value={inviteQuery}
+                  onChange={(e) => handleInviteSearch(e.target.value)}
+                  disabled={busy}
+                  className="group-invite-input"
+                />
+                {inviteSearching && <span className="group-muted">Searching...</span>}
+              </div>
+              {inviteResults.length > 0 && (
+                <div className="group-invite-results">
+                  {inviteResults.map((u) => {
+                    const uName = u.username || u.name || '';
+                    const alreadySent = inviteSent.has(uName.toLowerCase());
+                    return (
+                      <div key={uName} className="group-invite-item">
+                        <div className="group-invite-user">
+                          <div className="group-member-avatar" aria-hidden="true">
+                            {u.profileImage || u.profile_image ? (
+                              <img className="group-member-avatar-img" src={u.profileImage || u.profile_image} alt="" />
+                            ) : (
+                              (uName || '?').slice(0, 1).toUpperCase()
+                            )}
+                          </div>
+                          <span className="group-invite-username">{uName}</span>
+                        </div>
+                        <button
+                          className={`group-btn tiny ${alreadySent ? 'secondary' : ''}`}
+                          onClick={() => handleInviteUser(uName)}
+                          disabled={busy || alreadySent}
+                        >
+                          {alreadySent ? 'Invited' : 'Invite'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {inviteQuery.trim() && !inviteSearching && inviteResults.length === 0 && (
+                <div className="group-muted" style={{ marginTop: 8 }}>No users found.</div>
+              )}
+            </div>
+          )}
+
           {members.length === 0 ? (
             <div className="group-muted">No members to show.</div>
           ) : (
@@ -1259,6 +1374,22 @@ export default function GroupDetail() {
               </div>
             )}
           </div>
+
+          {isOwner && (
+            <div className="group-admin-settings group-danger-zone">
+              <h3>Danger zone</h3>
+              <div className="group-muted">Permanently delete this group, including all posts, members, and data. This action cannot be undone.</div>
+              <div className="group-admin-row">
+                <button
+                  className="group-btn danger-delete"
+                  onClick={handleDeleteGroup}
+                  disabled={busy}
+                >
+                  {busy ? 'Deleting...' : '🗑️ Delete group'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
