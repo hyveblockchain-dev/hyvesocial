@@ -87,7 +87,7 @@ export default function Profile() {
     return resolved === userName;
   })();
   const friendCount = profile?.friendCount || profile?.friendsCount || friends.length || 0;
-  const canViewPrivateContent = isOwnProfile || friendshipStatus === 'friends';
+  const canViewPrivateContent = isOwnProfile || friendshipStatus === 'friends' || isAdmin;
   const currentPhoto = selectedAlbum?.photos?.[lightboxIndex];
   const isProfilePhotoAlbum = /profile/i.test(selectedAlbum?.name || selectedAlbum?.title || '');
   const isCoverPhotoAlbum = /cover/i.test(selectedAlbum?.name || selectedAlbum?.title || '');
