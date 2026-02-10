@@ -890,7 +890,8 @@ body.light-mode .stat-num {
   .mobile-nav-item {
     flex: 1;
     max-width: 68px;
-    height: 46px;
+    height: 48px;
+    min-height: 48px;
     padding: 0 8px;
     border-radius: 14px;
     display: inline-flex;
@@ -901,23 +902,26 @@ body.light-mode .stat-num {
     background: transparent;
     border: none;
     font-size: 20px;
-    transition: all var(--transition-fast);
     cursor: pointer;
     position: relative;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
     -webkit-user-select: none;
+    /* No transition on tap — instant feedback */
+  }
+
+  .mobile-nav-item > * {
+    pointer-events: none;
   }
 
   .mobile-nav-item::before {
     content: '';
     position: absolute;
-    inset: 4px;
+    inset: 2px;
     border-radius: 14px;
     background: transparent;
-    transition: background 0.15s ease;
-    z-index: -1;
+    pointer-events: none;
   }
 
   .mobile-nav-item:hover {
@@ -937,8 +941,8 @@ body.light-mode .stat-num {
   }
 
   .mobile-nav-item:active {
-    transform: scale(0.92);
-    transition: transform 0.05s ease;
+    transform: scale(0.90);
+    color: var(--gold-primary);
   }
 
   .mobile-nav-item:active::before {
