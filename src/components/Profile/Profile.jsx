@@ -30,6 +30,10 @@ export default function Profile() {
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [blockedUsers, setBlockedUsers] = useState([]);
   const [blockedLoading, setBlockedLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showBanConfirm, setShowBanConfirm] = useState(false);
+  const [banReason, setBanReason] = useState('');
+  const [banning, setBanning] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -132,6 +136,8 @@ export default function Profile() {
     } else {
       setBlockedUsers([]);
     }
+    // Check admin status
+    api.checkIsAdmin().then(admin => setIsAdmin(admin)).catch(() => {});
   }, [isOwnProfile]);
 
   useEffect(() => {
@@ -479,6 +485,23 @@ export default function Profile() {
       console.error('Delete account error:', error);
       alert('Failed to delete account. Please try again.');
       setDeletingAccount(false);
+    }
+  }
+
+  async function handleBanDeleteUser() {
+    if (!profile?.walletAddress) return;
+    try {
+      setBanning(true);
+      const result = await api.adminBanDeleteUser(profile.walletAddress, banReason || 'Banned by admin');
+      alert(result.message || 'User has been permanently banned and deleted.');
+      setShowBanConfirm(false);
+      setBanReason('');
+      navigate('/');
+    } catch (error) {
+      console.error('Ban user error:', error);
+      alert(error.message || 'Failed to ban user');
+    } finally {
+      setBanning(false);
     }
   }
 
@@ -1063,6 +1086,15 @@ export default function Profile() {
             >
               💬 Message
             </button>
+            {isAdmin && (
+              <button
+                className="btn-ban"
+                onClick={() => setShowBanConfirm(true)}
+                disabled={actionLoading}
+              >
+                🔨 Ban & Delete
+              </button>
+            )}
           </div>
         )}
         {isOwnProfile && (
@@ -1791,6 +1823,53 @@ export default function Profile() {
         )}
 
       </div>
+
+      {/* Admin Ban & Delete Confirmation Modal */}
+      {showBanConfirm && (
+        <div className="report-modal-overlay" onClick={() => setShowBanConfirm(false)}>
+          <div className="report-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '460px' }}>
+            <div className="report-modal-header">
+              <h3>🔨 Ban & Delete User</h3>
+              <button onClick={() => setShowBanConfirm(false)}>✕</button>
+            </div>
+            <div className="report-modal-body">
+              <p style={{ marginBottom: '12px', color: 'var(--text-primary)' }}>
+                You are about to <strong style={{ color: '#e53e3e' }}>permanently ban</strong> and delete <strong>{profile?.username || 'this user'}</strong>.
+              </p>
+              <p style={{ marginBottom: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                This will erase all their posts, comments, stories, albums, and profile data. Their wallet address will be permanently blocked from creating a new account.
+              </p>
+              <textarea
+                placeholder="Reason for banning (optional)..."
+                value={banReason}
+                onChange={(e) => setBanReason(e.target.value)}
+                rows="2"
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  border: '1px solid var(--border-color, rgba(255,255,255,0.1))',
+                  borderRadius: '10px',
+                  background: 'var(--bg-secondary, rgba(255,255,255,0.03))',
+                  color: 'var(--text-primary)',
+                  fontSize: '14px',
+                  resize: 'vertical',
+                  fontFamily: 'inherit',
+                }}
+              />
+            </div>
+            <div className="report-modal-footer">
+              <button className="btn-secondary" onClick={() => { setShowBanConfirm(false); setBanReason(''); }}>Cancel</button>
+              <button
+                className="btn-danger"
+                onClick={handleBanDeleteUser}
+                disabled={banning}
+              >
+                {banning ? 'Banning...' : 'Permanently Ban & Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

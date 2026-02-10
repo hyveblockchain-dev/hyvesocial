@@ -452,6 +452,22 @@
   background: rgba(245, 158, 11, 0.1);
 }
 
+.btn-ban {
+  background: #e53e3e;
+  color: white;
+  border: 1px solid #c53030;
+  font-weight: 600;
+}
+
+.btn-ban:hover {
+  background: #c53030;
+}
+
+.btn-ban:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-message {
   background: var(--bg-card);
   color: var(--text-primary);

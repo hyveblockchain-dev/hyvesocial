@@ -25,7 +25,9 @@ export async function register(username, walletAddress, signature) {
     },
     body: JSON.stringify({ address: walletAddress, signature, username }),
   });
-  return response.json();
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Registration failed');
+  return data;
 }
 
 export async function login(walletAddress, signature) {
@@ -36,7 +38,9 @@ export async function login(walletAddress, signature) {
     },
     body: JSON.stringify({ address: walletAddress, signature }),
   });
-  return response.json();
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Login failed');
+  return data;
 }
 
 export async function getCurrentUser() {
@@ -1335,6 +1339,52 @@ export async function getReportCounts() {
 }
 
 // ========================================
+// ADMIN: BAN & USER MANAGEMENT
+// ========================================
+
+export async function adminBanDeleteUser(walletAddress, reason) {
+  const response = await fetch(`${API_URL}/api/admin/users/${walletAddress}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+    body: JSON.stringify({ reason }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to ban user');
+  return data;
+}
+
+export async function adminCheckBanned(walletAddress) {
+  const response = await fetch(`${API_URL}/api/admin/banned/${walletAddress}`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to check ban status');
+  return data;
+}
+
+export async function adminGetBannedWallets() {
+  const response = await fetch(`${API_URL}/api/admin/banned`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get banned wallets');
+  return data;
+}
+
+export async function adminUnbanWallet(walletAddress) {
+  const response = await fetch(`${API_URL}/api/admin/banned/${walletAddress}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to unban wallet');
+  return data;
+}
+
+// ========================================
 // DEFAULT EXPORT
 // ========================================
 
@@ -1442,4 +1492,10 @@ export default {
   getReportDetail,
   actionReport,
   getReportCounts,
+
+  // Admin: Ban & User Management
+  adminBanDeleteUser,
+  adminCheckBanned,
+  adminGetBannedWallets,
+  adminUnbanWallet,
 };
