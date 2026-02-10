@@ -9,10 +9,11 @@ let model = null;
 let modelPromise = null;
 
 // Thresholds — an image is blocked if ANY of these are exceeded
+// Kept aggressive to catch suggestive/implied content
 const THRESHOLDS = {
-  Porn: 0.25,
-  Hentai: 0.25,
-  Sexy: 0.60
+  Porn: 0.20,
+  Hentai: 0.20,
+  Sexy: 0.35
 };
 
 // How many frames to sample from animated GIFs
