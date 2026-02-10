@@ -257,3 +257,49 @@
     padding: 12px 16px;
   }
 }
+
+/* ─── Light Mode ─────────────────────────────── */
+body.light-mode .discover-page {
+  color: #0f172a;
+}
+
+body.light-mode .discover-header h1 {
+  color: #0f172a;
+}
+
+body.light-mode .discover-header p {
+  color: #64748b;
+}
+
+body.light-mode .discover-search input {
+  background: rgba(0, 0, 0, 0.03);
+  color: #0f172a;
+}
+
+body.light-mode .section-header h2 {
+  color: #0f172a;
+}
+
+body.light-mode .user-card {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+body.light-mode .user-card:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+body.light-mode .user-name {
+  color: #0f172a;
+}
+
+body.light-mode .user-bio {
+  color: #64748b;
+}
+
+body.light-mode .friend-badge {
+  color: #b8860b;
+}
+
+body.light-mode .discover-empty {
+  color: #64748b;
+}

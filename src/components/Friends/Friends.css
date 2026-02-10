@@ -604,3 +604,53 @@
     border-radius: 0;
   }
 }
+
+/* ─── Light Mode ─────────────────────────────── */
+body.light-mode .friends-container {
+  color: #0f172a;
+}
+
+body.light-mode .friends-header h2 {
+  color: #0f172a;
+}
+
+body.light-mode .friend-card {
+  background: #ffffff;
+}
+
+body.light-mode .friend-name {
+  color: #0f172a;
+}
+
+body.light-mode .friend-status {
+  color: #64748b;
+}
+
+body.light-mode .friend-actions button {
+  color: #475569;
+}
+
+body.light-mode .chat-modal {
+  background: #ffffff;
+}
+
+body.light-mode .chat-modal-user h4 {
+  color: #0f172a;
+}
+
+body.light-mode .chat-close {
+  color: #475569;
+}
+
+body.light-mode .chat-empty {
+  color: #94a3b8;
+}
+
+body.light-mode .chat-modal-footer input {
+  background: rgba(0, 0, 0, 0.04);
+  color: #0f172a;
+}
+
+body.light-mode .chat-modal-footer input::placeholder {
+  color: #94a3b8;
+}

@@ -1374,3 +1374,62 @@ body.light-mode .page-footer {
     font-size: 18px;
   }
 }
+
+/* ─── Light Mode Text Fixes ──────────────────── */
+body.light-mode .user-dropdown {
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+body.light-mode .user-dropdown a,
+body.light-mode .user-dropdown button {
+  color: #0f172a;
+}
+
+body.light-mode .user-dropdown a:hover,
+body.light-mode .user-dropdown button:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #b8860b;
+}
+
+body.light-mode .notification-dropdown {
+  background: #ffffff;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+body.light-mode .notification-dropdown-header {
+  color: #0f172a;
+}
+
+body.light-mode .widget {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+body.light-mode .widget h3 {
+  color: #0f172a;
+}
+
+body.light-mode .suggested-user-name {
+  color: #0f172a;
+}
+
+body.light-mode .nav-item {
+  color: #475569;
+}
+
+body.light-mode .profile-card .profile-name {
+  color: #0f172a;
+}
+
+body.light-mode .stat-label {
+  color: #64748b;
+}
+
+body.light-mode .friends-list-title {
+  color: #64748b;
+}
+
+body.light-mode .page-footer {
+  color: #64748b;
+}

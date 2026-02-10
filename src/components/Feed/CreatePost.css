@@ -281,3 +281,32 @@
     font-size: 14px;
   }
 }
+
+/* ─── Light Mode ───────────────────────────────────────── */
+body.light-mode .create-post-box {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+body.light-mode .create-post-box textarea {
+  background: rgba(0, 0, 0, 0.03);
+  color: #0f172a;
+}
+
+body.light-mode .create-post-box textarea::placeholder {
+  color: #94a3b8;
+}
+
+body.light-mode .create-post-header h3 {
+  color: #475569;
+}
+
+body.light-mode .option-button {
+  color: #475569;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+body.light-mode .option-button:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #0f172a;
+}

@@ -442,3 +442,13 @@
     font-size: 14px;
   }
 }
+
+/* ─── Light Mode ───────────────────────────────────────── */
+body.light-mode .empty-feed {
+  background: #ffffff;
+  color: #475569;
+}
+
+body.light-mode .story-viewer-text {
+  color: #0f172a;
+}

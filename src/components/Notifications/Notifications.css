@@ -263,3 +263,50 @@
     font-size: 13px;
   }
 }
+
+/* ─── Light Mode ─────────────────────────────── */
+body.light-mode .notifications-container {
+  color: #0f172a;
+}
+
+body.light-mode .notifications-header h2 {
+  color: #0f172a;
+}
+
+body.light-mode .notifications-subtitle {
+  color: #64748b;
+}
+
+body.light-mode .notifications-tabs {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+body.light-mode .notifications-tabs .tab {
+  color: #475569;
+}
+
+body.light-mode .notifications-tabs .tab:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+body.light-mode .notifications-tabs .tab.active {
+  color: #b8860b;
+  background: rgba(184, 134, 11, 0.08);
+}
+
+body.light-mode .notification-card {
+  background: #ffffff;
+}
+
+body.light-mode .notification-content p {
+  color: #0f172a;
+}
+
+body.light-mode .notification-meta {
+  color: #64748b;
+}
+
+body.light-mode .no-notifications,
+body.light-mode .notifications-loading {
+  color: #64748b;
+}

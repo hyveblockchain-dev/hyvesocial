@@ -892,3 +892,100 @@
     width: 100%;
   }
 }
+
+/* ─── Light Mode ───────────────────────────────────────── */
+body.light-mode .group-page {
+  color: #0f172a;
+}
+
+body.light-mode .group-title {
+  color: #0f172a;
+}
+
+body.light-mode .group-subtitle {
+  color: #64748b;
+}
+
+body.light-mode .group-description {
+  color: #475569;
+}
+
+body.light-mode .group-panel {
+  background: #ffffff;
+}
+
+body.light-mode .group-panel h2,
+body.light-mode .group-panel h3 {
+  color: #0f172a;
+}
+
+body.light-mode .group-btn.secondary {
+  background: rgba(0, 0, 0, 0.04);
+  color: #475569;
+}
+
+body.light-mode .group-member-chip {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+body.light-mode .group-member-chip-name {
+  color: #0f172a;
+}
+
+body.light-mode .group-invite-section {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+body.light-mode .group-invite-item,
+body.light-mode .group-member,
+body.light-mode .group-request {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+body.light-mode .group-admin-settings {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+body.light-mode .group-about-item {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+body.light-mode .group-pending-item {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+body.light-mode .group-tab {
+  color: #475569;
+}
+
+body.light-mode .group-tab.active {
+  color: #0f172a;
+}
+
+body.light-mode .group-muted {
+  color: #64748b;
+}
+
+body.light-mode .group-status-badge.pending {
+  color: #2563eb;
+}
+
+body.light-mode .group-status-badge.approved {
+  color: #16a34a;
+}
+
+body.light-mode .group-status-badge.rejected {
+  color: #dc2626;
+}
+
+body.light-mode .group-page.error {
+  color: #dc2626;
+}
+
+body.light-mode .group-btn.danger {
+  color: #dc2626;
+}
+
+body.light-mode .badge.danger {
+  color: #dc2626;
+}

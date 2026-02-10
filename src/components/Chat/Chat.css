@@ -415,3 +415,78 @@
     font-size: 12px;
   }
 }
+
+/* ─── Light Mode ─────────────────────────────── */
+body.light-mode .chat-container {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+body.light-mode .chat-header {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+body.light-mode .chat-header h2 {
+  color: #0f172a;
+}
+
+body.light-mode .close-button {
+  background: rgba(0, 0, 0, 0.05);
+  color: #475569;
+}
+
+body.light-mode .close-button:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .chat-search input {
+  background: rgba(0, 0, 0, 0.03);
+  color: #0f172a;
+}
+
+body.light-mode .conversation-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+body.light-mode .conversation-info h4 {
+  color: #0f172a;
+}
+
+body.light-mode .message-content {
+  background: rgba(0, 0, 0, 0.05);
+  color: #0f172a;
+}
+
+body.light-mode .emoji-toggle {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode .emoji-toggle:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .chat-emoji-picker {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+body.light-mode .emoji-option {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+body.light-mode .emoji-option:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .chat-input {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+body.light-mode .chat-input input {
+  background: rgba(0, 0, 0, 0.03);
+  color: #0f172a;
+}
+
+body.light-mode .no-conversations,
+body.light-mode .chat-loading {
+  color: #64748b;
+}

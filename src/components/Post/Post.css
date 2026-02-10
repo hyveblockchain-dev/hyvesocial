@@ -597,3 +597,70 @@
     font-size: 18px;
   }
 }
+
+/* ─── Light Mode ─────────────────────────────── */
+body.light-mode .post-card {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+body.light-mode .author-name {
+  color: #0f172a;
+}
+
+body.light-mode .post-time {
+  color: #64748b;
+}
+
+body.light-mode .post-content {
+  color: #1e293b;
+}
+
+body.light-mode .post-stats {
+  color: #64748b;
+}
+
+body.light-mode .action-button {
+  color: #475569;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+body.light-mode .action-button:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+
+body.light-mode .action-button.liked {
+  color: #b8860b;
+  background: rgba(184, 134, 11, 0.08);
+}
+
+body.light-mode .comment-author {
+  color: #0f172a;
+}
+
+body.light-mode .comment-time {
+  color: #64748b;
+}
+
+body.light-mode .comment-content p {
+  color: #1e293b;
+}
+
+body.light-mode .add-comment input {
+  background: rgba(0, 0, 0, 0.03);
+  color: #0f172a;
+}
+
+body.light-mode .delete-button {
+  color: #94a3b8;
+}
+
+body.light-mode .delete-button:hover {
+  color: #ef4444;
+}
+
+body.light-mode .reaction-menu {
+  background: #ffffff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}

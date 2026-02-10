@@ -1467,3 +1467,86 @@
   flex: 0;
   white-space: nowrap;
 }
+
+/* ─── Light Mode ─────────────────────────────── */
+body.light-mode .profile-page {
+  color: #0f172a;
+}
+
+body.light-mode .profile-info h1 {
+  color: #0f172a;
+}
+
+body.light-mode .profile-bio {
+  color: #475569;
+}
+
+body.light-mode .profile-stats {
+  color: #0f172a;
+}
+
+body.light-mode .profile-stat-label {
+  color: #64748b;
+}
+
+body.light-mode .tab {
+  color: #475569;
+}
+
+body.light-mode .tab.active {
+  color: #0f172a;
+}
+
+body.light-mode .profile-card {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+body.light-mode .profile-card h2,
+body.light-mode .profile-card h3 {
+  color: #0f172a;
+}
+
+body.light-mode .profile-card-text {
+  color: #475569;
+}
+
+body.light-mode .profile-card-muted {
+  color: #64748b;
+}
+
+body.light-mode .profile-details-list dt {
+  color: #64748b;
+}
+
+body.light-mode .profile-details-list dd {
+  color: #0f172a;
+}
+
+body.light-mode .profile-wallet {
+  color: #475569;
+}
+
+body.light-mode .friend-name {
+  color: #0f172a;
+}
+
+body.light-mode .album-info h3 {
+  color: #0f172a;
+}
+
+body.light-mode .empty-state-title {
+  color: #475569;
+}
+
+body.light-mode .danger-zone-info h4 {
+  color: #dc2626;
+}
+
+body.light-mode .danger-zone-info p {
+  color: #64748b;
+}
+
+body.light-mode .blocked-username {
+  color: #0f172a;
+}

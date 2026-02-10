@@ -443,3 +443,59 @@
     padding: 18px;
   }
 }
+
+/* ─── Light Mode ───────────────────────────────────────── */
+body.light-mode .groups-page {
+  color: #0f172a;
+}
+
+body.light-mode .groups-title {
+  color: #0f172a;
+}
+
+body.light-mode .groups-subtitle {
+  color: #64748b;
+}
+
+body.light-mode .groups-tab {
+  background: rgba(0, 0, 0, 0.03);
+  color: #475569;
+}
+
+body.light-mode .groups-tab.active {
+  color: #0f172a;
+}
+
+body.light-mode .groups-search input {
+  background: rgba(0, 0, 0, 0.03);
+  color: #0f172a;
+}
+
+body.light-mode .groups-secondary {
+  background: rgba(0, 0, 0, 0.03);
+  color: #475569;
+}
+
+body.light-mode .group-card {
+  background: #ffffff;
+}
+
+body.light-mode .group-content h3 {
+  color: #0f172a;
+}
+
+body.light-mode .group-content p {
+  color: #64748b;
+}
+
+body.light-mode .groups-error {
+  color: #dc2626;
+}
+
+body.light-mode .groups-create-header h2 {
+  color: #0f172a;
+}
+
+body.light-mode .groups-create label {
+  color: #475569;
+}
