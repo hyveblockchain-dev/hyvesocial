@@ -604,6 +604,10 @@ body.light-mode .post-card {
   color: #0f172a;
 }
 
+body.light-mode .post-author {
+  color: #0f172a;
+}
+
 body.light-mode .author-name {
   color: #0f172a;
 }

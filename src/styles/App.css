@@ -214,6 +214,14 @@ a:hover {
   color: var(--gold-light);
 }
 
+body.light-mode a {
+  color: #b8860b;
+}
+
+body.light-mode a:hover {
+  color: #996515;
+}
+
 /* ─── Cards & Surfaces ─────────────────────────── */
 .card,
 .post-card,

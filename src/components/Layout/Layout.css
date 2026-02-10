@@ -1414,6 +1414,18 @@ body.light-mode .suggested-user-name {
   color: #0f172a;
 }
 
+body.light-mode .suggested-name {
+  color: #0f172a;
+}
+
+body.light-mode .suggested-user {
+  color: #0f172a;
+}
+
+body.light-mode .suggested-user:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
 body.light-mode .nav-item {
   color: #475569;
 }
