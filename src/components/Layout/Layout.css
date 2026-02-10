@@ -1268,6 +1268,12 @@ body.light-mode .widget h3 {
   z-index: 100;
 }
 
+body.light-mode .page-footer {
+  background: rgba(255, 255, 255, 0.92);
+  border-top-color: rgba(0, 0, 0, 0.06);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.04);
+}
+
 .footer-links {
   display: flex;
   gap: 20px;
