@@ -564,6 +564,16 @@ export default function GroupDetail() {
     }
     try {
       setBusy(true);
+      setNotice('Scanning image...');
+
+      // NSFW check
+      const { checkImageNSFW } = await import('../../utils/nsfwCheck');
+      const nsfwResult = await checkImageNSFW(file);
+      if (!nsfwResult.safe) {
+        setNotice(nsfwResult.reason);
+        return;
+      }
+
       setNotice('Uploading cover photo...');
       const compressedFile = await compressImage(file, 2, 1920);
       const previewBase64 = await new Promise((resolve, reject) => {
@@ -603,6 +613,16 @@ export default function GroupDetail() {
     }
     try {
       setBusy(true);
+      setNotice('Scanning image...');
+
+      // NSFW check
+      const { checkImageNSFW } = await import('../../utils/nsfwCheck');
+      const nsfwResult = await checkImageNSFW(file);
+      if (!nsfwResult.safe) {
+        setNotice(nsfwResult.reason);
+        return;
+      }
+
       setNotice('Uploading avatar...');
       const compressedFile = await compressImage(file, 2, 1024);
       const previewBase64 = await new Promise((resolve, reject) => {

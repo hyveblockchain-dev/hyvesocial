@@ -14,6 +14,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
   const [imagePreview, setImagePreview] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [allowShare, setAllowShare] = useState(true);
+  const [scanning, setScanning] = useState(false);
   const fileInputRef = useRef(null);
   const { user } = useAuth();
   const displayName = user?.username || 'there';
@@ -124,6 +125,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
           </div>
         )}
 
+        {scanning && <div className="inline-info" style={{color:'var(--gold-primary)',padding:'8px',fontSize:'13px'}}>Scanning image for safety...</div>}
         {error && <div className="inline-error">{error}</div>}
 
         <div className="create-post-actions">
@@ -185,12 +187,25 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
           type="file"
           accept="image/*"
           style={{ display: 'none' }}
-          onChange={(e) => {
+          onChange={async (e) => {
             const file = e.target.files?.[0];
             if (!file) return;
             if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
               setError(`Image too large. Max ${MAX_IMAGE_MB}MB.`);
               return;
+            }
+            setScanning(true);
+            setError('');
+            try {
+              const { checkImageNSFW } = await import('../../utils/nsfwCheck');
+              const result = await checkImageNSFW(file);
+              if (!result.safe) {
+                setError(result.reason);
+                e.target.value = '';
+                return;
+              }
+            } finally {
+              setScanning(false);
             }
             setImageFile(file);
             setImagePreview(URL.createObjectURL(file));

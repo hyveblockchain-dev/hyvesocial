@@ -501,6 +501,14 @@ export default function Profile() {
 
     try {
       setUploading(true);
+
+      // NSFW check
+      const { checkImageNSFW } = await import('../../utils/nsfwCheck');
+      const nsfwResult = await checkImageNSFW(selectedFile);
+      if (!nsfwResult.safe) {
+        alert(nsfwResult.reason);
+        return;
+      }
       
       // Compress image before upload
       const compressedFile = await compressImage(selectedFile, 2, 1920);
@@ -649,6 +657,16 @@ export default function Profile() {
 
     try {
       setUploading(true);
+      setProfileMessage('Scanning image...');
+
+      // NSFW check
+      const { checkImageNSFW } = await import('../../utils/nsfwCheck');
+      const nsfwResult = await checkImageNSFW(file);
+      if (!nsfwResult.safe) {
+        setProfileMessage(nsfwResult.reason);
+        e.target.value = '';
+        return;
+      }
       
       // Compress image before upload
       const compressedFile = await compressImage(file, 2, 1920);
@@ -725,6 +743,16 @@ export default function Profile() {
 
     try {
       setUploading(true);
+      setProfileMessage('Scanning image...');
+
+      // NSFW check
+      const { checkImageNSFW: checkNSFW } = await import('../../utils/nsfwCheck');
+      const nsfwResult = await checkNSFW(file);
+      if (!nsfwResult.safe) {
+        setProfileMessage(nsfwResult.reason);
+        e.target.value = '';
+        return;
+      }
       
       // Compress image before upload
       const compressedFile = await compressImage(file, 2, 1920);

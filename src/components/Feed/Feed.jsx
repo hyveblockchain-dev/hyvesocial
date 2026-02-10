@@ -332,11 +332,18 @@ export default function Feed() {
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => {
+              onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
                 if (file.size > MAX_STORY_IMAGE_MB * 1024 * 1024) {
                   alert(`Image too large. Max ${MAX_STORY_IMAGE_MB}MB.`);
+                  return;
+                }
+                const { checkImageNSFW } = await import('../../utils/nsfwCheck');
+                const nsfwResult = await checkImageNSFW(file);
+                if (!nsfwResult.safe) {
+                  alert(nsfwResult.reason);
+                  e.target.value = '';
                   return;
                 }
                 setStoryFile(file);
