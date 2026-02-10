@@ -764,6 +764,8 @@ body.light-mode .stat-num {
     padding: 0 16px;
     height: 60px;
     border-bottom: 2px solid var(--trim-color);
+    border-left: none;
+    border-right: none;
   }
 
   .page-footer {
