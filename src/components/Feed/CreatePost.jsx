@@ -3,7 +3,7 @@ import { useState, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import { compressImage } from '../../utils/imageCompression';
-import { CameraIcon, VideoIcon, SmileIcon, CloseIcon } from '../Icons/Icons';
+import { CameraIcon, SmileIcon, CloseIcon } from '../Icons/Icons';
 import './CreatePost.css';
 
 export default function CreatePost({ onPostCreated, groupId = null, contextLabel = '' }) {
@@ -12,26 +12,20 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
   const [error, setError] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
-  const [videoFile, setVideoFile] = useState(null);
-  const [videoPreview, setVideoPreview] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
-  const [showVideoInput, setShowVideoInput] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [allowShare, setAllowShare] = useState(true);
   const fileInputRef = useRef(null);
-  const videoInputRef = useRef(null);
   const { user } = useAuth();
   const displayName = user?.username || 'there';
 
   const MAX_IMAGE_MB = 5;
-  const MAX_VIDEO_MB = 25;
 
   const emojiOptions = ['😀','😄','😁','😅','😂','😍','🥳','😎','😮','😢','😡','👍','❤️'];
 
   async function handleSubmit(e) {
     e.preventDefault();
     
-    if (!content.trim() && !imageFile && !videoUrl.trim() && !videoFile) {
+    if (!content.trim() && !imageFile) {
       setError('Please write something!');
       return;
     }
@@ -48,8 +42,6 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
       const data = await api.createPost({
         content: content.trim(),
         imageFile: uploadImage,
-        videoUrl: videoUrl.trim(),
-        videoFile,
         allowShare,
         groupId
       });
@@ -62,7 +54,6 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
         reaction_count: 0,
         comment_count: 0,
         image_url: data.post?.image_url || imagePreview,
-        video_url: data.post?.video_url || data.post?.videoUrl || videoUrl.trim() || videoPreview,
         allow_share: allowShare,
         group_id: groupId ?? data.post?.group_id,
         groupId: groupId ?? data.post?.group_id
@@ -77,10 +68,6 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
       setContent('');
       setImageFile(null);
       setImagePreview('');
-      setVideoFile(null);
-      setVideoPreview('');
-      setVideoUrl('');
-      setShowVideoInput(false);
       setShowEmojiPicker(false);
       setAllowShare(true);
       
@@ -137,52 +124,6 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
           </div>
         )}
 
-        {videoPreview && (
-          <div className="media-preview">
-            <video src={videoPreview} controls />
-            <button
-              type="button"
-              className="remove-media"
-              onClick={() => {
-                setVideoFile(null);
-                setVideoPreview('');
-              }}
-            >
-              <CloseIcon size={14} />
-            </button>
-          </div>
-        )}
-
-        {showVideoInput && (
-          <div className="video-input">
-            <input
-              type="url"
-              placeholder="Paste a video URL (mp4/webm)"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-            />
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => videoInputRef.current?.click()}
-            >
-              Upload Video
-            </button>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => {
-                setVideoUrl('');
-                setVideoFile(null);
-                setVideoPreview('');
-                setShowVideoInput(false);
-              }}
-            >
-              Remove
-            </button>
-          </div>
-        )}
-
         {error && <div className="inline-error">{error}</div>}
 
         <div className="create-post-actions">
@@ -193,13 +134,6 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
               onClick={() => fileInputRef.current?.click()}
             >
               <CameraIcon size={16} /> Photo
-            </button>
-            <button
-              type="button"
-              className="option-button"
-              onClick={() => setShowVideoInput((prev) => !prev)}
-            >
-              <VideoIcon size={16} /> Video
             </button>
             <button
               type="button"
@@ -240,7 +174,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
           <button 
             type="submit" 
             className="post-button"
-            disabled={posting || (!content.trim() && !imageFile && !videoUrl.trim() && !videoFile)}
+            disabled={posting || (!content.trim() && !imageFile)}
           >
             {posting ? 'Posting...' : 'Post'}
           </button>
@@ -260,23 +194,6 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
             }
             setImageFile(file);
             setImagePreview(URL.createObjectURL(file));
-          }}
-        />
-        <input
-          ref={videoInputRef}
-          type="file"
-          accept="video/*"
-          style={{ display: 'none' }}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
-              setError(`Video too large. Max ${MAX_VIDEO_MB}MB.`);
-              return;
-            }
-            setVideoFile(file);
-            setVideoPreview(URL.createObjectURL(file));
-            setVideoUrl('');
           }}
         />
       </form>
