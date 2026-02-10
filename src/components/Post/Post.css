@@ -2,7 +2,7 @@
 
 .post-card {
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: var(--radius-xl);
   padding: 24px;
   animation: fadeIn 0.35s ease-out;
@@ -15,7 +15,7 @@
 .post-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--card-hover);
-  border-color: rgba(255, 215, 0, 0.1);
+  border-color: var(--trim-color);
 }
 
 .post-header {
@@ -116,8 +116,8 @@
   display: flex;
   gap: 20px;
   padding: 14px 0;
-  border-top: 2px solid rgba(255, 215, 0, 0.25);
-  border-bottom: 2px solid rgba(255, 215, 0, 0.25);
+  border-top: 2px solid var(--trim-color);
+  border-bottom: 2px solid var(--trim-color);
   color: var(--text-tertiary);
   font-size: 13px;
   margin-bottom: 12px;
@@ -156,7 +156,7 @@
   gap: 6px;
   padding: 10px 14px;
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 50px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
   opacity: 0;
@@ -237,7 +237,7 @@
 .comments-section {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 2px solid rgba(255, 215, 0, 0.25);
+  border-top: 2px solid var(--trim-color);
 }
 
 .comment {
@@ -311,7 +311,7 @@
   flex: 1;
   padding: 10px 16px;
   background: var(--bg-input);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 20px;
   color: var(--text-primary);
   font-size: 14px;
@@ -391,7 +391,7 @@
 }
 
 .comment.highlight {
-  border: 2px solid rgba(255, 215, 0, 0.65);
+  border: 2px solid var(--trim-strong);
   box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
   background: rgba(255, 215, 0, 0.08);
 }
@@ -412,7 +412,7 @@
   flex: 1;
   padding: 8px 12px;
   background: var(--bg-input);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 16px;
   color: var(--text-primary);
   font-size: 13px;
@@ -463,7 +463,7 @@
   padding: 8px;
   border-radius: 10px;
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   margin-top: 8px;
 }
 
@@ -478,7 +478,7 @@
 @media (max-width: 768px) {
   .post-card {
     padding: 16px;
-    border: 2px solid rgba(255, 215, 0, 0.18);
+    border: 2px solid var(--trim-color);
   }
 
   .author-avatar {

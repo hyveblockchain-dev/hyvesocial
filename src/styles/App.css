@@ -66,7 +66,7 @@
 
 .inline-success {
   background: rgba(34, 197, 94, 0.06);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   color: #86efac;
   padding: 0.75rem 1rem;
   border-radius: var(--radius-sm);
@@ -81,7 +81,7 @@
 
 .success-message {
   background: rgba(34, 197, 94, 0.06);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   color: #86efac;
   padding: 0.875rem 1.125rem;
   border-radius: var(--radius-md);
@@ -144,7 +144,7 @@
 .btn-secondary {
   background: var(--glass-bg);
   color: var(--text-primary);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   padding: 0.75rem 1.5rem;
   border-radius: var(--radius-md);
   font-weight: 600;
@@ -156,7 +156,7 @@
 
 .btn-secondary:hover {
   background: var(--bg-hover);
-  border-color: rgba(255, 215, 0, 0.3);
+  border-color: var(--trim-strong);
   color: var(--gold-primary);
   transform: translateY(-1px);
 }
@@ -174,7 +174,7 @@ input[type="search"],
 textarea {
   width: 100%;
   background: var(--bg-input);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   color: var(--text-primary);
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);
@@ -187,7 +187,7 @@ textarea {
 input:focus,
 textarea:focus {
   outline: none;
-  border-color: rgba(255, 215, 0, 0.4);
+  border-color: var(--trim-strong);
   box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.06);
   background: rgba(255, 255, 255, 0.04);
 }
@@ -220,7 +220,7 @@ a:hover {
 .profile-card,
 .widget {
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: var(--radius-lg);
   padding: 24px;
   backdrop-filter: blur(24px);
@@ -244,7 +244,7 @@ a:hover {
 .card:hover,
 .post-card:hover,
 .widget:hover {
-  border-color: rgba(255, 215, 0, 0.1);
+  border-color: var(--trim-color);
   box-shadow: var(--card-shadow-hover);
 }
 
@@ -303,7 +303,7 @@ a:hover {
   justify-content: center;
   min-height: 400px;
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: var(--radius-lg);
   padding: 40px;
   text-align: center;

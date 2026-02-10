@@ -14,7 +14,7 @@
   justify-content: space-between;
   gap: 16px;
   padding-bottom: 20px;
-  border-bottom: 2px solid rgba(255, 215, 0, 0.25);
+  border-bottom: 2px solid var(--trim-color);
 }
 
 .discover-header h1 {
@@ -38,7 +38,7 @@
   width: 100%;
   padding: 12px 20px;
   border-radius: 999px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   background: rgba(255, 255, 255, 0.03);
   color: var(--text-primary);
   font-size: 14px;
@@ -47,7 +47,7 @@
 
 .discover-search input:focus {
   outline: none;
-  border-color: rgba(255, 215, 0, 0.4);
+  border-color: var(--trim-strong);
   box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.08);
 }
 
@@ -65,7 +65,7 @@
 
 .discover-section {
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: var(--radius-xl);
   padding: 20px;
   box-shadow: var(--card-shadow);
@@ -75,7 +75,7 @@
 }
 
 .discover-section:hover {
-  border-color: rgba(255, 215, 0, 0.08);
+  border-color: var(--trim-color);
 }
 
 .section-header {
@@ -84,7 +84,7 @@
   align-items: center;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 2px solid rgba(255, 215, 0, 0.25);
+  border-bottom: 2px solid var(--trim-color);
 }
 
 .section-header h2 {
@@ -132,14 +132,14 @@
   gap: 14px;
   padding: 14px 16px;
   border-radius: 14px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   background: rgba(0, 0, 0, 0.35);
   transition: all 0.25s ease;
 }
 
 .user-card:hover {
   background: rgba(0, 0, 0, 0.45);
-  border-color: rgba(255, 215, 0, 0.15);
+  border-color: var(--trim-color);
   transform: translateX(4px);
 }
 
@@ -209,7 +209,7 @@
   font-weight: 700;
   color: #ffd700;
   background: rgba(255, 215, 0, 0.12);
-  border: 2px solid rgba(255, 215, 0, 0.35);
+  border: 2px solid var(--trim-strong);
 }
 
 @media (max-width: 720px) {

@@ -38,7 +38,7 @@
   color: #fff;
   font-weight: 600;
   scroll-snap-align: start;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   background: linear-gradient(180deg, rgba(30, 30, 40, 0.6) 0%, rgba(15, 15, 25, 0.9) 100%);
   background-size: cover;
   background-position: center;
@@ -59,7 +59,7 @@
 .story-card:hover {
   transform: translateY(-4px) scale(1.02);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-  border-color: rgba(255, 215, 0, 0.3);
+  border-color: var(--trim-strong);
 }
 
 .story-card.create-story {
@@ -69,7 +69,7 @@
   justify-content: center;
   flex-direction: column;
   gap: 12px;
-  border: 2px dashed rgba(255, 215, 0, 0.25);
+  border: 2px dashed var(--trim-color);
 }
 
 .story-card.create-story::before {
@@ -77,7 +77,7 @@
 }
 
 .story-card.create-story:hover {
-  border-color: rgba(255, 215, 0, 0.5);
+  border-color: var(--trim-strong);
   background: rgba(255, 215, 0, 0.05);
 }
 
@@ -147,7 +147,7 @@
   font-size: 12px;
   font-weight: 700;
   overflow: hidden;
-  border: 2px solid rgba(255, 215, 0, 0.5);
+  border: 2px solid var(--trim-strong);
   z-index: 2;
 }
 
@@ -216,7 +216,7 @@
 .story-modal-content {
   width: min(520px, 90vw);
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 12px;
   padding: 20px;
   display: grid;
@@ -280,7 +280,7 @@
 .story-viewer-content {
   width: min(560px, 92vw);
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
@@ -291,7 +291,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 2px solid rgba(255, 215, 0, 0.25);
+  border-bottom: 2px solid var(--trim-color);
 }
 
 .story-viewer-user {
@@ -362,7 +362,7 @@
   color: var(--text-secondary);
   background: var(--bg-card);
   border-radius: 12px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
 }
 
 .posts-list {

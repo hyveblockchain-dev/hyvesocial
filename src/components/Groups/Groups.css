@@ -8,7 +8,7 @@
 /* ========== HEADER ========== */
 .groups-header {
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: var(--radius-xl);
   padding: 24px 28px;
   display: flex;
@@ -61,7 +61,7 @@
 .groups-tab {
   background: rgba(255, 255, 255, 0.03);
   color: var(--text-secondary);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 14px;
   padding: 12px 24px;
   font-size: 14px;
@@ -72,7 +72,7 @@
 
 .groups-tab:hover {
   background: rgba(255, 215, 0, 0.05);
-  border-color: rgba(255, 215, 0, 0.2);
+  border-color: var(--trim-color);
   color: var(--text-primary);
 }
 
@@ -92,7 +92,7 @@
 .groups-search input {
   width: 100%;
   background: rgba(255, 255, 255, 0.03);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   color: var(--text-primary);
   padding: 14px 20px;
   border-radius: 50px;
@@ -102,7 +102,7 @@
 
 .groups-search input:focus {
   outline: none;
-  border-color: rgba(255, 215, 0, 0.4);
+  border-color: var(--trim-strong);
   box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.08);
   background: rgba(255, 255, 255, 0.05);
 }
@@ -145,7 +145,7 @@
 .groups-secondary {
   background: rgba(255, 255, 255, 0.03);
   color: var(--text-primary);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 12px;
   padding: 12px 18px;
   font-size: 13px;
@@ -156,7 +156,7 @@
 }
 
 .groups-secondary:hover {
-  border-color: rgba(255, 215, 0, 0.4);
+  border-color: var(--trim-strong);
   color: var(--gold-primary);
   background: rgba(255, 215, 0, 0.05);
 }
@@ -173,7 +173,7 @@
 /* ========== CREATE MODAL ========== */
 .groups-create {
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 16px;
   padding: 24px;
 }
@@ -190,7 +190,7 @@
   justify-content: space-between;
   gap: 12px;
   padding-bottom: 18px;
-  border-bottom: 2px solid rgba(255, 215, 0, 0.25);
+  border-bottom: 2px solid var(--trim-color);
 }
 
 .groups-create-header h2 {
@@ -202,7 +202,7 @@
 
 .groups-close {
   background: transparent;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   color: var(--text-secondary);
   padding: 8px 16px;
   border-radius: 8px;
@@ -230,7 +230,7 @@
 .groups-create textarea,
 .groups-create select {
   background: var(--bg-input);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 10px;
   color: var(--text-primary);
   padding: 12px 14px;
@@ -270,7 +270,7 @@
 
 .group-card {
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 20px;
   overflow: hidden;
   display: flex;
@@ -283,7 +283,7 @@
 .group-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.3);
-  border-color: rgba(255, 215, 0, 0.25);
+  border-color: var(--trim-color);
 }
 
 .group-cover {
@@ -356,7 +356,7 @@
   font-size: 13px;
   margin-top: auto;
   padding-top: 14px;
-  border-top: 2px solid rgba(255, 215, 0, 0.25);
+  border-top: 2px solid var(--trim-color);
 }
 
 .group-meta span {

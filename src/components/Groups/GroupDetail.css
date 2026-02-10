@@ -11,7 +11,7 @@
 .group-hero {
   border-radius: var(--radius-xl);
   overflow: hidden;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   background: var(--bg-card);
   box-shadow: var(--card-shadow);
 }
@@ -30,7 +30,7 @@
   gap: 16px;
   padding: 16px 20px;
   background: var(--bg-card);
-  border-top: 2px solid rgba(255, 215, 0, 0.25);
+  border-top: 2px solid var(--trim-color);
 }
 
 .group-hero-left {
@@ -50,7 +50,7 @@
   color: #0a0a0f;
   background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
   box-shadow: 0 10px 22px rgba(0,0,0,0.35);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
 }
 
 .group-hero-meta {
@@ -82,7 +82,7 @@
   align-items: center;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   background: rgba(255, 215, 0, 0.06);
   color: var(--text-primary);
   font-weight: 700;
@@ -110,7 +110,7 @@
 }
 
 .group-tab {
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   background: var(--bg-card);
   color: var(--text-secondary);
   padding: 10px 12px;
@@ -121,13 +121,13 @@
 
 .group-tab.active {
   color: #000;
-  border-color: rgba(255, 215, 0, 0.4);
+  border-color: var(--trim-strong);
   background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
 }
 
 .group-panel {
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 18px;
   padding: 16px;
 }
@@ -209,7 +209,7 @@
   gap: 10px;
   padding: 10px 12px;
   border-radius: 12px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   background: var(--bg-card);
   color: var(--text-secondary);
   font-weight: 800;
@@ -221,7 +221,7 @@
 }
 
 .group-btn {
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   background: var(--bg-card);
   color: var(--text-primary);
   padding: 10px 14px;
@@ -239,7 +239,7 @@
 .group-btn.primary {
   background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
   color: #000;
-  border-color: rgba(255, 215, 0, 0.35);
+  border-color: var(--trim-strong);
 }
 
 .group-btn.secondary {
@@ -269,7 +269,7 @@
   border-radius: 16px;
   padding: 12px 14px;
   background: rgba(255, 215, 0, 0.08);
-  border: 2px solid rgba(255, 215, 0, 0.18);
+  border: 2px solid var(--trim-color);
   color: var(--text-primary);
   font-weight: 700;
 }
@@ -286,7 +286,7 @@
   gap: 10px;
   padding: 10px;
   border-radius: 14px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   background: rgba(255, 255, 255, 0.02);
 }
 
@@ -313,7 +313,7 @@
 .group-invite-section {
   margin-bottom: 20px;
   padding: 16px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.02);
 }
@@ -335,7 +335,7 @@
   flex: 1;
   padding: 10px 14px;
   border-radius: 12px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   background: var(--bg-input);
   color: var(--text-primary);
   font-size: 14px;
@@ -361,7 +361,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 8px 12px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.02);
 }
@@ -390,7 +390,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 12px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.02);
 }
@@ -444,7 +444,7 @@
   padding: 4px 10px;
   border-radius: 999px;
   background: rgba(255, 215, 0, 0.08);
-  border: 2px solid rgba(255, 215, 0, 0.18);
+  border: 2px solid var(--trim-color);
   color: var(--text-primary);
   font-size: 12px;
   text-transform: lowercase;
@@ -475,7 +475,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 12px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.02);
 }
@@ -493,7 +493,7 @@
 .group-admin-settings {
   margin-top: 14px;
   padding: 14px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.02);
 }
@@ -543,7 +543,7 @@
   min-width: 220px;
   padding: 10px 12px;
   border-radius: 12px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   background: var(--bg-input);
   color: var(--text-primary);
   font-weight: 800;
@@ -574,7 +574,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 12px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.02);
 }
@@ -593,13 +593,13 @@
 
 .group-post {
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 18px;
   padding: 14px;
 }
 
 .group-post.pinned {
-  border-color: rgba(255, 215, 0, 0.35);
+  border-color: var(--trim-strong);
   box-shadow: 0 12px 26px rgba(255, 215, 0, 0.08);
 }
 
@@ -624,7 +624,7 @@
   color: var(--text-primary);
   font-weight: 900;
   font-size: 12px;
-  border: 2px solid rgba(255, 215, 0, 0.22);
+  border: 2px solid var(--trim-color);
 }
 
 .group-status-badge {
@@ -664,7 +664,7 @@
 .group-about-item {
   padding: 12px;
   border-radius: 16px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   background: rgba(255, 255, 255, 0.02);
 }
 
@@ -696,7 +696,7 @@
 .group-edit-description textarea {
   width: 100%;
   background: var(--bg-input);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 10px;
   color: var(--text-primary);
   padding: 12px 14px;
@@ -760,7 +760,7 @@
   background-size: cover;
   background-position: center;
   background-color: rgba(255, 215, 0, 0.06);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -780,7 +780,7 @@
   font-weight: 900;
   font-size: 22px;
   overflow: hidden;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
 }
 
 .group-avatar-preview img {

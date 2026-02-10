@@ -43,7 +43,7 @@
   font-size: 14px;
   font-weight: 600;
   transition: all 0.25s ease;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
 }
 
 .edit-cover-btn:hover {
@@ -74,7 +74,7 @@
   font-size: 14px;
   font-weight: 600;
   transition: all 0.25s ease;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
 }
 
 .remove-cover-btn:hover {
@@ -129,7 +129,7 @@
   gap: 28px;
   padding: 28px;
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 20px;
   margin: 16px 16px 24px;
   flex-wrap: wrap;
@@ -187,7 +187,7 @@
   font-size: 20px;
   cursor: pointer;
   transition: all 0.25s ease;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
 }
 
 .edit-avatar-btn:hover {
@@ -283,7 +283,7 @@
 .btn-cancel-username {
   background: var(--bg-secondary);
   color: var(--text-secondary);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   padding: 6px 12px;
   border-radius: var(--radius-md, 8px);
   font-size: 13px;
@@ -352,7 +352,7 @@
 .btn-following {
   background: transparent;
   color: var(--text-primary);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
 }
 
 .btn-following:hover {
@@ -399,7 +399,7 @@
 .btn-blocked {
   background: transparent;
   color: var(--text-primary);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   cursor: default;
 }
 
@@ -455,7 +455,7 @@
 .btn-message {
   background: var(--bg-card);
   color: var(--text-primary);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
 }
 
 .btn-message:hover {
@@ -470,7 +470,7 @@
   gap: 12px;
   margin: 0 16px 20px;
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 12px;
   padding: 8px 12px;
 }
@@ -538,7 +538,7 @@
 
 .profile-card {
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 12px;
   padding: 20px;
 }
@@ -604,7 +604,7 @@
   width: 100%;
   padding: 12px 14px;
   border-radius: 8px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   background: var(--bg-input);
   color: var(--text-primary);
   font-size: 14px;
@@ -657,7 +657,7 @@
 
 .privacy-card {
   background: var(--bg-card);
-  border: 2px dashed rgba(255, 215, 0, 0.25);
+  border: 2px dashed var(--trim-color);
   border-radius: 12px;
   padding: 28px;
   text-align: center;
@@ -692,7 +692,7 @@
   gap: 12px;
   align-items: center;
   padding: 12px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 12px;
   background: var(--bg-secondary);
   cursor: pointer;
@@ -786,7 +786,7 @@
 
 .create-album-form {
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
@@ -796,7 +796,7 @@
   width: 100%;
   padding: 12px 16px;
   background: var(--bg-input);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 8px;
   color: var(--text-primary);
   font-size: 16px;
@@ -840,7 +840,7 @@
 .btn-secondary {
   background: transparent;
   color: var(--text-primary);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
 }
 
 .btn-secondary:hover {
@@ -856,7 +856,7 @@
 
 .album-card {
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
@@ -910,7 +910,7 @@
 /* Album View */
 .album-view {
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 12px;
   padding: 24px;
 }
@@ -926,7 +926,7 @@
 .btn-back {
   padding: 8px 16px;
   background: transparent;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   color: var(--text-primary);
   border-radius: 6px;
   cursor: pointer;
@@ -991,7 +991,7 @@
   width: 100%;
   padding: 12px;
   background: var(--bg-input);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 6px;
   color: var(--text-primary);
   margin-bottom: 16px;
@@ -1087,7 +1087,7 @@
 
 .lightbox-side {
   padding: 18px;
-  border-left: 2px solid rgba(255, 215, 0, 0.25);
+  border-left: 2px solid var(--trim-color);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1097,7 +1097,7 @@
   width: 100%;
   padding: 12px 14px;
   border-radius: 8px;
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   background: var(--bg-input);
   color: var(--text-primary);
   resize: vertical;
@@ -1167,7 +1167,7 @@
   text-align: center;
   padding: 60px 20px;
   background: var(--bg-card);
-  border: 2px solid rgba(255, 215, 0, 0.25);
+  border: 2px solid var(--trim-color);
   border-radius: 12px;
 }
 
@@ -1335,7 +1335,7 @@
 
   .lightbox-side {
     border-left: none;
-    border-top: 2px solid rgba(255, 215, 0, 0.25);
+    border-top: 2px solid var(--trim-color);
   }
 }
 
