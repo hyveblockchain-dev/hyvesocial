@@ -1,5 +1,5 @@
 // src/components/Auth/Login.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { setE2EESignature } from '../../utils/e2ee';
@@ -25,15 +25,29 @@ export default function Login() {
   const [mailPass, setMailPass] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showMailPass, setShowMailPass] = useState(false);
+  const peekRef = useRef(null);
+
+  // Press-and-hold peek with auto-hide after 3 seconds
+  const startPeek = useCallback((setter) => {
+    setter(true);
+    clearTimeout(peekRef.current);
+    peekRef.current = setTimeout(() => setter(false), 3000);
+  }, []);
+  const stopPeek = useCallback((setter) => {
+    setter(false);
+    clearTimeout(peekRef.current);
+  }, []);
 
   // Auto-hide passwords when user leaves the page/tab
   useEffect(() => {
-    const hidePasswords = () => { setShowPassword(false); setShowMailPass(false); };
+    const hidePasswords = () => { setShowPassword(false); setShowMailPass(false); clearTimeout(peekRef.current); };
     window.addEventListener('blur', hidePasswords);
-    document.addEventListener('visibilitychange', () => { if (document.hidden) hidePasswords(); });
+    const onVis = () => { if (document.hidden) hidePasswords(); };
+    document.addEventListener('visibilitychange', onVis);
     return () => {
       window.removeEventListener('blur', hidePasswords);
-      document.removeEventListener('visibilitychange', hidePasswords);
+      document.removeEventListener('visibilitychange', onVis);
+      clearTimeout(peekRef.current);
     };
   }, []);
 
@@ -247,7 +261,7 @@ export default function Login() {
                       />
                       <span className="email-login-domain">@hyvechain.com</span>
                     </div>
-                    <div className="password-input-wrapper">
+                    <div className={`password-input-wrapper${showPassword ? ' peeking' : ''}`}>
                       <input
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Password"
@@ -256,7 +270,17 @@ export default function Login() {
                         disabled={loading}
                         className="email-login-password"
                       />
-                      <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
+                      <button
+                        type="button"
+                        className={`password-toggle${showPassword ? ' peeking' : ''}`}
+                        onMouseDown={() => startPeek(setShowPassword)}
+                        onMouseUp={() => stopPeek(setShowPassword)}
+                        onMouseLeave={() => stopPeek(setShowPassword)}
+                        onTouchStart={(e) => { e.preventDefault(); startPeek(setShowPassword); }}
+                        onTouchEnd={() => stopPeek(setShowPassword)}
+                        tabIndex={-1}
+                        title="Hold to peek"
+                      >
                         {showPassword ? '🙈' : '👁️'}
                       </button>
                     </div>
@@ -290,7 +314,7 @@ export default function Login() {
                       />
                       <span className="email-login-domain">@hyvechain.com</span>
                     </div>
-                    <div className="password-input-wrapper">
+                    <div className={`password-input-wrapper${showMailPass ? ' peeking' : ''}`}>
                       <input
                         type={showMailPass ? 'text' : 'password'}
                         placeholder="Password"
@@ -299,7 +323,17 @@ export default function Login() {
                         disabled={loading}
                         className="email-login-password"
                       />
-                      <button type="button" className="password-toggle" onClick={() => setShowMailPass(!showMailPass)} tabIndex={-1}>
+                      <button
+                        type="button"
+                        className={`password-toggle${showMailPass ? ' peeking' : ''}`}
+                        onMouseDown={() => startPeek(setShowMailPass)}
+                        onMouseUp={() => stopPeek(setShowMailPass)}
+                        onMouseLeave={() => stopPeek(setShowMailPass)}
+                        onTouchStart={(e) => { e.preventDefault(); startPeek(setShowMailPass); }}
+                        onTouchEnd={() => stopPeek(setShowMailPass)}
+                        tabIndex={-1}
+                        title="Hold to peek"
+                      >
                         {showMailPass ? '🙈' : '👁️'}
                       </button>
                     </div>

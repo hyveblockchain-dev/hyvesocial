@@ -1,5 +1,5 @@
 // src/components/Email/EmailSignup.jsx
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import emailApi from '../../services/emailApi';
@@ -23,12 +23,24 @@ export default function EmailSignup() {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const peekRef = useRef(null);
+
+  const startPeek = useCallback((setter) => {
+    setter(true);
+    clearTimeout(peekRef.current);
+    peekRef.current = setTimeout(() => setter(false), 3000);
+  }, []);
+  const stopPeek = useCallback((setter) => {
+    setter(false);
+    clearTimeout(peekRef.current);
+  }, []);
 
   useEffect(() => {
-    const hide = () => { setShowPassword(false); setShowConfirmPassword(false); };
+    const hide = () => { setShowPassword(false); setShowConfirmPassword(false); clearTimeout(peekRef.current); };
     window.addEventListener('blur', hide);
-    document.addEventListener('visibilitychange', () => { if (document.hidden) hide(); });
-    return () => { window.removeEventListener('blur', hide); document.removeEventListener('visibilitychange', hide); };
+    const onVis = () => { if (document.hidden) hide(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => { window.removeEventListener('blur', hide); document.removeEventListener('visibilitychange', onVis); clearTimeout(peekRef.current); };
   }, []);
   const debounceRef = useRef(null);
 
@@ -257,7 +269,7 @@ export default function EmailSignup() {
             <p className="step-subtitle">
               Your email: <strong>{username}@hyvechain.com</strong>
             </p>
-            <div className="password-input-wrapper">
+            <div className={`password-input-wrapper${showPassword ? ' peeking' : ''}`}>
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Password"
@@ -265,7 +277,17 @@ export default function EmailSignup() {
                 onChange={(e) => setPassword(e.target.value)}
                 autoFocus
               />
-              <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
+              <button
+                type="button"
+                className={`password-toggle${showPassword ? ' peeking' : ''}`}
+                onMouseDown={() => startPeek(setShowPassword)}
+                onMouseUp={() => stopPeek(setShowPassword)}
+                onMouseLeave={() => stopPeek(setShowPassword)}
+                onTouchStart={(e) => { e.preventDefault(); startPeek(setShowPassword); }}
+                onTouchEnd={() => stopPeek(setShowPassword)}
+                tabIndex={-1}
+                title="Hold to peek"
+              >
                 {showPassword ? '🙈' : '👁️'}
               </button>
             </div>
@@ -287,14 +309,24 @@ export default function EmailSignup() {
                 </span>
               </div>
             )}
-            <div className="password-input-wrapper">
+            <div className={`password-input-wrapper${showConfirmPassword ? ' peeking' : ''}`}>
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="Confirm password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
-              <button type="button" className="password-toggle" onClick={() => setShowConfirmPassword(!showConfirmPassword)} tabIndex={-1}>
+              <button
+                type="button"
+                className={`password-toggle${showConfirmPassword ? ' peeking' : ''}`}
+                onMouseDown={() => startPeek(setShowConfirmPassword)}
+                onMouseUp={() => stopPeek(setShowConfirmPassword)}
+                onMouseLeave={() => stopPeek(setShowConfirmPassword)}
+                onTouchStart={(e) => { e.preventDefault(); startPeek(setShowConfirmPassword); }}
+                onTouchEnd={() => stopPeek(setShowConfirmPassword)}
+                tabIndex={-1}
+                title="Hold to peek"
+              >
                 {showConfirmPassword ? '🙈' : '👁️'}
               </button>
             </div>

@@ -1,5 +1,5 @@
 // src/components/Email/EmailLogin.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import emailApi from '../../services/emailApi';
 import { IconMailbox, IconShield, IconLock } from '../Icons/Icons';
@@ -12,12 +12,24 @@ export default function EmailLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const peekRef = useRef(null);
+
+  const startPeek = useCallback((setter) => {
+    setter(true);
+    clearTimeout(peekRef.current);
+    peekRef.current = setTimeout(() => setter(false), 3000);
+  }, []);
+  const stopPeek = useCallback((setter) => {
+    setter(false);
+    clearTimeout(peekRef.current);
+  }, []);
 
   useEffect(() => {
-    const hide = () => setShowPassword(false);
+    const hide = () => { setShowPassword(false); clearTimeout(peekRef.current); };
     window.addEventListener('blur', hide);
-    document.addEventListener('visibilitychange', () => { if (document.hidden) hide(); });
-    return () => { window.removeEventListener('blur', hide); document.removeEventListener('visibilitychange', hide); };
+    const onVis = () => { if (document.hidden) hide(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => { window.removeEventListener('blur', hide); document.removeEventListener('visibilitychange', onVis); clearTimeout(peekRef.current); };
   }, []);
 
   async function handleLogin(e) {
@@ -82,14 +94,24 @@ export default function EmailLogin() {
             <span className="email-domain">@hyvechain.com</span>
           </div>
 
-          <div className="password-input-wrapper">
+          <div className={`password-input-wrapper${showPassword ? ' peeking' : ''}`}>
             <input
               type={showPassword ? 'text' : 'password'}
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
+            <button
+              type="button"
+              className={`password-toggle${showPassword ? ' peeking' : ''}`}
+              onMouseDown={() => startPeek(setShowPassword)}
+              onMouseUp={() => stopPeek(setShowPassword)}
+              onMouseLeave={() => stopPeek(setShowPassword)}
+              onTouchStart={(e) => { e.preventDefault(); startPeek(setShowPassword); }}
+              onTouchEnd={() => stopPeek(setShowPassword)}
+              tabIndex={-1}
+              title="Hold to peek"
+            >
               {showPassword ? '🙈' : '👁️'}
             </button>
           </div>

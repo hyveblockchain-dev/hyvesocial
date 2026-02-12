@@ -679,6 +679,54 @@
   user-select: none;
 }
 
+/* Peek mode - press and hold protection */
+.password-input-wrapper.peeking {
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.35);
+  border-radius: 8px;
+}
+
+.password-input-wrapper.peeking::after {
+  content: 'PEEK';
+  position: absolute;
+  right: 48px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: rgba(255, 215, 0, 0.55);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.password-input-wrapper.peeking::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, #ffd700, #ff6b35);
+  border-radius: 0 0 8px 8px;
+  animation: peek-countdown 3s linear forwards;
+  z-index: 2;
+}
+
+@keyframes peek-countdown {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+.password-toggle.peeking {
+  opacity: 1;
+  animation: peek-pulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes peek-pulse {
+  from { transform: translateY(-50%) scale(1); }
+  to { transform: translateY(-50%) scale(1.15); }
+}
+
 .register-email-note {
   font-size: 13px;
   color: var(--text-secondary);

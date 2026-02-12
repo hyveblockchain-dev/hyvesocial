@@ -1,5 +1,5 @@
 // src/components/Profile/Profile.jsx
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -89,14 +89,25 @@ export default function Profile() {
   const [linkingWallet, setLinkingWallet] = useState(false);
   const [linkMessage, setLinkMessage] = useState('');
   const [showLinkPassword, setShowLinkPassword] = useState(false);
+  const peekRef = useRef(null);
+
+  const startPeek = useCallback((setter) => {
+    setter(true);
+    clearTimeout(peekRef.current);
+    peekRef.current = setTimeout(() => setter(false), 3000);
+  }, []);
+  const stopPeek = useCallback((setter) => {
+    setter(false);
+    clearTimeout(peekRef.current);
+  }, []);
 
   // Auto-hide password when user leaves the page/tab
   useEffect(() => {
-    const hide = () => setShowLinkPassword(false);
+    const hide = () => { setShowLinkPassword(false); clearTimeout(peekRef.current); };
     window.addEventListener('blur', hide);
     const onVis = () => { if (document.hidden) hide(); };
     document.addEventListener('visibilitychange', onVis);
-    return () => { window.removeEventListener('blur', hide); document.removeEventListener('visibilitychange', onVis); };
+    return () => { window.removeEventListener('blur', hide); document.removeEventListener('visibilitychange', onVis); clearTimeout(peekRef.current); };
   }, []);
   
   const isOwnProfile = (() => {
@@ -1667,7 +1678,7 @@ export default function Profile() {
                     />
                     <span className="email-domain">@hyvechain.com</span>
                   </div>
-                  <div className="password-input-wrapper">
+                  <div className={`password-input-wrapper${showLinkPassword ? ' peeking' : ''}`}>
                     <input
                       type={showLinkPassword ? 'text' : 'password'}
                       placeholder="Email password"
@@ -1675,7 +1686,17 @@ export default function Profile() {
                       onChange={(e) => setLinkEmailPassword(e.target.value)}
                       required
                     />
-                    <button type="button" className="password-toggle" onClick={() => setShowLinkPassword(!showLinkPassword)} tabIndex={-1}>
+                    <button
+                      type="button"
+                      className={`password-toggle${showLinkPassword ? ' peeking' : ''}`}
+                      onMouseDown={() => startPeek(setShowLinkPassword)}
+                      onMouseUp={() => stopPeek(setShowLinkPassword)}
+                      onMouseLeave={() => stopPeek(setShowLinkPassword)}
+                      onTouchStart={(e) => { e.preventDefault(); startPeek(setShowLinkPassword); }}
+                      onTouchEnd={() => stopPeek(setShowLinkPassword)}
+                      tabIndex={-1}
+                      title="Hold to peek"
+                    >
                       {showLinkPassword ? '🙈' : '👁️'}
                     </button>
                   </div>
