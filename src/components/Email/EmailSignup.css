@@ -7,23 +7,9 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255, 215, 0, 0.10), transparent),
-    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(255, 215, 0, 0.04), transparent),
-    var(--bg-primary);
+  background: transparent;
   position: relative;
   overflow: hidden;
-}
-
-.email-signup-page::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-  background-size: 60px 60px;
-  pointer-events: none;
 }
 
 /* ── Container ── */
