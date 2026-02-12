@@ -1039,6 +1039,11 @@ export default function Layout({ children }) {
         <Link to="/profile/me" className={location.pathname.startsWith('/profile') ? 'mobile-nav-item active' : 'mobile-nav-item'}>
           <IconUser width={22} height={22} />
         </Link>
+        {isAdmin && (
+          <Link to="/moderation" className={location.pathname === '/moderation' ? 'mobile-nav-item active' : 'mobile-nav-item'}>
+            <IconShield width={22} height={22} />
+          </Link>
+        )}
       </nav>
 
       {/* Chat List Popup */}
