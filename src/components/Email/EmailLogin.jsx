@@ -94,7 +94,6 @@ export default function EmailLogin() {
 
           <div className="signup-nav-links">
             <Link to="/email/signup" className="nav-link">Don't have an account? Create one</Link>
-            <Link to="/login" className="nav-link">Go to Hyve Social</Link>
           </div>
         </form>
 

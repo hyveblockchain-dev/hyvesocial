@@ -234,7 +234,6 @@ export default function EmailSignup() {
             </button>
             <div className="signup-nav-links">
               <Link to="/email/login" className="nav-link">Already have an account? Sign in</Link>
-              <Link to="/login" className="nav-link">Go to Hyve Social</Link>
             </div>
           </form>
         )}
@@ -338,15 +337,11 @@ export default function EmailSignup() {
             <h2>Welcome to HyveMail!</h2>
             <p className="success-email">{createdEmail}</p>
             <p className="success-description">
-              Your private email account is ready. You can now send and receive emails, 
-              and use this address to log into Hyve Social.
+              Your private email account is ready. You can now send and receive emails.
             </p>
             <div className="success-actions">
               <button className="primary-btn" onClick={() => navigate('/email')}>
                 <IconMailbox size={18} /> Open Webmail
-              </button>
-              <button className="secondary-btn" onClick={() => navigate('/login')}>
-                Sign Into Hyve Social
               </button>
             </div>
           </div>
@@ -377,8 +372,8 @@ export default function EmailSignup() {
               <IconMailbox size={22} />
             </div>
             <div className="email-feature-text">
-              <span className="email-feature-title">Hyve Social Login</span>
-              <span className="email-feature-desc">Use your email across the Hyve ecosystem</span>
+              <span className="email-feature-title">Your Own Domain</span>
+              <span className="email-feature-desc">A real @hyvechain.com address</span>
             </div>
           </div>
         </div>
