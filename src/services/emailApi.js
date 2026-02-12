@@ -100,8 +100,8 @@ export async function getMessages(folder = 'inbox', page = 1, limit = 50) {
 }
 
 /** Get a single message by ID */
-export async function getMessage(messageId) {
-  const response = await fetch(`${EMAIL_API_URL}/api/email/messages/${messageId}`, {
+export async function getMessage(messageId, folder = 'inbox') {
+  const response = await fetch(`${EMAIL_API_URL}/api/email/messages/${messageId}?folder=${folder}`, {
     headers: authHeaders(),
   });
   const data = await response.json();

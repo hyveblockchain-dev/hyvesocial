@@ -19,6 +19,7 @@ import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import { ImapFlow } from 'imapflow';
 import nodemailer from 'nodemailer';
+import { simpleParser } from 'mailparser';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { execSync } from 'child_process';
@@ -477,8 +478,15 @@ app.get('/api/email/messages', authenticate, async (req, res) => {
             envelope: true, 
             flags: true, 
             bodyStructure: true,
-            source: { start: 0, maxLength: 500 } // Preview
+            source: true
           })) {
+            let preview = '';
+            try {
+              const parsed = await simpleParser(msg.source);
+              preview = (parsed.text || parsed.html?.replace(/<[^>]+>/g, '') || '').substring(0, 200).trim();
+            } catch (e) {
+              preview = '';
+            }
             messages.push({
               id: msg.uid,
               seq: msg.seq,
@@ -489,7 +497,7 @@ app.get('/api/email/messages', authenticate, async (req, res) => {
               date: msg.envelope?.date?.toISOString() || new Date().toISOString(),
               read: msg.flags?.has('\\Seen') || false,
               starred: msg.flags?.has('\\Flagged') || false,
-              preview: msg.source?.toString()?.substring(0, 200) || '',
+              preview,
               hasAttachments: false,
             });
           }
@@ -526,10 +534,13 @@ app.get('/api/email/messages/:id', authenticate, async (req, res) => {
   try {
     const { email, password } = getUserCredentials(req);
     const messageId = req.params.id;
+    const folder = req.query.folder || 'INBOX';
+    const folderMap = { inbox: 'INBOX', sent: 'Sent', drafts: 'Drafts', trash: 'Trash', spam: 'Spam' };
+    const imapFolder = folderMap[folder.toLowerCase()] || folder;
 
     const client = await getImapClient(email, password);
     try {
-      const lock = await client.getMailboxLock('INBOX');
+      const lock = await client.getMailboxLock(imapFolder);
       try {
         const msg = await client.fetchOne(messageId, {
           envelope: true,
@@ -544,7 +555,8 @@ app.get('/api/email/messages/:id', authenticate, async (req, res) => {
         // Mark as seen
         await client.messageFlagsAdd(messageId, ['\\Seen'], { uid: true });
 
-        const bodyText = msg.source?.toString() || '';
+        // Parse the MIME source using mailparser
+        const parsed = await simpleParser(msg.source);
 
         res.json({
           id: msg.uid,
@@ -556,9 +568,9 @@ app.get('/api/email/messages/:id', authenticate, async (req, res) => {
           date: msg.envelope?.date?.toISOString() || '',
           read: true,
           starred: msg.flags?.has('\\Flagged') || false,
-          body: bodyText,
-          html: null,
-          attachments: [],
+          body: parsed.text || '',
+          html: parsed.html || null,
+          attachments: (parsed.attachments || []).map(a => ({ filename: a.filename, size: a.size, contentType: a.contentType })),
         });
       } finally {
         lock.release();
@@ -602,6 +614,31 @@ app.post('/api/email/send', [authenticate, sendLimiter], async (req, res) => {
 
     await transport.sendMail(mailOptions);
     transport.close();
+
+    // Save a copy to Sent folder via IMAP
+    try {
+      const client = await getImapClient(email, password);
+      try {
+        const rawMessage = [
+          `From: ${mailOptions.from}`,
+          `To: ${mailOptions.to}`,
+          cc ? `Cc: ${mailOptions.cc}` : null,
+          `Subject: ${mailOptions.subject || ''}`,
+          `Date: ${new Date().toUTCString()}`,
+          `MIME-Version: 1.0`,
+          `Content-Type: text/plain; charset=utf-8`,
+          '',
+          mailOptions.text || '',
+        ].filter(l => l !== null).join('\r\n');
+
+        await client.append('Sent', rawMessage, ['\\Seen']);
+      } finally {
+        await client.logout();
+      }
+    } catch (sentErr) {
+      console.error('Failed to save to Sent folder:', sentErr);
+      // Non-fatal - email was still sent
+    }
 
     res.json({ success: true, message: 'Email sent successfully' });
   } catch (error) {

@@ -185,7 +185,15 @@ export default function Webmail() {
   }
 
   async function handleOpenMessage(message) {
-    setSelectedMessage(message);
+    // Fetch full message content from API
+    try {
+      const fullMsg = await emailApi.getMessage(message.id, currentFolder);
+      setSelectedMessage(fullMsg);
+    } catch (err) {
+      console.error('Failed to load message:', err);
+      // Fallback to list data
+      setSelectedMessage(message);
+    }
     if (!message.read) {
       handleMarkRead(message.id, true);
     }
