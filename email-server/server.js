@@ -49,7 +49,7 @@ const emailAccountSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true },
   passwordHash: { type: String, required: true },
   displayName: { type: String, default: '' },
-  recoveryCodeHash: { type: String, default: null }, // bcrypt hash of one-time recovery code
+  recoveryCodeHashes: [{ type: String }], // bcrypt hashes of 2 one-time recovery codes
   socialUserId: { type: String, default: null }, // Linked Hyve Social account
   socialUsername: { type: String, default: null },
   storageUsed: { type: Number, default: 0 },
@@ -284,9 +284,14 @@ app.post('/api/email/signup', signupLimiter, async (req, res) => {
     // Create system mail account
     await createSystemMailAccount(lowerUsername, password);
 
-    // Generate one-time recovery code (like ProtonMail)
-    const recoveryCode = crypto.randomBytes(12).toString('hex').toUpperCase(); // 24-char hex
-    const recoveryCodeHash = await bcrypt.hash(recoveryCode, 12);
+    // Generate 5 one-time recovery codes
+    const recoveryCodes = [];
+    const recoveryCodeHashes = [];
+    for (let i = 0; i < 5; i++) {
+      const code = crypto.randomBytes(12).toString('hex').toUpperCase();
+      recoveryCodes.push(code);
+      recoveryCodeHashes.push(await bcrypt.hash(code, 12));
+    }
 
     // Hash password and create DB record
     const passwordHash = await bcrypt.hash(password, 12);
@@ -295,7 +300,7 @@ app.post('/api/email/signup', signupLimiter, async (req, res) => {
       email,
       passwordHash,
       displayName: displayName || username,
-      recoveryCodeHash,
+      recoveryCodeHashes,
     });
     await account.save();
 
@@ -306,10 +311,10 @@ app.post('/api/email/signup', signupLimiter, async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    // Return recovery code in plaintext ONCE — client must save it
+    // Return recovery codes in plaintext ONCE — client must save them
     res.status(201).json({
       token,
-      recoveryCode,
+      recoveryCodes,
       account: {
         username: lowerUsername,
         email,
@@ -338,13 +343,18 @@ app.post('/api/email/reset-password', authLimiter, async (req, res) => {
     if (!account) {
       return res.status(404).json({ error: 'Account not found' });
     }
-    if (!account.recoveryCodeHash) {
-      return res.status(400).json({ error: 'No recovery code set for this account' });
+    if (!account.recoveryCodeHashes || account.recoveryCodeHashes.length === 0) {
+      return res.status(400).json({ error: 'No recovery codes set for this account' });
     }
 
-    // Verify recovery code
-    const codeMatch = await bcrypt.compare(recoveryCode.toUpperCase().trim(), account.recoveryCodeHash);
-    if (!codeMatch) {
+    // Check which recovery code matches
+    const codeUpper = recoveryCode.toUpperCase().trim();
+    let matchedIndex = -1;
+    for (let i = 0; i < account.recoveryCodeHashes.length; i++) {
+      const isMatch = await bcrypt.compare(codeUpper, account.recoveryCodeHashes[i]);
+      if (isMatch) { matchedIndex = i; break; }
+    }
+    if (matchedIndex === -1) {
       return res.status(401).json({ error: 'Invalid recovery code' });
     }
 
@@ -352,9 +362,15 @@ app.post('/api/email/reset-password', authLimiter, async (req, res) => {
     const newPasswordHash = await bcrypt.hash(newPassword, 12);
     account.passwordHash = newPasswordHash;
 
-    // Generate a NEW recovery code (old one is now consumed)
-    const newRecoveryCode = crypto.randomBytes(12).toString('hex').toUpperCase();
-    account.recoveryCodeHash = await bcrypt.hash(newRecoveryCode, 12);
+    // Generate 5 NEW recovery codes (all old ones consumed)
+    const newRecoveryCodes = [];
+    const newHashes = [];
+    for (let i = 0; i < 5; i++) {
+      const code = crypto.randomBytes(12).toString('hex').toUpperCase();
+      newRecoveryCodes.push(code);
+      newHashes.push(await bcrypt.hash(code, 12));
+    }
+    account.recoveryCodeHashes = newHashes;
     await account.save();
 
     // Update password in Dovecot system
@@ -378,7 +394,7 @@ app.post('/api/email/reset-password', authLimiter, async (req, res) => {
 
     res.json({
       message: 'Password reset successfully',
-      newRecoveryCode, // Return new recovery code — user must save it again
+      newRecoveryCodes, // Return new recovery codes — user must save them again
     });
   } catch (error) {
     console.error('Password reset error:', error);

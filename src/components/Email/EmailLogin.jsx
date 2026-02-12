@@ -22,7 +22,7 @@ export default function EmailLogin() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [resetSuccess, setResetSuccess] = useState(false);
-  const [newRecoveryCode, setNewRecoveryCode] = useState('');
+  const [newRecoveryCodes, setNewRecoveryCodes] = useState([]);
   const [codeCopied, setCodeCopied] = useState(false);
 
   const startPeek = useCallback((setter) => {
@@ -94,7 +94,7 @@ export default function EmailLogin() {
         recoveryCode: resetCode.trim(),
         newPassword,
       });
-      setNewRecoveryCode(result.newRecoveryCode || '');
+      setNewRecoveryCodes(result.newRecoveryCodes || []);
       setResetSuccess(true);
     } catch (err) {
       setError(err.message || 'Failed to reset password');
@@ -133,41 +133,46 @@ export default function EmailLogin() {
             <h2>Password Reset Successfully!</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>You can now sign in with your new password.</p>
 
-            {newRecoveryCode && (
+            {newRecoveryCodes.length > 0 && (
               <div className="recovery-code-section">
                 <div className="recovery-code-warning">
                   <span className="recovery-warning-icon">⚠️</span>
-                  <h3>New Recovery Code</h3>
+                  <h3>New Recovery Codes</h3>
                   <p>
-                    Your old recovery code has been invalidated. Save this <strong>new recovery code</strong> — 
-                    it is the <strong>only way</strong> to reset your password again. 
-                    <strong> It will not be shown again.</strong>
+                    Your old recovery codes have been invalidated. Save these <strong>new recovery codes</strong> — 
+                    they are the <strong>only way</strong> to reset your password again. 
+                    <strong> They will not be shown again.</strong>
                   </p>
                 </div>
-                <div className="recovery-code-display">
-                  <code className="recovery-code-value">{newRecoveryCode}</code>
-                  <button
-                    type="button"
-                    className="copy-code-btn"
-                    onClick={() => {
-                      navigator.clipboard.writeText(newRecoveryCode);
-                      setCodeCopied(true);
-                      setTimeout(() => setCodeCopied(false), 3000);
-                    }}
-                  >
-                    {codeCopied ? '✓ Copied!' : '📋 Copy'}
-                  </button>
+                <div className="recovery-codes-list">
+                  {newRecoveryCodes.map((code, i) => (
+                    <div key={i} className="recovery-code-item">
+                      <span className="recovery-code-number">{i + 1}.</span>
+                      <code className="recovery-code-value">{code}</code>
+                    </div>
+                  ))}
                 </div>
+                <button
+                  type="button"
+                  className="copy-code-btn copy-all-btn"
+                  onClick={() => {
+                    navigator.clipboard.writeText(newRecoveryCodes.join('\n'));
+                    setCodeCopied(true);
+                    setTimeout(() => setCodeCopied(false), 3000);
+                  }}
+                >
+                  {codeCopied ? '✓ Copied All!' : '📋 Copy All Codes'}
+                </button>
                 <ul className="recovery-code-tips">
-                  <li>Write it down on paper and store it safely</li>
-                  <li>Save it in a password manager</li>
-                  <li>Do <strong>not</strong> share it with anyone</li>
+                  <li>Write them down on paper and store safely</li>
+                  <li>Save them in a password manager</li>
+                  <li>Do <strong>not</strong> share them with anyone</li>
                 </ul>
               </div>
             )}
 
             <div className="success-actions">
-              <button className="primary-btn" onClick={() => { setForgotMode(false); setResetSuccess(false); setResetCode(''); setNewPassword(''); setConfirmNewPassword(''); setNewRecoveryCode(''); setError(''); }}>
+              <button className="primary-btn" onClick={() => { setForgotMode(false); setResetSuccess(false); setResetCode(''); setNewPassword(''); setConfirmNewPassword(''); setNewRecoveryCodes([]); setError(''); }}>
                 <IconLock size={18} /> Go to Sign In
               </button>
             </div>
