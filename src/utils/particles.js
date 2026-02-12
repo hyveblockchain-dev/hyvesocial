@@ -21,16 +21,16 @@ export function initParticles() {
     return {
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      size: Math.random() * 2 + 0.5,
-      speedX: (Math.random() - 0.5) * 0.5,
-      speedY: (Math.random() - 0.5) * 0.5,
-      opacity: Math.random() * 0.5 + 0.1,
+      size: Math.random() * 2.5 + 0.5,
+      speedX: (Math.random() - 0.5) * 0.4,
+      speedY: (Math.random() - 0.5) * 0.4,
+      opacity: Math.random() * 0.6 + 0.15,
       hue: Math.random() * 30 + 40  // Gold hues (40-70)
     };
   }
 
   // Initialize particles
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 120; i++) {
     particles.push(createParticle());
   }
 
@@ -60,11 +60,12 @@ export function initParticles() {
     particles.forEach((p1, i) => {
       particles.slice(i + 1).forEach(p2 => {
         const dist = Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
-        if (dist < 100) {
+        if (dist < 150) {
           ctx.beginPath();
           ctx.moveTo(p1.x, p1.y);
           ctx.lineTo(p2.x, p2.y);
-          ctx.strokeStyle = `rgba(255, 215, 0, ${0.1 * (1 - dist / 100)})`;
+          ctx.strokeStyle = `rgba(255, 215, 0, ${0.18 * (1 - dist / 150)})`;
+          ctx.lineWidth = 0.8;
           ctx.stroke();
         }
       });
