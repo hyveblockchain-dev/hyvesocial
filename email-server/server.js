@@ -932,21 +932,36 @@ app.post('/api/email/social-login', authLimiter, async (req, res) => {
 // Link email to existing social account
 app.post('/api/email/link-social', authenticate, async (req, res) => {
   try {
-    const { socialToken } = req.body;
+    const { socialToken, walletAddress, username } = req.body;
 
-    // Verify the social token
-    let socialUser;
-    try {
-      socialUser = jwt.verify(socialToken, SOCIAL_JWT_SECRET);
-    } catch {
-      return res.status(401).json({ error: 'Invalid social token' });
+    let resolvedWallet = null;
+    let resolvedUsername = username;
+
+    // Try verifying social token first
+    if (socialToken) {
+      try {
+        const socialUser = jwt.verify(socialToken, SOCIAL_JWT_SECRET);
+        resolvedWallet = socialUser.walletAddress || socialUser.userId || socialUser._id || socialUser.id;
+        resolvedUsername = socialUser.username || username;
+      } catch (err) {
+        console.warn('Social token verification failed:', err.message);
+      }
+    }
+
+    // Fall back to directly provided walletAddress
+    if (!resolvedWallet && walletAddress) {
+      resolvedWallet = walletAddress;
+    }
+
+    if (!resolvedWallet) {
+      return res.status(401).json({ error: 'No valid social token or wallet address provided' });
     }
 
     const account = await EmailAccount.findById(req.emailUser.id);
     if (!account) return res.status(404).json({ error: 'Email account not found' });
 
-    account.socialUserId = socialUser.walletAddress || socialUser.userId || socialUser._id || socialUser.id;
-    account.socialUsername = socialUser.username || req.body.username || account.username;
+    account.socialUserId = resolvedWallet;
+    account.socialUsername = resolvedUsername || account.username;
     await account.save();
 
     res.json({ success: true, message: 'Accounts linked successfully' });
