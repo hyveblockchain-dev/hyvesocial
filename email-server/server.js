@@ -27,7 +27,7 @@ import { execSync } from 'child_process';
 const app = express();
 const PORT = process.env.EMAIL_PORT || 4500;
 const JWT_SECRET = process.env.EMAIL_JWT_SECRET || 'hyvemail-secret-change-in-production';
-const SOCIAL_JWT_SECRET = process.env.SOCIAL_JWT_SECRET || 'hyve-social-secret-change-in-production';
+const SOCIAL_JWT_SECRET = process.env.SOCIAL_JWT_SECRET || 'hyve_super_secret_jwt_key_change_this_12345';
 const MONGO_URI = process.env.EMAIL_MONGO_URI || 'mongodb://localhost:27017/hyvemail';
 const MAIL_DOMAIN = 'hyvechain.com';
 
