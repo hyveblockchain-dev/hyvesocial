@@ -1,0 +1,680 @@
+/* src/components/Email/EmailSignup.css */
+
+/* ── Page ── */
+.email-signup-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255, 215, 0, 0.10), transparent),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(255, 215, 0, 0.04), transparent),
+    var(--bg-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+.email-signup-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+}
+
+/* ── Container ── */
+.email-signup-container {
+  width: 100%;
+  max-width: 520px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Hero ── */
+.email-signup-hero {
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.email-signup-hero-content {
+  background: var(--glass-bg);
+  border: 2px solid var(--trim-color);
+  border-radius: var(--radius-xl);
+  padding: 28px 24px;
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.email-signup-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--trim-color);
+}
+
+.email-signup-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-lg);
+  background: rgba(0, 0, 0, 0.5);
+  padding: 6px;
+  border: 1.5px solid rgba(255, 215, 0, 0.3);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.08);
+  object-fit: contain;
+}
+
+.email-signup-brand h1 {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0 0 3px;
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.3px;
+}
+
+.email-signup-brand p {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+
+.email-signup-hero-copy h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.email-signup-hero-copy p {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.email-signup-hero-copy strong {
+  color: var(--gold-primary);
+  font-weight: 600;
+}
+
+/* ── Progress Indicator ── */
+.signup-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--glass-bg);
+  border: 2px solid var(--trim-color);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(20px);
+}
+
+.progress-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.4;
+  transition: opacity 0.3s;
+}
+
+.progress-step.active {
+  opacity: 1;
+}
+
+.progress-step.completed {
+  opacity: 0.8;
+}
+
+.progress-number {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--trim-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  transition: all 0.3s;
+}
+
+.progress-step.active .progress-number {
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+  background: rgba(255, 215, 0, 0.08);
+}
+
+.progress-step.completed .progress-number {
+  border-color: #22c55e;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.progress-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+.progress-step.active .progress-label {
+  color: var(--text-primary);
+}
+
+.progress-line {
+  flex: 1;
+  max-width: 40px;
+  height: 2px;
+  background: var(--trim-color);
+  border-radius: 1px;
+}
+
+/* ── Form ── */
+.email-signup-form {
+  background: var(--glass-bg);
+  border: 2px solid var(--trim-color);
+  border-radius: var(--radius-xl);
+  padding: 28px 24px;
+  margin-bottom: 24px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--card-shadow);
+  text-align: left;
+}
+
+.email-signup-form h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+  text-align: center;
+}
+
+.step-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.step-subtitle strong {
+  color: var(--gold-primary);
+}
+
+.form-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-bottom: 16px;
+  transition: color 0.2s;
+}
+
+.form-back-btn:hover {
+  color: var(--gold-primary);
+}
+
+/* Email input with domain suffix */
+.email-input-group {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid var(--trim-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 8px;
+  transition: border-color 0.2s;
+}
+
+.email-input-group:focus-within {
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.08);
+}
+
+.email-input-group input {
+  flex: 1;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-family: inherit;
+  outline: none;
+  min-width: 0;
+}
+
+.email-input-group input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.email-domain {
+  padding: 14px 16px;
+  background: rgba(255, 215, 0, 0.06);
+  color: var(--gold-primary);
+  font-size: 14px;
+  font-weight: 600;
+  border-left: 2px solid var(--trim-color);
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Availability check */
+.availability-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.availability-status.checking {
+  color: var(--text-tertiary);
+}
+
+.availability-status.available {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.availability-status.taken {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.availability-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--text-secondary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* Standard inputs */
+.email-signup-form > input {
+  width: 100%;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid var(--trim-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  font-size: 15px;
+  margin-bottom: 14px;
+  transition: all 0.2s;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.email-signup-form > input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.email-signup-form > input:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.input-hint {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin: 4px 0 18px;
+  line-height: 1.5;
+}
+
+/* Password strength */
+.password-strength {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.strength-bars {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.strength-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  transition: background-color 0.3s;
+}
+
+.strength-label {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 50px;
+  text-align: right;
+}
+
+/* Submit button */
+.email-signup-form button[type="submit"] {
+  width: 100%;
+  padding: 15px 32px;
+  background: var(--gold-gradient);
+  color: #000;
+  border: none;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.2px;
+}
+
+.email-signup-form button[type="submit"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transition: left 0.6s ease;
+}
+
+.email-signup-form button[type="submit"]:hover::before {
+  left: 100%;
+}
+
+.email-signup-form button[type="submit"]:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.35);
+}
+
+.email-signup-form button[type="submit"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(0, 0, 0, 0.2);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* Navigation links */
+.signup-nav-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--trim-color);
+}
+
+.nav-link {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: var(--gold-primary);
+}
+
+/* ── Success State ── */
+.email-signup-success {
+  background: var(--glass-bg);
+  border: 2px solid var(--trim-color);
+  border-radius: var(--radius-xl);
+  padding: 40px 28px;
+  margin-bottom: 24px;
+  text-align: center;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--card-shadow);
+}
+
+.success-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.1);
+  border: 2px solid rgba(34, 197, 94, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #22c55e;
+  margin: 0 auto 20px;
+}
+
+.email-signup-success h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.success-email {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gold-primary);
+  margin-bottom: 12px;
+}
+
+.success-description {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.success-actions .primary-btn {
+  width: 100%;
+  padding: 15px 32px;
+  background: var(--gold-gradient);
+  color: #000;
+  border: none;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s;
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.2);
+}
+
+.success-actions .primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.35);
+}
+
+.success-actions .secondary-btn {
+  width: 100%;
+  padding: 14px 32px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 2px solid var(--trim-color);
+  border-radius: 50px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.success-actions .secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  border-color: var(--trim-strong);
+}
+
+/* ── Feature Cards ── */
+.email-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.email-feature {
+  background: var(--glass-bg);
+  border: 2px solid var(--trim-color);
+  border-radius: var(--radius-lg);
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  transition: all 0.3s;
+}
+
+.email-feature:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.email-feature-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 215, 0, 0.08);
+  border: 2px solid var(--trim-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold-primary);
+}
+
+.email-feature-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.email-feature-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.email-feature-desc {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+
+/* ── Error ── */
+.email-signup-page .error-message {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .email-signup-page {
+    padding: 16px;
+    align-items: flex-start;
+    padding-top: 32px;
+  }
+
+  .email-signup-container {
+    max-width: 100%;
+  }
+
+  .email-features {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .email-feature {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .email-input-group {
+    flex-direction: column;
+  }
+
+  .email-domain {
+    border-left: none;
+    border-top: 2px solid var(--trim-color);
+    text-align: center;
+    padding: 10px 16px;
+  }
+}
+
+@media (max-width: 380px) {
+  .email-signup-hero-content {
+    padding: 18px 14px;
+  }
+
+  .email-signup-form {
+    padding: 20px 14px;
+  }
+
+  .signup-progress {
+    gap: 4px;
+    padding: 12px;
+  }
+
+  .progress-label {
+    font-size: 11px;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

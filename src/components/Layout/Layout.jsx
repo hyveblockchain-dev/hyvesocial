@@ -9,7 +9,7 @@ import { normalizeNotification } from '../../utils/notifications';
 import {
   IconSearch, IconLogout, IconMoon, IconSun, IconBell,
   IconFeed, IconUser, IconUsers, IconChat, IconClose,
-  IconGroup, IconDiscover, IconShield
+  IconGroup, IconDiscover, IconShield, IconMailbox
 } from '../Icons/Icons';
 import './Layout.css';
 
@@ -903,6 +903,10 @@ export default function Layout({ children }) {
             <Link to="/discover" className={location.pathname === '/discover' ? 'nav-item active' : 'nav-item'}>
               <span className="nav-icon"><IconDiscover width={20} height={20} /></span>
               <span>Discover</span>
+            </Link>
+            <Link to="/email" className={location.pathname.startsWith('/email') ? 'nav-item active' : 'nav-item'}>
+              <span className="nav-icon"><IconMailbox width={20} height={20} /></span>
+              <span>HyveMail</span>
             </Link>
             {isAdmin && (
               <Link to="/moderation" className={location.pathname === '/moderation' ? 'nav-item active' : 'nav-item'}>

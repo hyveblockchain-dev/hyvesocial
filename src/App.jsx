@@ -15,6 +15,11 @@ const Groups = lazy(() => import('./components/Groups/Groups'));
 const GroupDetail = lazy(() => import('./components/Groups/GroupDetail'));
 const Moderation = lazy(() => import('./components/Moderation/Moderation'));
 
+// Email components
+const EmailSignup = lazy(() => import('./components/Email/EmailSignup'));
+const EmailLogin = lazy(() => import('./components/Email/EmailLogin'));
+const Webmail = lazy(() => import('./components/Email/Webmail'));
+
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
 
@@ -44,7 +49,9 @@ function App() {
       import('./components/Notifications/Notifications'),
       import('./components/Discover/Discover'),
       import('./components/Groups/Groups'),
-      import('./components/Auth/Login')
+      import('./components/Auth/Login'),
+      import('./components/Email/EmailSignup'),
+      import('./components/Email/Webmail')
     ];
     preloads.forEach((promise) => promise.catch(() => {}));
   }, []);
@@ -55,6 +62,9 @@ function App() {
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/email/signup" element={<EmailSignup />} />
+            <Route path="/email/login" element={<EmailLogin />} />
+            <Route path="/email" element={<Webmail />} />
             <Route
               path="/"
               element={

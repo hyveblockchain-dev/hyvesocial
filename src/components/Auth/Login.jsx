@@ -1,19 +1,23 @@
 // src/components/Auth/Login.jsx
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { setE2EESignature } from '../../utils/e2ee';
-import { IconShield, IconZap, IconUsers, IconLock, IconChat, IconGlobe } from '../Icons/Icons';
+import { IconShield, IconZap, IconUsers, IconLock, IconChat, IconGlobe, IconMailbox } from '../Icons/Icons';
 import './Login.css';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, register, connectWallet } = useAuth();
+  const { login, loginWithEmail, register, registerWithEmail, connectWallet } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [needsRegistration, setNeedsRegistration] = useState(false);
   const [username, setUsername] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
+  const [loginMode, setLoginMode] = useState('wallet'); // 'wallet' | 'email'
+  const [emailInput, setEmailInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [pendingEmail, setPendingEmail] = useState('');
 
   async function handleConnect() {
     try {
@@ -43,6 +47,34 @@ export default function Login() {
     }
   }
 
+  async function handleEmailLogin(e) {
+    e.preventDefault();
+    if (!emailInput.trim() || !passwordInput.trim()) {
+      setError('Please enter your email and password');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+
+      const fullEmail = emailInput.includes('@') ? emailInput : `${emailInput}@hyvechain.com`;
+      const result = await loginWithEmail(fullEmail, passwordInput);
+
+      if (result.needsRegistration) {
+        setPendingEmail(fullEmail);
+        setNeedsRegistration(true);
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      console.error('Email login error:', err);
+      setError(err.message || 'Invalid email or password');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleRegister(e) {
     e.preventDefault();
     
@@ -55,8 +87,13 @@ export default function Login() {
       setLoading(true);
       setError('');
 
-      console.log('Registering user...');
-      await register(walletAddress, username);
+      if (pendingEmail) {
+        // Register via email
+        await registerWithEmail(pendingEmail, username);
+      } else {
+        // Register via wallet
+        await register(walletAddress, username);
+      }
       
       console.log('Registration successful!');
       navigate('/');
@@ -97,25 +134,89 @@ export default function Login() {
 
         {!needsRegistration ? (
           <div className="login-box">
-            <button 
-              className="connect-button" 
-              onClick={handleConnect}
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="connect-loading">
-                  <span className="connect-spinner"></span>
-                  Connecting...
-                </span>
-              ) : (
-                'Connect with MetaMask'
-              )}
-            </button>
-            <p className="login-subtitle">Connect your wallet to get started</p>
+            {/* Login mode tabs */}
+            <div className="login-tabs">
+              <button
+                className={`login-tab ${loginMode === 'wallet' ? 'active' : ''}`}
+                onClick={() => { setLoginMode('wallet'); setError(''); }}
+              >
+                <IconLock size={16} />
+                Wallet
+              </button>
+              <button
+                className={`login-tab ${loginMode === 'email' ? 'active' : ''}`}
+                onClick={() => { setLoginMode('email'); setError(''); }}
+              >
+                <IconMailbox size={16} />
+                Email
+              </button>
+            </div>
+
+            {loginMode === 'wallet' ? (
+              <>
+                <button 
+                  className="connect-button" 
+                  onClick={handleConnect}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <span className="connect-loading">
+                      <span className="connect-spinner"></span>
+                      Connecting...
+                    </span>
+                  ) : (
+                    'Connect with MetaMask'
+                  )}
+                </button>
+                <p className="login-subtitle">Connect your wallet to get started</p>
+              </>
+            ) : (
+              <form className="email-login-form" onSubmit={handleEmailLogin}>
+                <div className="email-login-input-group">
+                  <input
+                    type="text"
+                    placeholder="username"
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value.trim())}
+                    disabled={loading}
+                    autoFocus
+                  />
+                  <span className="email-login-domain">@hyvechain.com</span>
+                </div>
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  disabled={loading}
+                  className="email-login-password"
+                />
+                <button type="submit" className="connect-button" disabled={loading}>
+                  {loading ? (
+                    <span className="connect-loading">
+                      <span className="connect-spinner"></span>
+                      Signing in...
+                    </span>
+                  ) : (
+                    'Sign In with Email'
+                  )}
+                </button>
+                <div className="email-login-links">
+                  <Link to="/email/signup" className="email-login-link">
+                    Get a @hyvechain.com email
+                  </Link>
+                </div>
+              </form>
+            )}
           </div>
         ) : (
           <form className="register-form" onSubmit={handleRegister}>
             <h2>Create Your Profile</h2>
+            {pendingEmail && (
+              <p className="register-email-note">
+                Linked to: <strong>{pendingEmail}</strong>
+              </p>
+            )}
             <input
               type="text"
               placeholder="Choose a username"
@@ -129,7 +230,7 @@ export default function Login() {
             </button>
             <button 
               type="button" 
-              onClick={() => setNeedsRegistration(false)}
+              onClick={() => { setNeedsRegistration(false); setPendingEmail(''); }}
               disabled={loading}
               className="back-button"
             >

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import EthereumProvider from '@walletconnect/ethereum-provider';
 import api from '../services/api';
+import emailApi from '../services/emailApi';
 import socketService from '../services/socket';
 import { API_URL, WALLETCONNECT_PROJECT_ID } from '../utils/env';
 
@@ -219,15 +220,81 @@ export function AuthProvider({ children }) {
     return data;
   }
 
+  async function loginWithEmail(email, password) {
+    try {
+      // Login via HyveMail -> get social session token
+      const result = await emailApi.socialLoginWithEmail(email, password);
+
+      if (result.socialToken) {
+        localStorage.setItem('token', result.socialToken);
+      }
+      if (result.emailToken) {
+        localStorage.setItem('email_token', result.emailToken);
+      }
+
+      if (result.user) {
+        setUser(result.user);
+        const socketUser = result.user.username || result.user.handle;
+        if (socketUser) {
+          socketService.connect(socketUser);
+          setSocket(socketService.socket);
+        }
+        return { needsRegistration: false };
+      } else {
+        // Email account exists but no linked social account — need to create one
+        return { needsRegistration: true, emailToken: result.emailToken, email };
+      }
+    } catch (error) {
+      console.error('Email login error:', error);
+      throw error;
+    }
+  }
+
+  async function registerWithEmail(email, username) {
+    try {
+      const emailToken = localStorage.getItem('email_token');
+      // Register social account and link to email
+      const response = await fetch(`${API_URL}/api/auth/register-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(emailToken ? { 'X-Email-Token': emailToken } : {}),
+        },
+        body: JSON.stringify({ email, username }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Registration failed');
+
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+
+      if (data.user) {
+        setUser(data.user);
+        const socketUser = data.user.username || data.user.handle;
+        if (socketUser) {
+          socketService.connect(socketUser);
+          setSocket(socketService.socket);
+        }
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Email register error:', error);
+      throw error;
+    }
+  }
+
   function logout() {
     localStorage.removeItem('token');
+    localStorage.removeItem('email_token');
     setUser(null);
     socketService.disconnect();
     setSocket(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, login, register, logout, checkAuth, connectWallet, socket }}>
+    <AuthContext.Provider value={{ user, setUser, loading, login, loginWithEmail, register, registerWithEmail, logout, checkAuth, connectWallet, socket }}>
       {children}
     </AuthContext.Provider>
   );
