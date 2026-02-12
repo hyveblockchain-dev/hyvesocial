@@ -362,7 +362,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
               >
                 {overlayTextInput}
               </div>
-            ))}
+            )}
             <button
               type="button"
               className="remove-media"
