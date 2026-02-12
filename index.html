@@ -6,21 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="description" content="Hyve Social - Blockchain-based social media platform" />
     <title>Hyve Social</title>
+    <!-- Google Fonts: Orbitron + Rajdhani -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <!-- Animated Background -->
-    <div class="bg-animation">
-      <canvas id="particleCanvas"></canvas>
-      <div class="gradient-orbs">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
-      </div>
-      <div class="grid-overlay"></div>
-    </div>
+    <!-- Particles.js Background -->
+    <div id="particles-js"></div>
+    <!-- Hex Grid Overlay -->
+    <div class="hex-grid-overlay"></div>
+    <div class="hex-glow"></div>
 
     <!-- React App -->
     <div id="root"></div>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

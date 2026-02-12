@@ -6,13 +6,19 @@ import './styles/index.css'
 import './styles/App.css'
 import { initParticles } from './utils/particles.js'
 
-// Initialize particles when DOM is ready
+// Initialize particles once the library is loaded
+function tryInitParticles(retries = 20) {
+  if (typeof window.particlesJS === 'function') {
+    initParticles();
+  } else if (retries > 0) {
+    setTimeout(() => tryInitParticles(retries - 1), 200);
+  }
+}
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => initParticles(), 100);
-  });
+  document.addEventListener('DOMContentLoaded', () => tryInitParticles());
 } else {
-  setTimeout(() => initParticles(), 100);
+  tryInitParticles();
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(
