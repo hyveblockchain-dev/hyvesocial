@@ -158,7 +158,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
 
   // ── Flatten overlays onto canvas → File ──
   async function flattenOverlays(imgFile) {
-    if (overlays.length === 0) return imgFile;
+    if (overlays.length === 0 && !selectedFilter) return imgFile;
     return new Promise((resolve) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -176,21 +176,42 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
         ctx.drawImage(img, 0, 0);
         ctx.filter = 'none';
 
-        // Draw each overlay
+        // Compute object-fit: cover mapping so overlay positions match the CSS preview
+        const containerEl = previewRef.current;
+        const contW = containerEl?.offsetWidth || canvas.width;
+        const contH = containerEl?.clientHeight || canvas.height;
+        const natW = canvas.width;
+        const natH = canvas.height;
+        const contAR = contW / contH;
+        const imgAR = natW / natH;
+
+        let visibleX = 0, visibleY = 0, visibleW = natW, visibleH = natH;
+        if (imgAR > contAR) {
+          // Image wider than container → horizontal crop
+          visibleW = natH * contAR;
+          visibleX = (natW - visibleW) / 2;
+        } else {
+          // Image taller than container → vertical crop
+          visibleH = natW / contAR;
+          visibleY = (natH - visibleH) / 2;
+        }
+
+        // Draw overlays with proper coordinate mapping
+        ctx.textBaseline = 'top';
         for (const o of overlays) {
-          const px = (o.x / 100) * canvas.width;
-          const py = (o.y / 100) * canvas.height;
-          const scaledSize = (o.size / 320) * canvas.height; // scale relative to preview height
+          const px = visibleX + (o.x / 100) * visibleW;
+          const py = visibleY + (o.y / 100) * visibleH;
+          const scaledSize = (o.size / contH) * visibleH;
           if (o.type === 'text') {
             ctx.font = `bold ${scaledSize}px sans-serif`;
             ctx.fillStyle = o.color;
             ctx.strokeStyle = 'rgba(0,0,0,0.5)';
             ctx.lineWidth = Math.max(2, scaledSize / 14);
-            ctx.strokeText(o.content, px, py + scaledSize);
-            ctx.fillText(o.content, px, py + scaledSize);
+            ctx.strokeText(o.content, px, py);
+            ctx.fillText(o.content, px, py);
           } else {
             ctx.font = `${scaledSize}px serif`;
-            ctx.fillText(o.content, px, py + scaledSize);
+            ctx.fillText(o.content, px, py);
           }
         }
 
