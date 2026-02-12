@@ -169,6 +169,10 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
         canvas.height = img.naturalHeight;
         const ctx = canvas.getContext('2d');
 
+        // Enable high-quality rendering
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
         // Draw the base image with filter
         const filterCss = selectedFilter
           ? PHOTO_FILTERS.find(f => f.id === selectedFilter)?.css || 'none'
@@ -188,11 +192,9 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
 
         let visibleX = 0, visibleY = 0, visibleW = natW, visibleH = natH;
         if (imgAR > contAR) {
-          // Image wider than container → horizontal crop
           visibleW = natH * contAR;
           visibleX = (natW - visibleW) / 2;
         } else {
-          // Image taller than container → vertical crop
           visibleH = natW / contAR;
           visibleY = (natH - visibleH) / 2;
         }
@@ -204,21 +206,41 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
           const py = visibleY + (o.y / 100) * visibleH;
           const scaledSize = (o.size / contH) * visibleH;
           if (o.type === 'text') {
-            ctx.font = `bold ${scaledSize}px sans-serif`;
+            ctx.font = `bold ${scaledSize}px -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
             ctx.fillStyle = o.color;
-            ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-            ctx.lineWidth = Math.max(2, scaledSize / 14);
+            // Multi-layer shadow for crisp readable text
+            ctx.shadowColor = 'rgba(0,0,0,0.7)';
+            ctx.shadowBlur = Math.max(4, scaledSize / 8);
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = Math.max(1, scaledSize / 20);
+            ctx.fillText(o.content, px, py);
+            // Draw again without shadow for crispness
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+            ctx.lineWidth = Math.max(1.5, scaledSize / 18);
+            ctx.lineJoin = 'round';
             ctx.strokeText(o.content, px, py);
             ctx.fillText(o.content, px, py);
           } else {
-            ctx.font = `${scaledSize}px serif`;
+            // Emoji: use a larger font with text-drawing for maximum quality
+            ctx.font = `${scaledSize}px -apple-system, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = Math.max(2, scaledSize / 10);
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = Math.max(1, scaledSize / 20);
             ctx.fillText(o.content, px, py);
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
           }
         }
 
+        // Use high-quality JPEG
         canvas.toBlob((blob) => {
           resolve(new File([blob], 'edited.jpg', { type: 'image/jpeg' }));
-        }, 'image/jpeg', 0.92);
+        }, 'image/jpeg', 0.97);
       };
       img.src = URL.createObjectURL(imgFile);
     });
@@ -255,8 +277,12 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
       let uploadImage = imageFile;
       if (imageFile) {
         // Flatten any text/emoji overlays onto the image
+        const hasOverlays = finalOverlays.length > 0 || selectedFilter;
         uploadImage = await flattenOverlays(imageFile, finalOverlays);
-        uploadImage = await compressImage(uploadImage, 2, 1920);
+        // Only compress if no overlays (overlays already output high-quality)
+        if (!hasOverlays) {
+          uploadImage = await compressImage(uploadImage, 2, 1920);
+        }
       }
 
       const metadata = {};
