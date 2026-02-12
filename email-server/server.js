@@ -895,14 +895,13 @@ app.post('/api/email/social-login', authLimiter, async (req, res) => {
 
     // If linked to a social account, generate social token
     if (account.socialUserId) {
-      // Generate token compatible with the social backend's authenticateToken
-      // The social backend expects { walletAddress } signed with its JWT_SECRET
-      const crypto = await import('crypto');
-      const emailHash = crypto.createHash('sha256').update(normalizedEmail).digest('hex');
-      const pseudoAddress = '0x' + emailHash.substring(0, 40);
+      // Use the stored socialUserId as the wallet address for the token.
+      // For email-only registered users, this is the pseudo-address (0x + sha256(email)).
+      // For wallet users who linked their email, this is their real wallet address.
+      const walletAddress = account.socialUserId;
 
       const socialToken = jwt.sign(
-        { walletAddress: pseudoAddress },
+        { walletAddress },
         SOCIAL_JWT_SECRET,
         { expiresIn: '7d' }
       );
@@ -911,7 +910,7 @@ app.post('/api/email/social-login', authLimiter, async (req, res) => {
         emailToken,
         socialToken,
         user: {
-          walletAddress: pseudoAddress,
+          walletAddress,
           username: account.socialUsername,
           email: normalizedEmail,
         },

@@ -61,6 +61,36 @@ export async function getCurrentUser() {
   return response.json();
 }
 
+export async function linkEmail(email, emailPassword) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/auth/link-email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ email, emailPassword }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to link email');
+  return data;
+}
+
+export async function linkWallet(walletAddress, signature) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/auth/link-wallet`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ walletAddress, signature }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to link wallet');
+  return data;
+}
+
 // ========================================
 // USER FUNCTIONS
 // ========================================

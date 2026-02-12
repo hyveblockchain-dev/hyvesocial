@@ -12,7 +12,7 @@ import './Profile.css';
 export default function Profile() {
   const { handle } = useParams();
   const navigate = useNavigate();
-  const { user, setUser, socket, logout } = useAuth();
+  const { user, setUser, socket, logout, connectWallet } = useAuth();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [albums, setAlbums] = useState([]);
@@ -80,6 +80,14 @@ export default function Profile() {
   const [captionSaving, setCaptionSaving] = useState(false);
   const [resolvedAddress, setResolvedAddress] = useState(null);
   const [profileCache, setProfileCache] = useState({});
+  
+  // Account linking state
+  const [showLinkEmail, setShowLinkEmail] = useState(false);
+  const [linkEmailAddress, setLinkEmailAddress] = useState('');
+  const [linkEmailPassword, setLinkEmailPassword] = useState('');
+  const [linkingEmail, setLinkingEmail] = useState(false);
+  const [linkingWallet, setLinkingWallet] = useState(false);
+  const [linkMessage, setLinkMessage] = useState('');
   
   const isOwnProfile = (() => {
     const resolved = resolvedAddress?.toLowerCase?.();
@@ -486,6 +494,47 @@ export default function Profile() {
       console.error('Delete account error:', error);
       alert('Failed to delete account. Please try again.');
       setDeletingAccount(false);
+    }
+  }
+
+  async function handleLinkEmail(e) {
+    e.preventDefault();
+    setLinkMessage('');
+    const email = linkEmailAddress.toLowerCase().includes('@')
+      ? linkEmailAddress.toLowerCase()
+      : `${linkEmailAddress.toLowerCase()}@hyvechain.com`;
+    
+    try {
+      setLinkingEmail(true);
+      await api.linkEmail(email, linkEmailPassword);
+      setLinkMessage('Email linked successfully! You can now sign in with either your wallet or email.');
+      setShowLinkEmail(false);
+      setLinkEmailAddress('');
+      setLinkEmailPassword('');
+      // Refresh user data
+      const freshUser = await api.getCurrentUser();
+      if (freshUser?.user) setUser(freshUser.user);
+    } catch (error) {
+      setLinkMessage(error.message || 'Failed to link email');
+    } finally {
+      setLinkingEmail(false);
+    }
+  }
+
+  async function handleLinkWallet() {
+    setLinkMessage('');
+    try {
+      setLinkingWallet(true);
+      const { address, signature } = await connectWallet();
+      await api.linkWallet(address, signature);
+      setLinkMessage('Wallet linked successfully! You can now sign in with either your wallet or email.');
+      // Refresh user data
+      const freshUser = await api.getCurrentUser();
+      if (freshUser?.user) setUser(freshUser.user);
+    } catch (error) {
+      setLinkMessage(error.message || 'Failed to link wallet');
+    } finally {
+      setLinkingWallet(false);
     }
   }
 
@@ -1533,6 +1582,105 @@ export default function Profile() {
         {activeTab === 'settings' && isOwnProfile && (
           <div className="profile-card settings-section">
             <h2>Account Settings</h2>
+
+            {/* Account Linking Section */}
+            <div className="account-linking-section">
+              <h3>🔗 Linked Accounts</h3>
+              <p className="linking-description">Link your wallet and HyveMail email to use either for signing in.</p>
+              
+              {linkMessage && (
+                <div className={`link-message ${linkMessage.includes('successfully') ? 'success' : 'error'}`}>
+                  {linkMessage}
+                </div>
+              )}
+
+              <div className="linked-accounts-list">
+                {/* Wallet status */}
+                <div className="linked-account-item">
+                  <div className="linked-account-icon">🦊</div>
+                  <div className="linked-account-info">
+                    <div className="linked-account-label">Wallet</div>
+                    <div className="linked-account-value">
+                      {user?.linkedWallet
+                        ? `${user.linkedWallet.slice(0, 6)}...${user.linkedWallet.slice(-4)}`
+                        : !user?.email
+                          ? `${user?.walletAddress?.slice(0, 6)}...${user?.walletAddress?.slice(-4)}`
+                          : <span className="not-linked">Not linked</span>
+                      }
+                    </div>
+                  </div>
+                  {user?.email && !user?.linkedWallet && (
+                    <button
+                      className="btn-link-account"
+                      onClick={handleLinkWallet}
+                      disabled={linkingWallet}
+                    >
+                      {linkingWallet ? 'Linking...' : 'Link Wallet'}
+                    </button>
+                  )}
+                </div>
+
+                {/* Email status */}
+                <div className="linked-account-item">
+                  <div className="linked-account-icon">📧</div>
+                  <div className="linked-account-info">
+                    <div className="linked-account-label">HyveMail</div>
+                    <div className="linked-account-value">
+                      {user?.email
+                        ? user.email
+                        : <span className="not-linked">Not linked</span>
+                      }
+                    </div>
+                  </div>
+                  {!user?.email && (
+                    <button
+                      className="btn-link-account"
+                      onClick={() => setShowLinkEmail(!showLinkEmail)}
+                      disabled={linkingEmail}
+                    >
+                      Link Email
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Link Email Form */}
+              {showLinkEmail && !user?.email && (
+                <form className="link-email-form" onSubmit={handleLinkEmail}>
+                  <div className="link-email-input-group">
+                    <input
+                      type="text"
+                      placeholder="username"
+                      value={linkEmailAddress}
+                      onChange={(e) => setLinkEmailAddress(e.target.value)}
+                      required
+                    />
+                    <span className="email-domain">@hyvechain.com</span>
+                  </div>
+                  <input
+                    type="password"
+                    placeholder="Email password"
+                    value={linkEmailPassword}
+                    onChange={(e) => setLinkEmailPassword(e.target.value)}
+                    required
+                  />
+                  <div className="link-email-actions">
+                    <button type="submit" className="btn-primary" disabled={linkingEmail}>
+                      {linkingEmail ? 'Verifying...' : 'Link Email'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={() => { setShowLinkEmail(false); setLinkEmailAddress(''); setLinkEmailPassword(''); }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  <p className="link-email-note">Don't have a HyveMail account? <a href="https://hyvechain.com/#/email/signup" target="_blank" rel="noopener noreferrer">Sign up here</a></p>
+                </form>
+              )}
+            </div>
+
             <div className="danger-zone">
               <div className="danger-zone-header">
                 <h3>⚠️ Danger Zone</h3>
