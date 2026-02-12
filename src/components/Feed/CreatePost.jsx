@@ -57,6 +57,8 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
   const [overlayTextSize, setOverlayTextSize] = useState(28);
   const [draggingId, setDraggingId] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [livePreviewPos, setLivePreviewPos] = useState({ x: 50, y: 50 });
+  const [draggingLive, setDraggingLive] = useState(false);
   const previewRef = useRef(null);
   const fileInputRef = useRef(null);
   const { user } = useAuth();
@@ -76,12 +78,13 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
       id: Date.now(),
       type: 'text',
       content: overlayTextInput.trim(),
-      x: 50, y: 50,
+      x: livePreviewPos.x, y: livePreviewPos.y,
       color: overlayTextColor,
       size: overlayTextSize,
     }]);
     setOverlayTextInput('');
     setShowOverlayText(false);
+    setLivePreviewPos({ x: 50, y: 50 });
   }
 
   // ── Add an emoji overlay ──
@@ -119,18 +122,38 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
   }, []);
 
   const handlePointerMove = useCallback((e) => {
-    if (draggingId === null) return;
     const rect = previewRef.current?.getBoundingClientRect();
     if (!rect) return;
+    if (draggingLive) {
+      const x = ((e.clientX - dragOffset.x - rect.left + 16) / rect.width) * 100;
+      const y = ((e.clientY - dragOffset.y - rect.top + 16) / rect.height) * 100;
+      setLivePreviewPos({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
+      return;
+    }
+    if (draggingId === null) return;
     const x = ((e.clientX - dragOffset.x - rect.left + 16) / rect.width) * 100;
     const y = ((e.clientY - dragOffset.y - rect.top + 16) / rect.height) * 100;
     setOverlays(prev => prev.map(o =>
       o.id === draggingId ? { ...o, x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) } : o
     ));
-  }, [draggingId, dragOffset]);
+  }, [draggingId, draggingLive, dragOffset]);
 
   const handlePointerUp = useCallback(() => {
     setDraggingId(null);
+    setDraggingLive(false);
+  }, []);
+
+  // ── Drag handler for live text preview ──
+  const handleLivePreviewPointerDown = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = previewRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const el = e.currentTarget;
+    const oRect = el.getBoundingClientRect();
+    setDraggingLive(true);
+    setDragOffset({ x: e.clientX - oRect.left, y: e.clientY - oRect.top });
+    el.setPointerCapture(e.pointerId);
   }, []);
 
   // ── Flatten overlays onto canvas → File ──
@@ -347,18 +370,20 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
                 </button>
               </div>
             ))}
-            {/* Live text preview while typing */}
+            {/* Live text preview while typing — draggable to position */}
             {showOverlayText && overlayTextInput && (
               <div
-                className="photo-overlay photo-overlay-text live-text-preview"
+                className={`photo-overlay photo-overlay-text live-text-preview${draggingLive ? ' dragging' : ''}`}
                 style={{
-                  left: '50%',
-                  top: '50%',
-                  transform: 'translate(-50%, -50%)',
+                  left: `${livePreviewPos.x}%`,
+                  top: `${livePreviewPos.y}%`,
                   fontSize: `${overlayTextSize}px`,
                   color: overlayTextColor,
-                  pointerEvents: 'none',
+                  touchAction: 'none',
+                  userSelect: 'none',
+                  cursor: 'grab',
                 }}
+                onPointerDown={handleLivePreviewPointerDown}
               >
                 {overlayTextInput}
               </div>
