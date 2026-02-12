@@ -62,7 +62,8 @@ export default function Login() {
       const result = await loginWithEmail(fullEmail, passwordInput);
 
       if (result.needsRegistration) {
-        setError('No Hyve Social profile is linked to this email. Use the webmail login to access your email, or connect a wallet to create a social profile.');
+        setPendingEmail(fullEmail);
+        setNeedsRegistration(true);
       } else {
         navigate('/');
       }
