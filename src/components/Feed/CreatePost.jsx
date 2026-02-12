@@ -391,8 +391,8 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
                 </button>
               </div>
             ))}
-            {/* Live text preview while typing — draggable to position */}
-            {showOverlayText && overlayTextInput && (
+            {/* Live text preview while typing — stays visible across panel switches */}
+            {overlayTextInput && (
               <div
                 className={`photo-overlay photo-overlay-text live-text-preview${draggingLive ? ' dragging' : ''}`}
                 style={{
@@ -432,7 +432,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
               <button
                 type="button"
                 className={`option-button${showFilterPicker ? ' active' : ''}`}
-                onClick={() => { setShowFilterPicker(prev => !prev); setShowOverlayText(false); setShowOverlayEmoji(false); }}
+                onClick={() => { setShowFilterPicker(prev => !prev); setShowOverlayEmoji(false); setShowOverlayText(false); }}
               >
                 🎨 Filters
               </button>
@@ -446,7 +446,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
               <button
                 type="button"
                 className={`option-button${showOverlayEmoji ? ' active' : ''}`}
-                onClick={() => { setShowOverlayEmoji(prev => !prev); setShowOverlayText(false); setShowFilterPicker(false); }}
+                onClick={() => { setShowOverlayEmoji(prev => !prev); setShowFilterPicker(false); setShowOverlayText(false); }}
               >
                 😀 Add Emoji
               </button>
