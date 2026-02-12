@@ -1,5 +1,5 @@
 // src/components/Feed/CreatePost.jsx
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import { compressImage } from '../../utils/imageCompression';
@@ -48,6 +48,16 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
   const [showBgPicker, setShowBgPicker] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState(null);
   const [showFilterPicker, setShowFilterPicker] = useState(false);
+  // ── Photo overlay state ──
+  const [overlays, setOverlays] = useState([]);
+  const [showOverlayText, setShowOverlayText] = useState(false);
+  const [showOverlayEmoji, setShowOverlayEmoji] = useState(false);
+  const [overlayTextInput, setOverlayTextInput] = useState('');
+  const [overlayTextColor, setOverlayTextColor] = useState('#ffffff');
+  const [overlayTextSize, setOverlayTextSize] = useState(28);
+  const [draggingId, setDraggingId] = useState(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const previewRef = useRef(null);
   const fileInputRef = useRef(null);
   const { user } = useAuth();
   const displayName = user?.username || 'there';
@@ -55,6 +65,119 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
   const MAX_IMAGE_MB = 5;
 
   const emojiOptions = ['😀','😄','😁','😅','😂','😍','🥳','😎','😮','😢','😡','👍','❤️'];
+
+  const overlayEmojis = ['😀','😂','😍','🥳','😎','🔥','❤️','⭐','💯','👑','🎉','💀','🙏','💪','👀','🤔','✨','🌈','🦋','🐱'];
+  const textColors = ['#ffffff','#000000','#f6d365','#ef4444','#3b82f6','#22c55e','#a855f7','#ec4899','#f97316','#06b6d4'];
+
+  // ── Add a text overlay ──
+  function addTextOverlay() {
+    if (!overlayTextInput.trim()) return;
+    setOverlays(prev => [...prev, {
+      id: Date.now(),
+      type: 'text',
+      content: overlayTextInput.trim(),
+      x: 50, y: 50,
+      color: overlayTextColor,
+      size: overlayTextSize,
+    }]);
+    setOverlayTextInput('');
+    setShowOverlayText(false);
+  }
+
+  // ── Add an emoji overlay ──
+  function addEmojiOverlay(emoji) {
+    setOverlays(prev => [...prev, {
+      id: Date.now(),
+      type: 'emoji',
+      content: emoji,
+      x: 50, y: 50,
+      size: 40,
+    }]);
+    setShowOverlayEmoji(false);
+  }
+
+  // ── Remove an overlay ──
+  function removeOverlay(id) {
+    setOverlays(prev => prev.filter(o => o.id !== id));
+  }
+
+  // ── Drag handlers (pointer-based for touch + mouse) ──
+  const handlePointerDown = useCallback((e, id) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = previewRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const overlay = document.getElementById(`overlay-${id}`);
+    if (!overlay) return;
+    const oRect = overlay.getBoundingClientRect();
+    setDraggingId(id);
+    setDragOffset({
+      x: e.clientX - oRect.left,
+      y: e.clientY - oRect.top,
+    });
+    overlay.setPointerCapture(e.pointerId);
+  }, []);
+
+  const handlePointerMove = useCallback((e) => {
+    if (draggingId === null) return;
+    const rect = previewRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = ((e.clientX - dragOffset.x - rect.left + 16) / rect.width) * 100;
+    const y = ((e.clientY - dragOffset.y - rect.top + 16) / rect.height) * 100;
+    setOverlays(prev => prev.map(o =>
+      o.id === draggingId ? { ...o, x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) } : o
+    ));
+  }, [draggingId, dragOffset]);
+
+  const handlePointerUp = useCallback(() => {
+    setDraggingId(null);
+  }, []);
+
+  // ── Flatten overlays onto canvas → File ──
+  async function flattenOverlays(imgFile) {
+    if (overlays.length === 0) return imgFile;
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+
+        // Draw the base image with filter
+        const filterCss = selectedFilter
+          ? PHOTO_FILTERS.find(f => f.id === selectedFilter)?.css || 'none'
+          : 'none';
+        ctx.filter = filterCss;
+        ctx.drawImage(img, 0, 0);
+        ctx.filter = 'none';
+
+        // Draw each overlay
+        for (const o of overlays) {
+          const px = (o.x / 100) * canvas.width;
+          const py = (o.y / 100) * canvas.height;
+          const scaledSize = (o.size / 320) * canvas.height; // scale relative to preview height
+          if (o.type === 'text') {
+            ctx.font = `bold ${scaledSize}px sans-serif`;
+            ctx.fillStyle = o.color;
+            ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+            ctx.lineWidth = Math.max(2, scaledSize / 14);
+            ctx.strokeText(o.content, px, py + scaledSize);
+            ctx.fillText(o.content, px, py + scaledSize);
+          } else {
+            ctx.font = `${scaledSize}px serif`;
+            ctx.fillText(o.content, px, py + scaledSize);
+          }
+        }
+
+        canvas.toBlob((blob) => {
+          resolve(new File([blob], 'edited.jpg', { type: 'image/jpeg' }));
+        }, 'image/jpeg', 0.92);
+      };
+      img.src = URL.createObjectURL(imgFile);
+    });
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -70,7 +193,9 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
     try {
       let uploadImage = imageFile;
       if (imageFile) {
-        uploadImage = await compressImage(imageFile, 2, 1920);
+        // Flatten any text/emoji overlays onto the image
+        uploadImage = await flattenOverlays(imageFile);
+        uploadImage = await compressImage(uploadImage, 2, 1920);
       }
 
       const metadata = {};
@@ -118,6 +243,10 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
       setShowBgPicker(false);
       setSelectedFilter(null);
       setShowFilterPicker(false);
+      setOverlays([]);
+      setShowOverlayText(false);
+      setShowOverlayEmoji(false);
+      setOverlayTextInput('');
       
       // Show success (optional)
       console.log('Post created successfully!');
@@ -174,16 +303,50 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
           />
         )}
 
-        {/* Image preview with live filter */}
+        {/* Image preview with live filter + draggable overlays */}
         {imagePreview && (
-          <div className="media-preview">
+          <div
+            className="media-preview"
+            ref={previewRef}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+          >
             <img
               src={imagePreview}
               alt="Preview"
               style={selectedFilter ? {
                 filter: PHOTO_FILTERS.find(f => f.id === selectedFilter)?.css || 'none'
               } : {}}
+              draggable={false}
             />
+            {/* Rendered overlays */}
+            {overlays.map(o => (
+              <div
+                key={o.id}
+                id={`overlay-${o.id}`}
+                className={`photo-overlay ${o.type === 'text' ? 'photo-overlay-text' : 'photo-overlay-emoji'}${draggingId === o.id ? ' dragging' : ''}`}
+                style={{
+                  left: `${o.x}%`,
+                  top: `${o.y}%`,
+                  fontSize: `${o.size}px`,
+                  color: o.color || '#fff',
+                  touchAction: 'none',
+                  userSelect: 'none',
+                }}
+                onPointerDown={(e) => handlePointerDown(e, o.id)}
+              >
+                {o.content}
+                <button
+                  type="button"
+                  className="overlay-remove"
+                  onClick={(e) => { e.stopPropagation(); removeOverlay(o.id); }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
             <button
               type="button"
               className="remove-media"
@@ -192,6 +355,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
                 setImagePreview('');
                 setSelectedFilter(null);
                 setShowFilterPicker(false);
+                setOverlays([]);
               }}
             >
               <CloseIcon size={14} />
@@ -199,16 +363,34 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
           </div>
         )}
 
-        {/* Photo filter picker (only when image is attached) */}
+        {/* Photo tools: Filters, Add Text, Add Emoji (only when image is attached) */}
         {imagePreview && (
           <div className="filter-picker-section">
-            <button
-              type="button"
-              className={`option-button${showFilterPicker ? ' active' : ''}`}
-              onClick={() => setShowFilterPicker(prev => !prev)}
-            >
-              🎨 Filters
-            </button>
+            <div className="photo-tools-bar">
+              <button
+                type="button"
+                className={`option-button${showFilterPicker ? ' active' : ''}`}
+                onClick={() => { setShowFilterPicker(prev => !prev); setShowOverlayText(false); setShowOverlayEmoji(false); }}
+              >
+                🎨 Filters
+              </button>
+              <button
+                type="button"
+                className={`option-button${showOverlayText ? ' active' : ''}`}
+                onClick={() => { setShowOverlayText(prev => !prev); setShowOverlayEmoji(false); setShowFilterPicker(false); }}
+              >
+                ✏️ Add Text
+              </button>
+              <button
+                type="button"
+                className={`option-button${showOverlayEmoji ? ' active' : ''}`}
+                onClick={() => { setShowOverlayEmoji(prev => !prev); setShowOverlayText(false); setShowFilterPicker(false); }}
+              >
+                😀 Add Emoji
+              </button>
+            </div>
+
+            {/* Filter strip */}
             {showFilterPicker && (
               <div className="filter-strip">
                 {PHOTO_FILTERS.map(f => (
@@ -224,6 +406,65 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
                       style={{ filter: f.css }}
                     />
                     <span>{f.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Text overlay panel */}
+            {showOverlayText && (
+              <div className="overlay-text-panel">
+                <input
+                  type="text"
+                  value={overlayTextInput}
+                  onChange={e => setOverlayTextInput(e.target.value)}
+                  placeholder="Type text to add..."
+                  className="overlay-text-input"
+                  maxLength={80}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTextOverlay(); } }}
+                />
+                <div className="overlay-text-options">
+                  <div className="overlay-color-row">
+                    {textColors.map(c => (
+                      <button
+                        key={c}
+                        type="button"
+                        className={`color-dot${overlayTextColor === c ? ' selected' : ''}`}
+                        style={{ background: c }}
+                        onClick={() => setOverlayTextColor(c)}
+                      />
+                    ))}
+                  </div>
+                  <div className="overlay-size-row">
+                    <label>Size</label>
+                    <input
+                      type="range"
+                      min="16"
+                      max="56"
+                      value={overlayTextSize}
+                      onChange={e => setOverlayTextSize(Number(e.target.value))}
+                      className="size-slider"
+                    />
+                    <span className="size-label">{overlayTextSize}px</span>
+                  </div>
+                  <button type="button" className="overlay-add-btn" onClick={addTextOverlay} disabled={!overlayTextInput.trim()}>
+                    Add Text
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Emoji overlay picker */}
+            {showOverlayEmoji && (
+              <div className="overlay-emoji-panel">
+                {overlayEmojis.map(em => (
+                  <button
+                    key={em}
+                    type="button"
+                    className="overlay-emoji-btn"
+                    onClick={() => addEmojiOverlay(em)}
+                  >
+                    {em}
                   </button>
                 ))}
               </div>
@@ -357,6 +598,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
             // Clear text background when image is added
             setSelectedBg(null);
             setShowBgPicker(false);
+            setOverlays([]);
           }}
         />
       </form>
