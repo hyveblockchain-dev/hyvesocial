@@ -157,8 +157,9 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
   }, []);
 
   // ── Flatten overlays onto canvas → File ──
-  async function flattenOverlays(imgFile) {
-    if (overlays.length === 0 && !selectedFilter) return imgFile;
+  async function flattenOverlays(imgFile, overlayList) {
+    const items = overlayList || overlays;
+    if (items.length === 0 && !selectedFilter) return imgFile;
     return new Promise((resolve) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -198,7 +199,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
 
         // Draw overlays with proper coordinate mapping
         ctx.textBaseline = 'top';
-        for (const o of overlays) {
+        for (const o of items) {
           const px = visibleX + (o.x / 100) * visibleW;
           const py = visibleY + (o.y / 100) * visibleH;
           const scaledSize = (o.size / contH) * visibleH;
@@ -235,10 +236,26 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
     setError('');
 
     try {
+      // Auto-commit any pending live preview text as an overlay before flattening
+      let finalOverlays = overlays;
+      if (imageFile && overlayTextInput.trim()) {
+        finalOverlays = [...overlays, {
+          id: Date.now(),
+          type: 'text',
+          content: overlayTextInput.trim(),
+          x: livePreviewPos.x,
+          y: livePreviewPos.y,
+          color: overlayTextColor,
+          size: overlayTextSize,
+        }];
+        setOverlays(finalOverlays);
+        setOverlayTextInput('');
+      }
+
       let uploadImage = imageFile;
       if (imageFile) {
         // Flatten any text/emoji overlays onto the image
-        uploadImage = await flattenOverlays(imageFile);
+        uploadImage = await flattenOverlays(imageFile, finalOverlays);
         uploadImage = await compressImage(uploadImage, 2, 1920);
       }
 
