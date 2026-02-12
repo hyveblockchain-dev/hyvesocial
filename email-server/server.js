@@ -895,8 +895,14 @@ app.post('/api/email/social-login', authLimiter, async (req, res) => {
 
     // If linked to a social account, generate social token
     if (account.socialUserId) {
+      // Generate token compatible with the social backend's authenticateToken
+      // The social backend expects { walletAddress } signed with its JWT_SECRET
+      const crypto = await import('crypto');
+      const emailHash = crypto.createHash('sha256').update(normalizedEmail).digest('hex');
+      const pseudoAddress = '0x' + emailHash.substring(0, 40);
+
       const socialToken = jwt.sign(
-        { userId: account.socialUserId, username: account.socialUsername, email: normalizedEmail },
+        { walletAddress: pseudoAddress },
         SOCIAL_JWT_SECRET,
         { expiresIn: '7d' }
       );
@@ -905,7 +911,7 @@ app.post('/api/email/social-login', authLimiter, async (req, res) => {
         emailToken,
         socialToken,
         user: {
-          _id: account.socialUserId,
+          walletAddress: pseudoAddress,
           username: account.socialUsername,
           email: normalizedEmail,
         },
@@ -940,8 +946,8 @@ app.post('/api/email/link-social', authenticate, async (req, res) => {
     const account = await EmailAccount.findById(req.emailUser.id);
     if (!account) return res.status(404).json({ error: 'Email account not found' });
 
-    account.socialUserId = socialUser.userId || socialUser._id || socialUser.id;
-    account.socialUsername = socialUser.username;
+    account.socialUserId = socialUser.walletAddress || socialUser.userId || socialUser._id || socialUser.id;
+    account.socialUsername = socialUser.username || req.body.username || account.username;
     await account.save();
 
     res.json({ success: true, message: 'Accounts linked successfully' });
