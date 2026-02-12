@@ -502,6 +502,53 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 
+/* Social method toggle (wallet / email within Hyve Social tab) */
+.login-method-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.method-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.method-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+}
+
+.method-btn.active {
+  background: rgba(255, 215, 0, 0.06);
+  border-color: rgba(255, 215, 0, 0.25);
+  color: var(--gold-primary);
+}
+
+/* Email tab heading */
+.email-tab-heading {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 14px 0;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.email-tab-signup {
+  text-align: center;
+}
+
 /* Email login form */
 .email-login-form {
   text-align: left;

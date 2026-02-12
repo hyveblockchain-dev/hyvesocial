@@ -1,6 +1,6 @@
 // src/components/Auth/Login.jsx
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { setE2EESignature } from '../../utils/e2ee';
 import { IconShield, IconZap, IconUsers, IconLock, IconChat, IconGlobe, IconMailbox } from '../Icons/Icons';
@@ -14,10 +14,15 @@ export default function Login() {
   const [needsRegistration, setNeedsRegistration] = useState(false);
   const [username, setUsername] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
-  const [loginMode, setLoginMode] = useState('wallet'); // 'wallet' | 'email'
+  const [activeTab, setActiveTab] = useState('social'); // 'social' | 'email'
+  const [socialMethod, setSocialMethod] = useState('wallet'); // 'wallet' | 'email'
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [pendingEmail, setPendingEmail] = useState('');
+  // Email tab state
+  const [emailTabMode, setEmailTabMode] = useState('login'); // 'login' | 'signup'
+  const [mailUser, setMailUser] = useState('');
+  const [mailPass, setMailPass] = useState('');
 
   async function handleConnect() {
     try {
@@ -75,6 +80,34 @@ export default function Login() {
     }
   }
 
+  // Email tab: direct webmail login
+  async function handleMailLogin(e) {
+    e.preventDefault();
+    if (!mailUser.trim() || !mailPass.trim()) {
+      setError('Please enter your email and password');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+
+      const fullEmail = mailUser.includes('@') ? mailUser : `${mailUser}@hyvechain.com`;
+      const emailApi = (await import('../../services/emailApi')).default;
+      const result = await emailApi.emailLogin(fullEmail, mailPass);
+
+      if (result.token) {
+        localStorage.setItem('email_token', result.token);
+      }
+
+      navigate('/email');
+    } catch (err) {
+      setError(err.message || 'Invalid email or password');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleRegister(e) {
     e.preventDefault();
     
@@ -113,8 +146,8 @@ export default function Login() {
             <div className="login-brand">
               <img src="/hyvelogo.png" alt="Hyve" className="login-logo" />
               <div>
-                <h1>Hyve Social</h1>
-                <p>The decentralized social layer</p>
+                <h1>Hyve</h1>
+                <p>The decentralized ecosystem</p>
               </div>
             </div>
             <div className="login-hero-copy">
@@ -132,86 +165,154 @@ export default function Login() {
           </div>
         )}
 
+        {/* Top-level tabs: Hyve Social | Hyve Email */}
         {!needsRegistration ? (
-          <div className="login-box">
-            {/* Login mode tabs */}
+          <>
             <div className="login-tabs">
               <button
-                className={`login-tab ${loginMode === 'wallet' ? 'active' : ''}`}
-                onClick={() => { setLoginMode('wallet'); setError(''); }}
+                className={`login-tab ${activeTab === 'social' ? 'active' : ''}`}
+                onClick={() => { setActiveTab('social'); setError(''); }}
               >
-                <IconLock size={16} />
-                Wallet
+                <IconUsers size={16} />
+                Hyve Social
               </button>
               <button
-                className={`login-tab ${loginMode === 'email' ? 'active' : ''}`}
-                onClick={() => { setLoginMode('email'); setError(''); }}
+                className={`login-tab ${activeTab === 'email' ? 'active' : ''}`}
+                onClick={() => { setActiveTab('email'); setError(''); }}
               >
                 <IconMailbox size={16} />
-                Email
+                Hyve Email
               </button>
             </div>
 
-            {loginMode === 'wallet' ? (
-              <>
-                <button 
-                  className="connect-button" 
-                  onClick={handleConnect}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <span className="connect-loading">
-                      <span className="connect-spinner"></span>
-                      Connecting...
-                    </span>
-                  ) : (
-                    'Connect with MetaMask'
-                  )}
-                </button>
-                <p className="login-subtitle">Connect your wallet to get started</p>
-              </>
+            {activeTab === 'social' ? (
+              <div className="login-box">
+                {/* Social login method toggle */}
+                <div className="login-method-toggle">
+                  <button
+                    className={`method-btn ${socialMethod === 'wallet' ? 'active' : ''}`}
+                    onClick={() => { setSocialMethod('wallet'); setError(''); }}
+                  >
+                    <IconLock size={14} /> Wallet
+                  </button>
+                  <button
+                    className={`method-btn ${socialMethod === 'email' ? 'active' : ''}`}
+                    onClick={() => { setSocialMethod('email'); setError(''); }}
+                  >
+                    <IconMailbox size={14} /> Email
+                  </button>
+                </div>
+
+                {socialMethod === 'wallet' ? (
+                  <>
+                    <button 
+                      className="connect-button" 
+                      onClick={handleConnect}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <span className="connect-loading">
+                          <span className="connect-spinner"></span>
+                          Connecting...
+                        </span>
+                      ) : (
+                        'Connect with MetaMask'
+                      )}
+                    </button>
+                    <p className="login-subtitle">Connect your wallet to get started</p>
+                  </>
+                ) : (
+                  <form className="email-login-form" onSubmit={handleEmailLogin}>
+                    <div className="email-login-input-group">
+                      <input
+                        type="text"
+                        placeholder="username"
+                        value={emailInput}
+                        onChange={(e) => setEmailInput(e.target.value.trim())}
+                        disabled={loading}
+                        autoFocus
+                      />
+                      <span className="email-login-domain">@hyvechain.com</span>
+                    </div>
+                    <input
+                      type="password"
+                      placeholder="Password"
+                      value={passwordInput}
+                      onChange={(e) => setPasswordInput(e.target.value)}
+                      disabled={loading}
+                      className="email-login-password"
+                    />
+                    <button type="submit" className="connect-button" disabled={loading}>
+                      {loading ? (
+                        <span className="connect-loading">
+                          <span className="connect-spinner"></span>
+                          Signing in...
+                        </span>
+                      ) : (
+                        'Sign In to Hyve Social'
+                      )}
+                    </button>
+                    <p className="login-subtitle">Use your @hyvechain.com email to access Hyve Social</p>
+                  </form>
+                )}
+              </div>
             ) : (
-              <form className="email-login-form" onSubmit={handleEmailLogin}>
-                <div className="email-login-input-group">
-                  <input
-                    type="text"
-                    placeholder="username"
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value.trim())}
-                    disabled={loading}
-                    autoFocus
-                  />
-                  <span className="email-login-domain">@hyvechain.com</span>
-                </div>
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  disabled={loading}
-                  className="email-login-password"
-                />
-                <button type="submit" className="connect-button" disabled={loading}>
-                  {loading ? (
-                    <span className="connect-loading">
-                      <span className="connect-spinner"></span>
-                      Signing in...
-                    </span>
-                  ) : (
-                    'Sign In with Email'
-                  )}
-                </button>
-                <div className="email-login-links">
-                  <Link to="/email/login" className="email-login-link">
-                    Just need email? Go to HyveMail
-                  </Link>
-                  <Link to="/email/signup" className="email-login-link">
-                    Get a @hyvechain.com email
-                  </Link>
-                </div>
-              </form>
+              <div className="login-box">
+                {emailTabMode === 'login' ? (
+                  <form className="email-login-form" onSubmit={handleMailLogin}>
+                    <h3 className="email-tab-heading">Sign In to HyveMail</h3>
+                    <div className="email-login-input-group">
+                      <input
+                        type="text"
+                        placeholder="username"
+                        value={mailUser}
+                        onChange={(e) => setMailUser(e.target.value.trim())}
+                        disabled={loading}
+                        autoFocus
+                      />
+                      <span className="email-login-domain">@hyvechain.com</span>
+                    </div>
+                    <input
+                      type="password"
+                      placeholder="Password"
+                      value={mailPass}
+                      onChange={(e) => setMailPass(e.target.value)}
+                      disabled={loading}
+                      className="email-login-password"
+                    />
+                    <button type="submit" className="connect-button" disabled={loading}>
+                      {loading ? (
+                        <span className="connect-loading">
+                          <span className="connect-spinner"></span>
+                          Signing in...
+                        </span>
+                      ) : (
+                        'Open My Email'
+                      )}
+                    </button>
+                    <div className="email-login-links">
+                      <button type="button" className="email-login-link" onClick={() => { setEmailTabMode('signup'); setError(''); }}>
+                        Don't have an email? Create one
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="email-tab-signup">
+                    <h3 className="email-tab-heading">Get Your @hyvechain.com Email</h3>
+                    <p className="login-subtitle">Create a private, ad-free email account.</p>
+                    <button className="connect-button" onClick={() => navigate('/email/signup')}>
+                      Create Email Account
+                    </button>
+                    <div className="email-login-links">
+                      <button type="button" className="email-login-link" onClick={() => { setEmailTabMode('login'); setError(''); }}>
+                        Already have an account? Sign in
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
-          </div>
+          </>
         ) : (
           <form className="register-form" onSubmit={handleRegister}>
             {pendingEmail ? (
@@ -238,20 +339,6 @@ export default function Login() {
             <button type="submit" disabled={loading}>
               {loading ? 'Setting up...' : 'Set Up Profile'}
             </button>
-            {pendingEmail && (
-              <button
-                type="button"
-                onClick={() => {
-                  localStorage.setItem('email_token', localStorage.getItem('email_token') || '');
-                  navigate('/email');
-                }}
-                disabled={loading}
-                className="back-button"
-                style={{ background: 'rgba(255,255,255,0.08)' }}
-              >
-                Skip — Go to HyveMail
-              </button>
-            )}
             <button 
               type="button" 
               onClick={() => { setNeedsRegistration(false); setPendingEmail(''); }}
