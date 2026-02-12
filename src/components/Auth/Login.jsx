@@ -62,8 +62,8 @@ export default function Login() {
       const result = await loginWithEmail(fullEmail, passwordInput);
 
       if (result.needsRegistration) {
-        setPendingEmail(fullEmail);
-        setNeedsRegistration(true);
+        // Email is valid but no social profile — go straight to webmail
+        navigate('/email');
       } else {
         navigate('/');
       }
