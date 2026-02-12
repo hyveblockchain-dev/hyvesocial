@@ -121,16 +121,55 @@ export async function getMessage(messageId, folder = 'inbox') {
   return data;
 }
 
-/** Send an email */
+/** Send an email (uses FormData when attachments are present) */
 export async function sendEmail({ to, cc, bcc, subject, body, attachments, replyTo }) {
-  const response = await fetch(`${EMAIL_API_URL}/api/email/send`, {
-    method: 'POST',
-    headers: authHeaders(),
-    body: JSON.stringify({ to, cc, bcc, subject, body, attachments, replyTo }),
-  });
+  const token = getToken();
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+
+  let fetchOptions;
+
+  if (attachments && attachments.length > 0) {
+    // Use FormData for file uploads
+    const formData = new FormData();
+    formData.append('to', JSON.stringify(to));
+    if (cc) formData.append('cc', JSON.stringify(cc));
+    if (bcc) formData.append('bcc', JSON.stringify(bcc));
+    formData.append('subject', subject || '');
+    formData.append('body', body || '');
+    if (replyTo) formData.append('replyTo', replyTo);
+
+    for (const file of attachments) {
+      formData.append('attachments', file, file.name);
+    }
+
+    fetchOptions = {
+      method: 'POST',
+      headers: authHeader, // No Content-Type — browser sets multipart boundary
+      body: formData,
+    };
+  } else {
+    fetchOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({ to, cc, bcc, subject, body, replyTo }),
+    };
+  }
+
+  const response = await fetch(`${EMAIL_API_URL}/api/email/send`, fetchOptions);
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'Failed to send email');
   return data;
+}
+
+/** Download an attachment (returns a blob URL) */
+export async function downloadAttachment(messageId, attachmentIndex, folder = 'inbox') {
+  const response = await fetch(
+    `${EMAIL_API_URL}/api/email/messages/${messageId}/attachments/${attachmentIndex}?folder=${folder}`,
+    { headers: { Authorization: `Bearer ${getToken()}` } }
+  );
+  if (!response.ok) throw new Error('Failed to download attachment');
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
 }
 
 /** Save draft */
@@ -259,6 +298,7 @@ const emailApi = {
   deleteMessage,
   getUnreadCounts,
   searchEmails,
+  downloadAttachment,
   linkToSocial,
   socialLoginWithEmail,
 };

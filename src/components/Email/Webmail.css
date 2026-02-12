@@ -712,7 +712,100 @@
   border-top: 2px solid var(--trim-color);
   background: var(--bg-secondary);
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.attach-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--trim-color);
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.attach-btn:hover {
+  color: var(--gold-primary);
+  border-color: var(--gold-primary);
+  background: rgba(255, 215, 0, 0.05);
+}
+
+/* Compose Attachments */
+.compose-attachments {
+  padding: 10px 20px;
+  border-top: 1px solid var(--trim-color);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.compose-att-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+.compose-att-total {
+  color: var(--text-tertiary);
+  opacity: 0.7;
+}
+
+.compose-att-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.compose-att-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--trim-color);
+  border-radius: 8px;
+  font-size: 13px;
+  max-width: 260px;
+}
+
+.compose-att-name {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 160px;
+}
+
+.compose-att-size {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.compose-att-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.compose-att-remove:hover {
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.1);
 }
 
 .send-btn {
@@ -951,12 +1044,28 @@
   color: var(--text-secondary);
   text-decoration: none;
   font-size: 13px;
+  cursor: pointer;
   transition: all 0.2s;
 }
 
 .ev-attachment:hover {
   background: rgba(255, 255, 255, 0.06);
   color: var(--gold-primary);
+}
+
+.ev-attachment:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.ev-att-downloading {
+  color: var(--gold-primary);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 .ev-att-size {

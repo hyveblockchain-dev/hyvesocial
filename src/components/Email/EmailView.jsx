@@ -1,6 +1,26 @@
 // src/components/Email/EmailView.jsx
+import { useState } from 'react';
 import { IconArrowLeft, IconTrash, IconSend } from '../Icons/Icons';
+import emailApi from '../../services/emailApi';
 import './Webmail.css';
+
+function IconDownload(props) {
+  const size = props.size || 20;
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
+function formatAttSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
 
 function IconReply(props) {
   const size = props.size || 20;
@@ -31,7 +51,26 @@ function IconStar(props) {
   );
 }
 
-export default function EmailView({ message, onBack, onReply, onDelete, onStar, formatDate, getInitials, getAvatarColor }) {
+export default function EmailView({ message, folder, onBack, onReply, onDelete, onStar, formatDate, getInitials, getAvatarColor }) {
+  const [downloading, setDownloading] = useState(null);
+
+  async function handleDownload(att, index) {
+    try {
+      setDownloading(index);
+      const blobUrl = await emailApi.downloadAttachment(message.id, att.index ?? index, folder || 'inbox');
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = att.filename || 'attachment';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch (err) {
+      console.error('Download failed:', err);
+    } finally {
+      setDownloading(null);
+    }
+  }
   return (
     <div className="email-view">
       <div className="email-view-toolbar">
@@ -92,10 +131,17 @@ export default function EmailView({ message, onBack, onReply, onDelete, onStar, 
             <h4>Attachments ({message.attachments.length})</h4>
             <div className="ev-attachment-list">
               {message.attachments.map((att, i) => (
-                <a key={i} href={att.url} className="ev-attachment" download={att.filename}>
+                <button
+                  key={i}
+                  className="ev-attachment"
+                  onClick={() => handleDownload(att, i)}
+                  disabled={downloading === i}
+                >
+                  <IconDownload size={14} />
                   <span className="ev-att-name">{att.filename}</span>
-                  <span className="ev-att-size">{att.size}</span>
-                </a>
+                  <span className="ev-att-size">{formatAttSize(att.size)}</span>
+                  {downloading === i && <span className="ev-att-downloading">...</span>}
+                </button>
               ))}
             </div>
           </div>

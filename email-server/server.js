@@ -24,6 +24,13 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { execSync } from 'child_process';
 import crypto from 'crypto';
+import multer from 'multer';
+
+// Configure multer for file uploads (store in memory, 25MB limit)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB per file
+});
 
 const app = express();
 const PORT = process.env.EMAIL_PORT || 4500;
@@ -692,7 +699,13 @@ app.get('/api/email/messages/:id', authenticate, async (req, res) => {
           starred: msg.flags?.has('\\Flagged') || false,
           body: parsed.text || '',
           html: parsed.html || null,
-          attachments: (parsed.attachments || []).map(a => ({ filename: a.filename, size: a.size, contentType: a.contentType })),
+          attachments: (parsed.attachments || []).map((a, idx) => ({
+            filename: a.filename || `attachment-${idx}`,
+            size: a.size,
+            contentType: a.contentType,
+            index: idx,
+            url: `/api/email/messages/${msg.uid}/attachments/${idx}?folder=${folder}`,
+          })),
         });
       } finally {
         lock.release();
@@ -706,10 +719,27 @@ app.get('/api/email/messages/:id', authenticate, async (req, res) => {
   }
 });
 
-// Send email
-app.post('/api/email/send', [authenticate, sendLimiter], async (req, res) => {
+// Send email (supports multipart/form-data with attachments)
+app.post('/api/email/send', [authenticate, sendLimiter, upload.array('attachments', 10)], async (req, res) => {
   try {
-    const { to, cc, bcc, subject, body } = req.body;
+    let to, cc, bcc, subject, body;
+
+    // Handle both JSON and multipart/form-data
+    if (req.is('multipart/form-data')) {
+      // Parse fields from form data — 'to' and 'cc'/'bcc' may be JSON arrays or strings
+      const parseField = (val) => {
+        if (!val) return undefined;
+        try { return JSON.parse(val); } catch { return val; }
+      };
+      to = parseField(req.body.to);
+      cc = parseField(req.body.cc);
+      bcc = parseField(req.body.bcc);
+      subject = req.body.subject;
+      body = req.body.body;
+    } else {
+      ({ to, cc, bcc, subject, body } = req.body);
+    }
+
     const { email, password } = getUserCredentials(req);
 
     if (!to || (Array.isArray(to) && to.length === 0)) {
@@ -734,6 +764,15 @@ app.post('/api/email/send', [authenticate, sendLimiter], async (req, res) => {
       mailOptions.text += `\n\n--\n${account.settings.signature}`;
     }
 
+    // Attach uploaded files
+    if (req.files && req.files.length > 0) {
+      mailOptions.attachments = req.files.map(file => ({
+        filename: file.originalname,
+        content: file.buffer,
+        contentType: file.mimetype,
+      }));
+    }
+
     // Verify SMTP connection before sending
     try {
       await transport.verify();
@@ -754,17 +793,53 @@ app.post('/api/email/send', [authenticate, sendLimiter], async (req, res) => {
     try {
       const client = await getImapClient(email, password);
       try {
-        const rawMessage = [
-          `From: ${mailOptions.from}`,
-          `To: ${mailOptions.to}`,
-          cc ? `Cc: ${mailOptions.cc}` : null,
-          `Subject: ${mailOptions.subject || ''}`,
-          `Date: ${new Date().toUTCString()}`,
-          `MIME-Version: 1.0`,
-          `Content-Type: text/plain; charset=utf-8`,
-          '',
-          mailOptions.text || '',
-        ].filter(l => l !== null).join('\r\n');
+        // Build raw MIME message for Sent copy (including attachments)
+        const boundary = `----HyveMail_${crypto.randomUUID()}`;
+        const hasAttachments = req.files && req.files.length > 0;
+
+        let rawMessage;
+        if (hasAttachments) {
+          const parts = [
+            `From: ${mailOptions.from}`,
+            `To: ${mailOptions.to}`,
+            cc ? `Cc: ${mailOptions.cc}` : null,
+            `Subject: ${mailOptions.subject || ''}`,
+            `Date: ${new Date().toUTCString()}`,
+            `MIME-Version: 1.0`,
+            `Content-Type: multipart/mixed; boundary="${boundary}"`,
+            '',
+            `--${boundary}`,
+            `Content-Type: text/plain; charset=utf-8`,
+            `Content-Transfer-Encoding: 7bit`,
+            '',
+            mailOptions.text || '',
+          ].filter(l => l !== null);
+
+          for (const file of req.files) {
+            parts.push(
+              `--${boundary}`,
+              `Content-Type: ${file.mimetype}; name="${file.originalname}"`,
+              `Content-Disposition: attachment; filename="${file.originalname}"`,
+              `Content-Transfer-Encoding: base64`,
+              '',
+              file.buffer.toString('base64').match(/.{1,76}/g).join('\r\n'),
+            );
+          }
+          parts.push(`--${boundary}--`);
+          rawMessage = parts.join('\r\n');
+        } else {
+          rawMessage = [
+            `From: ${mailOptions.from}`,
+            `To: ${mailOptions.to}`,
+            cc ? `Cc: ${mailOptions.cc}` : null,
+            `Subject: ${mailOptions.subject || ''}`,
+            `Date: ${new Date().toUTCString()}`,
+            `MIME-Version: 1.0`,
+            `Content-Type: text/plain; charset=utf-8`,
+            '',
+            mailOptions.text || '',
+          ].filter(l => l !== null).join('\r\n');
+        }
 
         await client.append('Sent', rawMessage, ['\\Seen']);
       } finally {
@@ -805,6 +880,51 @@ app.post('/api/email/send', [authenticate, sendLimiter], async (req, res) => {
       error: userMessage,
       detail: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
+  }
+});
+
+// Download attachment from a message
+app.get('/api/email/messages/:id/attachments/:index', authenticate, async (req, res) => {
+  try {
+    const { email, password } = getUserCredentials(req);
+    const messageId = req.params.id;
+    const attachmentIndex = parseInt(req.params.index);
+    const folder = req.query.folder || 'INBOX';
+    const folderMap = { inbox: 'INBOX', sent: 'Sent', drafts: 'Drafts', trash: 'Trash', spam: 'Spam' };
+    const imapFolder = folderMap[folder.toLowerCase()] || folder;
+
+    const client = await getImapClient(email, password);
+    try {
+      const lock = await client.getMailboxLock(imapFolder);
+      try {
+        const msg = await client.fetchOne(messageId, { source: true }, { uid: true });
+        if (!msg) {
+          return res.status(404).json({ error: 'Message not found' });
+        }
+
+        const parsed = await simpleParser(msg.source);
+        const attachments = parsed.attachments || [];
+
+        if (attachmentIndex < 0 || attachmentIndex >= attachments.length) {
+          return res.status(404).json({ error: 'Attachment not found' });
+        }
+
+        const att = attachments[attachmentIndex];
+        res.set({
+          'Content-Type': att.contentType || 'application/octet-stream',
+          'Content-Disposition': `attachment; filename="${encodeURIComponent(att.filename || 'attachment')}"`,
+          'Content-Length': att.size || att.content.length,
+        });
+        res.send(att.content);
+      } finally {
+        lock.release();
+      }
+    } finally {
+      await client.logout();
+    }
+  } catch (error) {
+    console.error('Download attachment error:', error);
+    res.status(500).json({ error: 'Failed to download attachment' });
   }
 });
 

@@ -18,6 +18,7 @@
     "jsonwebtoken": "^9.0.2",
     "mailparser": "^3.7.1",
     "mongoose": "^8.1.1",
+    "multer": "^2.0.2",
     "nodemailer": "^6.9.8"
   }
 }

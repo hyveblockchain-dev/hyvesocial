@@ -269,6 +269,7 @@ export default function Webmail() {
     return (
       <EmailView
         message={selectedMessage}
+        folder={currentFolder}
         onBack={() => setSelectedMessage(null)}
         onReply={handleReply}
         onDelete={() => handleMoveToTrash(selectedMessage.id)}
