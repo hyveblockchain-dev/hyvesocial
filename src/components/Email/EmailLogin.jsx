@@ -62,6 +62,12 @@ export default function EmailLogin() {
         localStorage.setItem('email_token', result.token);
       }
 
+      // If email account is linked to social, store social token too
+      if (result.socialToken) {
+        localStorage.setItem('auth_token', result.socialToken);
+        localStorage.setItem('token', result.socialToken);
+      }
+
       navigate('/email');
     } catch (err) {
       setError(err.message || 'Invalid email or password');

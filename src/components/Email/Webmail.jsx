@@ -340,7 +340,21 @@ export default function Webmail() {
             </div>
           )}
           <div className="sidebar-actions">
-            <button className="sidebar-action-btn" onClick={() => navigate('/')} title="Go to Hyve Social">
+            <button className="sidebar-action-btn" onClick={async () => {
+              // If no social auth token, try to get one from email session
+              if (!localStorage.getItem('auth_token')) {
+                try {
+                  const result = await emailApi.getSocialToken();
+                  if (result.socialToken) {
+                    localStorage.setItem('auth_token', result.socialToken);
+                    localStorage.setItem('token', result.socialToken);
+                  }
+                } catch (err) {
+                  console.warn('Could not get social token:', err);
+                }
+              }
+              navigate('/');
+            }} title="Go to Hyve Social">
               <IconMailbox size={16} /> Social
             </button>
             <button className="sidebar-action-btn" onClick={handleEmailLogout} title="Sign out of email">

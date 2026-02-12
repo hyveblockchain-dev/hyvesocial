@@ -482,8 +482,26 @@ app.post('/api/email/login', authLimiter, async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    // Also generate social token if email is linked to a social account
+    let socialToken = null;
+    let socialUser = null;
+    if (account.socialUserId) {
+      socialToken = jwt.sign(
+        { walletAddress: account.socialUserId },
+        SOCIAL_JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+      socialUser = {
+        walletAddress: account.socialUserId,
+        username: account.socialUsername,
+        email: normalizedEmail,
+      };
+    }
+
     res.json({
       token,
+      socialToken,
+      socialUser,
       account: {
         username: account.username,
         email: normalizedEmail,
@@ -1146,6 +1164,38 @@ app.get('/api/email/search', authenticate, async (req, res) => {
 // ========================================
 // HYVE SOCIAL INTEGRATION
 // ========================================
+
+// Get social token from email session (authenticated)
+app.get('/api/email/social-token', authenticate, async (req, res) => {
+  try {
+    const account = await EmailAccount.findById(req.emailUser.id);
+    if (!account) {
+      return res.status(404).json({ error: 'Account not found', socialToken: null });
+    }
+
+    if (!account.socialUserId) {
+      return res.json({ socialToken: null, user: null });
+    }
+
+    const socialToken = jwt.sign(
+      { walletAddress: account.socialUserId },
+      SOCIAL_JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      socialToken,
+      user: {
+        walletAddress: account.socialUserId,
+        username: account.socialUsername,
+        email: account.email,
+      },
+    });
+  } catch (error) {
+    console.error('Social token error:', error);
+    res.status(500).json({ error: 'Failed to get social token', socialToken: null });
+  }
+});
 
 // Login to Hyve Social using email credentials
 app.post('/api/email/social-login', authLimiter, async (req, res) => {

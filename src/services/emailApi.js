@@ -280,6 +280,16 @@ export async function socialLoginWithEmail(email, password) {
   return data;
 }
 
+/** Get social auth token from current email session */
+export async function getSocialToken() {
+  const response = await fetch(`${EMAIL_API_URL}/api/email/social-token`, {
+    headers: authHeaders(),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get social token');
+  return data;
+}
+
 const emailApi = {
   emailSignup,
   emailLogin,
@@ -301,6 +311,7 @@ const emailApi = {
   downloadAttachment,
   linkToSocial,
   socialLoginWithEmail,
+  getSocialToken,
 };
 
 export default emailApi;
