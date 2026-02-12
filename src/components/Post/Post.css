@@ -96,6 +96,22 @@
   font-size: 15px;
 }
 
+/* ── Styled text background posts ──────────────────────── */
+.post-content.post-content-bg {
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 24px;
+  border-radius: 16px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  word-break: break-word;
+}
+
 .post-image img {
   width: 100%;
   border-radius: 16px;

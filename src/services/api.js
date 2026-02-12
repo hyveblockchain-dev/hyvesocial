@@ -215,6 +215,8 @@ export async function createPost(content, imageFile = null, videoUrl = '') {
   let normalizedAllowShare = undefined;
   let normalizedGroupId = undefined;
 
+  let normalizedMetadata = undefined;
+
   if (typeof content === 'object' && content !== null) {
     normalizedContent = content.content || '';
     normalizedImageFile = content.imageFile || null;
@@ -224,6 +226,7 @@ export async function createPost(content, imageFile = null, videoUrl = '') {
     normalizedAllowShare =
       content.allowShare ?? content.allow_share ?? content.shareable ?? content.is_shareable;
     normalizedGroupId = content.groupId ?? content.group_id;
+    normalizedMetadata = content.metadata || undefined;
   }
 
   const postData = {
@@ -251,6 +254,10 @@ export async function createPost(content, imageFile = null, videoUrl = '') {
   if (typeof normalizedAllowShare === 'boolean') {
     postData.allowShare = normalizedAllowShare;
     postData.allow_share = normalizedAllowShare;
+  }
+
+  if (normalizedMetadata && Object.keys(normalizedMetadata).length > 0) {
+    postData.metadata = normalizedMetadata;
   }
 
   const response = await fetch(`${API_URL}/api/posts`, {

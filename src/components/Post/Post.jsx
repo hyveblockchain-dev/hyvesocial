@@ -8,6 +8,32 @@ import { ThumbsUpIcon, ChatIcon, ShareIcon, SmileIcon, CameraIcon, CloseIcon, Fl
 import api from '../../services/api';
 import './Post.css';
 
+// ── Text background presets (must match CreatePost.jsx) ───────────
+const TEXT_BG_MAP = {
+  'gradient-gold': 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+  'gradient-ocean': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  'gradient-sunset': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+  'gradient-forest': 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+  'gradient-night': 'linear-gradient(135deg, #0c0c1d 0%, #1a1a4e 50%, #2d1b69 100%)',
+  'gradient-fire': 'linear-gradient(135deg, #f12711 0%, #f5af19 100%)',
+  'gradient-arctic': 'linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%)',
+  'gradient-berry': 'linear-gradient(135deg, #7028e4 0%, #e5b2ca 100%)',
+  'solid-black': '#0a0a0a',
+  'solid-red': '#dc2626',
+  'solid-blue': '#2563eb',
+};
+
+const FILTER_CSS_MAP = {
+  'vivid': 'saturate(1.4) contrast(1.1)',
+  'warm': 'sepia(0.25) saturate(1.3) brightness(1.05)',
+  'cool': 'saturate(0.9) brightness(1.05) hue-rotate(15deg)',
+  'bw': 'grayscale(1)',
+  'sepia': 'sepia(0.7)',
+  'dramatic': 'contrast(1.4) saturate(1.2) brightness(0.9)',
+  'fade': 'contrast(0.85) brightness(1.1) saturate(0.7)',
+  'vintage': 'sepia(0.35) contrast(1.1) brightness(0.95) saturate(1.2)',
+};
+
 // Helper function to render avatar
 function getAvatar(imageUrl, username, className) {
   if (imageUrl) {
@@ -567,13 +593,43 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
         )}
       </div>
 
-      <div className="post-content">{normalizeSharedContent(post.content)}</div>
+      {/* Post content — with optional text background */}
+      {(() => {
+        const meta = typeof post.metadata === 'string' ? (() => { try { return JSON.parse(post.metadata); } catch { return {}; } })() : (post.metadata || {});
+        const bgId = meta.textBackground;
+        const bgValue = bgId ? TEXT_BG_MAP[bgId] : null;
+        if (bgValue && !post.image_url) {
+          const isGradient = bgValue.startsWith('linear-gradient');
+          return (
+            <div
+              className="post-content post-content-bg"
+              style={{
+                background: bgValue,
+                color: (bgId === 'gradient-arctic') ? '#0f172a' : '#fff',
+              }}
+            >
+              {normalizeSharedContent(post.content)}
+            </div>
+          );
+        }
+        return <div className="post-content">{normalizeSharedContent(post.content)}</div>;
+      })()}
 
-      {post.image_url && (
-        <div className="post-image">
-          <img src={post.image_url} alt="Post" />
-        </div>
-      )}
+      {/* Post image — with optional CSS filter */}
+      {post.image_url && (() => {
+        const meta = typeof post.metadata === 'string' ? (() => { try { return JSON.parse(post.metadata); } catch { return {}; } })() : (post.metadata || {});
+        const filterId = meta.imageFilter;
+        const filterCss = filterId ? FILTER_CSS_MAP[filterId] : null;
+        return (
+          <div className="post-image">
+            <img
+              src={post.image_url}
+              alt="Post"
+              style={filterCss ? { filter: filterCss } : {}}
+            />
+          </div>
+        );
+      })()}
 
       {post.video_url && (
         <div className="post-video">
