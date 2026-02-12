@@ -315,7 +315,8 @@
 }
 
 /* Standard inputs */
-.email-signup-form > input {
+.email-signup-form > input,
+.email-signup-form > .password-input-wrapper input {
   width: 100%;
   padding: 14px 18px;
   background: rgba(255, 255, 255, 0.03);
@@ -329,15 +330,26 @@
   box-sizing: border-box;
 }
 
-.email-signup-form > input::placeholder {
+.email-signup-form > input::placeholder,
+.email-signup-form > .password-input-wrapper input::placeholder {
   color: var(--text-tertiary);
 }
 
-.email-signup-form > input:focus {
+.email-signup-form > input:focus,
+.email-signup-form > .password-input-wrapper input:focus {
   outline: none;
   border-color: var(--gold-primary);
   box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.08);
   background: rgba(255, 255, 255, 0.04);
+}
+
+.email-signup-form > .password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.email-signup-form > .password-input-wrapper input {
+  padding-right: 44px;
 }
 
 .input-hint {
@@ -345,6 +357,38 @@
   color: var(--text-tertiary);
   margin: 4px 0 18px;
   line-height: 1.5;
+}
+
+/* Password toggle */
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-input-wrapper input {
+  width: 100%;
+  padding-right: 44px;
+  box-sizing: border-box;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  z-index: 1;
+}
+
+.password-toggle:hover {
+  opacity: 1;
 }
 
 /* Password strength */

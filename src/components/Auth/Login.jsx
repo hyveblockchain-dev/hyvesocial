@@ -23,6 +23,8 @@ export default function Login() {
   const [emailTabMode, setEmailTabMode] = useState('login'); // 'login' | 'signup'
   const [mailUser, setMailUser] = useState('');
   const [mailPass, setMailPass] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showMailPass, setShowMailPass] = useState(false);
 
   async function handleConnect() {
     try {
@@ -234,14 +236,19 @@ export default function Login() {
                       />
                       <span className="email-login-domain">@hyvechain.com</span>
                     </div>
-                    <input
-                      type="password"
-                      placeholder="Password"
-                      value={passwordInput}
-                      onChange={(e) => setPasswordInput(e.target.value)}
-                      disabled={loading}
-                      className="email-login-password"
-                    />
+                    <div className="password-input-wrapper">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Password"
+                        value={passwordInput}
+                        onChange={(e) => setPasswordInput(e.target.value)}
+                        disabled={loading}
+                        className="email-login-password"
+                      />
+                      <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
+                        {showPassword ? '🙈' : '👁️'}
+                      </button>
+                    </div>
                     <button type="submit" className="connect-button" disabled={loading}>
                       {loading ? (
                         <span className="connect-loading">
@@ -272,14 +279,19 @@ export default function Login() {
                       />
                       <span className="email-login-domain">@hyvechain.com</span>
                     </div>
-                    <input
-                      type="password"
-                      placeholder="Password"
-                      value={mailPass}
-                      onChange={(e) => setMailPass(e.target.value)}
-                      disabled={loading}
-                      className="email-login-password"
-                    />
+                    <div className="password-input-wrapper">
+                      <input
+                        type={showMailPass ? 'text' : 'password'}
+                        placeholder="Password"
+                        value={mailPass}
+                        onChange={(e) => setMailPass(e.target.value)}
+                        disabled={loading}
+                        className="email-login-password"
+                      />
+                      <button type="button" className="password-toggle" onClick={() => setShowMailPass(!showMailPass)} tabIndex={-1}>
+                        {showMailPass ? '🙈' : '👁️'}
+                      </button>
+                    </div>
                     <button type="submit" className="connect-button" disabled={loading}>
                       {loading ? (
                         <span className="connect-loading">

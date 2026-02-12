@@ -88,6 +88,7 @@ export default function Profile() {
   const [linkingEmail, setLinkingEmail] = useState(false);
   const [linkingWallet, setLinkingWallet] = useState(false);
   const [linkMessage, setLinkMessage] = useState('');
+  const [showLinkPassword, setShowLinkPassword] = useState(false);
   
   const isOwnProfile = (() => {
     const resolved = resolvedAddress?.toLowerCase?.();
@@ -1657,13 +1658,18 @@ export default function Profile() {
                     />
                     <span className="email-domain">@hyvechain.com</span>
                   </div>
-                  <input
-                    type="password"
-                    placeholder="Email password"
-                    value={linkEmailPassword}
-                    onChange={(e) => setLinkEmailPassword(e.target.value)}
-                    required
-                  />
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showLinkPassword ? 'text' : 'password'}
+                      placeholder="Email password"
+                      value={linkEmailPassword}
+                      onChange={(e) => setLinkEmailPassword(e.target.value)}
+                      required
+                    />
+                    <button type="button" className="password-toggle" onClick={() => setShowLinkPassword(!showLinkPassword)} tabIndex={-1}>
+                      {showLinkPassword ? '🙈' : '👁️'}
+                    </button>
+                  </div>
                   <div className="link-email-actions">
                     <button type="submit" className="btn-primary" disabled={linkingEmail}>
                       {linkingEmail ? 'Verifying...' : 'Link Email'}

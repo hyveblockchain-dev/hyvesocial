@@ -21,6 +21,8 @@ export default function EmailSignup() {
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [createdEmail, setCreatedEmail] = useState('');
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const debounceRef = useRef(null);
 
   // Check username availability with debounce
@@ -248,13 +250,18 @@ export default function EmailSignup() {
             <p className="step-subtitle">
               Your email: <strong>{username}@hyvechain.com</strong>
             </p>
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoFocus
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoFocus
+              />
+              <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
             {password && (
               <div className="password-strength">
                 <div className="strength-bars">
@@ -273,12 +280,17 @@ export default function EmailSignup() {
                 </span>
               </div>
             )}
-            <input
-              type="password"
-              placeholder="Confirm password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+              <button type="button" className="password-toggle" onClick={() => setShowConfirmPassword(!showConfirmPassword)} tabIndex={-1}>
+                {showConfirmPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
             <p className="input-hint">
               Minimum 8 characters. Use uppercase, numbers, and symbols for a stronger password.
             </p>
