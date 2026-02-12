@@ -1509,6 +1509,10 @@ export default {
   // Account
   deleteAccount,
 
+  // Account Linking
+  linkEmail,
+  linkWallet,
+
   // Chat/Messages
   getConversations,
   getMessages,

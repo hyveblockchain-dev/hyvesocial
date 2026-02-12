@@ -1603,8 +1603,8 @@ export default function Profile() {
                     <div className="linked-account-value">
                       {user?.linkedWallet
                         ? `${user.linkedWallet.slice(0, 6)}...${user.linkedWallet.slice(-4)}`
-                        : !user?.email
-                          ? `${user?.walletAddress?.slice(0, 6)}...${user?.walletAddress?.slice(-4)}`
+                        : (user?.walletAddress && !user?.email)
+                          ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-4)}`
                           : <span className="not-linked">Not linked</span>
                       }
                     </div>
