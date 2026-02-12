@@ -340,7 +340,7 @@ export default function Webmail() {
             </div>
           )}
           <div className="sidebar-actions">
-            <button className="sidebar-action-btn" onClick={() => navigate('/login')} title="Go to Hyve Social">
+            <button className="sidebar-action-btn" onClick={() => navigate('/')} title="Go to Hyve Social">
               <IconMailbox size={16} /> Social
             </button>
             <button className="sidebar-action-btn" onClick={handleEmailLogout} title="Sign out of email">
