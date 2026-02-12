@@ -232,7 +232,23 @@ export function AuthProvider({ children }) {
         localStorage.setItem('email_token', result.emailToken);
       }
 
-      if (result.user) {
+      if (result.user && result.socialToken) {
+        // Fetch full profile from social backend using the social token
+        try {
+          const fullUser = await api.getCurrentUser();
+          if (fullUser && fullUser.user) {
+            setUser(fullUser.user);
+            const socketUser = fullUser.user.username || fullUser.user.handle;
+            if (socketUser) {
+              socketService.connect(socketUser);
+              setSocket(socketService.socket);
+            }
+            return { needsRegistration: false };
+          }
+        } catch (meErr) {
+          console.warn('Failed to fetch full profile, using minimal user:', meErr);
+        }
+        // Fallback to minimal user from mail response
         setUser(result.user);
         const socketUser = result.user.username || result.user.handle;
         if (socketUser) {
