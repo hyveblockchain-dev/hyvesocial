@@ -347,6 +347,22 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
                 </button>
               </div>
             ))}
+            {/* Live text preview while typing */}
+            {showOverlayText && overlayTextInput && (
+              <div
+                className="photo-overlay photo-overlay-text live-text-preview"
+                style={{
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  fontSize: `${overlayTextSize}px`,
+                  color: overlayTextColor,
+                  pointerEvents: 'none',
+                }}
+              >
+                {overlayTextInput}
+              </div>
+            ))}
             <button
               type="button"
               className="remove-media"
