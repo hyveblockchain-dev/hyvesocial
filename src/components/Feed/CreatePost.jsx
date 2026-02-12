@@ -164,39 +164,41 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
+        // Use 2x resolution for retina-quality text/emoji
+        const scale = 2;
+        const baseW = img.naturalWidth;
+        const baseH = img.naturalHeight;
         const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
+        canvas.width = baseW * scale;
+        canvas.height = baseH * scale;
         const ctx = canvas.getContext('2d');
 
-        // Enable high-quality rendering
+        // High-quality rendering settings
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
-        // Draw the base image with filter
+        // Draw the base image with filter, scaled up
         const filterCss = selectedFilter
           ? PHOTO_FILTERS.find(f => f.id === selectedFilter)?.css || 'none'
           : 'none';
         ctx.filter = filterCss;
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         ctx.filter = 'none';
 
         // Compute object-fit: cover mapping so overlay positions match the CSS preview
         const containerEl = previewRef.current;
-        const contW = containerEl?.offsetWidth || canvas.width;
-        const contH = containerEl?.clientHeight || canvas.height;
-        const natW = canvas.width;
-        const natH = canvas.height;
+        const contW = containerEl?.offsetWidth || baseW;
+        const contH = containerEl?.clientHeight || baseH;
         const contAR = contW / contH;
-        const imgAR = natW / natH;
+        const imgAR = baseW / baseH;
 
-        let visibleX = 0, visibleY = 0, visibleW = natW, visibleH = natH;
+        let visibleX = 0, visibleY = 0, visibleW = baseW * scale, visibleH = baseH * scale;
         if (imgAR > contAR) {
-          visibleW = natH * contAR;
-          visibleX = (natW - visibleW) / 2;
+          visibleW = (baseH * scale) * contAR;
+          visibleX = (canvas.width - visibleW) / 2;
         } else {
-          visibleH = natW / contAR;
-          visibleY = (natH - visibleH) / 2;
+          visibleH = (baseW * scale) / contAR;
+          visibleY = (canvas.height - visibleH) / 2;
         }
 
         // Draw overlays with proper coordinate mapping
@@ -204,43 +206,68 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
         for (const o of items) {
           const px = visibleX + (o.x / 100) * visibleW;
           const py = visibleY + (o.y / 100) * visibleH;
-          const scaledSize = (o.size / contH) * visibleH;
+          const scaledSize = (o.size / contH) * (visibleH);
           if (o.type === 'text') {
             ctx.font = `bold ${scaledSize}px -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
             ctx.fillStyle = o.color;
-            // Multi-layer shadow for crisp readable text
-            ctx.shadowColor = 'rgba(0,0,0,0.7)';
-            ctx.shadowBlur = Math.max(4, scaledSize / 8);
+            ctx.lineJoin = 'round';
+            ctx.miterLimit = 2;
+            // Shadow pass for depth
+            ctx.shadowColor = 'rgba(0,0,0,0.8)';
+            ctx.shadowBlur = Math.max(6, scaledSize / 6);
             ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = Math.max(1, scaledSize / 20);
+            ctx.shadowOffsetY = Math.max(2, scaledSize / 16);
             ctx.fillText(o.content, px, py);
-            // Draw again without shadow for crispness
+            // Crisp stroke + fill pass (no shadow)
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
             ctx.shadowOffsetX = 0;
             ctx.shadowOffsetY = 0;
-            ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-            ctx.lineWidth = Math.max(1.5, scaledSize / 18);
-            ctx.lineJoin = 'round';
+            ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+            ctx.lineWidth = Math.max(2, scaledSize / 14);
             ctx.strokeText(o.content, px, py);
             ctx.fillText(o.content, px, py);
           } else {
-            // Emoji: use a larger font with text-drawing for maximum quality
-            ctx.font = `${scaledSize}px -apple-system, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
-            ctx.shadowColor = 'rgba(0,0,0,0.3)';
-            ctx.shadowBlur = Math.max(2, scaledSize / 10);
+            // Emoji rendering
+            ctx.font = `${scaledSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif`;
+            ctx.shadowColor = 'rgba(0,0,0,0.4)';
+            ctx.shadowBlur = Math.max(4, scaledSize / 8);
             ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = Math.max(1, scaledSize / 20);
+            ctx.shadowOffsetY = Math.max(2, scaledSize / 16);
             ctx.fillText(o.content, px, py);
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
           }
         }
 
-        // Use high-quality JPEG
-        canvas.toBlob((blob) => {
-          resolve(new File([blob], 'edited.jpg', { type: 'image/jpeg' }));
-        }, 'image/jpeg', 0.97);
+        // Scale canvas back down to original dimensions for a crisp anti-aliased result
+        const outCanvas = document.createElement('canvas');
+        outCanvas.width = baseW;
+        outCanvas.height = baseH;
+        const outCtx = outCanvas.getContext('2d');
+        outCtx.imageSmoothingEnabled = true;
+        outCtx.imageSmoothingQuality = 'high';
+        outCtx.drawImage(canvas, 0, 0, baseW, baseH);
+
+        // Output as PNG for lossless text/emoji quality
+        outCanvas.toBlob((pngBlob) => {
+          // If PNG is under 5MB, use it directly (crisp text)
+          if (pngBlob && pngBlob.size < 5 * 1024 * 1024) {
+            resolve(new File([pngBlob], 'edited.png', { type: 'image/png' }));
+            return;
+          }
+          // Fallback: try WebP at high quality
+          outCanvas.toBlob((webpBlob) => {
+            if (webpBlob && webpBlob.size < pngBlob.size * 0.8) {
+              resolve(new File([webpBlob], 'edited.webp', { type: 'image/webp' }));
+            } else {
+              // Final fallback: JPEG at max quality
+              outCanvas.toBlob((jpgBlob) => {
+                resolve(new File([jpgBlob], 'edited.jpg', { type: 'image/jpeg' }));
+              }, 'image/jpeg', 0.98);
+            }
+          }, 'image/webp', 0.96);
+        }, 'image/png');
       };
       img.src = URL.createObjectURL(imgFile);
     });
