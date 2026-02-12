@@ -23,6 +23,7 @@ import { simpleParser } from 'mailparser';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { execSync } from 'child_process';
+import crypto from 'crypto';
 
 const app = express();
 const PORT = process.env.EMAIL_PORT || 4500;
@@ -48,7 +49,7 @@ const emailAccountSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true },
   passwordHash: { type: String, required: true },
   displayName: { type: String, default: '' },
-  recoveryEmail: { type: String, default: '' },
+  recoveryCodeHash: { type: String, default: null }, // bcrypt hash of one-time recovery code
   socialUserId: { type: String, default: null }, // Linked Hyve Social account
   socialUsername: { type: String, default: null },
   storageUsed: { type: Number, default: 0 },
@@ -256,7 +257,7 @@ app.get('/api/email/check/:username', async (req, res) => {
 // Create email account
 app.post('/api/email/signup', signupLimiter, async (req, res) => {
   try {
-    const { username, password, displayName, recoveryEmail } = req.body;
+    const { username, password, displayName } = req.body;
 
     // Validate
     if (!username || !password) {
@@ -283,6 +284,10 @@ app.post('/api/email/signup', signupLimiter, async (req, res) => {
     // Create system mail account
     await createSystemMailAccount(lowerUsername, password);
 
+    // Generate one-time recovery code (like ProtonMail)
+    const recoveryCode = crypto.randomBytes(12).toString('hex').toUpperCase(); // 24-char hex
+    const recoveryCodeHash = await bcrypt.hash(recoveryCode, 12);
+
     // Hash password and create DB record
     const passwordHash = await bcrypt.hash(password, 12);
     const account = new EmailAccount({
@@ -290,7 +295,7 @@ app.post('/api/email/signup', signupLimiter, async (req, res) => {
       email,
       passwordHash,
       displayName: displayName || username,
-      recoveryEmail: recoveryEmail || '',
+      recoveryCodeHash,
     });
     await account.save();
 
@@ -301,8 +306,10 @@ app.post('/api/email/signup', signupLimiter, async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    // Return recovery code in plaintext ONCE — client must save it
     res.status(201).json({
       token,
+      recoveryCode,
       account: {
         username: lowerUsername,
         email,
@@ -312,6 +319,70 @@ app.post('/api/email/signup', signupLimiter, async (req, res) => {
   } catch (error) {
     console.error('Signup error:', error);
     res.status(500).json({ error: 'Failed to create account' });
+  }
+});
+
+// Reset password using recovery code
+app.post('/api/email/reset-password', authLimiter, async (req, res) => {
+  try {
+    const { username, recoveryCode, newPassword } = req.body;
+    if (!username || !recoveryCode || !newPassword) {
+      return res.status(400).json({ error: 'Username, recovery code, and new password are required' });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters' });
+    }
+
+    const lowerUsername = username.toLowerCase().trim();
+    const account = await EmailAccount.findOne({ username: lowerUsername });
+    if (!account) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+    if (!account.recoveryCodeHash) {
+      return res.status(400).json({ error: 'No recovery code set for this account' });
+    }
+
+    // Verify recovery code
+    const codeMatch = await bcrypt.compare(recoveryCode.toUpperCase().trim(), account.recoveryCodeHash);
+    if (!codeMatch) {
+      return res.status(401).json({ error: 'Invalid recovery code' });
+    }
+
+    // Update password in MongoDB
+    const newPasswordHash = await bcrypt.hash(newPassword, 12);
+    account.passwordHash = newPasswordHash;
+
+    // Generate a NEW recovery code (old one is now consumed)
+    const newRecoveryCode = crypto.randomBytes(12).toString('hex').toUpperCase();
+    account.recoveryCodeHash = await bcrypt.hash(newRecoveryCode, 12);
+    await account.save();
+
+    // Update password in Dovecot system
+    try {
+      const escapedPass = newPassword.replace(/'/g, "'\\''");
+      const hashedPassword = execSync(`doveadm pw -s BLF-CRYPT -p '${escapedPass}'`).toString().trim();
+      const email = `${lowerUsername}@${MAIL_DOMAIN}`;
+      const dovecotLine = `${email}:${hashedPassword}`;
+      const usersFile = '/etc/dovecot/users';
+      const { readFileSync, writeFileSync } = await import('fs');
+      let usersContent = '';
+      try { usersContent = readFileSync(usersFile, 'utf8'); } catch (e) {}
+      const lines = usersContent.split('\n').filter(l => !l.startsWith(`${email}:`));
+      lines.push(dovecotLine);
+      writeFileSync(usersFile, lines.filter(l => l.trim()).join('\n') + '\n');
+      console.log(`Password reset for: ${email}`);
+    } catch (sysErr) {
+      console.error('Failed to update system password:', sysErr);
+      // DB was updated, system will be out of sync — but DB is source of truth
+    }
+
+    res.json({
+      message: 'Password reset successfully',
+      newRecoveryCode, // Return new recovery code — user must save it again
+    });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
   }
 });
 

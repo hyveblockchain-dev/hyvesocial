@@ -714,6 +714,100 @@
   text-align: left;
 }
 
+/* ── Recovery Code Section ── */
+.recovery-code-section {
+  margin: 20px 0;
+  border: 2px solid rgba(255, 165, 0, 0.4);
+  border-radius: 12px;
+  padding: 20px;
+  background: rgba(255, 165, 0, 0.06);
+}
+
+.recovery-code-warning {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.recovery-warning-icon {
+  font-size: 28px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.recovery-code-warning h3 {
+  color: #ffa500;
+  font-size: 18px;
+  margin: 0 0 8px;
+}
+
+.recovery-code-warning p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.recovery-code-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 215, 0, 0.25);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 16px 0;
+}
+
+.recovery-code-value {
+  flex: 1;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffd700;
+  letter-spacing: 2px;
+  word-break: break-all;
+  user-select: all;
+  -webkit-user-select: all;
+}
+
+.copy-code-btn {
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  color: #ffd700;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.copy-code-btn:hover {
+  background: rgba(255, 215, 0, 0.25);
+}
+
+.recovery-code-tips {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recovery-code-tips li {
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 4px 0;
+  padding-left: 20px;
+  position: relative;
+}
+
+.recovery-code-tips li::before {
+  content: '•';
+  position: absolute;
+  left: 6px;
+  color: #ffa500;
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .email-signup-page {

@@ -19,14 +19,26 @@ function authHeaders(extra = {}) {
 // ========================================
 
 /** Create a new @hyvechain.com email account */
-export async function emailSignup({ username, password, displayName, recoveryEmail }) {
+export async function emailSignup({ username, password, displayName }) {
   const response = await fetch(`${EMAIL_API_URL}/api/email/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password, displayName, recoveryEmail }),
+    body: JSON.stringify({ username, password, displayName }),
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'Email signup failed');
+  return data;
+}
+
+/** Reset password using recovery code */
+export async function resetPasswordWithCode({ username, recoveryCode, newPassword }) {
+  const response = await fetch(`${EMAIL_API_URL}/api/email/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, recoveryCode, newPassword }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Password reset failed');
   return data;
 }
 
@@ -232,6 +244,7 @@ export async function socialLoginWithEmail(email, password) {
 const emailApi = {
   emailSignup,
   emailLogin,
+  resetPasswordWithCode,
   checkEmailAvailability,
   getEmailAccount,
   updateEmailAccount,

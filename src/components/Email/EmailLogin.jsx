@@ -12,7 +12,18 @@ export default function EmailLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const peekRef = useRef(null);
+
+  // Forgot password state
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetUsername, setResetUsername] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [resetSuccess, setResetSuccess] = useState(false);
+  const [newRecoveryCode, setNewRecoveryCode] = useState('');
+  const [codeCopied, setCodeCopied] = useState(false);
 
   const startPeek = useCallback((setter) => {
     setter(true);
@@ -25,7 +36,7 @@ export default function EmailLogin() {
   }, []);
 
   useEffect(() => {
-    const hide = () => { setShowPassword(false); clearTimeout(peekRef.current); };
+    const hide = () => { setShowPassword(false); setShowNewPassword(false); clearTimeout(peekRef.current); };
     window.addEventListener('blur', hide);
     const onVis = () => { if (document.hidden) hide(); };
     document.addEventListener('visibilitychange', onVis);
@@ -59,6 +70,39 @@ export default function EmailLogin() {
     }
   }
 
+  async function handleResetPassword(e) {
+    e.preventDefault();
+    if (!resetUsername.trim() || !resetCode.trim() || !newPassword.trim()) {
+      setError('All fields are required');
+      return;
+    }
+    if (newPassword.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const result = await emailApi.resetPasswordWithCode({
+        username: resetUsername.trim(),
+        recoveryCode: resetCode.trim(),
+        newPassword,
+      });
+      setNewRecoveryCode(result.newRecoveryCode || '');
+      setResetSuccess(true);
+    } catch (err) {
+      setError(err.message || 'Failed to reset password');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="email-signup-page">
       <div className="email-signup-container">
@@ -72,15 +116,137 @@ export default function EmailLogin() {
               </div>
             </div>
             <div className="email-signup-hero-copy">
-              <h2>Sign In to Your Email</h2>
-              <p>Access your <strong>@hyvechain.com</strong> inbox — private, encrypted, yours.</p>
+              <h2>{forgotMode ? 'Reset Your Password' : 'Sign In to Your Email'}</h2>
+              <p>{forgotMode ? 'Use your recovery code to regain access.' : 'Access your @hyvechain.com inbox — private, encrypted, yours.'}</p>
             </div>
           </div>
         </div>
 
         {error && <div className="error-message">{error}</div>}
 
-        <form className="email-signup-form" onSubmit={handleLogin}>
+        {/* Reset success with new recovery code */}
+        {resetSuccess ? (
+          <div className="email-signup-success">
+            <div className="success-icon" style={{ background: 'rgba(76, 175, 80, 0.15)', color: '#4caf50', width: 64, height: 64, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}>
+              ✓
+            </div>
+            <h2>Password Reset Successfully!</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>You can now sign in with your new password.</p>
+
+            {newRecoveryCode && (
+              <div className="recovery-code-section">
+                <div className="recovery-code-warning">
+                  <span className="recovery-warning-icon">⚠️</span>
+                  <h3>New Recovery Code</h3>
+                  <p>
+                    Your old recovery code has been invalidated. Save this <strong>new recovery code</strong> — 
+                    it is the <strong>only way</strong> to reset your password again. 
+                    <strong> It will not be shown again.</strong>
+                  </p>
+                </div>
+                <div className="recovery-code-display">
+                  <code className="recovery-code-value">{newRecoveryCode}</code>
+                  <button
+                    type="button"
+                    className="copy-code-btn"
+                    onClick={() => {
+                      navigator.clipboard.writeText(newRecoveryCode);
+                      setCodeCopied(true);
+                      setTimeout(() => setCodeCopied(false), 3000);
+                    }}
+                  >
+                    {codeCopied ? '✓ Copied!' : '📋 Copy'}
+                  </button>
+                </div>
+                <ul className="recovery-code-tips">
+                  <li>Write it down on paper and store it safely</li>
+                  <li>Save it in a password manager</li>
+                  <li>Do <strong>not</strong> share it with anyone</li>
+                </ul>
+              </div>
+            )}
+
+            <div className="success-actions">
+              <button className="primary-btn" onClick={() => { setForgotMode(false); setResetSuccess(false); setResetCode(''); setNewPassword(''); setConfirmNewPassword(''); setNewRecoveryCode(''); setError(''); }}>
+                <IconLock size={18} /> Go to Sign In
+              </button>
+            </div>
+          </div>
+        ) : forgotMode ? (
+          /* Forgot password form */
+          <form className="email-signup-form" onSubmit={handleResetPassword}>
+            <h2>Recover Your Account</h2>
+            <p className="step-subtitle" style={{ marginBottom: 16 }}>Enter your username and recovery code to set a new password.</p>
+
+            <div className="email-input-group">
+              <input
+                type="text"
+                placeholder="username"
+                value={resetUsername}
+                onChange={(e) => setResetUsername(e.target.value.trim())}
+                autoFocus
+              />
+              <span className="email-domain">@hyvechain.com</span>
+            </div>
+
+            <input
+              type="text"
+              placeholder="Recovery code"
+              value={resetCode}
+              onChange={(e) => setResetCode(e.target.value.toUpperCase())}
+              style={{ fontFamily: 'monospace', letterSpacing: '1px', textTransform: 'uppercase' }}
+              autoComplete="off"
+            />
+
+            <div className={`password-input-wrapper${showNewPassword ? ' peeking' : ''}`}>
+              <input
+                type={showNewPassword ? 'text' : 'password'}
+                placeholder="New password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className={`password-toggle${showNewPassword ? ' peeking' : ''}`}
+                onMouseDown={() => startPeek(setShowNewPassword)}
+                onMouseUp={() => stopPeek(setShowNewPassword)}
+                onMouseLeave={() => stopPeek(setShowNewPassword)}
+                onTouchStart={(e) => { e.preventDefault(); startPeek(setShowNewPassword); }}
+                onTouchEnd={() => stopPeek(setShowNewPassword)}
+                tabIndex={-1}
+                title="Hold to peek"
+              >
+                {showNewPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
+
+            <input
+              type="password"
+              placeholder="Confirm new password"
+              value={confirmNewPassword}
+              onChange={(e) => setConfirmNewPassword(e.target.value)}
+            />
+
+            <button type="submit" disabled={loading}>
+              {loading ? (
+                <span className="btn-loading">
+                  <span className="btn-spinner" />
+                  Resetting...
+                </span>
+              ) : (
+                'Reset Password'
+              )}
+            </button>
+
+            <div className="signup-nav-links">
+              <button type="button" className="nav-link" onClick={() => { setForgotMode(false); setError(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                ← Back to Sign In
+              </button>
+            </div>
+          </form>
+        ) : (
+          /* Normal login form */
+          <form className="email-signup-form" onSubmit={handleLogin}>
           <h2>Email Sign In</h2>
 
           <div className="email-input-group">
@@ -128,9 +294,13 @@ export default function EmailLogin() {
           </button>
 
           <div className="signup-nav-links">
+            <button type="button" className="nav-link" onClick={() => { setForgotMode(true); setError(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+              Forgot password?
+            </button>
             <Link to="/email/signup" className="nav-link">Don't have an account? Create one</Link>
           </div>
         </form>
+        )}
 
         <div className="email-features">
           <div className="email-feature">

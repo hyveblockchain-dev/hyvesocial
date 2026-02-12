@@ -14,7 +14,8 @@ export default function EmailSignup() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [recoveryCode, setRecoveryCode] = useState('');
+  const [codeCopied, setCodeCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [usernameAvailable, setUsernameAvailable] = useState(null);
@@ -146,12 +147,16 @@ export default function EmailSignup() {
         username,
         password,
         displayName: displayName || username,
-        recoveryEmail: recoveryEmail || undefined,
       });
 
       // Store email token
       if (result.token) {
         localStorage.setItem('email_token', result.token);
+      }
+
+      // Store recovery code to show on success page
+      if (result.recoveryCode) {
+        setRecoveryCode(result.recoveryCode);
       }
 
       setCreatedEmail(`${username}@hyvechain.com`);
@@ -357,14 +362,8 @@ export default function EmailSignup() {
               maxLength={50}
               autoFocus
             />
-            <input
-              type="email"
-              placeholder="Recovery email (optional, recommended)"
-              value={recoveryEmail}
-              onChange={(e) => setRecoveryEmail(e.target.value)}
-            />
             <p className="input-hint">
-              A recovery email helps you regain access if you forget your password. This is optional but strongly recommended.
+              A display name is shown on emails you send. If left blank, your username will be used.
             </p>
             <button type="submit" disabled={loading}>
               {loading ? (
@@ -379,7 +378,7 @@ export default function EmailSignup() {
           </form>
         )}
 
-        {/* Step 4: Success */}
+        {/* Step 4: Success + Recovery Code */}
         {step === 4 && (
           <div className="email-signup-success">
             <div className="success-icon">
@@ -387,9 +386,41 @@ export default function EmailSignup() {
             </div>
             <h2>Welcome to HyveMail!</h2>
             <p className="success-email">{createdEmail}</p>
-            <p className="success-description">
-              Your private email account is ready. You can now send and receive emails.
-            </p>
+
+            {recoveryCode && (
+              <div className="recovery-code-section">
+                <div className="recovery-code-warning">
+                  <span className="recovery-warning-icon">⚠️</span>
+                  <h3>Save Your Recovery Code</h3>
+                  <p>
+                    This is your <strong>one-time recovery code</strong>. If you lose your password, 
+                    this is the <strong>only way</strong> to regain access to your account. 
+                    <strong> It will not be shown again.</strong>
+                  </p>
+                </div>
+                <div className="recovery-code-display">
+                  <code className="recovery-code-value">{recoveryCode}</code>
+                  <button
+                    type="button"
+                    className="copy-code-btn"
+                    onClick={() => {
+                      navigator.clipboard.writeText(recoveryCode);
+                      setCodeCopied(true);
+                      setTimeout(() => setCodeCopied(false), 3000);
+                    }}
+                  >
+                    {codeCopied ? '✓ Copied!' : '📋 Copy'}
+                  </button>
+                </div>
+                <ul className="recovery-code-tips">
+                  <li>Write it down on paper and store it safely</li>
+                  <li>Save it in a password manager</li>
+                  <li>Do <strong>not</strong> share it with anyone</li>
+                  <li>This code is single-use — after a reset, a new code is issued</li>
+                </ul>
+              </div>
+            )}
+
             <div className="success-actions">
               <button className="primary-btn" onClick={() => navigate('/email')}>
                 <IconMailbox size={18} /> Open Webmail
