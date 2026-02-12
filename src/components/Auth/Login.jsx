@@ -202,6 +202,9 @@ export default function Login() {
                   )}
                 </button>
                 <div className="email-login-links">
+                  <Link to="/email/login" className="email-login-link">
+                    Just need email? Go to HyveMail
+                  </Link>
                   <Link to="/email/signup" className="email-login-link">
                     Get a @hyvechain.com email
                   </Link>
@@ -211,11 +214,18 @@ export default function Login() {
           </div>
         ) : (
           <form className="register-form" onSubmit={handleRegister}>
-            <h2>Create Your Profile</h2>
-            {pendingEmail && (
-              <p className="register-email-note">
-                Linked to: <strong>{pendingEmail}</strong>
-              </p>
+            {pendingEmail ? (
+              <>
+                <h2>Welcome Back!</h2>
+                <p className="register-email-note">
+                  Signed in as <strong>{pendingEmail}</strong>
+                </p>
+                <p className="register-email-note" style={{ marginTop: '0', fontSize: '0.85rem', opacity: 0.8 }}>
+                  Choose a username to set up your Hyve Social profile.
+                </p>
+              </>
+            ) : (
+              <h2>Create Your Profile</h2>
             )}
             <input
               type="text"
@@ -226,8 +236,22 @@ export default function Login() {
               maxLength={20}
             />
             <button type="submit" disabled={loading}>
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? 'Setting up...' : 'Set Up Profile'}
             </button>
+            {pendingEmail && (
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.setItem('email_token', localStorage.getItem('email_token') || '');
+                  navigate('/email');
+                }}
+                disabled={loading}
+                className="back-button"
+                style={{ background: 'rgba(255,255,255,0.08)' }}
+              >
+                Skip — Go to HyveMail
+              </button>
+            )}
             <button 
               type="button" 
               onClick={() => { setNeedsRegistration(false); setPendingEmail(''); }}
