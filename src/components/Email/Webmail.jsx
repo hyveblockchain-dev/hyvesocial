@@ -342,19 +342,18 @@ export default function Webmail() {
           <div className="sidebar-actions">
             <button className="sidebar-action-btn" onClick={async () => {
               // If no social auth token, try to get one from email session
-              if (!localStorage.getItem('auth_token')) {
+              if (!localStorage.getItem('token')) {
                 try {
                   const result = await emailApi.getSocialToken();
                   if (result.socialToken) {
-                    localStorage.setItem('auth_token', result.socialToken);
                     localStorage.setItem('token', result.socialToken);
                   }
                 } catch (err) {
                   console.warn('Could not get social token:', err);
                 }
               }
-              // Full reload so AuthProvider re-checks the token
-              window.location.href = '/';
+              // Full page reload to re-initialize AuthProvider with the stored token
+              window.location.reload();
             }} title="Go to Hyve Social">
               <IconMailbox size={16} /> Social
             </button>
