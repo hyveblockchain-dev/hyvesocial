@@ -1,5 +1,5 @@
 // src/components/Email/EmailLogin.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import emailApi from '../../services/emailApi';
 import { IconMailbox, IconShield, IconLock } from '../Icons/Icons';
@@ -12,6 +12,13 @@ export default function EmailLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    const hide = () => setShowPassword(false);
+    window.addEventListener('blur', hide);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) hide(); });
+    return () => { window.removeEventListener('blur', hide); document.removeEventListener('visibilitychange', hide); };
+  }, []);
 
   async function handleLogin(e) {
     e.preventDefault();

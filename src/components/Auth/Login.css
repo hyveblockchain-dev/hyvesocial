@@ -674,6 +674,11 @@
   opacity: 1;
 }
 
+.password-input-wrapper input {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .register-email-note {
   font-size: 13px;
   color: var(--text-secondary);

@@ -23,6 +23,13 @@ export default function EmailSignup() {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  useEffect(() => {
+    const hide = () => { setShowPassword(false); setShowConfirmPassword(false); };
+    window.addEventListener('blur', hide);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) hide(); });
+    return () => { window.removeEventListener('blur', hide); document.removeEventListener('visibilitychange', hide); };
+  }, []);
   const debounceRef = useRef(null);
 
   // Check username availability with debounce

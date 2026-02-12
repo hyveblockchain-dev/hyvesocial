@@ -89,6 +89,15 @@ export default function Profile() {
   const [linkingWallet, setLinkingWallet] = useState(false);
   const [linkMessage, setLinkMessage] = useState('');
   const [showLinkPassword, setShowLinkPassword] = useState(false);
+
+  // Auto-hide password when user leaves the page/tab
+  useEffect(() => {
+    const hide = () => setShowLinkPassword(false);
+    window.addEventListener('blur', hide);
+    const onVis = () => { if (document.hidden) hide(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => { window.removeEventListener('blur', hide); document.removeEventListener('visibilitychange', onVis); };
+  }, []);
   
   const isOwnProfile = (() => {
     const resolved = resolvedAddress?.toLowerCase?.();

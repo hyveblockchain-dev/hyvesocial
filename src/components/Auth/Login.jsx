@@ -1,5 +1,5 @@
 // src/components/Auth/Login.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { setE2EESignature } from '../../utils/e2ee';
@@ -25,6 +25,17 @@ export default function Login() {
   const [mailPass, setMailPass] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showMailPass, setShowMailPass] = useState(false);
+
+  // Auto-hide passwords when user leaves the page/tab
+  useEffect(() => {
+    const hidePasswords = () => { setShowPassword(false); setShowMailPass(false); };
+    window.addEventListener('blur', hidePasswords);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) hidePasswords(); });
+    return () => {
+      window.removeEventListener('blur', hidePasswords);
+      document.removeEventListener('visibilitychange', hidePasswords);
+    };
+  }, []);
 
   async function handleConnect() {
     try {
