@@ -353,7 +353,8 @@ export default function Webmail() {
                   console.warn('Could not get social token:', err);
                 }
               }
-              navigate('/');
+              // Full reload so AuthProvider re-checks the token
+              window.location.href = '/';
             }} title="Go to Hyve Social">
               <IconMailbox size={16} /> Social
             </button>

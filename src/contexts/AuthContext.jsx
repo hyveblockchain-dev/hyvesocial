@@ -223,7 +223,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, connectWallet, socket: socketInstance }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, connectWallet, checkAuth, socket: socketInstance }}>
       {children}
     </AuthContext.Provider>
   );
