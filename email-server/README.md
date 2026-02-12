@@ -62,16 +62,19 @@ sudo apt install postfix dovecot-imapd dovecot-pop3d
 
 Add these DNS records for `hyvechain.com`:
 
-| Type | Name | Value |
-|------|------|-------|
-| MX | @ | `mail.hyvechain.com` (priority 10) |
-| A | mail | `YOUR_MAIL_SERVER_IP` |
-| TXT | @ | `v=spf1 mx a:mail.hyvechain.com -all` |
-| TXT | _dmarc | `v=DMARC1; p=quarantine; rua=mailto:postmaster@hyvechain.com` |
-| TXT | mail._domainkey | `v=DKIM1; k=rsa; p=YOUR_DKIM_PUBLIC_KEY` |
-| CNAME | autoconfig | `mail.hyvechain.com` |
-| SRV | _imaps._tcp | `0 1 993 mail.hyvechain.com` |
-| SRV | _submission._tcp | `0 1 587 mail.hyvechain.com` |
+| Type | Name | Value | Notes |
+|------|------|-------|-------|
+| MX | @ | `mail.hyvechain.com` (priority 10) | Required for receiving |
+| A | mail | `68.168.218.138` | Points to mail server |
+| TXT | @ | `v=spf1 mx a:mail.hyvechain.com ip4:68.168.218.138 -all` | **Required for sending** |
+| TXT | _dmarc | `v=DMARC1; p=quarantine; rua=mailto:postmaster@hyvechain.com; fo=1` | **Required for sending** |
+| TXT | mail._domainkey | `v=DKIM1; k=rsa; p=YOUR_DKIM_PUBLIC_KEY` | **Required for sending** |
+| PTR | 68.168.218.138 | `mail.hyvechain.com` | **Required — set via hosting provider** |
+| CNAME | autoconfig | `mail.hyvechain.com` | Optional |
+| SRV | _imaps._tcp | `0 1 993 mail.hyvechain.com` | Optional |
+| SRV | _submission._tcp | `0 1 587 mail.hyvechain.com` | Optional |
+
+> **CRITICAL**: Without SPF, DKIM, DMARC, and PTR records, external providers (Gmail, Outlook, Yahoo) will reject your outbound emails. The PTR (reverse DNS) record must be set through your hosting provider's control panel.
 
 ## Setup Instructions
 
@@ -93,7 +96,48 @@ npm install
 npm start
 ```
 
-### 4. Configure Frontend
+### 4. Run Diagnostics
+
+After setup, check that everything is configured correctly:
+
+```bash
+curl http://localhost:4500/api/email/diagnostics
+```
+
+This will verify: SMTP connectivity, DNS records (MX, SPF, DKIM, DMARC, PTR), and outbound port 25 status.
+
+### 5. Configure SMTP Relay (if port 25 is blocked)
+
+Most cloud providers (AWS, GCP, Azure, DigitalOcean) **block outbound port 25** by default, which prevents direct email delivery to external servers. If the diagnostics show port 25 is blocked, you need an SMTP relay.
+
+#### Option A: SendGrid (Free tier: 100 emails/day)
+```env
+SMTP_RELAY_HOST=smtp.sendgrid.net
+SMTP_RELAY_PORT=587
+SMTP_RELAY_USER=apikey
+SMTP_RELAY_PASS=your-sendgrid-api-key
+```
+
+#### Option B: Mailgun
+```env
+SMTP_RELAY_HOST=smtp.mailgun.org
+SMTP_RELAY_PORT=587
+SMTP_RELAY_USER=postmaster@hyvechain.com
+SMTP_RELAY_PASS=your-mailgun-password
+```
+
+#### Option C: Amazon SES
+```env
+SMTP_RELAY_HOST=email-smtp.us-east-1.amazonaws.com
+SMTP_RELAY_PORT=587
+SMTP_RELAY_USER=your-ses-smtp-username
+SMTP_RELAY_PASS=your-ses-smtp-password
+```
+
+#### Option D: Request port 25 unblock
+Contact your hosting provider and request outbound port 25 to be unblocked. This allows direct delivery without a relay.
+
+### 6. Configure Frontend
 
 Add to your React app's `.env`:
 ```

@@ -985,7 +985,7 @@ export default function Profile() {
         {isOwnProfile && (
           <div className="cover-photo-actions">
             <label className={`edit-cover-btn ${uploading ? 'disabled' : ''}`}>
-              {uploading ? '⏳ Uploading...' : '📷 Change Cover'}
+              {uploading ? '⏳' : '📷 Change Cover'}
               <input
                 type="file"
                 accept="image/*"
@@ -999,8 +999,9 @@ export default function Profile() {
                 className={`remove-cover-btn ${uploading ? 'disabled' : ''}`}
                 onClick={handleRemoveCoverPhoto}
                 disabled={uploading}
+                title="Remove cover photo"
               >
-                🗑️ Remove Cover
+                🗑️ Remove
               </button>
             )}
           </div>

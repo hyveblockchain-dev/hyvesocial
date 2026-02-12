@@ -38,6 +38,14 @@ const IMAP_PORT = parseInt(process.env.IMAP_PORT || '993');
 const SMTP_HOST = process.env.SMTP_HOST || 'mail.hyvechain.com';
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
 
+// SMTP Relay configuration (for when outbound port 25 is blocked)
+// Set SMTP_RELAY_HOST to use a relay service (SendGrid, Mailgun, Amazon SES, etc.)
+const SMTP_RELAY_HOST = process.env.SMTP_RELAY_HOST || ''; // e.g., 'smtp.sendgrid.net'
+const SMTP_RELAY_PORT = parseInt(process.env.SMTP_RELAY_PORT || '587');
+const SMTP_RELAY_USER = process.env.SMTP_RELAY_USER || ''; // e.g., 'apikey' for SendGrid
+const SMTP_RELAY_PASS = process.env.SMTP_RELAY_PASS || '';
+const SMTP_RELAY_SECURE = process.env.SMTP_RELAY_SECURE === 'true';
+
 // ========================================
 // DATABASE MODELS
 // ========================================
@@ -140,12 +148,39 @@ async function getImapClient(email, password) {
 }
 
 function getSmtpTransport(email, password) {
+  // If an SMTP relay is configured, use it for outbound delivery
+  // This is needed when the hosting provider blocks outbound port 25
+  if (SMTP_RELAY_HOST) {
+    console.log(`Using SMTP relay: ${SMTP_RELAY_HOST}:${SMTP_RELAY_PORT}`);
+    return nodemailer.createTransport({
+      host: SMTP_RELAY_HOST,
+      port: SMTP_RELAY_PORT,
+      secure: SMTP_RELAY_SECURE,
+      auth: {
+        user: SMTP_RELAY_USER,
+        pass: SMTP_RELAY_PASS,
+      },
+      tls: { rejectUnauthorized: true },
+      // Pool connections for better performance
+      pool: true,
+      maxConnections: 5,
+    });
+  }
+
+  // Default: send via local Postfix (requires outbound port 25 open)
   return nodemailer.createTransport({
     host: SMTP_HOST,
     port: SMTP_PORT,
     secure: false,
     auth: { user: email, pass: password },
-    tls: { rejectUnauthorized: false },
+    tls: {
+      rejectUnauthorized: false,
+      // Force STARTTLS upgrade
+      requireTLS: true,
+    },
+    // Enable debug logging for troubleshooting delivery issues
+    debug: process.env.SMTP_DEBUG === 'true',
+    logger: process.env.SMTP_DEBUG === 'true',
   });
 }
 
@@ -699,7 +734,20 @@ app.post('/api/email/send', [authenticate, sendLimiter], async (req, res) => {
       mailOptions.text += `\n\n--\n${account.settings.signature}`;
     }
 
-    await transport.sendMail(mailOptions);
+    // Verify SMTP connection before sending
+    try {
+      await transport.verify();
+    } catch (verifyErr) {
+      console.error('SMTP connection verification failed:', verifyErr);
+      transport.close();
+      return res.status(502).json({ 
+        error: 'Mail server connection failed. Please try again later.',
+        detail: process.env.NODE_ENV === 'development' ? verifyErr.message : undefined,
+      });
+    }
+
+    const info = await transport.sendMail(mailOptions);
+    console.log(`Email sent: ${info.messageId} to ${mailOptions.to} (response: ${info.response})`);
     transport.close();
 
     // Save a copy to Sent folder via IMAP
@@ -727,10 +775,36 @@ app.post('/api/email/send', [authenticate, sendLimiter], async (req, res) => {
       // Non-fatal - email was still sent
     }
 
-    res.json({ success: true, message: 'Email sent successfully' });
+    res.json({ success: true, message: 'Email sent successfully', messageId: info.messageId });
   } catch (error) {
-    console.error('Send email error:', error);
-    res.status(500).json({ error: 'Failed to send email' });
+    console.error('Send email error:', {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      responseCode: error.responseCode,
+      response: error.response,
+    });
+
+    // Provide more specific error messages
+    let userMessage = 'Failed to send email';
+    if (error.code === 'ECONNREFUSED') {
+      userMessage = 'Mail server is unreachable. Please try again later.';
+    } else if (error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT') {
+      userMessage = 'Connection to mail server timed out. Please try again.';
+    } else if (error.responseCode === 550) {
+      userMessage = 'Recipient rejected. Please check the email address.';
+    } else if (error.responseCode === 553 || error.responseCode === 551) {
+      userMessage = 'Sender address not authorized.';
+    } else if (error.responseCode === 452) {
+      userMessage = 'Mailbox full or quota exceeded.';
+    } else if (error.code === 'EENVELOPE') {
+      userMessage = 'Invalid email address format.';
+    }
+
+    res.status(500).json({ 
+      error: userMessage,
+      detail: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
   }
 });
 
@@ -1059,7 +1133,7 @@ app.post('/api/email/link-social', authenticate, async (req, res) => {
 });
 
 // ========================================
-// HEALTH CHECK
+// HEALTH CHECK & DIAGNOSTICS
 // ========================================
 
 app.get('/api/email/health', (req, res) => {
@@ -1069,6 +1143,168 @@ app.get('/api/email/health', (req, res) => {
     domain: MAIL_DOMAIN,
     timestamp: new Date().toISOString(),
   });
+});
+
+// Diagnostic endpoint — checks SMTP, DNS, DKIM, SPF
+// Protected: only accessible with admin token or from localhost
+app.get('/api/email/diagnostics', async (req, res) => {
+  const clientIp = req.ip || req.headers['x-forwarded-for'] || '';
+  const isLocal = clientIp === '127.0.0.1' || clientIp === '::1' || clientIp === '::ffff:127.0.0.1';
+  const adminKey = process.env.ADMIN_KEY || '';
+  
+  if (!isLocal && req.headers['x-admin-key'] !== adminKey) {
+    return res.status(403).json({ error: 'Diagnostics only available from localhost or with admin key' });
+  }
+
+  const results = {
+    timestamp: new Date().toISOString(),
+    config: {
+      domain: MAIL_DOMAIN,
+      smtpHost: SMTP_HOST,
+      smtpPort: SMTP_PORT,
+      imapHost: IMAP_HOST,
+      imapPort: IMAP_PORT,
+      relayConfigured: !!SMTP_RELAY_HOST,
+      relayHost: SMTP_RELAY_HOST || 'none',
+    },
+    checks: {},
+  };
+
+  // Check 1: SMTP connectivity
+  try {
+    const transport = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: false,
+      auth: { user: `postmaster@${MAIL_DOMAIN}`, pass: 'test' },
+      tls: { rejectUnauthorized: false },
+      connectionTimeout: 10000,
+    });
+    await transport.verify();
+    results.checks.smtpConnection = { status: 'ok', message: 'SMTP server reachable' };
+    transport.close();
+  } catch (err) {
+    results.checks.smtpConnection = { 
+      status: 'fail', 
+      message: err.message,
+      code: err.code,
+      hint: err.code === 'ECONNREFUSED' 
+        ? 'Postfix may not be running. Run: systemctl start postfix'
+        : 'Check SMTP credentials and server status',
+    };
+  }
+
+  // Check 2: SMTP relay (if configured)
+  if (SMTP_RELAY_HOST) {
+    try {
+      const relay = nodemailer.createTransport({
+        host: SMTP_RELAY_HOST,
+        port: SMTP_RELAY_PORT,
+        secure: SMTP_RELAY_SECURE,
+        auth: { user: SMTP_RELAY_USER, pass: SMTP_RELAY_PASS },
+        connectionTimeout: 10000,
+      });
+      await relay.verify();
+      results.checks.smtpRelay = { status: 'ok', message: `Relay ${SMTP_RELAY_HOST} reachable` };
+      relay.close();
+    } catch (err) {
+      results.checks.smtpRelay = { status: 'fail', message: err.message };
+    }
+  }
+
+  // Check 3: DNS records
+  try {
+    const dns = await import('dns');
+    const { resolve, resolveMx, resolveTxt } = dns.promises;
+
+    // MX record
+    try {
+      const mx = await resolveMx(MAIL_DOMAIN);
+      results.checks.mxRecord = { status: 'ok', records: mx };
+    } catch (e) {
+      results.checks.mxRecord = { status: 'fail', message: 'No MX record found', hint: `Add MX record pointing to ${SMTP_HOST}` };
+    }
+
+    // SPF record
+    try {
+      const txt = await resolveTxt(MAIL_DOMAIN);
+      const spf = txt.flat().find(r => r.startsWith('v=spf1'));
+      results.checks.spfRecord = spf 
+        ? { status: 'ok', record: spf }
+        : { status: 'fail', message: 'No SPF record found', hint: 'Add TXT record: v=spf1 mx a:mail.hyvechain.com -all' };
+    } catch (e) {
+      results.checks.spfRecord = { status: 'fail', message: 'DNS lookup failed' };
+    }
+
+    // DKIM record
+    try {
+      const dkimTxt = await resolveTxt(`mail._domainkey.${MAIL_DOMAIN}`);
+      const dkim = dkimTxt.flat().find(r => r.includes('v=DKIM1'));
+      results.checks.dkimRecord = dkim 
+        ? { status: 'ok', record: dkim.substring(0, 80) + '...' }
+        : { status: 'fail', message: 'DKIM record found but invalid' };
+    } catch (e) {
+      results.checks.dkimRecord = { status: 'fail', message: 'No DKIM record found', hint: 'Run setup-mail.sh to generate DKIM keys, then add the TXT record' };
+    }
+
+    // DMARC record
+    try {
+      const dmarcTxt = await resolveTxt(`_dmarc.${MAIL_DOMAIN}`);
+      const dmarc = dmarcTxt.flat().find(r => r.startsWith('v=DMARC1'));
+      results.checks.dmarcRecord = dmarc 
+        ? { status: 'ok', record: dmarc }
+        : { status: 'fail', message: 'No DMARC record found', hint: 'Add TXT record for _dmarc: v=DMARC1; p=quarantine; rua=mailto:postmaster@hyvechain.com' };
+    } catch (e) {
+      results.checks.dmarcRecord = { status: 'fail', message: 'No DMARC record found' };
+    }
+
+    // PTR record (reverse DNS)
+    try {
+      const addresses = await resolve(SMTP_HOST);
+      if (addresses.length > 0) {
+        const ptr = await dns.promises.reverse(addresses[0]);
+        results.checks.ptrRecord = { status: 'ok', ip: addresses[0], ptr };
+      }
+    } catch (e) {
+      results.checks.ptrRecord = { 
+        status: 'warn', 
+        message: 'Could not verify PTR record',
+        hint: 'Set reverse DNS (PTR) via your hosting provider to point to mail.hyvechain.com',
+      };
+    }
+  } catch (dnsErr) {
+    results.checks.dns = { status: 'error', message: dnsErr.message };
+  }
+
+  // Check 4: Outbound port 25 (direct delivery)
+  try {
+    const net = await import('net');
+    const port25Open = await new Promise((resolve) => {
+      const sock = new net.Socket();
+      sock.setTimeout(5000);
+      sock.on('connect', () => { sock.destroy(); resolve(true); });
+      sock.on('error', () => resolve(false));
+      sock.on('timeout', () => { sock.destroy(); resolve(false); });
+      sock.connect(25, 'gmail-smtp-in.l.google.com');
+    });
+    results.checks.outboundPort25 = port25Open
+      ? { status: 'ok', message: 'Outbound port 25 is open — direct delivery works' }
+      : { 
+          status: 'fail', 
+          message: 'Outbound port 25 is BLOCKED',
+          hint: 'Your hosting provider blocks port 25. Configure SMTP_RELAY_HOST to use a relay service (SendGrid, Mailgun, Amazon SES).',
+        };
+  } catch (e) {
+    results.checks.outboundPort25 = { status: 'error', message: e.message };
+  }
+
+  // Summary
+  const failCount = Object.values(results.checks).filter(c => c.status === 'fail').length;
+  results.summary = failCount === 0 
+    ? 'All checks passed — outbound delivery should work'
+    : `${failCount} issue(s) found that may prevent outbound delivery`;
+
+  res.json(results);
 });
 
 // ========================================
