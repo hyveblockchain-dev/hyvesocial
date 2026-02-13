@@ -531,11 +531,15 @@
 .compose-overlay {
   position: fixed;
   inset: 0;
-  background: var(--bg-primary);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   z-index: 50;
   display: flex;
   justify-content: center;
+  align-items: flex-start;
   overflow-y: auto;
+  padding: 40px 16px;
 }
 
 .compose-window {
@@ -543,7 +547,12 @@
   max-width: 720px;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--trim-color);
+  border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
 }
 
 .compose-header {
@@ -1242,6 +1251,11 @@ body.light-mode .email-ac-active {
 
   .compose-window {
     max-width: 100%;
+    border-radius: 0;
+  }
+
+  .compose-overlay {
+    padding: 0;
   }
 }
 
