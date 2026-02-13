@@ -160,7 +160,6 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 18px;
-  border-bottom: 2px solid var(--trim-color);
 }
 
 .sidebar-brand {
@@ -195,6 +194,10 @@
 }
 
 /* Compose button */
+.compose-wrapper {
+  border-bottom: 2px solid var(--trim-color);
+}
+
 .compose-btn {
   display: flex;
   align-items: center;

@@ -345,10 +345,12 @@ export default function Webmail() {
           </button>
         </div>
 
-        <button className="compose-btn" onClick={() => setShowCompose(true)}>
-          <IconEdit size={18} />
-          Compose
-        </button>
+        <div className="compose-wrapper">
+          <button className="compose-btn" onClick={() => setShowCompose(true)}>
+            <IconEdit size={18} />
+            Compose
+          </button>
+        </div>
 
         <nav className="folder-list">
           {FOLDERS.map((folder) => {
