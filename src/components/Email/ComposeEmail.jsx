@@ -1,5 +1,5 @@
 // src/components/Email/ComposeEmail.jsx
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import emailApi from '../../services/emailApi';
 import { IconSend, IconClose, IconArrowLeft } from '../Icons/Icons';
 import './Webmail.css';
@@ -19,6 +19,41 @@ function formatFileSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
+/* ── Contact memory helpers ── */
+const CONTACTS_KEY = 'hyve_email_contacts';
+
+function loadContacts() {
+  try {
+    const raw = localStorage.getItem(CONTACTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function saveContacts(list) {
+  try {
+    // dedupe, keep most recent first, cap at 200
+    const seen = new Set();
+    const unique = [];
+    for (const c of list) {
+      const key = c.email.toLowerCase();
+      if (!seen.has(key)) { seen.add(key); unique.push(c); }
+    }
+    localStorage.setItem(CONTACTS_KEY, JSON.stringify(unique.slice(0, 200)));
+  } catch { /* quota */ }
+}
+
+function rememberEmails(emails) {
+  if (!emails?.length) return;
+  const existing = loadContacts();
+  const now = Date.now();
+  const newEntries = emails
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean)
+    .map(email => ({ email, lastUsed: now }));
+  // put new ones first so they rank higher
+  saveContacts([...newEntries, ...existing]);
+}
+
 export default function ComposeEmail({ account, replyTo, onClose, onSent }) {
   const [to, setTo] = useState(replyTo ? (replyTo.from || '') : '');
   const [cc, setCc] = useState('');
@@ -34,6 +69,91 @@ export default function ComposeEmail({ account, replyTo, onClose, onSent }) {
   const [error, setError] = useState('');
   const [attachments, setAttachments] = useState([]);
   const fileInputRef = useRef(null);
+
+  /* ── Autocomplete state ── */
+  const [acResults, setAcResults] = useState([]);
+  const [acField, setAcField] = useState(null); // 'to' | 'cc' | 'bcc'
+  const [acIndex, setAcIndex] = useState(-1);
+  const acRef = useRef(null);
+
+  // Seed contacts from inbox/sent on mount
+  useEffect(() => {
+    async function seedContacts() {
+      try {
+        const [inbox, sent] = await Promise.all([
+          emailApi.getMessages('inbox', 1, 50).catch(() => ({ messages: [] })),
+          emailApi.getMessages('sent', 1, 50).catch(() => ({ messages: [] })),
+        ]);
+        const emails = new Set();
+        for (const m of (inbox.messages || [])) {
+          if (m.from) emails.add(m.from.toLowerCase());
+        }
+        for (const m of (sent.messages || [])) {
+          const toList = Array.isArray(m.to) ? m.to : (m.to ? [m.to] : []);
+          toList.forEach(e => emails.add(e.toLowerCase()));
+        }
+        if (emails.size) rememberEmails([...emails]);
+      } catch { /* silent */ }
+    }
+    seedContacts();
+  }, []);
+
+  // Close autocomplete on outside click
+  useEffect(() => {
+    function handleClick(e) {
+      if (acRef.current && !acRef.current.contains(e.target)) {
+        setAcResults([]);
+        setAcField(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const getAutocomplete = useCallback((value) => {
+    // get the part after the last comma
+    const parts = value.split(',');
+    const query = (parts[parts.length - 1] || '').trim().toLowerCase();
+    if (query.length < 1) return [];
+    const contacts = loadContacts();
+    return contacts
+      .filter(c => c.email.toLowerCase().includes(query))
+      .slice(0, 8);
+  }, []);
+
+  function handleFieldChange(value, setter, fieldName) {
+    setter(value);
+    const results = getAutocomplete(value);
+    setAcResults(results);
+    setAcField(results.length > 0 ? fieldName : null);
+    setAcIndex(-1);
+  }
+
+  function selectSuggestion(email, fieldValue, setter) {
+    const parts = fieldValue.split(',');
+    parts[parts.length - 1] = ' ' + email;
+    setter(parts.join(',').replace(/^[\s,]+/, '') + ', ');
+    setAcResults([]);
+    setAcField(null);
+    setAcIndex(-1);
+  }
+
+  function handleFieldKeyDown(e, fieldValue, setter) {
+    if (acResults.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setAcIndex(i => (i + 1) % acResults.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setAcIndex(i => (i <= 0 ? acResults.length - 1 : i - 1));
+    } else if (e.key === 'Enter' && acIndex >= 0) {
+      e.preventDefault();
+      selectSuggestion(acResults[acIndex].email, fieldValue, setter);
+    } else if (e.key === 'Escape') {
+      setAcResults([]);
+      setAcField(null);
+    }
+  }
 
   function handleAttach() {
     fileInputRef.current?.click();
@@ -83,6 +203,13 @@ export default function ComposeEmail({ account, replyTo, onClose, onSent }) {
         attachments: attachments.length > 0 ? attachments : undefined,
         replyTo: replyTo?.id,
       });
+      // Remember all recipient emails
+      const allRecipients = [
+        ...to.split(',').map(s => s.trim()).filter(Boolean),
+        ...cc.split(',').map(s => s.trim()).filter(Boolean),
+        ...bcc.split(',').map(s => s.trim()).filter(Boolean),
+      ];
+      rememberEmails(allRecipients);
       onSent();
     } catch (err) {
       setError(err.message || 'Failed to send email');
@@ -134,14 +261,17 @@ export default function ComposeEmail({ account, replyTo, onClose, onSent }) {
             <span className="compose-from">{account?.email || 'you@hyvechain.com'}</span>
           </div>
 
-          <div className="compose-field">
+          <div className="compose-field compose-field-ac" ref={acField === 'to' ? acRef : undefined}>
             <label>To</label>
             <input
               type="text"
               placeholder="recipient@example.com"
               value={to}
-              onChange={(e) => setTo(e.target.value)}
+              onChange={(e) => handleFieldChange(e.target.value, setTo, 'to')}
+              onKeyDown={(e) => handleFieldKeyDown(e, to, setTo)}
+              onFocus={() => { const r = getAutocomplete(to); setAcResults(r); setAcField(r.length ? 'to' : null); }}
               autoFocus={!replyTo}
+              autoComplete="off"
             />
             {!showCcBcc && (
               <button
@@ -152,27 +282,78 @@ export default function ComposeEmail({ account, replyTo, onClose, onSent }) {
                 Cc / Bcc
               </button>
             )}
+            {acField === 'to' && acResults.length > 0 && (
+              <div className="email-ac-dropdown">
+                {acResults.map((c, i) => (
+                  <button
+                    key={c.email}
+                    type="button"
+                    className={`email-ac-option${i === acIndex ? ' email-ac-active' : ''}`}
+                    onMouseDown={(e) => { e.preventDefault(); selectSuggestion(c.email, to, setTo); }}
+                  >
+                    <span className="email-ac-icon">@</span>
+                    <span className="email-ac-email">{c.email}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {showCcBcc && (
             <>
-              <div className="compose-field">
+              <div className="compose-field compose-field-ac" ref={acField === 'cc' ? acRef : undefined}>
                 <label>Cc</label>
                 <input
                   type="text"
                   placeholder="cc@example.com"
                   value={cc}
-                  onChange={(e) => setCc(e.target.value)}
+                  onChange={(e) => handleFieldChange(e.target.value, setCc, 'cc')}
+                  onKeyDown={(e) => handleFieldKeyDown(e, cc, setCc)}
+                  onFocus={() => { const r = getAutocomplete(cc); setAcResults(r); setAcField(r.length ? 'cc' : null); }}
+                  autoComplete="off"
                 />
+                {acField === 'cc' && acResults.length > 0 && (
+                  <div className="email-ac-dropdown">
+                    {acResults.map((c, i) => (
+                      <button
+                        key={c.email}
+                        type="button"
+                        className={`email-ac-option${i === acIndex ? ' email-ac-active' : ''}`}
+                        onMouseDown={(e) => { e.preventDefault(); selectSuggestion(c.email, cc, setCc); }}
+                      >
+                        <span className="email-ac-icon">@</span>
+                        <span className="email-ac-email">{c.email}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="compose-field">
+              <div className="compose-field compose-field-ac" ref={acField === 'bcc' ? acRef : undefined}>
                 <label>Bcc</label>
                 <input
                   type="text"
                   placeholder="bcc@example.com"
                   value={bcc}
-                  onChange={(e) => setBcc(e.target.value)}
+                  onChange={(e) => handleFieldChange(e.target.value, setBcc, 'bcc')}
+                  onKeyDown={(e) => handleFieldKeyDown(e, bcc, setBcc)}
+                  onFocus={() => { const r = getAutocomplete(bcc); setAcResults(r); setAcField(r.length ? 'bcc' : null); }}
+                  autoComplete="off"
                 />
+                {acField === 'bcc' && acResults.length > 0 && (
+                  <div className="email-ac-dropdown">
+                    {acResults.map((c, i) => (
+                      <button
+                        key={c.email}
+                        type="button"
+                        className={`email-ac-option${i === acIndex ? ' email-ac-active' : ''}`}
+                        onMouseDown={(e) => { e.preventDefault(); selectSuggestion(c.email, bcc, setBcc); }}
+                      >
+                        <span className="email-ac-icon">@</span>
+                        <span className="email-ac-email">{c.email}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           )}
