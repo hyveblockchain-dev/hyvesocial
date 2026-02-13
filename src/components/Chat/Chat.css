@@ -277,6 +277,7 @@
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-secondary);
   font-size: 18px;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -306,6 +307,7 @@
   background: rgba(255, 255, 255, 0.06);
   cursor: pointer;
   font-size: 18px;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif;
   display: inline-flex;
   align-items: center;
   justify-content: center;
