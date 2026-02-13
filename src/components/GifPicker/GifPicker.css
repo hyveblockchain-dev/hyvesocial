@@ -164,7 +164,7 @@
   max-width: 360px;
   border-radius: 10px;
   overflow: hidden;
-  margin: 4px 0;
+  margin: 4px auto;
 }
 
 .post-gif img {
