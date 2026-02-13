@@ -15,6 +15,7 @@
   max-width: 1400px;
   margin: 0 auto;
   position: relative;
+  border-top: 2px solid var(--trim-strong);
 }
 
 /* ── Sidebar ── */
@@ -24,6 +25,7 @@
   height: calc(100vh - 44px);
   background: var(--bg-secondary);
   border-right: 2px solid var(--trim-color);
+  border-left: 2px solid var(--trim-strong);
   display: flex;
   flex-direction: column;
   z-index: 30;
@@ -1294,6 +1296,7 @@ body.light-mode .email-ac-active {
   height: calc(100vh - 44px);
   background: var(--bg-secondary);
   border-left: 2px solid var(--trim-color);
+  border-right: 2px solid var(--trim-strong);
   padding: 20px 16px;
   overflow-y: auto;
   display: flex;
@@ -1408,7 +1411,9 @@ body.light-mode .email-ac-active {
   background: rgba(12, 12, 20, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-top: 2px solid var(--trim-color);
+  border-top: 2px solid var(--trim-strong);
+  border-left: 2px solid var(--trim-strong);
+  border-right: 2px solid var(--trim-strong);
   display: flex;
   align-items: center;
   justify-content: center;
