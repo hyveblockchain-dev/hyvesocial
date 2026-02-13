@@ -43,7 +43,7 @@ export default function Feed() {
   const [focusedParentCommentId, setFocusedParentCommentId] = useState(null);
   const hasScrolledRef = useRef(false);
 
-  const MAX_STORY_IMAGE_MB = 5;
+  const MAX_STORY_IMAGE_MB = 20;
 
   const FEED_CACHE_KEY = 'feed_posts_cache';
   const FEED_CACHE_TS_KEY = 'feed_posts_cache_ts';

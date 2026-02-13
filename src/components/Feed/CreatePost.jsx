@@ -68,7 +68,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
   const { user } = useAuth();
   const displayName = user?.username || 'there';
 
-  const MAX_IMAGE_MB = 5;
+  const MAX_IMAGE_MB = 20;
 
   const emojiOptions = ['😀','😄','😁','😅','😂','😍','🥳','😎','😮','😢','😡','👍','❤️'];
 

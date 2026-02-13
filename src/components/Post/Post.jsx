@@ -75,7 +75,7 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
   const [reportDetails, setReportDetails] = useState('');
   const [reportStatus, setReportStatus] = useState('');
 
-  const MAX_COMMENT_IMAGE_MB = 5;
+  const MAX_COMMENT_IMAGE_MB = 20;
 
   const isOwner = (post.username || post.author_username || post.user?.username) === user?.username;
 

@@ -753,8 +753,8 @@ export default function Profile() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setProfileMessage('Image too large. Max 5MB.');
+    if (file.size > 20 * 1024 * 1024) {
+      setProfileMessage('Image too large. Max 20MB.');
       return;
     }
 
@@ -839,8 +839,8 @@ export default function Profile() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setProfileMessage('Image too large. Max 5MB.');
+    if (file.size > 20 * 1024 * 1024) {
+      setProfileMessage('Image too large. Max 20MB.');
       return;
     }
 
