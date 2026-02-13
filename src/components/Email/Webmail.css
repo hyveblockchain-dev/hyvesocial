@@ -198,7 +198,10 @@
   border-bottom: 2px solid var(--trim-color);
   display: flex;
   justify-content: center;
-  padding-bottom: 16px;
+  align-items: center;
+  padding-bottom: 0;
+  height: 76px;
+  box-sizing: border-box;
 }
 
 .compose-btn {
@@ -206,7 +209,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin: 16px 14px 0 14px;
+  margin: 0 14px;
   padding: 12px 20px;
   background: var(--gold-gradient);
   color: #000;
@@ -461,7 +464,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28px 20px;
+  padding: 0 20px;
+  height: 76px;
+  box-sizing: border-box;
   border-bottom: 2px solid var(--trim-color);
 }
 
