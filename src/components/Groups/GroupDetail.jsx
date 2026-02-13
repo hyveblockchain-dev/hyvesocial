@@ -6,6 +6,7 @@ import CreatePost from '../Feed/CreatePost';
 import Post from '../Post/Post';
 import ChannelChat from './ChannelChat';
 import MemberSidebar from './MemberSidebar';
+import UserSettings from './UserSettings';
 import { compressImage } from '../../utils/imageCompression';
 import { formatDate, formatDateTime } from '../../utils/date';
 import { IconArrowLeft } from '../Icons/Icons';
@@ -65,6 +66,7 @@ export default function GroupDetail() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [activePanel, setActivePanel] = useState('chat');
   const [showMemberSidebar, setShowMemberSidebar] = useState(true);
+  const [showUserSettings, setShowUserSettings] = useState(false);
 
   // ── Role management state ──
   const [customRoles, setCustomRoles] = useState([]);
@@ -798,7 +800,7 @@ export default function GroupDetail() {
             <span className="discord-user-panel-status">Online</span>
           </div>
           <div className="discord-user-panel-icons">
-            <button title="Settings" onClick={() => navigate('/profile/' + encodeURIComponent(user?.username || ''))}>⚙</button>
+            <button title="Settings" onClick={() => setShowUserSettings(true)}>⚙</button>
           </div>
         </div>
       </div>
@@ -1173,6 +1175,9 @@ export default function GroupDetail() {
       )}
     </div>
     </div>
+
+    {/* ── User Settings Modal ── */}
+    {showUserSettings && <UserSettings onClose={() => setShowUserSettings(false)} />}
     </div>
   );
 }

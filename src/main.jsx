@@ -6,6 +6,11 @@ import './styles/index.css'
 import './styles/App.css'
 import { initParticles } from './utils/particles.js'
 
+// Apply persisted theme
+if (localStorage.getItem('hyve-theme') === 'light') {
+  document.body.classList.add('light-mode');
+}
+
 // Initialize particles once the library is loaded
 function tryInitParticles(retries = 20) {
   if (typeof window.particlesJS === 'function') {
