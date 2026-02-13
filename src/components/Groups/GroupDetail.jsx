@@ -72,6 +72,9 @@ export default function GroupDetail() {
   const [newRoleName, setNewRoleName] = useState('');
   const [newRoleColor, setNewRoleColor] = useState('#f0b232');
 
+  // ── Guild bar (joined groups list) ──
+  const [joinedGroups, setJoinedGroups] = useState([]);
+
   const myUsername = (user?.username || '').toLowerCase();
 
   // ── Computed values ──
@@ -267,6 +270,18 @@ export default function GroupDetail() {
       setCustomRoles(data?.roles || []);
     } catch { setCustomRoles([]); }
   }, [groupId]);
+
+  // ── Fetch all joined groups for guild bar ──
+  useEffect(() => {
+    async function loadJoinedGroups() {
+      try {
+        const data = await api.getGroups();
+        const all = data?.groups || [];
+        setJoinedGroups(all.filter((g) => g.is_member));
+      } catch { setJoinedGroups([]); }
+    }
+    loadJoinedGroups();
+  }, []);
 
   // ── Initial load ──
   useEffect(() => {
@@ -566,10 +581,41 @@ export default function GroupDetail() {
     </header>
   );
 
+  // ── Guild icon bar (far-left server list) ──
+  const guildBar = (
+    <nav className="discord-guild-bar">
+      <Link to="/" className="guild-icon guild-home" title="Home">
+        <img src="/hyvelogo.png" alt="Home" />
+      </Link>
+      <div className="guild-separator" />
+      {joinedGroups.map((g) => {
+        const isActive = String(g.id) === String(groupId);
+        const avatar = g.avatar_image || g.avatarImage;
+        return (
+          <Link
+            key={g.id}
+            to={`/groups/${g.id}`}
+            className={`guild-icon${isActive ? ' guild-active' : ''}`}
+            title={g.name}
+          >
+            {avatar
+              ? <img src={avatar} alt={g.name} />
+              : <span className="guild-icon-letter">{(g.name || '?')[0].toUpperCase()}</span>}
+            {isActive && <span className="guild-pill" />}
+          </Link>
+        );
+      })}
+      <div className="guild-separator" />
+      <Link to="/groups" className="guild-icon guild-add" title="Explore Groups">
+        <span>+</span>
+      </Link>
+    </nav>
+  );
+
   // ── Loading / error states ──
-  if (loading) return <div className="discord-fullpage">{topBar}<div className="discord-loading">Loading server...</div></div>;
-  if (error) return <div className="discord-fullpage">{topBar}<div className="discord-loading error">{error}</div></div>;
-  if (!group) return <div className="discord-fullpage">{topBar}<div className="discord-loading">Group not found.</div></div>;
+  if (loading) return <div className="discord-fullpage">{topBar}<div className="discord-body">{guildBar}<div className="discord-loading">Loading server...</div></div></div>;
+  if (error) return <div className="discord-fullpage">{topBar}<div className="discord-body">{guildBar}<div className="discord-loading error">{error}</div></div></div>;
+  if (!group) return <div className="discord-fullpage">{topBar}<div className="discord-body">{guildBar}<div className="discord-loading">Group not found.</div></div></div>;
 
   const coverUrl = coverPreview || group.cover_image || group.coverImage;
   const avatarUrl = avatarPreview || group.avatar_image || group.avatarImage;
@@ -588,6 +634,8 @@ export default function GroupDetail() {
     return (
       <div className="discord-fullpage">
         {topBar}
+      <div className="discord-body">
+        {guildBar}
       <div className="discord-join-screen">
         <button className="discord-back-btn" onClick={() => navigate('/groups')}>
           <IconArrowLeft size={18} /> Back to Groups
@@ -605,6 +653,7 @@ export default function GroupDetail() {
         </div>
       </div>
       </div>
+      </div>
     );
   }
 
@@ -614,6 +663,8 @@ export default function GroupDetail() {
   return (
     <div className="discord-fullpage">
       {topBar}
+    <div className="discord-body">
+      {guildBar}
     <div className="discord-server">
       {/* ── Left: Channel sidebar ── */}
       <div className="discord-sidebar">
@@ -1094,6 +1145,7 @@ export default function GroupDetail() {
           }}
         />
       )}
+    </div>
     </div>
     </div>
   );

@@ -87,6 +87,140 @@
 }
 .discord-loading.error { color: #ed4245; }
 
+/* ── Body row (guild bar + server) ── */
+.discord-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Guild icon bar (far-left server strip)
+   ═══════════════════════════════════════════════════════════ */
+.discord-guild-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 72px;
+  min-width: 72px;
+  background: #1e1f22;
+  padding: 12px 0 12px;
+  gap: 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.discord-guild-bar::-webkit-scrollbar { width: 0; display: none; }
+
+.guild-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #313338;
+  color: #dbdee1;
+  text-decoration: none;
+  overflow: hidden;
+  transition: border-radius 0.2s, background 0.2s, color 0.2s;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.guild-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.guild-icon:hover,
+.guild-icon.guild-active {
+  border-radius: 16px;
+}
+.guild-icon:hover {
+  background: #5865f2;
+  color: #fff;
+}
+.guild-icon.guild-active {
+  background: #5865f2;
+  color: #fff;
+}
+
+/* Home icon */
+.guild-home {
+  background: #313338;
+}
+.guild-home:hover {
+  background: #5865f2;
+}
+.guild-home img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+/* Active pill indicator */
+.guild-pill {
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 40px;
+  border-radius: 0 4px 4px 0;
+  background: #f2f3f5;
+}
+.guild-icon:not(.guild-active):hover .guild-pill {
+  display: none;
+}
+
+/* Hover pill for non-active */
+.guild-icon:not(.guild-active)::before {
+  content: '';
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 0;
+  border-radius: 0 4px 4px 0;
+  background: #f2f3f5;
+  transition: height 0.15s;
+}
+.guild-icon:not(.guild-active):hover::before {
+  height: 20px;
+}
+
+/* Letter fallback */
+.guild-icon-letter {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* Add / Explore button */
+.guild-add {
+  background: #313338;
+  color: #23a55a;
+  font-size: 24px;
+  font-weight: 300;
+}
+.guild-add:hover {
+  background: #23a55a;
+  color: #fff;
+}
+
+/* Separator line */
+.guild-separator {
+  width: 32px;
+  height: 2px;
+  border-radius: 1px;
+  background: #35363c;
+  flex-shrink: 0;
+}
+
 /* ── Private join screen ── */
 .discord-join-screen {
   display: flex;
@@ -972,6 +1106,15 @@
 .light-mode .discord-topbar-group-name { color: #5c5e66; }
 .light-mode .discord-topbar-link { color: #5c5e66; }
 .light-mode .discord-topbar-link:hover { background: #f2f3f5; color: #060607; }
+.light-mode .discord-guild-bar { background: #e3e5e8; }
+.light-mode .guild-icon { background: #fff; color: #4e5058; }
+.light-mode .guild-icon:hover { background: #5865f2; color: #fff; }
+.light-mode .guild-icon.guild-active { background: #5865f2; color: #fff; }
+.light-mode .guild-pill { background: #060607; }
+.light-mode .guild-icon:not(.guild-active)::before { background: #060607; }
+.light-mode .guild-separator { background: #d1d3d7; }
+.light-mode .guild-add { background: #fff; color: #23a55a; }
+.light-mode .guild-add:hover { background: #23a55a; color: #fff; }
 
 /* ══════════════════════════════════════════════════════════
    RESPONSIVE BREAKPOINTS
@@ -993,6 +1136,7 @@
   }
   .discord-topbar-logo span { display: none; }
   .discord-topbar-center { display: none; }
+  .discord-guild-bar { display: none; }
   .discord-server {
     grid-template-columns: 1fr;
     height: auto;
