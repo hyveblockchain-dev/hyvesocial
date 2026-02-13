@@ -98,7 +98,7 @@ export default function ComposeEmail({ account, replyTo, onClose, onSent }) {
     seedContacts();
   }, []);
 
-  // Close autocomplete on outside click
+  // Close autocomplete on outside click / touch
   useEffect(() => {
     function handleClick(e) {
       if (acRef.current && !acRef.current.contains(e.target)) {
@@ -107,8 +107,21 @@ export default function ComposeEmail({ account, replyTo, onClose, onSent }) {
       }
     }
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    document.addEventListener('touchstart', handleClick, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('touchstart', handleClick);
+    };
   }, []);
+
+  function handleFieldBlur() {
+    // Small delay so suggestion click/tap can register first
+    setTimeout(() => {
+      setAcResults([]);
+      setAcField(null);
+      setAcIndex(-1);
+    }, 200);
+  }
 
   const getAutocomplete = useCallback((value) => {
     // get the part after the last comma
@@ -270,6 +283,7 @@ export default function ComposeEmail({ account, replyTo, onClose, onSent }) {
               onChange={(e) => handleFieldChange(e.target.value, setTo, 'to')}
               onKeyDown={(e) => handleFieldKeyDown(e, to, setTo)}
               onFocus={() => { const r = getAutocomplete(to); setAcResults(r); setAcField(r.length ? 'to' : null); }}
+              onBlur={handleFieldBlur}
               autoFocus={!replyTo}
               autoComplete="off"
             />
@@ -310,6 +324,7 @@ export default function ComposeEmail({ account, replyTo, onClose, onSent }) {
                   onChange={(e) => handleFieldChange(e.target.value, setCc, 'cc')}
                   onKeyDown={(e) => handleFieldKeyDown(e, cc, setCc)}
                   onFocus={() => { const r = getAutocomplete(cc); setAcResults(r); setAcField(r.length ? 'cc' : null); }}
+                  onBlur={handleFieldBlur}
                   autoComplete="off"
                 />
                 {acField === 'cc' && acResults.length > 0 && (
@@ -337,6 +352,7 @@ export default function ComposeEmail({ account, replyTo, onClose, onSent }) {
                   onChange={(e) => handleFieldChange(e.target.value, setBcc, 'bcc')}
                   onKeyDown={(e) => handleFieldKeyDown(e, bcc, setBcc)}
                   onFocus={() => { const r = getAutocomplete(bcc); setAcResults(r); setAcField(r.length ? 'bcc' : null); }}
+                  onBlur={handleFieldBlur}
                   autoComplete="off"
                 />
                 {acField === 'bcc' && acResults.length > 0 && (
