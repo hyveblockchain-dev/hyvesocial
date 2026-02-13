@@ -461,8 +461,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--trim-color);
+  padding: 28px 20px;
+  border-bottom: 2px solid var(--trim-color);
 }
 
 .folder-header h2 {
@@ -1657,7 +1657,6 @@ body.light-mode .sidebar-action-btn:hover {
 /* Main content light mode */
 body.light-mode .webmail-main {
   background: #f5f7fa;
-  border: 2px solid #94a3b8;
 }
 
 body.light-mode .webmail-toolbar {
@@ -1703,7 +1702,10 @@ body.light-mode .message-count {
 
 /* Message list light mode */
 body.light-mode .message-row {
-  border-color: #b0bec5;
+  border: 1px solid #94a3b8;
+  border-radius: 8px;
+  margin: 4px 8px;
+  padding: 12px 16px;
 }
 
 body.light-mode .message-row:hover {
@@ -1720,19 +1722,19 @@ body.light-mode .message-row.unread .message-subject {
 }
 
 body.light-mode .message-sender {
-  color: #1e293b;
+  color: #111827;
 }
 
 body.light-mode .message-subject {
-  color: #1e293b;
+  color: #111827;
 }
 
 body.light-mode .message-preview {
-  color: #64748b;
+  color: #374151;
 }
 
 body.light-mode .message-date {
-  color: #64748b;
+  color: #374151;
 }
 
 body.light-mode .star-btn {

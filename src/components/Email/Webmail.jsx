@@ -346,9 +346,6 @@ export default function Webmail() {
           >
             {isLightMode ? <IconMoon size={18} /> : <IconSun size={18} />}
           </button>
-          <Link to="/" className="webmail-header-btn" title="Hyve Social">
-            <IconMailbox size={18} />
-          </Link>
         </div>
       </header>
 
