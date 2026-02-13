@@ -1661,11 +1661,11 @@ body.light-mode .sidebar-action-btn:hover {
 
 /* Main content light mode */
 body.light-mode .webmail-main {
-  background: #f5f7fa;
+  background: transparent;
 }
 
 body.light-mode .webmail-toolbar {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.92);
   border-color: #94a3b8;
 }
 
@@ -1694,6 +1694,7 @@ body.light-mode .toolbar-btn:hover {
 }
 
 body.light-mode .folder-header {
+  background: rgba(255, 255, 255, 0.92);
   border-color: #94a3b8;
 }
 
@@ -1707,6 +1708,7 @@ body.light-mode .message-count {
 
 /* Message list light mode */
 body.light-mode .message-row {
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid #94a3b8;
   border-radius: 8px;
   margin: 4px 8px;
@@ -1714,11 +1716,12 @@ body.light-mode .message-row {
 }
 
 body.light-mode .message-row:hover {
-  background: rgba(0, 0, 0, 0.03);
+  background: rgba(255, 255, 255, 0.97);
 }
 
 body.light-mode .message-row.unread {
-  background: rgba(255, 215, 0, 0.04);
+  background: rgba(255, 255, 255, 0.95);
+  border-color: #d97706;
 }
 
 body.light-mode .message-row.unread .message-sender,
@@ -1764,11 +1767,11 @@ body.light-mode .message-delete-btn:hover {
 body.light-mode .messages-loading,
 body.light-mode .messages-empty,
 body.light-mode .messages-error {
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 body.light-mode .messages-empty h3 {
-  color: #374151;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 /* Compose light mode */
@@ -1883,12 +1886,18 @@ body.light-mode .compose-att-size {
 
 /* Email view light mode */
 body.light-mode .email-view {
-  background: #f5f7fa;
+  background: transparent;
 }
 
 body.light-mode .email-view-toolbar {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.92);
   border-color: #94a3b8;
+}
+
+body.light-mode .email-view-content {
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 8px;
+  margin-top: 8px;
 }
 
 body.light-mode .ev-back-btn {
@@ -1968,7 +1977,7 @@ body.light-mode .ev-att-size {
 }
 
 body.light-mode .ev-reply-bar {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.92);
   border-color: #94a3b8;
 }
 
