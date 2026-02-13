@@ -308,7 +308,6 @@ export default function Webmail() {
           </Link>
         </div>
         <form className="webmail-header-search" onSubmit={handleSearch}>
-          <IconSearch size={16} />
           <input
             type="text"
             placeholder="Search emails..."
