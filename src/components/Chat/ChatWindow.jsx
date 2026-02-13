@@ -13,6 +13,7 @@ export default function ChatWindow({ conversation, onClose }) {
   const [newMessage, setNewMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
+  const [expandedGif, setExpandedGif] = useState(null);
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
   const hasInitialScrollRef = useRef(false);
@@ -157,7 +158,7 @@ export default function ChatWindow({ conversation, onClose }) {
     const gifMatch = content?.match(/^\[gif\](.*?)\[\/gif\]$/);
     if (gifMatch) {
       return (
-        <div className="message-gif">
+        <div className="message-gif" onClick={() => setExpandedGif(gifMatch[1])}>
           <img src={gifMatch[1]} alt="GIF" loading="lazy" />
         </div>
       );
@@ -165,7 +166,7 @@ export default function ChatWindow({ conversation, onClose }) {
     // Also detect raw GIPHY/Tenor URLs
     if (/^https?:\/\/.*(\.gif|giphy\.com|tenor\.com)/i.test(content?.trim())) {
       return (
-        <div className="message-gif">
+        <div className="message-gif" onClick={() => setExpandedGif(content.trim())}>
           <img src={content.trim()} alt="GIF" loading="lazy" />
         </div>
       );
@@ -297,6 +298,14 @@ export default function ChatWindow({ conversation, onClose }) {
               {emoji}
             </button>
           ))}
+        </div>
+      )}
+      {expandedGif && (
+        <div className="gif-lightbox" onClick={() => setExpandedGif(null)}>
+          <div className="gif-lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <img src={expandedGif} alt="GIF" />
+            <button className="gif-lightbox-close" onClick={() => setExpandedGif(null)}>✕</button>
+          </div>
         </div>
       )}
     </div>

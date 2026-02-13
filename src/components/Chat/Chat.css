@@ -529,3 +529,59 @@ body.light-mode .no-conversations,
 body.light-mode .chat-loading {
   color: #64748b;
 }
+
+/* ── GIF lightbox ── */
+.message-gif {
+  cursor: pointer;
+}
+
+.gif-lightbox {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.15s ease;
+}
+
+.gif-lightbox-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 85vh;
+}
+
+.gif-lightbox-content img {
+  max-width: 90vw;
+  max-height: 85vh;
+  border-radius: 12px;
+  display: block;
+}
+
+.gif-lightbox-close {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-card, #111);
+  color: var(--text-primary, #fff);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: background 0.2s;
+}
+
+.gif-lightbox-close:hover {
+  background: var(--gold-primary, #f6d365);
+  color: #000;
+}
