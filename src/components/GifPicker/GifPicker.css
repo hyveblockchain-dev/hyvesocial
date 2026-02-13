@@ -159,22 +159,7 @@
   border-radius: 10px;
 }
 
-/* ── GIF in post ── */
-.post-gif {
-  max-width: 360px;
-  border-radius: 10px;
-  overflow: hidden;
-  margin: 8px auto 18px;
-  position: relative;
-  z-index: 0;
-}
-
-.post-gif img {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 10px;
-}
+/* .post-gif styles moved to Post.css */
 
 /* ── GIF preview in CreatePost ── */
 .gif-preview-wrap {
