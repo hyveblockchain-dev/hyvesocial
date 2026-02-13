@@ -140,9 +140,7 @@ function App() {
               path="/groups/:groupId"
               element={
                 <PrivateRoute>
-                  <Layout>
-                    <GroupDetail />
-                  </Layout>
+                  <GroupDetail />
                 </PrivateRoute>
               }
             />

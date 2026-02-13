@@ -1,13 +1,86 @@
 /* ═══════════════════════════════════════════════════════════
-   Discord-style Group Detail — 3-column layout
+   Discord-style Group Detail — full-page 3-column layout
    ═══════════════════════════════════════════════════════════ */
+
+/* ── Full-page wrapper (outside Layout) ── */
+.discord-fullpage {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  background: #1e1f22;
+  overflow: hidden;
+}
+
+/* ── Top navbar ── */
+.discord-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 52px;
+  min-height: 52px;
+  background: #111214;
+  border-bottom: 1px solid #1e1f22;
+  flex-shrink: 0;
+  z-index: 10;
+}
+.discord-topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: #f2f3f5;
+  font-weight: 800;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.discord-topbar-logo-img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+.discord-topbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+.discord-topbar-group-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #b5bac1;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.discord-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.discord-topbar-link {
+  color: #b5bac1;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+.discord-topbar-link:hover {
+  background: #2b2d31;
+  color: #f2f3f5;
+}
 
 /* ── Loading / error ── */
 .discord-loading {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 60vh;
+  flex: 1;
   color: #b5bac1;
   font-size: 15px;
   font-weight: 500;
@@ -95,7 +168,7 @@
 .discord-server {
   display: grid;
   grid-template-columns: 240px 1fr 240px;
-  height: calc(100vh - 60px);
+  flex: 1;
   overflow: hidden;
   background: #313338;
 }
@@ -893,6 +966,12 @@
 .light-mode .discord-cover-preview { background-color: #f2f3f5; border-color: #e3e5e8; }
 .light-mode .discord-avatar-preview { border-color: #e3e5e8; }
 .light-mode .discord-admin-section { border-bottom-color: #e3e5e8; }
+.light-mode .discord-fullpage { background: #e3e5e8; }
+.light-mode .discord-topbar { background: #fff; border-bottom-color: #e3e5e8; }
+.light-mode .discord-topbar-logo { color: #060607; }
+.light-mode .discord-topbar-group-name { color: #5c5e66; }
+.light-mode .discord-topbar-link { color: #5c5e66; }
+.light-mode .discord-topbar-link:hover { background: #f2f3f5; color: #060607; }
 
 /* ══════════════════════════════════════════════════════════
    RESPONSIVE BREAKPOINTS
@@ -907,10 +986,18 @@
 }
 
 @media (max-width: 800px) {
+  .discord-topbar {
+    padding: 0 10px;
+    height: 46px;
+    min-height: 46px;
+  }
+  .discord-topbar-logo span { display: none; }
+  .discord-topbar-center { display: none; }
   .discord-server {
     grid-template-columns: 1fr;
     height: auto;
-    min-height: calc(100vh - 60px);
+    flex: 1;
+    overflow-y: auto;
   }
   .discord-sidebar {
     flex-direction: row;

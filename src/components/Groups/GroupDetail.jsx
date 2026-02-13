@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import CreatePost from '../Feed/CreatePost';
@@ -549,10 +549,27 @@ export default function GroupDetail() {
     });
   }
 
+  // ── Top navbar (rendered outside Layout) ──
+  const topBar = (
+    <header className="discord-topbar">
+      <Link to="/" className="discord-topbar-logo">
+        <img src="/hyvelogo.png" alt="Hyve" className="discord-topbar-logo-img" />
+        <span>Hyve Social</span>
+      </Link>
+      <div className="discord-topbar-center">
+        {group && <span className="discord-topbar-group-name">{group.name || 'Group'}</span>}
+      </div>
+      <div className="discord-topbar-actions">
+        <Link to="/groups" className="discord-topbar-link">All Groups</Link>
+        <Link to="/" className="discord-topbar-link">Feed</Link>
+      </div>
+    </header>
+  );
+
   // ── Loading / error states ──
-  if (loading) return <div className="discord-loading">Loading server...</div>;
-  if (error) return <div className="discord-loading error">{error}</div>;
-  if (!group) return <div className="discord-loading">Group not found.</div>;
+  if (loading) return <div className="discord-fullpage">{topBar}<div className="discord-loading">Loading server...</div></div>;
+  if (error) return <div className="discord-fullpage">{topBar}<div className="discord-loading error">{error}</div></div>;
+  if (!group) return <div className="discord-fullpage">{topBar}<div className="discord-loading">Group not found.</div></div>;
 
   const coverUrl = coverPreview || group.cover_image || group.coverImage;
   const avatarUrl = avatarPreview || group.avatar_image || group.avatarImage;
@@ -569,6 +586,8 @@ export default function GroupDetail() {
   // ── Not a member of private group: show join screen ──
   if (!isMember && privacy === 'private') {
     return (
+      <div className="discord-fullpage">
+        {topBar}
       <div className="discord-join-screen">
         <button className="discord-back-btn" onClick={() => navigate('/groups')}>
           <IconArrowLeft size={18} /> Back to Groups
@@ -585,6 +604,7 @@ export default function GroupDetail() {
           </button>
         </div>
       </div>
+      </div>
     );
   }
 
@@ -592,6 +612,8 @@ export default function GroupDetail() {
   // ═══ Main Discord-style 3-column layout ═════════════════
   // ══════════════════════════════════════════════════════════
   return (
+    <div className="discord-fullpage">
+      {topBar}
     <div className="discord-server">
       {/* ── Left: Channel sidebar ── */}
       <div className="discord-sidebar">
@@ -1072,6 +1094,7 @@ export default function GroupDetail() {
           }}
         />
       )}
+    </div>
     </div>
   );
 }
