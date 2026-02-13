@@ -156,99 +156,23 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
     el.setPointerCapture(e.pointerId);
   }, []);
 
-  // ── Flatten overlays onto canvas → File ──
-  async function flattenOverlays(imgFile, overlayList) {
-    const items = overlayList || overlays;
-    if (items.length === 0 && !selectedFilter) return imgFile;
+  // ── Apply filter only (text/emoji stored as metadata, not baked) ──
+  async function applyFilter(imgFile) {
+    if (!selectedFilter) return imgFile;
     return new Promise((resolve) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
-        const natW = img.naturalWidth;
-        const natH = img.naturalHeight;
         const canvas = document.createElement('canvas');
-        canvas.width = natW;
-        canvas.height = natH;
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
         const ctx = canvas.getContext('2d');
-
-        // Draw the base image with filter at native resolution
-        const filterCss = selectedFilter
-          ? PHOTO_FILTERS.find(f => f.id === selectedFilter)?.css || 'none'
-          : 'none';
+        const filterCss = PHOTO_FILTERS.find(f => f.id === selectedFilter)?.css || 'none';
         ctx.filter = filterCss;
-        ctx.drawImage(img, 0, 0, natW, natH);
-        ctx.filter = 'none';
-
-        // Compute object-fit: cover mapping
-        const containerEl = previewRef.current;
-        const contW = containerEl?.offsetWidth || natW;
-        const contH = containerEl?.clientHeight || natH;
-        const contAR = contW / contH;
-        const imgAR = natW / natH;
-
-        let visibleX = 0, visibleY = 0, visibleW = natW, visibleH = natH;
-        if (imgAR > contAR) {
-          visibleW = natH * contAR;
-          visibleX = (natW - visibleW) / 2;
-        } else {
-          visibleH = natW / contAR;
-          visibleY = (natH - visibleH) / 2;
-        }
-
-        // Draw overlays at native resolution — no upscale/downscale for crystal-clear text
-        ctx.textBaseline = 'top';
-        for (const o of items) {
-          const px = visibleX + (o.x / 100) * visibleW;
-          const py = visibleY + (o.y / 100) * visibleH;
-          const fontSize = Math.round((o.size / contH) * visibleH);
-
-          if (o.type === 'text') {
-            ctx.font = `700 ${fontSize}px -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
-            ctx.fillStyle = o.color;
-            ctx.lineJoin = 'round';
-
-            // Pass 1: thin dark outline for contrast against any background
-            ctx.strokeStyle = 'rgba(0,0,0,0.95)';
-            ctx.lineWidth = Math.max(2, fontSize / 16);
-            ctx.shadowColor = 'rgba(0,0,0,0.9)';
-            ctx.shadowBlur = Math.max(1, fontSize / 18);
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
-            ctx.strokeText(o.content, px, py);
-
-            // Pass 2: clean fill with zero shadow — crystal clear
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
-            ctx.fillText(o.content, px, py);
-          } else {
-            // Emoji: clean fill, minimal shadow
-            ctx.font = `${fontSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
-            ctx.shadowColor = 'rgba(0,0,0,0.4)';
-            ctx.shadowBlur = Math.max(1, fontSize / 16);
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 1;
-            ctx.fillText(o.content, px, py);
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
-          }
-        }
-
-        // Output as PNG — lossless, no compression artifacts on text
-        canvas.toBlob((pngBlob) => {
-          if (pngBlob && pngBlob.size < 5 * 1024 * 1024) {
-            resolve(new File([pngBlob], 'edited.png', { type: 'image/png' }));
-            return;
-          }
-          canvas.toBlob((webpBlob) => {
-            if (webpBlob && webpBlob.size < pngBlob.size * 0.8) {
-              resolve(new File([webpBlob], 'edited.webp', { type: 'image/webp' }));
-            } else {
-              canvas.toBlob((jpgBlob) => {
-                resolve(new File([jpgBlob], 'edited.jpg', { type: 'image/jpeg' }));
-              }, 'image/jpeg', 0.98);
-            }
-          }, 'image/webp', 0.96);
-        }, 'image/png');
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob((blob) => {
+          resolve(new File([blob], 'filtered.jpg', { type: 'image/jpeg' }));
+        }, 'image/jpeg', 0.95);
       };
       img.src = URL.createObjectURL(imgFile);
     });
@@ -284,11 +208,10 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
 
       let uploadImage = imageFile;
       if (imageFile) {
-        // Flatten any text/emoji overlays onto the image
-        const hasOverlays = finalOverlays.length > 0 || selectedFilter;
-        uploadImage = await flattenOverlays(imageFile, finalOverlays);
-        // Only compress if no overlays (overlays already output high-quality)
-        if (!hasOverlays) {
+        // Apply filter if selected
+        if (selectedFilter) {
+          uploadImage = await applyFilter(imageFile);
+        } else {
           uploadImage = await compressImage(uploadImage, 2, 1920);
         }
       }
@@ -299,6 +222,17 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
       }
       if (imageFile && selectedFilter) {
         metadata.imageFilter = selectedFilter;
+      }
+      // Store overlays as metadata — rendered with CSS for crystal-clear text
+      if (imageFile && finalOverlays.length > 0) {
+        metadata.overlays = finalOverlays.map(o => ({
+          type: o.type,
+          content: o.content,
+          x: o.x,
+          y: o.y,
+          color: o.color,
+          size: o.size,
+        }));
       }
 
       const data = await api.createPost({

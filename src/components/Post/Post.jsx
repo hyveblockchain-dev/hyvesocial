@@ -620,13 +620,28 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
         const meta = typeof post.metadata === 'string' ? (() => { try { return JSON.parse(post.metadata); } catch { return {}; } })() : (post.metadata || {});
         const filterId = meta.imageFilter;
         const filterCss = filterId ? FILTER_CSS_MAP[filterId] : null;
+        const overlayItems = Array.isArray(meta.overlays) ? meta.overlays : [];
         return (
-          <div className="post-image">
+          <div className="post-image" style={{ position: 'relative' }}>
             <img
               src={post.image_url}
               alt="Post"
               style={filterCss ? { filter: filterCss } : {}}
             />
+            {overlayItems.map((o, i) => (
+              <span
+                key={i}
+                className={`post-overlay ${o.type === 'text' ? 'post-overlay-text' : 'post-overlay-emoji'}`}
+                style={{
+                  left: `${o.x}%`,
+                  top: `${o.y}%`,
+                  fontSize: `${o.size || 28}px`,
+                  color: o.color || '#fff',
+                }}
+              >
+                {o.content}
+              </span>
+            ))}
           </div>
         );
       })()}
