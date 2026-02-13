@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import { compressImage } from '../../utils/imageCompression';
 import { CameraIcon, SmileIcon, CloseIcon } from '../Icons/Icons';
+import GifPicker from '../GifPicker/GifPicker';
 import './CreatePost.css';
 
 // ── Text background presets (Facebook-style) ──────────────────────
@@ -59,6 +60,9 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [livePreviewPos, setLivePreviewPos] = useState({ x: 50, y: 50 });
   const [draggingLive, setDraggingLive] = useState(false);
+  // ── GIF state ──
+  const [showGifPicker, setShowGifPicker] = useState(false);
+  const [selectedGif, setSelectedGif] = useState(null);
   const previewRef = useRef(null);
   const fileInputRef = useRef(null);
   const { user } = useAuth();
@@ -181,7 +185,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
   async function handleSubmit(e) {
     e.preventDefault();
     
-    if (!content.trim() && !imageFile) {
+    if (!content.trim() && !imageFile && !selectedGif) {
       setError('Please write something!');
       return;
     }
@@ -235,9 +239,15 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
         }));
       }
 
+      // If a GIF is selected, store URL as imageUrl (no file upload needed)
+      if (selectedGif) {
+        metadata.isGif = true;
+      }
+
       const data = await api.createPost({
         content: content.trim(),
         imageFile: uploadImage,
+        imageUrl: selectedGif ? selectedGif.url : undefined,
         allowShare,
         groupId,
         metadata: Object.keys(metadata).length > 0 ? metadata : undefined
@@ -250,7 +260,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
         profile_image: user?.profileImage,
         reaction_count: 0,
         comment_count: 0,
-        image_url: data.post?.image_url || imagePreview,
+        image_url: data.post?.image_url || selectedGif?.url || imagePreview,
         allow_share: allowShare,
         group_id: groupId ?? data.post?.group_id,
         groupId: groupId ?? data.post?.group_id,
@@ -276,6 +286,8 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
       setShowOverlayText(false);
       setShowOverlayEmoji(false);
       setOverlayTextInput('');
+      setSelectedGif(null);
+      setShowGifPicker(false);
       
       // Show success (optional)
       console.log('Post created successfully!');
@@ -404,6 +416,20 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
                 setShowFilterPicker(false);
                 setOverlays([]);
               }}
+            >
+              <CloseIcon size={14} />
+            </button>
+          </div>
+        )}
+
+        {/* GIF preview */}
+        {selectedGif && !imagePreview && (
+          <div className="gif-preview-wrap">
+            <img src={selectedGif.url} alt={selectedGif.title || 'GIF'} />
+            <button
+              type="button"
+              className="remove-media"
+              onClick={() => setSelectedGif(null)}
             >
               <CloseIcon size={14} />
             </button>
@@ -563,10 +589,24 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
 
             <button
               type="button"
+              className={`option-button${showGifPicker ? ' active' : ''}`}
+              onClick={() => {
+                setShowGifPicker(prev => !prev);
+                setShowEmojiPicker(false);
+                setShowBgPicker(false);
+              }}
+              disabled={!!imageFile}
+            >
+              GIF
+            </button>
+
+            <button
+              type="button"
               className="option-button"
               onClick={() => {
                 setShowEmojiPicker((prev) => !prev);
                 setShowBgPicker(false);
+                setShowGifPicker(false);
               }}
             >
               <SmileIcon size={16} /> Emoji
@@ -602,6 +642,19 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
               </div>
             )}
 
+            {showGifPicker && !imageFile && (
+              <GifPicker
+                onSelect={(gif) => {
+                  setSelectedGif(gif);
+                  setShowGifPicker(false);
+                  // Clear image if any
+                  setImageFile(null);
+                  setImagePreview('');
+                }}
+                onClose={() => setShowGifPicker(false)}
+              />
+            )}
+
             {showEmojiPicker && (
               <div className="emoji-picker" role="menu">
                 {emojiOptions.map((emoji) => (
@@ -624,7 +677,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
           <button 
             type="submit" 
             className="post-button"
-            disabled={posting || (!content.trim() && !imageFile)}
+            disabled={posting || (!content.trim() && !imageFile && !selectedGif)}
           >
             {posting ? 'Posting...' : 'Post'}
           </button>
@@ -657,10 +710,12 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
             }
             setImageFile(file);
             setImagePreview(URL.createObjectURL(file));
-            // Clear text background when image is added
+            // Clear text background and GIF when image is added
             setSelectedBg(null);
             setShowBgPicker(false);
             setOverlays([]);
+            setSelectedGif(null);
+            setShowGifPicker(false);
           }}
         />
       </form>

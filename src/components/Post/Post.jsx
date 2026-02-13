@@ -615,12 +615,22 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
         return <div className="post-content">{normalizeSharedContent(post.content)}</div>;
       })()}
 
-      {/* Post image — with optional CSS filter */}
+      {/* Post image / GIF — with optional CSS filter */}
       {post.image_url && (() => {
         const meta = typeof post.metadata === 'string' ? (() => { try { return JSON.parse(post.metadata); } catch { return {}; } })() : (post.metadata || {});
+        const isGif = meta.isGif || /\.gif(\?|$)/i.test(post.image_url) || /giphy\.com|tenor\.com/i.test(post.image_url);
         const filterId = meta.imageFilter;
         const filterCss = filterId ? FILTER_CSS_MAP[filterId] : null;
         const overlayItems = Array.isArray(meta.overlays) ? meta.overlays : [];
+
+        if (isGif) {
+          return (
+            <div className="post-gif">
+              <img src={post.image_url} alt="GIF" loading="lazy" />
+            </div>
+          );
+        }
+
         return (
           <div className="post-image" style={{ position: 'relative' }}>
             <img

@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import { CloseIcon, SmileIcon } from '../Icons/Icons';
+import GifPicker from '../GifPicker/GifPicker';
 import './Chat.css';
 import { formatDateTime } from '../../utils/date';
 
@@ -11,6 +12,7 @@ export default function ChatWindow({ conversation, onClose }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
   const hasInitialScrollRef = useRef(false);
@@ -129,6 +131,48 @@ export default function ChatWindow({ conversation, onClose }) {
     }
   }
 
+  async function handleSendGif(gif) {
+    try {
+      const gifMessage = `[gif]${gif.url}[/gif]`;
+      const response = await api.sendMessage(conversationUsername, gifMessage);
+      const sentMessage = response?.message || response;
+      const withDefaults = {
+        ...sentMessage,
+        content: gifMessage,
+        from_username: sentMessage?.from_username ?? user?.username,
+        to_username: sentMessage?.to_username ?? conversationUsername,
+        created_at: sentMessage?.created_at ?? new Date().toISOString()
+      };
+      if (!socket?.connected) {
+        setMessages((prev) => [...prev, withDefaults]);
+      }
+      setShowGifPicker(false);
+    } catch (error) {
+      console.error('Send GIF error:', error);
+    }
+  }
+
+  function renderMessageContent(content) {
+    // Check for GIF markup: [gif]URL[/gif]
+    const gifMatch = content?.match(/^\[gif\](.*?)\[\/gif\]$/);
+    if (gifMatch) {
+      return (
+        <div className="message-gif">
+          <img src={gifMatch[1]} alt="GIF" loading="lazy" />
+        </div>
+      );
+    }
+    // Also detect raw GIPHY/Tenor URLs
+    if (/^https?:\/\/.*(\.gif|giphy\.com|tenor\.com)/i.test(content?.trim())) {
+      return (
+        <div className="message-gif">
+          <img src={content.trim()} alt="GIF" loading="lazy" />
+        </div>
+      );
+    }
+    return content;
+  }
+
   async function handleSendMessage(e) {
     e.preventDefault();
 
@@ -192,7 +236,7 @@ export default function ChatWindow({ conversation, onClose }) {
             const isOwn = !!currentUsername && fromUsername === currentUsername;
             return (
               <div key={index} className={`message ${isOwn ? 'own' : 'other'}`}>
-                <div className="message-content">{message.content}</div>
+                <div className="message-content">{renderMessageContent(message.content)}</div>
                 <div className="message-time">
                   {formatMessageTime(message)}
                 </div>
@@ -212,8 +256,17 @@ export default function ChatWindow({ conversation, onClose }) {
         />
         <button
           type="button"
+          className="gif-toggle"
+          onClick={() => { setShowGifPicker((prev) => !prev); setShowEmojiPicker(false); }}
+          aria-label="Send GIF"
+          title="Send GIF"
+        >
+          GIF
+        </button>
+        <button
+          type="button"
           className="emoji-toggle"
-          onClick={() => setShowEmojiPicker((prev) => !prev)}
+          onClick={() => { setShowEmojiPicker((prev) => !prev); setShowGifPicker(false); }}
           aria-label="Add emoji"
           title="Add emoji"
         >
@@ -221,6 +274,14 @@ export default function ChatWindow({ conversation, onClose }) {
         </button>
         <button type="submit">Send</button>
       </form>
+      {showGifPicker && (
+        <div className="chat-gif-picker-wrap">
+          <GifPicker
+            onSelect={handleSendGif}
+            onClose={() => setShowGifPicker(false)}
+          />
+        </div>
+      )}
       {showEmojiPicker && (
         <div className="chat-emoji-picker">
           {emojiOptions.map((emoji) => (
