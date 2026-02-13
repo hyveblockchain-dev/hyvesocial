@@ -1,11 +1,12 @@
 // src/components/Feed/Feed.jsx
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import CreatePost from './CreatePost';
 import Post from '../Post/Post';
 import { compressImage } from '../../utils/imageCompression';
+import { CloseIcon } from '../Icons/Icons';
 import './Feed.css';
 
 export default function Feed() {
@@ -22,6 +23,21 @@ export default function Feed() {
   const [storyPosting, setStoryPosting] = useState(false);
   const [showStoryViewer, setShowStoryViewer] = useState(false);
   const [activeStory, setActiveStory] = useState(null);
+  // Story editor state
+  const [storyFilter, setStoryFilter] = useState(null);
+  const [storyShowFilters, setStoryShowFilters] = useState(false);
+  const [storyOverlays, setStoryOverlays] = useState([]);
+  const [storyShowText, setStoryShowText] = useState(false);
+  const [storyShowEmoji, setStoryShowEmoji] = useState(false);
+  const [storyTextInput, setStoryTextInput] = useState('');
+  const [storyTextColor, setStoryTextColor] = useState('#ffffff');
+  const [storyTextSize, setStoryTextSize] = useState(28);
+  const [storyDraggingId, setStoryDraggingId] = useState(null);
+  const [storyDragOffset, setStoryDragOffset] = useState({ x: 0, y: 0 });
+  const [storyLivePos, setStoryLivePos] = useState({ x: 50, y: 50 });
+  const [storyDraggingLive, setStoryDraggingLive] = useState(false);
+  const storyPreviewRef = useRef(null);
+  const storyFileInputRef = useRef(null);
   const [focusedPostId, setFocusedPostId] = useState(null);
   const [focusedCommentId, setFocusedCommentId] = useState(null);
   const [focusedParentCommentId, setFocusedParentCommentId] = useState(null);
@@ -144,6 +160,107 @@ export default function Feed() {
     });
   }, [stories, friendUsernameSet, user]);
 
+  // ── Story filter & overlay presets ──
+  const STORY_FILTERS = [
+    { id: null, label: 'Normal', css: 'none' },
+    { id: 'vivid', label: 'Vivid', css: 'saturate(1.4) contrast(1.1)' },
+    { id: 'warm', label: 'Warm', css: 'sepia(0.25) saturate(1.3) brightness(1.05)' },
+    { id: 'cool', label: 'Cool', css: 'saturate(0.9) brightness(1.05) hue-rotate(15deg)' },
+    { id: 'bw', label: 'B&W', css: 'grayscale(1)' },
+    { id: 'sepia', label: 'Sepia', css: 'sepia(0.7)' },
+    { id: 'dramatic', label: 'Drama', css: 'contrast(1.4) saturate(1.2) brightness(0.9)' },
+    { id: 'fade', label: 'Fade', css: 'contrast(0.85) brightness(1.1) saturate(0.7)' },
+    { id: 'vintage', label: 'Vintage', css: 'sepia(0.35) contrast(1.1) brightness(0.95) saturate(1.2)' },
+  ];
+  const storyOverlayEmojis = ['😀','😂','😍','🥳','😎','🔥','❤️','⭐','💯','👑','🎉','💀','🙏','💪','👀','🤔','✨','🌈','🦋','🐱'];
+  const storyTextColors = ['#ffffff','#000000','#f6d365','#ef4444','#3b82f6','#22c55e','#a855f7','#ec4899','#f97316','#06b6d4'];
+
+  function addStoryTextOverlay() {
+    if (!storyTextInput.trim()) return;
+    setStoryOverlays(prev => [...prev, {
+      id: Date.now(), type: 'text', content: storyTextInput.trim(),
+      x: storyLivePos.x, y: storyLivePos.y, color: storyTextColor, size: storyTextSize,
+    }]);
+    setStoryTextInput('');
+    setStoryLivePos({ x: 50, y: 70 });
+  }
+
+  function addStoryEmojiOverlay(emoji) {
+    setStoryOverlays(prev => [...prev, {
+      id: Date.now(), type: 'emoji', content: emoji, x: 50, y: 50, size: 40,
+    }]);
+    setStoryShowEmoji(false);
+  }
+
+  function removeStoryOverlay(id) {
+    setStoryOverlays(prev => prev.filter(o => o.id !== id));
+  }
+
+  const handleStoryPointerDown = useCallback((e, id) => {
+    e.preventDefault(); e.stopPropagation();
+    const rect = storyPreviewRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const overlay = document.getElementById(`story-overlay-${id}`);
+    if (!overlay) return;
+    const oRect = overlay.getBoundingClientRect();
+    setStoryDraggingId(id);
+    setStoryDragOffset({ x: e.clientX - oRect.left, y: e.clientY - oRect.top });
+    overlay.setPointerCapture(e.pointerId);
+  }, []);
+
+  const handleStoryPointerMove = useCallback((e) => {
+    const rect = storyPreviewRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    if (storyDraggingLive) {
+      const x = ((e.clientX - storyDragOffset.x - rect.left + 16) / rect.width) * 100;
+      const y = ((e.clientY - storyDragOffset.y - rect.top + 16) / rect.height) * 100;
+      setStoryLivePos({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
+      return;
+    }
+    if (storyDraggingId === null) return;
+    const x = ((e.clientX - storyDragOffset.x - rect.left + 16) / rect.width) * 100;
+    const y = ((e.clientY - storyDragOffset.y - rect.top + 16) / rect.height) * 100;
+    setStoryOverlays(prev => prev.map(o =>
+      o.id === storyDraggingId ? { ...o, x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) } : o
+    ));
+  }, [storyDraggingId, storyDraggingLive, storyDragOffset]);
+
+  const handleStoryPointerUp = useCallback(() => {
+    setStoryDraggingId(null);
+    setStoryDraggingLive(false);
+  }, []);
+
+  const handleStoryLivePreviewPointerDown = useCallback((e) => {
+    e.preventDefault(); e.stopPropagation();
+    const rect = storyPreviewRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const oRect = e.currentTarget.getBoundingClientRect();
+    setStoryDraggingLive(true);
+    setStoryDragOffset({ x: e.clientX - oRect.left, y: e.clientY - oRect.top });
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }, []);
+
+  async function applyStoryFilter(imgFile) {
+    if (!storyFilter) return imgFile;
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        const filterCss = STORY_FILTERS.find(f => f.id === storyFilter)?.css || 'none';
+        ctx.filter = filterCss;
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob((blob) => {
+          resolve(new File([blob], 'filtered.jpg', { type: 'image/jpeg' }));
+        }, 'image/jpeg', 0.95);
+      };
+      img.src = URL.createObjectURL(imgFile);
+    });
+  }
+
   async function handleCreateStory() {
     if (!storyFile) {
       alert('Please select a story photo');
@@ -152,7 +269,20 @@ export default function Feed() {
 
     try {
       setStoryPosting(true);
-      const compressed = await compressImage(storyFile, 2, 1920);
+      // Auto-commit pending text
+      let finalOverlays = storyOverlays;
+      if (storyTextInput.trim()) {
+        finalOverlays = [...storyOverlays, {
+          id: Date.now(), type: 'text', content: storyTextInput.trim(),
+          x: storyLivePos.x, y: storyLivePos.y, color: storyTextColor, size: storyTextSize,
+        }];
+      }
+
+      let uploadFile = storyFile;
+      if (storyFilter) {
+        uploadFile = await applyStoryFilter(storyFile);
+      }
+      const compressed = await compressImage(uploadFile, 2, 1920);
       const data = await api.createStory({
         file: compressed,
         mediaType: compressed.type || 'image',
@@ -169,6 +299,12 @@ export default function Feed() {
       setStoryFile(null);
       setStoryPreview('');
       setStoryText('');
+      setStoryFilter(null);
+      setStoryShowFilters(false);
+      setStoryOverlays([]);
+      setStoryShowText(false);
+      setStoryShowEmoji(false);
+      setStoryTextInput('');
       loadStories();
     } catch (error) {
       console.error('Create story error:', error);
@@ -183,6 +319,15 @@ export default function Feed() {
     setStoryFile(null);
     setStoryPreview('');
     setStoryText('');
+    setStoryFilter(null);
+    setStoryShowFilters(false);
+    setStoryOverlays([]);
+    setStoryShowText(false);
+    setStoryShowEmoji(false);
+    setStoryTextInput('');
+    setStoryTextColor('#ffffff');
+    setStoryTextSize(28);
+    setStoryLivePos({ x: 50, y: 50 });
   }
 
   async function handleDeleteStory(storyId) {
@@ -327,11 +472,204 @@ export default function Feed() {
       </div>
       {showStoryModal && (
         <div className="story-modal" onClick={closeStoryModal}>
-          <div className="story-modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Create Story</h3>
+          <div className="story-modal-content story-editor" onClick={(e) => e.stopPropagation()}>
+            <div className="story-editor-header">
+              <h3>Create Story</h3>
+              <button className="story-editor-close" onClick={closeStoryModal}>✕</button>
+            </div>
+
+            {/* Image preview area */}
+            {storyPreview ? (
+              <div
+                className="story-editor-preview"
+                ref={storyPreviewRef}
+                onPointerMove={handleStoryPointerMove}
+                onPointerUp={handleStoryPointerUp}
+                onPointerLeave={handleStoryPointerUp}
+              >
+                <img
+                  src={storyPreview}
+                  alt="Story preview"
+                  className="story-editor-img"
+                  style={storyFilter ? { filter: STORY_FILTERS.find(f => f.id === storyFilter)?.css || 'none' } : {}}
+                  draggable={false}
+                />
+                {/* Rendered overlays */}
+                {storyOverlays.map(o => (
+                  <div
+                    key={o.id}
+                    id={`story-overlay-${o.id}`}
+                    className={`photo-overlay ${o.type === 'text' ? 'photo-overlay-text' : 'photo-overlay-emoji'}${storyDraggingId === o.id ? ' dragging' : ''}`}
+                    style={{
+                      left: `${o.x}%`, top: `${o.y}%`,
+                      fontSize: `${o.size}px`, color: o.color || '#fff',
+                      touchAction: 'none', userSelect: 'none',
+                    }}
+                    onPointerDown={(e) => handleStoryPointerDown(e, o.id)}
+                  >
+                    {o.content}
+                    <button
+                      type="button"
+                      className="overlay-remove"
+                      onClick={(e) => { e.stopPropagation(); removeStoryOverlay(o.id); }}
+                      onPointerDown={(e) => e.stopPropagation()}
+                    >✕</button>
+                  </div>
+                ))}
+                {/* Live text preview */}
+                {storyTextInput && (
+                  <div
+                    className={`photo-overlay photo-overlay-text live-text-preview${storyDraggingLive ? ' dragging' : ''}`}
+                    style={{
+                      left: `${storyLivePos.x}%`, top: `${storyLivePos.y}%`,
+                      fontSize: `${storyTextSize}px`, color: storyTextColor,
+                      touchAction: 'none', userSelect: 'none', cursor: 'grab',
+                    }}
+                    onPointerDown={handleStoryLivePreviewPointerDown}
+                  >
+                    {storyTextInput}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className="story-preview-remove"
+                  onClick={() => {
+                    setStoryFile(null);
+                    setStoryPreview('');
+                    setStoryFilter(null);
+                    setStoryOverlays([]);
+                  }}
+                >✕</button>
+              </div>
+            ) : (
+              <div className="story-editor-upload" onClick={() => storyFileInputRef.current?.click()}>
+                <div className="story-upload-icon">📷</div>
+                <span>Click to add a photo</span>
+              </div>
+            )}
+
+            {/* Toolbar — only when image is loaded */}
+            {storyPreview && (
+              <div className="story-editor-tools">
+                <div className="story-tools-bar">
+                  <button
+                    type="button"
+                    className={`option-button${storyShowFilters ? ' active' : ''}`}
+                    onClick={() => { setStoryShowFilters(p => !p); setStoryShowText(false); setStoryShowEmoji(false); }}
+                  >🎨 Filters</button>
+                  <button
+                    type="button"
+                    className={`option-button${storyShowText ? ' active' : ''}`}
+                    onClick={() => { setStoryShowText(p => !p); setStoryShowFilters(false); setStoryShowEmoji(false); }}
+                  >✏️ Text</button>
+                  <button
+                    type="button"
+                    className={`option-button${storyShowEmoji ? ' active' : ''}`}
+                    onClick={() => { setStoryShowEmoji(p => !p); setStoryShowFilters(false); setStoryShowText(false); }}
+                  >😀 Emoji</button>
+                </div>
+
+                {/* Filter strip */}
+                {storyShowFilters && (
+                  <div className="filter-strip">
+                    {STORY_FILTERS.map(f => (
+                      <button
+                        key={f.id || 'none'}
+                        type="button"
+                        className={`filter-thumb${storyFilter === f.id ? ' selected' : ''}`}
+                        onClick={() => setStoryFilter(f.id)}
+                      >
+                        <img src={storyPreview} alt={f.label} style={{ filter: f.css }} />
+                        <span>{f.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Text overlay panel */}
+                {storyShowText && (
+                  <div className="overlay-text-panel">
+                    <input
+                      type="text"
+                      value={storyTextInput}
+                      onChange={e => setStoryTextInput(e.target.value)}
+                      placeholder="Type text to add..."
+                      className="overlay-text-input"
+                      maxLength={80}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addStoryTextOverlay(); } }}
+                    />
+                    <div className="overlay-text-options">
+                      <div className="overlay-color-row">
+                        {storyTextColors.map(c => (
+                          <button
+                            key={c}
+                            type="button"
+                            className={`color-dot${storyTextColor === c ? ' selected' : ''}`}
+                            style={{ background: c }}
+                            onClick={() => setStoryTextColor(c)}
+                          />
+                        ))}
+                      </div>
+                      <div className="overlay-size-row">
+                        <label>Size</label>
+                        <input type="range" min="16" max="56" value={storyTextSize}
+                          onChange={e => setStoryTextSize(Number(e.target.value))} className="size-slider" />
+                        <span className="size-label">{storyTextSize}px</span>
+                      </div>
+                      <button type="button" className="overlay-add-btn" onClick={addStoryTextOverlay}
+                        disabled={!storyTextInput.trim()}>Add Text</button>
+                    </div>
+                    {storyOverlays.length > 0 && (
+                      <div className="overlay-list">
+                        <div className="overlay-list-title">Added overlays ({storyOverlays.length})</div>
+                        {storyOverlays.map((o) => (
+                          <div key={o.id} className="overlay-list-item">
+                            <span className="overlay-list-icon">{o.type === 'text' ? '✏️' : '😀'}</span>
+                            <span className="overlay-list-content" style={o.type === 'text' ? { color: o.color } : {}}>
+                              {o.content.length > 25 ? o.content.slice(0, 25) + '…' : o.content}
+                            </span>
+                            <button type="button" className="overlay-list-remove" onClick={() => removeStoryOverlay(o.id)}>✕</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Emoji overlay picker */}
+                {storyShowEmoji && (
+                  <div className="overlay-emoji-panel">
+                    {storyOverlayEmojis.map(em => (
+                      <button key={em} type="button" className="overlay-emoji-btn" onClick={() => addStoryEmojiOverlay(em)}>
+                        {em}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Caption */}
+            <textarea
+              rows={2}
+              placeholder="Add a caption..."
+              value={storyText}
+              onChange={(e) => setStoryText(e.target.value)}
+              className="story-caption-input"
+            />
+
+            <div className="story-modal-actions">
+              <button className="btn-secondary" onClick={closeStoryModal}>Cancel</button>
+              <button className="btn-primary" onClick={handleCreateStory} disabled={storyPosting || !storyFile}>
+                {storyPosting ? 'Posting...' : 'Post Story'}
+              </button>
+            </div>
+
             <input
+              ref={storyFileInputRef}
               type="file"
               accept="image/*"
+              style={{ display: 'none' }}
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
@@ -348,36 +686,10 @@ export default function Feed() {
                 }
                 setStoryFile(file);
                 setStoryPreview(URL.createObjectURL(file));
+                setStoryOverlays([]);
+                setStoryFilter(null);
               }}
             />
-            {storyPreview && (
-              <div className="story-preview-container">
-                <img className="story-preview" src={storyPreview} alt="Story preview" />
-                <button
-                  type="button"
-                  className="story-preview-remove"
-                  onClick={() => {
-                    setStoryFile(null);
-                    setStoryPreview('');
-                  }}
-                  title="Remove image"
-                >
-                  ✕
-                </button>
-              </div>
-            )}
-            <textarea
-              rows={3}
-              placeholder="Add a caption..."
-              value={storyText}
-              onChange={(e) => setStoryText(e.target.value)}
-            />
-            <div className="story-modal-actions">
-              <button className="btn-secondary" onClick={closeStoryModal}>Cancel</button>
-              <button className="btn-primary" onClick={handleCreateStory} disabled={storyPosting}>
-                {storyPosting ? 'Posting...' : 'Post Story'}
-              </button>
-            </div>
           </div>
         </div>
       )}
