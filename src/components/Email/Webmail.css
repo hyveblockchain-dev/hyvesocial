@@ -1559,63 +1559,80 @@ body.light-mode .email-ac-active {
 }
 
 /* ── Light mode ── */
+
+/* Header */
 body.light-mode .webmail-header {
   background: rgba(255, 255, 255, 0.92);
-  border-color: var(--trim-strong);
+  border-color: #cbd5e1;
+}
+
+body.light-mode .webmail-logo-text {
+  background: linear-gradient(135deg, #b8860b 0%, #8b6914 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+body.light-mode .webmail-logo-img {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: #cbd5e1;
+  filter: brightness(0.65) saturate(1.2);
 }
 
 body.light-mode .webmail-header-search input {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: #e5e7eb;
+  background: rgba(0, 0, 0, 0.05);
+  border-color: #cbd5e1;
   color: #0f172a;
 }
 
 body.light-mode .webmail-header-search input::placeholder {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 body.light-mode .webmail-header-search input:focus {
-  border-color: var(--trim-strong);
+  border-color: #b8860b;
   background: rgba(0, 0, 0, 0.06);
 }
 
 body.light-mode .webmail-header-btn {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: #e5e7eb;
-  color: #475569;
+  background: rgba(0, 0, 0, 0.05);
+  border-color: #cbd5e1;
+  color: #374151;
 }
 
 body.light-mode .webmail-header-btn:hover {
-  background: rgba(0, 0, 0, 0.08);
-  color: var(--gold-primary);
+  background: rgba(0, 0, 0, 0.1);
+  color: #b8860b;
+  border-color: #b8860b;
 }
 
 /* Sidebar light mode */
 body.light-mode .webmail-sidebar {
   background: #ffffff;
-  border-color: #e5e7eb;
+  border-color: #cbd5e1;
 }
 
 body.light-mode .compose-wrapper {
-  border-color: #e5e7eb;
+  border-color: #cbd5e1;
 }
 
 body.light-mode .folder-item {
-  color: #475569;
+  color: #374151;
 }
 
 body.light-mode .folder-item:hover {
-  background: rgba(0, 0, 0, 0.04);
-  color: #0f172a;
+  background: rgba(0, 0, 0, 0.05);
+  color: #111827;
 }
 
 body.light-mode .folder-item.active {
-  background: rgba(255, 215, 0, 0.1);
-  color: #b8860b;
+  background: #ffd700;
+  color: #111827;
+  font-weight: 700;
 }
 
 body.light-mode .sidebar-footer {
-  border-color: #e5e7eb;
+  border-color: #cbd5e1;
 }
 
 body.light-mode .sidebar-name {
@@ -1623,18 +1640,18 @@ body.light-mode .sidebar-name {
 }
 
 body.light-mode .sidebar-email {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 body.light-mode .sidebar-action-btn {
-  background: rgba(0, 0, 0, 0.03);
-  border-color: #e5e7eb;
-  color: #475569;
+  background: rgba(0, 0, 0, 0.04);
+  border-color: #cbd5e1;
+  color: #374151;
 }
 
 body.light-mode .sidebar-action-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
-  color: #0f172a;
+  background: rgba(0, 0, 0, 0.08);
+  color: #111827;
 }
 
 /* Main content light mode */
@@ -1644,12 +1661,12 @@ body.light-mode .webmail-main {
 
 body.light-mode .webmail-toolbar {
   background: #ffffff;
-  border-color: #e5e7eb;
+  border-color: #cbd5e1;
 }
 
 body.light-mode .email-search-form {
-  background: rgba(0, 0, 0, 0.02);
-  border-color: #e5e7eb;
+  background: rgba(0, 0, 0, 0.03);
+  border-color: #cbd5e1;
 }
 
 body.light-mode .email-search-form input {
@@ -1657,22 +1674,22 @@ body.light-mode .email-search-form input {
 }
 
 body.light-mode .email-search-form input::placeholder {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 body.light-mode .toolbar-btn {
-  background: rgba(0, 0, 0, 0.03);
-  border-color: #e5e7eb;
-  color: #475569;
+  background: rgba(0, 0, 0, 0.04);
+  border-color: #cbd5e1;
+  color: #374151;
 }
 
 body.light-mode .toolbar-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
-  color: #0f172a;
+  background: rgba(0, 0, 0, 0.08);
+  color: #111827;
 }
 
 body.light-mode .folder-header {
-  border-color: #e5e7eb;
+  border-color: #cbd5e1;
 }
 
 body.light-mode .folder-header h2 {
@@ -1680,16 +1697,16 @@ body.light-mode .folder-header h2 {
 }
 
 body.light-mode .message-count {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 /* Message list light mode */
 body.light-mode .message-row {
-  border-color: #f0f0f0;
+  border-color: #e2e8f0;
 }
 
 body.light-mode .message-row:hover {
-  background: rgba(0, 0, 0, 0.02);
+  background: rgba(0, 0, 0, 0.03);
 }
 
 body.light-mode .message-row.unread {
@@ -1702,32 +1719,32 @@ body.light-mode .message-row.unread .message-subject {
 }
 
 body.light-mode .message-sender {
-  color: #475569;
+  color: #1e293b;
 }
 
 body.light-mode .message-subject {
-  color: #475569;
+  color: #1e293b;
 }
 
 body.light-mode .message-preview {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 body.light-mode .message-date {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 body.light-mode .star-btn {
-  color: #cbd5e1;
+  color: #94a3b8;
 }
 
 body.light-mode .star-btn:hover,
 body.light-mode .star-btn.starred {
-  color: var(--gold-primary);
+  color: #d97706;
 }
 
 body.light-mode .message-delete-btn {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 body.light-mode .message-delete-btn:hover {
@@ -1739,11 +1756,11 @@ body.light-mode .message-delete-btn:hover {
 body.light-mode .messages-loading,
 body.light-mode .messages-empty,
 body.light-mode .messages-error {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 body.light-mode .messages-empty h3 {
-  color: #475569;
+  color: #374151;
 }
 
 /* Compose light mode */
@@ -1753,13 +1770,13 @@ body.light-mode .compose-overlay {
 
 body.light-mode .compose-window {
   background: #ffffff;
-  border-color: #e5e7eb;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15);
+  border-color: #cbd5e1;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
 }
 
 body.light-mode .compose-header {
   background: #ffffff;
-  border-color: #e5e7eb;
+  border-color: #cbd5e1;
 }
 
 body.light-mode .compose-header h3 {
@@ -1767,27 +1784,27 @@ body.light-mode .compose-header h3 {
 }
 
 body.light-mode .compose-back-btn {
-  color: #475569;
+  color: #374151;
 }
 
 body.light-mode .compose-back-btn:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: rgba(0, 0, 0, 0.05);
   color: #0f172a;
 }
 
 body.light-mode .compose-draft-btn {
-  background: rgba(0, 0, 0, 0.03);
-  border-color: #e5e7eb;
-  color: #475569;
+  background: rgba(0, 0, 0, 0.04);
+  border-color: #cbd5e1;
+  color: #374151;
 }
 
 body.light-mode .compose-draft-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(0, 0, 0, 0.08);
   color: #0f172a;
 }
 
 body.light-mode .compose-close-btn {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 body.light-mode .compose-close-btn:hover {
@@ -1800,11 +1817,11 @@ body.light-mode .compose-error {
 }
 
 body.light-mode .compose-field {
-  border-color: #f0f0f0;
+  border-color: #e2e8f0;
 }
 
 body.light-mode .compose-field label {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 body.light-mode .compose-field input {
@@ -1812,7 +1829,7 @@ body.light-mode .compose-field input {
 }
 
 body.light-mode .compose-field input::placeholder {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 body.light-mode .compose-body {
@@ -1820,40 +1837,40 @@ body.light-mode .compose-body {
 }
 
 body.light-mode .compose-body::placeholder {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 body.light-mode .compose-footer {
   background: #ffffff;
-  border-color: #e5e7eb;
+  border-color: #cbd5e1;
 }
 
 body.light-mode .attach-btn {
-  color: #475569;
-  border-color: #e5e7eb;
+  color: #374151;
+  border-color: #cbd5e1;
 }
 
 body.light-mode .attach-btn:hover {
-  color: var(--gold-primary);
-  border-color: var(--gold-primary);
+  color: #b8860b;
+  border-color: #b8860b;
 }
 
 body.light-mode .compose-attachments {
-  border-color: #f0f0f0;
-  background: rgba(0, 0, 0, 0.01);
+  border-color: #e2e8f0;
+  background: rgba(0, 0, 0, 0.02);
 }
 
 body.light-mode .compose-att-item {
-  background: rgba(0, 0, 0, 0.02);
-  border-color: #e5e7eb;
+  background: rgba(0, 0, 0, 0.03);
+  border-color: #cbd5e1;
 }
 
 body.light-mode .compose-att-name {
-  color: #475569;
+  color: #374151;
 }
 
 body.light-mode .compose-att-size {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 /* Email view light mode */
@@ -1863,26 +1880,26 @@ body.light-mode .email-view {
 
 body.light-mode .email-view-toolbar {
   background: #ffffff;
-  border-color: #e5e7eb;
+  border-color: #cbd5e1;
 }
 
 body.light-mode .ev-back-btn {
-  color: #475569;
+  color: #374151;
 }
 
 body.light-mode .ev-back-btn:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: rgba(0, 0, 0, 0.05);
   color: #0f172a;
 }
 
 body.light-mode .ev-action-btn {
-  background: rgba(0, 0, 0, 0.03);
-  border-color: #e5e7eb;
-  color: #475569;
+  background: rgba(0, 0, 0, 0.04);
+  border-color: #cbd5e1;
+  color: #374151;
 }
 
 body.light-mode .ev-action-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(0, 0, 0, 0.08);
   color: #0f172a;
 }
 
@@ -1896,7 +1913,7 @@ body.light-mode .ev-subject {
 }
 
 body.light-mode .ev-sender-row {
-  border-color: #e5e7eb;
+  border-color: #cbd5e1;
 }
 
 body.light-mode .ev-sender-name {
@@ -1904,15 +1921,15 @@ body.light-mode .ev-sender-name {
 }
 
 body.light-mode .ev-sender-email {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 body.light-mode .ev-meta {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 body.light-mode .ev-cc {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 body.light-mode .ev-body {
@@ -1920,81 +1937,75 @@ body.light-mode .ev-body {
 }
 
 body.light-mode .ev-attachments {
-  border-color: #e5e7eb;
+  border-color: #cbd5e1;
 }
 
 body.light-mode .ev-attachments h4 {
-  color: #475569;
+  color: #374151;
 }
 
 body.light-mode .ev-attachment {
-  background: rgba(0, 0, 0, 0.02);
-  border-color: #e5e7eb;
-  color: #475569;
+  background: rgba(0, 0, 0, 0.03);
+  border-color: #cbd5e1;
+  color: #374151;
 }
 
 body.light-mode .ev-attachment:hover {
-  background: rgba(0, 0, 0, 0.04);
-  color: var(--gold-primary);
+  background: rgba(0, 0, 0, 0.06);
+  color: #b8860b;
 }
 
 body.light-mode .ev-att-size {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 body.light-mode .ev-reply-bar {
   background: #ffffff;
-  border-color: #e5e7eb;
+  border-color: #cbd5e1;
 }
 
 body.light-mode .ev-forward-btn {
-  background: rgba(0, 0, 0, 0.03);
-  border-color: #e5e7eb;
-  color: #475569;
+  background: rgba(0, 0, 0, 0.04);
+  border-color: #cbd5e1;
+  color: #374151;
 }
 
 body.light-mode .ev-forward-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(0, 0, 0, 0.08);
   color: #0f172a;
 }
 
 /* Right sidebar light mode */
 body.light-mode .webmail-right {
-  background: #f9fafb;
-  border-color: #e5e7eb;
+  background: #ffffff;
+  border-color: #cbd5e1;
 }
 
 body.light-mode .wm-widget {
   background: #ffffff;
-  border-color: #e5e7eb;
+  border-color: #cbd5e1;
 }
 
 body.light-mode .wm-widget h3 {
-  color: #111827;
+  color: #0f172a;
 }
 
 body.light-mode .wm-suggested-user:hover {
-  background: rgba(0, 0, 0, 0.03);
+  background: rgba(0, 0, 0, 0.04);
 }
 
 body.light-mode .wm-quick-links a:hover {
-  background: rgba(0, 0, 0, 0.03);
+  background: rgba(0, 0, 0, 0.04);
 }
 
 /* Footer light mode */
 body.light-mode .webmail-footer {
   background: rgba(255, 255, 255, 0.92);
-  border-color: #e5e7eb;
+  border-color: #cbd5e1;
 }
 
 body.light-mode .wm-copyright {
-  color: #94a3b8;
-}
-
-/* Logo in light mode */
-body.light-mode .webmail-logo-img {
-  background: rgba(0, 0, 0, 0.05);
-  border-color: rgba(0, 0, 0, 0.1);
+  color: #64748b;
 }
 
 /* Scrollbar light mode */
@@ -2008,8 +2019,25 @@ body.light-mode .messages-list::-webkit-scrollbar-thumb {
 
 /* Email spinner light mode */
 body.light-mode .email-spinner {
-  border-color: rgba(0, 0, 0, 0.08);
-  border-top-color: var(--gold-primary);
+  border-color: rgba(0, 0, 0, 0.12);
+  border-top-color: #b8860b;
+}
+
+body.light-mode .search-clear {
+  color: #64748b;
+}
+
+body.light-mode .search-clear:hover {
+  color: #0f172a;
+}
+
+body.light-mode .compose-from {
+  color: #b8860b;
+}
+
+body.light-mode .folder-count {
+  background: #b8860b;
+  color: #fff;
 }
 
 /* ── Right sidebar & footer responsive ── */
