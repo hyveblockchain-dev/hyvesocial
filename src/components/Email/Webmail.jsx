@@ -80,9 +80,16 @@ export default function Webmail() {
   const [isLightMode, setIsLightMode] = useState(() => localStorage.getItem('theme') === 'light');
 
   // Sync light mode with body class and localStorage
+  // Keep the dark page background even in light mode so particles stay visible
   useEffect(() => {
     document.body.classList.toggle('light-mode', isLightMode);
     localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
+    if (isLightMode) {
+      document.body.style.background = '#0a0a0f';
+    } else {
+      document.body.style.background = '';
+    }
+    return () => { document.body.style.background = ''; };
   }, [isLightMode]);
 
   // Load account info + suggested users
