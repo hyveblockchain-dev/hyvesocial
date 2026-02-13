@@ -1563,7 +1563,7 @@ body.light-mode .email-ac-active {
 /* Header */
 body.light-mode .webmail-header {
   background: rgba(255, 255, 255, 0.92);
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .webmail-logo-text {
@@ -1575,13 +1575,13 @@ body.light-mode .webmail-logo-text {
 
 body.light-mode .webmail-logo-img {
   background: rgba(0, 0, 0, 0.05);
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
   filter: brightness(0.65) saturate(1.2);
 }
 
 body.light-mode .webmail-header-search input {
   background: rgba(0, 0, 0, 0.05);
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
   color: #0f172a;
 }
 
@@ -1596,7 +1596,7 @@ body.light-mode .webmail-header-search input:focus {
 
 body.light-mode .webmail-header-btn {
   background: rgba(0, 0, 0, 0.05);
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
   color: #374151;
 }
 
@@ -1609,11 +1609,11 @@ body.light-mode .webmail-header-btn:hover {
 /* Sidebar light mode */
 body.light-mode .webmail-sidebar {
   background: #ffffff;
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .compose-wrapper {
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .folder-item {
@@ -1632,7 +1632,7 @@ body.light-mode .folder-item.active {
 }
 
 body.light-mode .sidebar-footer {
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .sidebar-name {
@@ -1645,7 +1645,7 @@ body.light-mode .sidebar-email {
 
 body.light-mode .sidebar-action-btn {
   background: rgba(0, 0, 0, 0.04);
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
   color: #374151;
 }
 
@@ -1657,16 +1657,17 @@ body.light-mode .sidebar-action-btn:hover {
 /* Main content light mode */
 body.light-mode .webmail-main {
   background: #f5f7fa;
+  border: 2px solid #94a3b8;
 }
 
 body.light-mode .webmail-toolbar {
   background: #ffffff;
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .email-search-form {
   background: rgba(0, 0, 0, 0.03);
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .email-search-form input {
@@ -1679,7 +1680,7 @@ body.light-mode .email-search-form input::placeholder {
 
 body.light-mode .toolbar-btn {
   background: rgba(0, 0, 0, 0.04);
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
   color: #374151;
 }
 
@@ -1689,7 +1690,7 @@ body.light-mode .toolbar-btn:hover {
 }
 
 body.light-mode .folder-header {
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .folder-header h2 {
@@ -1702,7 +1703,7 @@ body.light-mode .message-count {
 
 /* Message list light mode */
 body.light-mode .message-row {
-  border-color: #e2e8f0;
+  border-color: #b0bec5;
 }
 
 body.light-mode .message-row:hover {
@@ -1770,13 +1771,13 @@ body.light-mode .compose-overlay {
 
 body.light-mode .compose-window {
   background: #ffffff;
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
 }
 
 body.light-mode .compose-header {
   background: #ffffff;
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .compose-header h3 {
@@ -1794,7 +1795,7 @@ body.light-mode .compose-back-btn:hover {
 
 body.light-mode .compose-draft-btn {
   background: rgba(0, 0, 0, 0.04);
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
   color: #374151;
 }
 
@@ -1817,7 +1818,7 @@ body.light-mode .compose-error {
 }
 
 body.light-mode .compose-field {
-  border-color: #e2e8f0;
+  border-color: #b0bec5;
 }
 
 body.light-mode .compose-field label {
@@ -1842,12 +1843,12 @@ body.light-mode .compose-body::placeholder {
 
 body.light-mode .compose-footer {
   background: #ffffff;
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .attach-btn {
   color: #374151;
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .attach-btn:hover {
@@ -1856,13 +1857,13 @@ body.light-mode .attach-btn:hover {
 }
 
 body.light-mode .compose-attachments {
-  border-color: #e2e8f0;
+  border-color: #b0bec5;
   background: rgba(0, 0, 0, 0.02);
 }
 
 body.light-mode .compose-att-item {
   background: rgba(0, 0, 0, 0.03);
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .compose-att-name {
@@ -1880,7 +1881,7 @@ body.light-mode .email-view {
 
 body.light-mode .email-view-toolbar {
   background: #ffffff;
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .ev-back-btn {
@@ -1894,7 +1895,7 @@ body.light-mode .ev-back-btn:hover {
 
 body.light-mode .ev-action-btn {
   background: rgba(0, 0, 0, 0.04);
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
   color: #374151;
 }
 
@@ -1913,7 +1914,7 @@ body.light-mode .ev-subject {
 }
 
 body.light-mode .ev-sender-row {
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .ev-sender-name {
@@ -1937,7 +1938,7 @@ body.light-mode .ev-body {
 }
 
 body.light-mode .ev-attachments {
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .ev-attachments h4 {
@@ -1946,7 +1947,7 @@ body.light-mode .ev-attachments h4 {
 
 body.light-mode .ev-attachment {
   background: rgba(0, 0, 0, 0.03);
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
   color: #374151;
 }
 
@@ -1961,12 +1962,12 @@ body.light-mode .ev-att-size {
 
 body.light-mode .ev-reply-bar {
   background: #ffffff;
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .ev-forward-btn {
   background: rgba(0, 0, 0, 0.04);
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
   color: #374151;
 }
 
@@ -1978,12 +1979,12 @@ body.light-mode .ev-forward-btn:hover {
 /* Right sidebar light mode */
 body.light-mode .webmail-right {
   background: #ffffff;
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .wm-widget {
   background: #ffffff;
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 body.light-mode .wm-widget h3 {
@@ -2001,11 +2002,12 @@ body.light-mode .wm-quick-links a:hover {
 /* Footer light mode */
 body.light-mode .webmail-footer {
   background: rgba(255, 255, 255, 0.92);
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
+  color: #374151;
 }
 
 body.light-mode .wm-copyright {
-  color: #64748b;
+  color: #374151;
 }
 
 /* Scrollbar light mode */
