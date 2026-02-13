@@ -879,7 +879,7 @@ export default function Layout({ children }) {
           <nav className="nav-menu">
             <Link to="/" className={location.pathname === '/' ? 'nav-item active' : 'nav-item'}>
               <span className="nav-icon"><IconFeed width={20} height={20} /></span>
-              <span>Feed</span>
+              <span>Private Feed</span>
             </Link>
             <Link to="/public" className={location.pathname === '/public' ? 'nav-item active' : 'nav-item'}>
               <span className="nav-icon"><IconGlobe width={20} height={20} /></span>
