@@ -155,6 +155,9 @@ export default function Feed() {
   const visiblePosts = useMemo(() => {
     const currentUsername = user?.username?.toLowerCase();
     return posts.filter((post) => {
+      // Exclude public-only posts from private feed
+      if (post.is_public === true || post.isPublic === true) return false;
+
       const authorUsername =
         post.username ||
         post.author_username ||

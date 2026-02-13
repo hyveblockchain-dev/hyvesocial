@@ -210,13 +210,38 @@ export async function getPublicPosts(options = {}) {
   const params = new URLSearchParams();
   if (limit !== undefined && limit !== null) params.set('limit', String(limit));
   if (offset !== undefined && offset !== null) params.set('offset', String(offset));
-  const url = params.toString() ? `${API_URL}/api/posts/public?${params}` : `${API_URL}/api/posts/public`;
-  const response = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
+
+  // Try dedicated public endpoint first
+  try {
+    const publicUrl = params.toString()
+      ? `${API_URL}/api/posts/public?${params}`
+      : `${API_URL}/api/posts/public`;
+    const res = await fetch(publicUrl, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (res.ok) {
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        const data = await res.json();
+        const posts = data.posts || data || [];
+        if (Array.isArray(posts) && posts.length > 0) return { posts };
+      }
+    }
+  } catch (_) {}
+
+  // Fallback: fetch all posts and filter for public ones client-side
+  const fallbackUrl = params.toString()
+    ? `${API_URL}/api/posts?${params}`
+    : `${API_URL}/api/posts`;
+  const response = await fetch(fallbackUrl, {
+    headers: { 'Authorization': `Bearer ${token}` },
   });
-  return response.json();
+  const data = await response.json();
+  const allPosts = data.posts || data || [];
+  const publicPosts = allPosts.filter(
+    (p) => p.is_public === true || p.isPublic === true
+  );
+  return { posts: publicPosts };
 }
 
 export async function createPost(content, imageFile = null, videoUrl = '') {
