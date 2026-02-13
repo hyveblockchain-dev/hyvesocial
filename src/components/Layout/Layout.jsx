@@ -7,7 +7,7 @@ import ChatWindow from '../Chat/ChatWindow';
 import api from '../../services/api';
 import { normalizeNotification } from '../../utils/notifications';
 import {
-  IconSearch, IconLogout, IconMoon, IconSun, IconBell,
+  IconSearch, IconLogout, IconBell,
   IconFeed, IconUser, IconUsers, IconChat, IconClose,
   IconGroup, IconDiscover, IconShield, IconMailbox
 } from '../Icons/Icons';
@@ -33,7 +33,7 @@ export default function Layout({ children }) {
   const [presenceMap, setPresenceMap] = useState({});
   const [onlineFriends, setOnlineFriends] = useState([]);
   const [blockedUsers, setBlockedUsers] = useState([]);
-  const [isLightMode, setIsLightMode] = useState(() => localStorage.getItem('theme') === 'light');
+
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState({});
 
@@ -329,10 +329,7 @@ export default function Layout({ children }) {
     setOnlineFriends(nextOnline);
   }, [friendsList, presenceMap]);
 
-  useEffect(() => {
-    document.body.classList.toggle('light-mode', isLightMode);
-    localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
-  }, [isLightMode]);
+
 
   useEffect(() => {
     function handleOpenChat(event) {
@@ -628,14 +625,7 @@ export default function Layout({ children }) {
           >
             <IconLogout width={20} height={20} />
           </button>
-          <button
-            className="light-toggle-btn"
-            onClick={() => setIsLightMode((prev) => !prev)}
-            aria-label="Toggle light mode"
-            title={isLightMode ? 'Switch to dark mode' : 'Switch to light mode'}
-          >
-            {isLightMode ? <IconMoon width={20} height={20} /> : <IconSun width={20} height={20} />}
-          </button>
+
           <div className="notification-menu">
             <button
               className="icon-btn"
