@@ -48,6 +48,26 @@ export default function Feed() {
   const FEED_CACHE_KEY = 'feed_posts_cache';
   const FEED_CACHE_TS_KEY = 'feed_posts_cache_ts';
 
+  // Safe cache write — strips base64 data and catches quota errors
+  function safeCacheWrite(posts) {
+    try {
+      const stripped = posts.slice(0, 30).map(p => {
+        const copy = { ...p };
+        // Strip base64 image data to save space (keep URLs)
+        if (copy.image_url && copy.image_url.startsWith('data:')) {
+          copy.image_url = '';
+        }
+        return copy;
+      });
+      sessionStorage.setItem(FEED_CACHE_KEY, JSON.stringify(stripped));
+      sessionStorage.setItem(FEED_CACHE_TS_KEY, Date.now().toString());
+    } catch (e) {
+      // Quota exceeded — clear cache and continue
+      try { sessionStorage.removeItem(FEED_CACHE_KEY); } catch (_) {}
+      try { sessionStorage.removeItem(FEED_CACHE_TS_KEY); } catch (_) {}
+    }
+  }
+
   useEffect(() => {
     let hasCache = false;
     const cached = sessionStorage.getItem(FEED_CACHE_KEY);
@@ -356,8 +376,7 @@ export default function Feed() {
       const data = await api.getPosts({ limit: 50, offset: 0 });
       const loadedPosts = data.posts || [];
       setPosts(loadedPosts);
-      sessionStorage.setItem(FEED_CACHE_KEY, JSON.stringify(loadedPosts));
-      sessionStorage.setItem(FEED_CACHE_TS_KEY, Date.now().toString());
+      safeCacheWrite(loadedPosts);
     } catch (error) {
       console.error('Load posts error:', error);
       if (!silent) setPosts([]);
@@ -369,8 +388,7 @@ export default function Feed() {
   function handlePostCreated(newPost) {
     setPosts((prev) => {
       const updated = [newPost, ...prev];
-      sessionStorage.setItem(FEED_CACHE_KEY, JSON.stringify(updated));
-      sessionStorage.setItem(FEED_CACHE_TS_KEY, Date.now().toString());
+      safeCacheWrite(updated);
       return updated;
     });
   }
@@ -378,8 +396,7 @@ export default function Feed() {
   function handlePostDeleted(postId) {
     setPosts((prev) => {
       const updated = prev.filter((p) => p.id !== postId);
-      sessionStorage.setItem(FEED_CACHE_KEY, JSON.stringify(updated));
-      sessionStorage.setItem(FEED_CACHE_TS_KEY, Date.now().toString());
+      safeCacheWrite(updated);
       return updated;
     });
   }
@@ -387,8 +404,7 @@ export default function Feed() {
   function handlePostUpdated(updatedPost) {
     setPosts((prev) => {
       const updated = prev.map((p) => (p.id === updatedPost.id ? updatedPost : p));
-      sessionStorage.setItem(FEED_CACHE_KEY, JSON.stringify(updated));
-      sessionStorage.setItem(FEED_CACHE_TS_KEY, Date.now().toString());
+      safeCacheWrite(updated);
       return updated;
     });
   }

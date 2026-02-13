@@ -1,0 +1,23 @@
+=== COMMAND: sed -n '998,1005p' /root/server.js ===
+    }
+
+    res.json({ post: result.rows[0] });
+
+    // ΓöÇΓöÇ Notify tagged users via socket ΓöÇΓöÇ
+    try {
+      const parsedMeta = metadata ? (typeof metadata === 'string' ? JSON.parse(metadata) : metadata) : {};
+      const taggedUsers = Array.isArray(parsedMeta.taggedUsers) ? parsedMeta.taggedUsers : [];
+
+
+=== COMMAND: node -e " ===
+STDERR: /root/node_modules/pg-pool/index.js:45
+    Error.captureStackTrace(err)
+          ^
+
+Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at /root/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+
+Node.js v18.20.8
+
+
