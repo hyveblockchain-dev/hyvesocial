@@ -205,6 +205,11 @@ export default function ChannelChat({ channel, groupId, user, isAdmin }) {
         <span className="channel-hash">#</span>
         <span className="channel-chat-name">{channel.name}</span>
         {channel.topic && <span className="channel-chat-topic">{channel.topic}</span>}
+        <div className="channel-header-actions">
+          <button className="channel-header-btn" title="Search">🔍</button>
+          <button className="channel-header-btn" title="Pinned Messages">📌</button>
+          <button className="channel-header-btn" title="Members">👥</button>
+        </div>
       </div>
 
       {/* Messages area */}
@@ -286,8 +291,20 @@ export default function ChannelChat({ channel, groupId, user, isAdmin }) {
                     <img src={msg.image_url} alt="" className="channel-msg-image" />
                   )}
                 </div>
+                {/* Reactions */}
+                {msg.reactions && msg.reactions.length > 0 && (
+                  <div className="channel-msg-reactions">
+                    {msg.reactions.map((r, ri) => (
+                      <button key={ri} className="channel-reaction-badge">
+                        <span className="reaction-emoji">{r.emoji}</span>
+                        <span className="reaction-count">{r.count}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {/* Actions */}
                 <div className="channel-msg-actions">
+                  <button title="Add Reaction">😊</button>
                   <button title="Reply" onClick={() => setReplyTo(msg)}>↩</button>
                   {canEdit && (
                     <button title="Edit" onClick={() => { setEditingId(msg.id); setEditText(msg.content); }}>✏️</button>
@@ -295,6 +312,7 @@ export default function ChannelChat({ channel, groupId, user, isAdmin }) {
                   {canDelete && (
                     <button title="Delete" onClick={() => handleDelete(msg.id)}>🗑️</button>
                   )}
+                  <button title="More">⋯</button>
                 </div>
               </div>
             );
@@ -321,6 +339,7 @@ export default function ChannelChat({ channel, groupId, user, isAdmin }) {
 
       {/* Input area */}
       <form className="channel-input-form" onSubmit={handleSend}>
+        <button type="button" className="channel-input-icon channel-attach-btn" title="Attach file">+</button>
         <input
           ref={inputRef}
           type="text"
@@ -330,9 +349,14 @@ export default function ChannelChat({ channel, groupId, user, isAdmin }) {
           onChange={handleInputChange}
           disabled={sending}
         />
-        <button type="submit" className="channel-send-btn" disabled={!input.trim() || sending}>
-          ➤
-        </button>
+        <div className="channel-input-right">
+          <button type="button" className="channel-input-icon" title="GIF">GIF</button>
+          <button type="button" className="channel-input-icon" title="Sticker">🏷️</button>
+          <button type="button" className="channel-input-icon" title="Emoji">😊</button>
+          {input.trim() && (
+            <button type="submit" className="channel-input-icon channel-send-icon" disabled={sending}>➤</button>
+          )}
+        </div>
       </form>
     </div>
   );

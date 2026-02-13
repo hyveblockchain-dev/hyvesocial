@@ -64,6 +64,30 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Channel header right-side icons */
+.channel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.channel-header-btn {
+  background: none;
+  border: none;
+  color: #b5bac1;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  transition: color 0.12s;
+}
+.channel-header-btn:hover {
+  color: #f2f3f5;
 }
 
 /* ── Messages area ── */
@@ -357,6 +381,34 @@
 }
 
 /* ═══════════════════════════════════════
+   Message reactions
+   ═══════════════════════════════════════ */
+.channel-msg-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.channel-reaction-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: #2b2d31;
+  border: 1px solid #3f4147;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.12s, border-color 0.12s;
+}
+.channel-reaction-badge:hover {
+  background: #36373d;
+  border-color: #5865f2;
+}
+.reaction-emoji { font-size: 16px; line-height: 1; }
+.reaction-count { font-size: 12px; color: #b5bac1; font-weight: 600; min-width: 8px; text-align: center; }
+
+/* ═══════════════════════════════════════
    Typing indicator
    ═══════════════════════════════════════ */
 .channel-typing {
@@ -414,6 +466,23 @@
   gap: 0;
   padding: 0 16px 24px;
   flex-shrink: 0;
+  position: relative;
+}
+.channel-attach-btn {
+  position: absolute;
+  left: 24px;
+  z-index: 2;
+  font-size: 22px;
+  font-weight: 300;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+.channel-attach-btn:hover {
+  color: #f2f3f5;
 }
 .channel-input {
   flex: 1;
@@ -421,7 +490,7 @@
   border: none;
   border-radius: 8px;
   color: #f2f3f5;
-  padding: 11px 16px;
+  padding: 11px 96px 11px 44px;
   font-size: 15px;
   font-family: inherit;
   outline: none;
@@ -433,19 +502,43 @@
 .channel-input:focus {
   outline: none;
 }
-.channel-send-btn {
+.channel-input-right {
+  position: absolute;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  z-index: 2;
+}
+.channel-input-icon {
   background: none;
   border: none;
-  color: #80848e;
+  color: #b5bac1;
   cursor: pointer;
-  padding: 8px;
-  font-size: 20px;
-  margin-left: -44px;
-  z-index: 1;
+  font-size: 16px;
+  padding: 4px 6px;
+  border-radius: 4px;
   transition: color 0.15s;
+  line-height: 1;
 }
-.channel-send-btn:hover:not(:disabled) { color: #f2f3f5; }
-.channel-send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.channel-input-icon:hover { color: #f2f3f5; }
+.channel-input-icon[title="GIF"] {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 4px;
+  border: 1.5px solid #b5bac1;
+  border-radius: 4px;
+  line-height: 1;
+}
+.channel-input-icon[title="GIF"]:hover {
+  border-color: #f2f3f5;
+  color: #f2f3f5;
+}
+.channel-send-icon {
+  color: #5865f2;
+}
+.channel-send-icon:hover { color: #7983f5; }
+.channel-send-icon:disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* ═══════════════════════════════════════
    Light mode
@@ -461,6 +554,15 @@
 .light-mode .channel-msg-actions button:hover { background: #e3e5e8; color: #060607; }
 .light-mode .channel-input { background: #ebedef; color: #060607; }
 .light-mode .channel-input::placeholder { color: #80848e; }
+.light-mode .channel-input-icon { color: #4e5058; }
+.light-mode .channel-input-icon:hover { color: #060607; }
+.light-mode .channel-input-icon[title="GIF"] { border-color: #4e5058; }
+.light-mode .channel-input-icon[title="GIF"]:hover { border-color: #060607; color: #060607; }
+.light-mode .channel-header-btn { color: #4e5058; }
+.light-mode .channel-header-btn:hover { color: #060607; }
+.light-mode .channel-reaction-badge { background: #f2f3f5; border-color: #e3e5e8; }
+.light-mode .channel-reaction-badge:hover { background: #e3e5e8; border-color: #5865f2; }
+.light-mode .reaction-count { color: #4e5058; }
 .light-mode .channel-welcome h2 { color: #060607; }
 .light-mode .channel-welcome-hash { background: #e3e5e8; color: #060607; }
 .light-mode .channel-reply-bar { background: #f2f3f5; }

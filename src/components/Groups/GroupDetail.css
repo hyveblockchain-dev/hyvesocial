@@ -599,6 +599,77 @@
 }
 .discord-view-toggle input { accent-color: var(--gold-primary, #f0b232); }
 
+/* ── User panel (Discord-style bottom bar) ── */
+.discord-user-panel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  height: 52px;
+  min-height: 52px;
+  background: #232428;
+  flex-shrink: 0;
+}
+.discord-user-panel-avatar {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+.discord-user-panel-avatar img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.discord-user-panel-dot {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #23a55a;
+  border: 2px solid #232428;
+}
+.discord-user-panel-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.discord-user-panel-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f2f3f5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.discord-user-panel-status {
+  font-size: 11px;
+  color: #80848e;
+}
+.discord-user-panel-icons {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.discord-user-panel-icons button {
+  background: none;
+  border: none;
+  color: #b5bac1;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: background 0.12s, color 0.12s;
+}
+.discord-user-panel-icons button:hover {
+  background: #36373d;
+  color: #f2f3f5;
+}
+
 /* ══════════════════════════════════════════════════════════
    CENTER MAIN CONTENT
    ══════════════════════════════════════════════════════════ */
@@ -1065,6 +1136,11 @@
 .light-mode .discord-nav-item.active { background: #d7d8dc; color: #060607; }
 .light-mode .discord-nav-divider { background: #e3e5e8; }
 .light-mode .discord-sidebar-footer { border-top-color: #e3e5e8; }
+.light-mode .discord-user-panel { background: #ebedef; }
+.light-mode .discord-user-panel-name { color: #060607; }
+.light-mode .discord-user-panel-dot { border-color: #ebedef; }
+.light-mode .discord-user-panel-icons button { color: #4e5058; }
+.light-mode .discord-user-panel-icons button:hover { background: #d7d8dc; color: #060607; }
 .light-mode .discord-notice { background: #f9f3e0; border-bottom-color: #e3e5e8; color: #806a33; }
 .light-mode .discord-panel-header { border-bottom-color: #e3e5e8; }
 .light-mode .discord-panel-header h2 { color: #060607; }

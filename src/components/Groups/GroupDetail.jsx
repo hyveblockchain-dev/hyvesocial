@@ -782,6 +782,25 @@ export default function GroupDetail() {
             </label>
           )}
         </div>
+
+        {/* User panel (bottom) */}
+        <div className="discord-user-panel">
+          <div className="discord-user-panel-avatar">
+            <img
+              src={user?.profile_image || user?.profileImage || '/default-avatar.png'}
+              alt=""
+              onError={(e) => { e.target.src = '/default-avatar.png'; }}
+            />
+            <span className="discord-user-panel-dot" />
+          </div>
+          <div className="discord-user-panel-info">
+            <span className="discord-user-panel-name">{user?.username || 'Unknown'}</span>
+            <span className="discord-user-panel-status">Online</span>
+          </div>
+          <div className="discord-user-panel-icons">
+            <button title="Settings" onClick={() => navigate('/profile/' + encodeURIComponent(user?.username || ''))}>⚙</button>
+          </div>
+        </div>
       </div>
 
       {/* ── Center: Main content area ── */}
