@@ -64,7 +64,7 @@ export default function GroupDetail() {
   const [showCreateCategory, setShowCreateCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [activePanel, setActivePanel] = useState('chat');
-  const [showMemberSidebar] = useState(true);
+  const [showMemberSidebar, setShowMemberSidebar] = useState(true);
 
   // ── Role management state ──
   const [customRoles, setCustomRoles] = useState([]);
@@ -808,7 +808,14 @@ export default function GroupDetail() {
         {notice && <div className="discord-notice">{notice}<button onClick={() => setNotice('')}>&#10005;</button></div>}
 
         {activePanel === 'chat' && (
-          <ChannelChat channel={selectedChannel} groupId={groupId} user={user} isAdmin={adminEnabled} />
+          <ChannelChat
+            channel={selectedChannel}
+            groupId={groupId}
+            user={user}
+            isAdmin={adminEnabled}
+            onToggleMembers={() => setShowMemberSidebar((p) => !p)}
+            showMembers={showMemberSidebar}
+          />
         )}
 
         {activePanel === 'discussion' && (

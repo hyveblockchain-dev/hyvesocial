@@ -2,9 +2,20 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import api from '../../services/api';
 import socketService from '../../services/socket';
 import { formatDate, formatDateTime } from '../../utils/date';
+import GifPicker from '../GifPicker/GifPicker';
 import './ChannelChat.css';
 
-export default function ChannelChat({ channel, groupId, user, isAdmin }) {
+// Common emoji grid for quick picking
+const EMOJI_LIST = [
+  '😀','😂','😍','🥰','😎','🤔','😮','😢','😡','🥳',
+  '👍','👎','❤️','🔥','🎉','💯','✅','❌','⭐','💀',
+  '🙏','👏','🤝','💪','👀','🧠','💡','📌','🚀','🏆',
+  '😊','😁','😆','🤣','😅','😇','🙂','😉','😌','😋',
+  '😜','🤪','😝','🤑','🤗','🤭','🤫','🤨','😐','😑',
+  '😶','😏','😒','🙄','😬','😮‍💨','🤥','😌','😔','😪',
+];
+
+export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleMembers, showMembers }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [input, setInput] = useState('');
@@ -14,10 +25,16 @@ export default function ChannelChat({ channel, groupId, user, isAdmin }) {
   const [replyTo, setReplyTo] = useState(null);
   const [typingUsers, setTypingUsers] = useState([]);
   const [hasMore, setHasMore] = useState(true);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [reactionPickerMsgId, setReactionPickerMsgId] = useState(null);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const inputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const myUsername = (user?.username || '').toLowerCase();
   const myAddress = (user?.wallet_address || user?.walletAddress || '').toLowerCase();
@@ -169,6 +186,85 @@ export default function ChannelChat({ channel, groupId, user, isAdmin }) {
     }
   };
 
+  // File attachment — convert to base64 and send as imageUrl
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Reset file input so same file can be re-selected
+    e.target.value = '';
+    if (!file.type.startsWith('image/')) {
+      alert('Only image files are supported.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File must be under 10 MB.');
+      return;
+    }
+    setSending(true);
+    try {
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      await api.sendChannelMessage(channel.id, {
+        content: input.trim() || '',
+        imageUrl: base64,
+        replyTo: replyTo?.id || null,
+      });
+      setInput('');
+      setReplyTo(null);
+    } catch (err) {
+      console.error('Failed to send image:', err);
+    } finally {
+      setSending(false);
+      inputRef.current?.focus();
+    }
+  };
+
+  // GIF select
+  const handleGifSelect = async (gif) => {
+    setShowGifPicker(false);
+    setSending(true);
+    try {
+      await api.sendChannelMessage(channel.id, {
+        content: '',
+        imageUrl: gif.url,
+        replyTo: replyTo?.id || null,
+      });
+      setReplyTo(null);
+    } catch (err) {
+      console.error('Failed to send GIF:', err);
+    } finally {
+      setSending(false);
+      inputRef.current?.focus();
+    }
+  };
+
+  // Emoji insert into input
+  const handleEmojiSelect = (emoji) => {
+    setInput((prev) => prev + emoji);
+    setShowEmojiPicker(false);
+    inputRef.current?.focus();
+  };
+
+  // Add reaction to message (client-side toggle — backend support can be added later)
+  const handleAddReaction = (msgId, emoji) => {
+    setReactionPickerMsgId(null);
+    setMessages((prev) => prev.map((m) => {
+      if (m.id !== msgId) return m;
+      const reactions = [...(m.reactions || [])];
+      const idx = reactions.findIndex((r) => r.emoji === emoji);
+      if (idx >= 0) {
+        reactions[idx] = { ...reactions[idx], count: reactions[idx].count + 1 };
+      } else {
+        reactions.push({ emoji, count: 1 });
+      }
+      return { ...m, reactions };
+    }));
+  };
+
   // Group messages by date
   const groupedMessages = messages.reduce((groups, msg) => {
     const date = new Date(msg.created_at).toLocaleDateString('en-US', {
@@ -206,11 +302,38 @@ export default function ChannelChat({ channel, groupId, user, isAdmin }) {
         <span className="channel-chat-name">{channel.name}</span>
         {channel.topic && <span className="channel-chat-topic">{channel.topic}</span>}
         <div className="channel-header-actions">
-          <button className="channel-header-btn" title="Search">🔍</button>
+          <button
+            className={`channel-header-btn${showSearch ? ' active' : ''}`}
+            title="Search"
+            onClick={() => { setShowSearch((p) => !p); setSearchQuery(''); }}
+          >🔍</button>
           <button className="channel-header-btn" title="Pinned Messages">📌</button>
-          <button className="channel-header-btn" title="Members">👥</button>
+          <button
+            className={`channel-header-btn${showMembers ? ' active' : ''}`}
+            title="Members"
+            onClick={onToggleMembers}
+          >👥</button>
         </div>
       </div>
+
+      {/* Search bar */}
+      {showSearch && (
+        <div className="channel-search-bar">
+          <input
+            type="text"
+            placeholder="Search messages..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            autoFocus
+          />
+          {searchQuery && (
+            <span className="channel-search-count">
+              {messages.filter((m) => m.content?.toLowerCase().includes(searchQuery.toLowerCase())).length} results
+            </span>
+          )}
+          <button onClick={() => { setShowSearch(false); setSearchQuery(''); }}>✕</button>
+        </div>
+      )}
 
       {/* Messages area */}
       <div
@@ -227,8 +350,16 @@ export default function ChannelChat({ channel, groupId, user, isAdmin }) {
             <p>This is the start of the #{channel.name} channel.</p>
           </div>
         ) : (
-          messages.map((msg, idx) => {
-            const showHeader = shouldShowHeader(msg, idx);
+          (searchQuery
+            ? messages.filter((m) => m.content?.toLowerCase().includes(searchQuery.toLowerCase()))
+            : messages
+          ).map((msg, idx, arr) => {
+            const showHeader = idx === 0 || (() => {
+              const prev = arr[idx - 1];
+              if (!prev) return true;
+              if (prev.user_address !== msg.user_address) return true;
+              return (new Date(msg.created_at) - new Date(prev.created_at)) > 5 * 60 * 1000;
+            })();
             const isMe = msg.user_address?.toLowerCase() === myAddress;
             const canDelete = isMe || isAdmin;
             const canEdit = isMe;
@@ -295,16 +426,25 @@ export default function ChannelChat({ channel, groupId, user, isAdmin }) {
                 {msg.reactions && msg.reactions.length > 0 && (
                   <div className="channel-msg-reactions">
                     {msg.reactions.map((r, ri) => (
-                      <button key={ri} className="channel-reaction-badge">
+                      <button key={ri} className="channel-reaction-badge" onClick={() => handleAddReaction(msg.id, r.emoji)}>
                         <span className="reaction-emoji">{r.emoji}</span>
                         <span className="reaction-count">{r.count}</span>
                       </button>
                     ))}
                   </div>
                 )}
+                {/* Reaction picker */}
+                {reactionPickerMsgId === msg.id && (
+                  <div className="channel-reaction-picker">
+                    {['👍','❤️','😂','😮','😢','🔥','🎉','💯'].map((em) => (
+                      <button key={em} onClick={() => handleAddReaction(msg.id, em)}>{em}</button>
+                    ))}
+                    <button onClick={() => setReactionPickerMsgId(null)}>✕</button>
+                  </div>
+                )}
                 {/* Actions */}
                 <div className="channel-msg-actions">
-                  <button title="Add Reaction">😊</button>
+                  <button title="Add Reaction" onClick={() => setReactionPickerMsgId((prev) => prev === msg.id ? null : msg.id)}>😊</button>
                   <button title="Reply" onClick={() => setReplyTo(msg)}>↩</button>
                   {canEdit && (
                     <button title="Edit" onClick={() => { setEditingId(msg.id); setEditText(msg.content); }}>✏️</button>
@@ -312,7 +452,6 @@ export default function ChannelChat({ channel, groupId, user, isAdmin }) {
                   {canDelete && (
                     <button title="Delete" onClick={() => handleDelete(msg.id)}>🗑️</button>
                   )}
-                  <button title="More">⋯</button>
                 </div>
               </div>
             );
@@ -337,9 +476,43 @@ export default function ChannelChat({ channel, groupId, user, isAdmin }) {
         </div>
       )}
 
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleFileSelect}
+      />
+
+      {/* GIF picker */}
+      {showGifPicker && (
+        <div className="channel-gif-picker-wrap">
+          <GifPicker
+            onSelect={handleGifSelect}
+            onClose={() => setShowGifPicker(false)}
+          />
+        </div>
+      )}
+
+      {/* Emoji picker */}
+      {showEmojiPicker && (
+        <div className="channel-emoji-picker">
+          <div className="channel-emoji-picker-header">
+            <span>Emoji</span>
+            <button onClick={() => setShowEmojiPicker(false)}>✕</button>
+          </div>
+          <div className="channel-emoji-grid">
+            {EMOJI_LIST.map((em) => (
+              <button key={em} onClick={() => handleEmojiSelect(em)}>{em}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Input area */}
       <form className="channel-input-form" onSubmit={handleSend}>
-        <button type="button" className="channel-input-icon channel-attach-btn" title="Attach file">+</button>
+        <button type="button" className="channel-input-icon channel-attach-btn" title="Attach file" onClick={() => fileInputRef.current?.click()}>+</button>
         <input
           ref={inputRef}
           type="text"
@@ -350,9 +523,8 @@ export default function ChannelChat({ channel, groupId, user, isAdmin }) {
           disabled={sending}
         />
         <div className="channel-input-right">
-          <button type="button" className="channel-input-icon" title="GIF">GIF</button>
-          <button type="button" className="channel-input-icon" title="Sticker">🏷️</button>
-          <button type="button" className="channel-input-icon" title="Emoji">😊</button>
+          <button type="button" className={`channel-input-icon${showGifPicker ? ' active' : ''}`} title="GIF" onClick={() => { setShowGifPicker((p) => !p); setShowEmojiPicker(false); }}>GIF</button>
+          <button type="button" className={`channel-input-icon${showEmojiPicker ? ' active' : ''}`} title="Emoji" onClick={() => { setShowEmojiPicker((p) => !p); setShowGifPicker(false); }}>😊</button>
           {input.trim() && (
             <button type="submit" className="channel-input-icon channel-send-icon" disabled={sending}>➤</button>
           )}
