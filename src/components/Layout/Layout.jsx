@@ -69,7 +69,7 @@ export default function Layout({ children }) {
   }
 
   function saveRecentNotifications(list) {
-    const trimmed = Array.isArray(list) ? list.slice(0, 20) : [];
+    const trimmed = Array.isArray(list) ? list.slice(0, 30) : [];
     localStorage.setItem(RECENT_NOTIFICATIONS_KEY, JSON.stringify(trimmed));
     setNotificationItems(trimmed);
   }
@@ -77,7 +77,7 @@ export default function Layout({ children }) {
   function persistNotificationItems(updater) {
     setNotificationItems((prev) => {
       const next = typeof updater === 'function' ? updater(prev || []) : updater;
-      const trimmed = Array.isArray(next) ? next.slice(0, 20) : [];
+      const trimmed = Array.isArray(next) ? next.slice(0, 30) : [];
       localStorage.setItem(RECENT_NOTIFICATIONS_KEY, JSON.stringify(trimmed));
       return trimmed;
     });
@@ -88,7 +88,7 @@ export default function Layout({ children }) {
     setNotificationItems((prev) => {
       const existing = prev || [];
       const filtered = existing.filter((item) => item?.id !== entry.id);
-      const next = [entry, ...filtered].slice(0, 20);
+      const next = [entry, ...filtered].slice(0, 30);
       localStorage.setItem(RECENT_NOTIFICATIONS_KEY, JSON.stringify(next));
       return next;
     });
@@ -650,7 +650,7 @@ export default function Layout({ children }) {
               <IconBell width={20} height={20} />
               {getUnreadCount() > 0 && (
                 <span className="notification-badge">
-                  {getUnreadCount() > 9 ? '9+' : getUnreadCount()}
+                  {getUnreadCount()}
                 </span>
               )}
             </button>
@@ -666,7 +666,7 @@ export default function Layout({ children }) {
                   <div className="notification-empty">No new notifications</div>
                 ) : (
                   <div className="notification-items">
-                    {notificationItems.slice(0, 5).map((item) => {
+                    {notificationItems.slice(0, 25).map((item) => {
                       if (item.type === 'friend_request') {
                         const request = item.request;
                         if (!request) return null;

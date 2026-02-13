@@ -297,6 +297,8 @@ body.light-mode .logo-icon-img {
 .notification-items {
   display: flex;
   flex-direction: column;
+  max-height: 420px;
+  overflow-y: auto;
 }
 
 .notification-item {
