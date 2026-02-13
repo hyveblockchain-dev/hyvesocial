@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import api from '../../services/api';
 import socketService from '../../services/socket';
-import './GroupDetail.css';
+import './MemberSidebar.css';
 
 export default function MemberSidebar({ groupId, user, isAdmin, isOwner, onMemberClick }) {
   const [members, setMembers] = useState([]);

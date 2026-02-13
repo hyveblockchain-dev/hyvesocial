@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import api from '../../services/api';
 import socketService from '../../services/socket';
 import { formatDate, formatDateTime } from '../../utils/date';
-import './GroupDetail.css';
+import './ChannelChat.css';
 
 export default function ChannelChat({ channel, groupId, user, isAdmin }) {
   const [messages, setMessages] = useState([]);
