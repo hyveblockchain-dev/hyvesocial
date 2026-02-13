@@ -196,6 +196,9 @@
 /* Compose button */
 .compose-wrapper {
   border-bottom: 2px solid var(--trim-color);
+  display: flex;
+  justify-content: center;
+  padding-bottom: 16px;
 }
 
 .compose-btn {
@@ -203,7 +206,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin: 16px 14px;
+  margin: 16px 14px 0 14px;
   padding: 12px 20px;
   background: var(--gold-gradient);
   color: #000;

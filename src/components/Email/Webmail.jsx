@@ -8,7 +8,7 @@ import EmailView from './EmailView';
 import {
   IconInbox, IconSend, IconTrash, IconSearch, IconEdit,
   IconMailbox, IconClose, IconCheck, IconArrowLeft,
-  IconLogout, IconFilter
+  IconLogout, IconFilter, IconSun, IconMoon
 } from '../Icons/Icons';
 import './Webmail.css';
 
@@ -77,6 +77,13 @@ export default function Webmail() {
   const [selectedMessages, setSelectedMessages] = useState(new Set());
   const [replyTo, setReplyTo] = useState(null);
   const [suggestedUsers, setSuggestedUsers] = useState([]);
+  const [isLightMode, setIsLightMode] = useState(() => localStorage.getItem('theme') === 'light');
+
+  // Sync light mode with body class and localStorage
+  useEffect(() => {
+    document.body.classList.toggle('light-mode', isLightMode);
+    localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
+  }, [isLightMode]);
 
   // Load account info + suggested users
   useEffect(() => {
@@ -331,6 +338,14 @@ export default function Webmail() {
           <button className="webmail-header-btn" onClick={handleRefresh} title="Refresh">
             <IconRefresh size={18} />
           </button>
+          <button
+            className="webmail-header-btn"
+            onClick={() => setIsLightMode((prev) => !prev)}
+            aria-label="Toggle light mode"
+            title={isLightMode ? 'Switch to dark mode' : 'Switch to light mode'}
+          >
+            {isLightMode ? <IconMoon size={18} /> : <IconSun size={18} />}
+          </button>
           <Link to="/" className="webmail-header-btn" title="Hyve Social">
             <IconMailbox size={18} />
           </Link>
@@ -339,11 +354,9 @@ export default function Webmail() {
 
       {/* Sidebar */}
       <aside className={`webmail-sidebar ${showSidebar ? 'show' : ''}`}>
-        <div className="sidebar-header">
-          <button className="sidebar-close" onClick={() => setShowSidebar(false)}>
-            <IconClose size={18} />
-          </button>
-        </div>
+        <button className="sidebar-close" onClick={() => setShowSidebar(false)}>
+          <IconClose size={18} />
+        </button>
 
         <div className="compose-wrapper">
           <button className="compose-btn" onClick={() => setShowCompose(true)}>
