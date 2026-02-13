@@ -296,10 +296,47 @@ export default function Webmail() {
 
   return (
     <div className="webmail">
-      {/* Mobile sidebar toggle */}
-      <button className="sidebar-toggle" onClick={() => setShowSidebar(!showSidebar)}>
-        <IconMailbox size={20} />
-      </button>
+      {/* Header */}
+      <header className="webmail-header">
+        <div className="webmail-header-left">
+          <button className="sidebar-toggle" onClick={() => setShowSidebar(!showSidebar)}>
+            <IconMailbox size={20} />
+          </button>
+          <Link to="/email" className="webmail-logo">
+            <img src="/hyvelogo.png" alt="Hyve" className="webmail-logo-img" />
+            <span className="webmail-logo-text">HyveMail</span>
+          </Link>
+        </div>
+        <form className="webmail-header-search" onSubmit={handleSearch}>
+          <IconSearch size={16} />
+          <input
+            type="text"
+            placeholder="Search emails..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              className="search-clear"
+              onClick={() => {
+                setSearchQuery('');
+                loadMessages();
+              }}
+            >
+              <IconClose size={14} />
+            </button>
+          )}
+        </form>
+        <div className="webmail-header-right">
+          <button className="webmail-header-btn" onClick={handleRefresh} title="Refresh">
+            <IconRefresh size={18} />
+          </button>
+          <Link to="/" className="webmail-header-btn" title="Hyve Social">
+            <IconMailbox size={18} />
+          </Link>
+        </div>
+      </header>
 
       {/* Sidebar */}
       <aside className={`webmail-sidebar ${showSidebar ? 'show' : ''}`}>
@@ -379,36 +416,6 @@ export default function Webmail() {
 
       {/* Main content */}
       <main className="webmail-main">
-        {/* Toolbar */}
-        <div className="webmail-toolbar">
-          <form className="email-search-form" onSubmit={handleSearch}>
-            <IconSearch size={16} />
-            <input
-              type="text"
-              placeholder="Search emails..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                className="search-clear"
-                onClick={() => {
-                  setSearchQuery('');
-                  loadMessages();
-                }}
-              >
-                <IconClose size={14} />
-              </button>
-            )}
-          </form>
-          <div className="toolbar-actions">
-            <button className="toolbar-btn" onClick={handleRefresh} title="Refresh">
-              <IconRefresh size={18} />
-            </button>
-          </div>
-        </div>
-
         {/* Folder header */}
         <div className="folder-header">
           <h2>{FOLDERS.find((f) => f.id === currentFolder)?.label || 'Inbox'}</h2>
