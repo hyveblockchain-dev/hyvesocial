@@ -340,10 +340,6 @@ export default function Webmail() {
       {/* Sidebar */}
       <aside className={`webmail-sidebar ${showSidebar ? 'show' : ''}`}>
         <div className="sidebar-header">
-          <div className="sidebar-brand">
-            <img src="/hyvelogo.png" alt="Hyve" className="sidebar-logo" />
-            <span>HyveMail</span>
-          </div>
           <button className="sidebar-close" onClick={() => setShowSidebar(false)}>
             <IconClose size={18} />
           </button>
@@ -490,45 +486,6 @@ export default function Webmail() {
 
       {/* Sidebar overlay for mobile */}
       {showSidebar && <div className="sidebar-overlay" onClick={() => setShowSidebar(false)} />}
-
-      {/* Right Sidebar */}
-      <aside className="webmail-right">
-        <div className="wm-widget">
-          <h3>Suggested Users</h3>
-          {suggestedUsers.length === 0 ? (
-            <p className="wm-empty">No suggestions</p>
-          ) : (
-            <div className="wm-suggested-list">
-              {suggestedUsers.map(u => (
-                <Link
-                  key={u.username}
-                  to={`/profile/${encodeURIComponent(u.username)}`}
-                  className="wm-suggested-user"
-                >
-                  {u.profile_image ? (
-                    <img src={u.profile_image} alt={u.username} className="wm-suggested-avatar" />
-                  ) : (
-                    <div className="wm-suggested-avatar">
-                      {u.username?.charAt(0).toUpperCase() || '?'}
-                    </div>
-                  )}
-                  <span className="wm-suggested-name">{u.username}</span>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="wm-widget">
-          <h3>Quick Links</h3>
-          <div className="wm-quick-links">
-            <Link to="/">Feed</Link>
-            <Link to="/friends">Friends</Link>
-            <Link to="/groups">Groups</Link>
-            <Link to="/discover">Discover</Link>
-          </div>
-        </div>
-      </aside>
 
       {/* Footer */}
       <footer className="webmail-footer">
