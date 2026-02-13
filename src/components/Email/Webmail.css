@@ -11,6 +11,8 @@
   background: transparent;
   color: var(--text-primary);
   overflow: hidden;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 /* ── Sidebar ── */
