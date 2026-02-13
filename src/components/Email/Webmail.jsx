@@ -487,6 +487,10 @@ export default function Webmail() {
       {/* Sidebar overlay for mobile */}
       {showSidebar && <div className="sidebar-overlay" onClick={() => setShowSidebar(false)} />}
 
+      {/* Right Sidebar */}
+      <aside className="webmail-right">
+      </aside>
+
       {/* Footer */}
       <footer className="webmail-footer">
         <p className="wm-copyright">© 2026 Hyve Social</p>
