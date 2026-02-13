@@ -620,58 +620,6 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
               />
               <span>Allow Sharing</span>
             </label>
-
-            {/* Background picker dropdown */}
-            {showBgPicker && !imageFile && (
-              <div className="bg-picker" role="menu">
-                {TEXT_BACKGROUNDS.map(bg => (
-                  <button
-                    key={bg.id || 'none'}
-                    type="button"
-                    className={`bg-swatch${selectedBg === bg.id ? ' selected' : ''}`}
-                    style={bg.id ? bg.style : { background: 'var(--bg-card)', border: '2px dashed var(--text-tertiary)' }}
-                    onClick={() => {
-                      setSelectedBg(bg.id);
-                      setShowBgPicker(false);
-                    }}
-                    title={bg.label}
-                  >
-                    {!bg.id && <span style={{fontSize:'10px',color:'var(--text-tertiary)'}}>✕</span>}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {showGifPicker && !imageFile && (
-              <GifPicker
-                onSelect={(gif) => {
-                  setSelectedGif(gif);
-                  setShowGifPicker(false);
-                  // Clear image if any
-                  setImageFile(null);
-                  setImagePreview('');
-                }}
-                onClose={() => setShowGifPicker(false)}
-              />
-            )}
-
-            {showEmojiPicker && (
-              <div className="emoji-picker" role="menu">
-                {emojiOptions.map((emoji) => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    className="emoji-btn"
-                    onClick={() => {
-                      setContent((prev) => `${prev}${emoji}`);
-                      setShowEmojiPicker(false);
-                    }}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
           <button 
@@ -682,6 +630,59 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
             {posting ? 'Posting...' : 'Post'}
           </button>
         </div>
+
+        {/* Background picker dropdown */}
+        {showBgPicker && !imageFile && (
+          <div className="bg-picker" role="menu">
+            {TEXT_BACKGROUNDS.map(bg => (
+              <button
+                key={bg.id || 'none'}
+                type="button"
+                className={`bg-swatch${selectedBg === bg.id ? ' selected' : ''}`}
+                style={bg.id ? bg.style : { background: 'var(--bg-card)', border: '2px dashed var(--text-tertiary)' }}
+                onClick={() => {
+                  setSelectedBg(bg.id);
+                  setShowBgPicker(false);
+                }}
+                title={bg.label}
+              >
+                {!bg.id && <span style={{fontSize:'10px',color:'var(--text-tertiary)'}}>✕</span>}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* GIF picker */}
+        {showGifPicker && !imageFile && (
+          <GifPicker
+            onSelect={(gif) => {
+              setSelectedGif(gif);
+              setShowGifPicker(false);
+              setImageFile(null);
+              setImagePreview('');
+            }}
+            onClose={() => setShowGifPicker(false)}
+          />
+        )}
+
+        {/* Emoji picker */}
+        {showEmojiPicker && (
+          <div className="emoji-picker" role="menu">
+            {emojiOptions.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                className="emoji-btn"
+                onClick={() => {
+                  setContent((prev) => `${prev}${emoji}`);
+                  setShowEmojiPicker(false);
+                }}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        )}
 
         <input
           ref={fileInputRef}
