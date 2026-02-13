@@ -1081,6 +1081,214 @@ export async function inviteToGroup(groupId, username) {
   }
 }
 
+// ========================================
+// DISCORD-LIKE CHANNEL FUNCTIONS
+// ========================================
+
+export async function getGroupChannels(groupId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/channels`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) return { categories: [], channels: [] };
+  return response.json();
+}
+
+export async function createChannel(groupId, { name, categoryId, topic, type }) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/channels`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify({ name, categoryId, topic, type })
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to create channel');
+  return data;
+}
+
+export async function updateChannel(groupId, channelId, updates) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/channels/${channelId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify(updates)
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to update channel');
+  return data;
+}
+
+export async function deleteChannel(groupId, channelId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/channels/${channelId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to delete channel');
+  return data;
+}
+
+export async function createCategory(groupId, name) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/categories`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify({ name })
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to create category');
+  return data;
+}
+
+export async function deleteCategory(groupId, catId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/categories/${catId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to delete category');
+  return data;
+}
+
+export async function getChannelMessages(channelId, { limit, before } = {}) {
+  const token = localStorage.getItem('token');
+  const params = new URLSearchParams();
+  if (limit) params.append('limit', limit);
+  if (before) params.append('before', before);
+  const qs = params.toString();
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/messages${qs ? '?' + qs : ''}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) return { messages: [] };
+  return response.json();
+}
+
+export async function sendChannelMessage(channelId, { content, imageUrl, replyTo }) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify({ content, imageUrl, replyTo })
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to send message');
+  return data;
+}
+
+export async function editChannelMessage(channelId, messageId, content) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/messages/${messageId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify({ content })
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to edit message');
+  return data;
+}
+
+export async function deleteChannelMessage(channelId, messageId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/messages/${messageId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to delete message');
+  return data;
+}
+
+// ========================================
+// CUSTOM GROUP ROLES
+// ========================================
+
+export async function getGroupRoles(groupId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/roles`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) return { roles: [] };
+  return response.json();
+}
+
+export async function createGroupRole(groupId, { name, color, permissions }) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/roles`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify({ name, color, permissions })
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to create role');
+  return data;
+}
+
+export async function updateGroupRole(groupId, roleId, updates) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/roles/${roleId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify(updates)
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to update role');
+  return data;
+}
+
+export async function deleteGroupRole(groupId, roleId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/roles/${roleId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to delete role');
+  return data;
+}
+
+export async function assignMemberRole(groupId, address, roleId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/members/${address}/roles`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify({ roleId })
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to assign role');
+  return data;
+}
+
+export async function removeMemberRole(groupId, address, roleId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/members/${address}/roles/${roleId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to remove role');
+  return data;
+}
+
+export async function getMembersWithRoles(groupId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/members-with-roles`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) return { members: [] };
+  return response.json();
+}
+
+export async function getGroupOnlineMembers(groupId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/online`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) return { online: [], offline: [], onlineCount: 0, totalCount: 0 };
+  return response.json();
+}
+
 export async function deleteAccount() {
   const token = localStorage.getItem('token');
   try {
@@ -1586,6 +1794,28 @@ export default {
   getGroupBans,
   deleteGroup,
   inviteToGroup,
+
+  // Discord-like Channels
+  getGroupChannels,
+  createChannel,
+  updateChannel,
+  deleteChannel,
+  createCategory,
+  deleteCategory,
+  getChannelMessages,
+  sendChannelMessage,
+  editChannelMessage,
+  deleteChannelMessage,
+
+  // Custom Group Roles
+  getGroupRoles,
+  createGroupRole,
+  updateGroupRole,
+  deleteGroupRole,
+  assignMemberRole,
+  removeMemberRole,
+  getMembersWithRoles,
+  getGroupOnlineMembers,
 
   // Account
   deleteAccount,
