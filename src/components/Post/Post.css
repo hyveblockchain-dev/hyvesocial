@@ -149,6 +149,13 @@ body.light-mode .mention-link {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 }
 
+/* Ensure GIF posts don't overlap with surrounding elements */
+.post-gif {
+  margin-bottom: 18px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  clear: both;
+}
+
 /* ── CSS-rendered overlays on post images (crystal-clear text) ── */
 .post-overlay {
   position: absolute;
