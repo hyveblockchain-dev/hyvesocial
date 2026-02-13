@@ -1,7 +1,8 @@
 // src/components/Email/Webmail.jsx
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import emailApi from '../../services/emailApi';
+import api from '../../services/api';
 import ComposeEmail from './ComposeEmail';
 import EmailView from './EmailView';
 import {
@@ -75,10 +76,12 @@ export default function Webmail() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [selectedMessages, setSelectedMessages] = useState(new Set());
   const [replyTo, setReplyTo] = useState(null);
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
 
-  // Load account info
+  // Load account info + suggested users
   useEffect(() => {
     loadAccount();
+    loadSuggestedUsers();
   }, []);
 
   // Load messages when folder changes
@@ -98,6 +101,16 @@ export default function Webmail() {
       }
       console.error('Failed to load email account:', err);
     }
+  }
+
+  async function loadSuggestedUsers() {
+    try {
+      if (!api.getUsers) return;
+      const data = await api.getUsers();
+      if (!data?.users) return;
+      const random = data.users.sort(() => 0.5 - Math.random()).slice(0, 5);
+      setSuggestedUsers(random);
+    } catch { /* silent */ }
   }
 
   async function loadMessages() {
@@ -471,6 +484,50 @@ export default function Webmail() {
 
       {/* Sidebar overlay for mobile */}
       {showSidebar && <div className="sidebar-overlay" onClick={() => setShowSidebar(false)} />}
+
+      {/* Right Sidebar */}
+      <aside className="webmail-right">
+        <div className="wm-widget">
+          <h3>Suggested Users</h3>
+          {suggestedUsers.length === 0 ? (
+            <p className="wm-empty">No suggestions</p>
+          ) : (
+            <div className="wm-suggested-list">
+              {suggestedUsers.map(u => (
+                <Link
+                  key={u.username}
+                  to={`/profile/${encodeURIComponent(u.username)}`}
+                  className="wm-suggested-user"
+                >
+                  {u.profile_image ? (
+                    <img src={u.profile_image} alt={u.username} className="wm-suggested-avatar" />
+                  ) : (
+                    <div className="wm-suggested-avatar">
+                      {u.username?.charAt(0).toUpperCase() || '?'}
+                    </div>
+                  )}
+                  <span className="wm-suggested-name">{u.username}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="wm-widget">
+          <h3>Quick Links</h3>
+          <div className="wm-quick-links">
+            <Link to="/">Feed</Link>
+            <Link to="/friends">Friends</Link>
+            <Link to="/groups">Groups</Link>
+            <Link to="/discover">Discover</Link>
+          </div>
+        </div>
+      </aside>
+
+      {/* Footer */}
+      <footer className="webmail-footer">
+        <p className="wm-copyright">© 2026 Hyve Social</p>
+      </footer>
     </div>
   );
 }
