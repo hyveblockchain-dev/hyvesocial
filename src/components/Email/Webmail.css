@@ -1560,13 +1560,18 @@ body.light-mode .email-ac-active {
 
 /* ── Light mode ── */
 body.light-mode .webmail-header {
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.92);
   border-color: var(--trim-strong);
 }
 
 body.light-mode .webmail-header-search input {
   background: rgba(0, 0, 0, 0.04);
   border-color: #e5e7eb;
+  color: #0f172a;
+}
+
+body.light-mode .webmail-header-search input::placeholder {
+  color: #94a3b8;
 }
 
 body.light-mode .webmail-header-search input:focus {
@@ -1577,10 +1582,386 @@ body.light-mode .webmail-header-search input:focus {
 body.light-mode .webmail-header-btn {
   background: rgba(0, 0, 0, 0.04);
   border-color: #e5e7eb;
+  color: #475569;
 }
 
+body.light-mode .webmail-header-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--gold-primary);
+}
+
+/* Sidebar light mode */
+body.light-mode .webmail-sidebar {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+body.light-mode .compose-wrapper {
+  border-color: #e5e7eb;
+}
+
+body.light-mode .folder-item {
+  color: #475569;
+}
+
+body.light-mode .folder-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #0f172a;
+}
+
+body.light-mode .folder-item.active {
+  background: rgba(255, 215, 0, 0.1);
+  color: #b8860b;
+}
+
+body.light-mode .sidebar-footer {
+  border-color: #e5e7eb;
+}
+
+body.light-mode .sidebar-name {
+  color: #0f172a;
+}
+
+body.light-mode .sidebar-email {
+  color: #94a3b8;
+}
+
+body.light-mode .sidebar-action-btn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: #e5e7eb;
+  color: #475569;
+}
+
+body.light-mode .sidebar-action-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+
+/* Main content light mode */
+body.light-mode .webmail-main {
+  background: #f5f7fa;
+}
+
+body.light-mode .webmail-toolbar {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+body.light-mode .email-search-form {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: #e5e7eb;
+}
+
+body.light-mode .email-search-form input {
+  color: #0f172a;
+}
+
+body.light-mode .email-search-form input::placeholder {
+  color: #94a3b8;
+}
+
+body.light-mode .toolbar-btn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: #e5e7eb;
+  color: #475569;
+}
+
+body.light-mode .toolbar-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+
+body.light-mode .folder-header {
+  border-color: #e5e7eb;
+}
+
+body.light-mode .folder-header h2 {
+  color: #0f172a;
+}
+
+body.light-mode .message-count {
+  color: #94a3b8;
+}
+
+/* Message list light mode */
+body.light-mode .message-row {
+  border-color: #f0f0f0;
+}
+
+body.light-mode .message-row:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+body.light-mode .message-row.unread {
+  background: rgba(255, 215, 0, 0.04);
+}
+
+body.light-mode .message-row.unread .message-sender,
+body.light-mode .message-row.unread .message-subject {
+  color: #0f172a;
+}
+
+body.light-mode .message-sender {
+  color: #475569;
+}
+
+body.light-mode .message-subject {
+  color: #475569;
+}
+
+body.light-mode .message-preview {
+  color: #94a3b8;
+}
+
+body.light-mode .message-date {
+  color: #94a3b8;
+}
+
+body.light-mode .star-btn {
+  color: #cbd5e1;
+}
+
+body.light-mode .star-btn:hover,
+body.light-mode .star-btn.starred {
+  color: var(--gold-primary);
+}
+
+body.light-mode .message-delete-btn {
+  color: #94a3b8;
+}
+
+body.light-mode .message-delete-btn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* Empty/Loading/Error states */
+body.light-mode .messages-loading,
+body.light-mode .messages-empty,
+body.light-mode .messages-error {
+  color: #94a3b8;
+}
+
+body.light-mode .messages-empty h3 {
+  color: #475569;
+}
+
+/* Compose light mode */
+body.light-mode .compose-overlay {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+body.light-mode .compose-window {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15);
+}
+
+body.light-mode .compose-header {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+body.light-mode .compose-header h3 {
+  color: #0f172a;
+}
+
+body.light-mode .compose-back-btn {
+  color: #475569;
+}
+
+body.light-mode .compose-back-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #0f172a;
+}
+
+body.light-mode .compose-draft-btn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: #e5e7eb;
+  color: #475569;
+}
+
+body.light-mode .compose-draft-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+
+body.light-mode .compose-close-btn {
+  color: #94a3b8;
+}
+
+body.light-mode .compose-close-btn:hover {
+  color: #0f172a;
+}
+
+body.light-mode .compose-error {
+  background: rgba(239, 68, 68, 0.06);
+  color: #dc2626;
+}
+
+body.light-mode .compose-field {
+  border-color: #f0f0f0;
+}
+
+body.light-mode .compose-field label {
+  color: #94a3b8;
+}
+
+body.light-mode .compose-field input {
+  color: #0f172a;
+}
+
+body.light-mode .compose-field input::placeholder {
+  color: #94a3b8;
+}
+
+body.light-mode .compose-body {
+  color: #0f172a;
+}
+
+body.light-mode .compose-body::placeholder {
+  color: #94a3b8;
+}
+
+body.light-mode .compose-footer {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+body.light-mode .attach-btn {
+  color: #475569;
+  border-color: #e5e7eb;
+}
+
+body.light-mode .attach-btn:hover {
+  color: var(--gold-primary);
+  border-color: var(--gold-primary);
+}
+
+body.light-mode .compose-attachments {
+  border-color: #f0f0f0;
+  background: rgba(0, 0, 0, 0.01);
+}
+
+body.light-mode .compose-att-item {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: #e5e7eb;
+}
+
+body.light-mode .compose-att-name {
+  color: #475569;
+}
+
+body.light-mode .compose-att-size {
+  color: #94a3b8;
+}
+
+/* Email view light mode */
+body.light-mode .email-view {
+  background: #f5f7fa;
+}
+
+body.light-mode .email-view-toolbar {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+body.light-mode .ev-back-btn {
+  color: #475569;
+}
+
+body.light-mode .ev-back-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #0f172a;
+}
+
+body.light-mode .ev-action-btn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: #e5e7eb;
+  color: #475569;
+}
+
+body.light-mode .ev-action-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+
+body.light-mode .ev-action-btn.delete:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+body.light-mode .ev-subject {
+  color: #0f172a;
+}
+
+body.light-mode .ev-sender-row {
+  border-color: #e5e7eb;
+}
+
+body.light-mode .ev-sender-name {
+  color: #0f172a;
+}
+
+body.light-mode .ev-sender-email {
+  color: #94a3b8;
+}
+
+body.light-mode .ev-meta {
+  color: #94a3b8;
+}
+
+body.light-mode .ev-cc {
+  color: #94a3b8;
+}
+
+body.light-mode .ev-body {
+  color: #0f172a;
+}
+
+body.light-mode .ev-attachments {
+  border-color: #e5e7eb;
+}
+
+body.light-mode .ev-attachments h4 {
+  color: #475569;
+}
+
+body.light-mode .ev-attachment {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: #e5e7eb;
+  color: #475569;
+}
+
+body.light-mode .ev-attachment:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--gold-primary);
+}
+
+body.light-mode .ev-att-size {
+  color: #94a3b8;
+}
+
+body.light-mode .ev-reply-bar {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+body.light-mode .ev-forward-btn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: #e5e7eb;
+  color: #475569;
+}
+
+body.light-mode .ev-forward-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+
+/* Right sidebar light mode */
 body.light-mode .webmail-right {
   background: #f9fafb;
+  border-color: #e5e7eb;
 }
 
 body.light-mode .wm-widget {
@@ -1600,9 +1981,35 @@ body.light-mode .wm-quick-links a:hover {
   background: rgba(0, 0, 0, 0.03);
 }
 
+/* Footer light mode */
 body.light-mode .webmail-footer {
   background: rgba(255, 255, 255, 0.92);
   border-color: #e5e7eb;
+}
+
+body.light-mode .wm-copyright {
+  color: #94a3b8;
+}
+
+/* Logo in light mode */
+body.light-mode .webmail-logo-img {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Scrollbar light mode */
+body.light-mode .webmail-right::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .messages-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Email spinner light mode */
+body.light-mode .email-spinner {
+  border-color: rgba(0, 0, 0, 0.08);
+  border-top-color: var(--gold-primary);
 }
 
 /* ── Right sidebar & footer responsive ── */
