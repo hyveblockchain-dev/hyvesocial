@@ -132,10 +132,13 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
   }
 
   function selectMention(selectedUser) {
+    // Remove the @query from content — the tag shows in the chips below, not inline
     const textBeforeCursor = content.slice(0, mentionCursorPos);
     const mentionStart = textBeforeCursor.lastIndexOf('@');
     const textAfterCursor = content.slice(mentionCursorPos);
-    const newContent = content.slice(0, mentionStart) + `@${selectedUser.username} ` + textAfterCursor;
+    const before = content.slice(0, mentionStart);
+    // Clean up: trim trailing space if we're removing the @query at the end
+    const newContent = (before + textAfterCursor).replace(/\s+$/, '') + (textAfterCursor ? '' : '');
     setContent(newContent);
 
     // Add to tagged users if not already tagged
@@ -151,10 +154,10 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
     setMentionQuery('');
     setMentionResults([]);
 
-    // Refocus textarea
+    // Refocus textarea at the position where the @query was removed
     setTimeout(() => {
       if (textareaRef.current) {
-        const newPos = mentionStart + selectedUser.username.length + 2; // @username + space
+        const newPos = before.length;
         textareaRef.current.focus();
         textareaRef.current.setSelectionRange(newPos, newPos);
       }
