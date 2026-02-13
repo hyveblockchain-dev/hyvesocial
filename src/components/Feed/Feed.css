@@ -552,6 +552,28 @@
   }
 }
 
+/* ─── Public Feed Header ───────────────────────────────── */
+.public-feed-header {
+  text-align: center;
+  padding: 20px 0 8px;
+}
+
+.public-feed-title {
+  font-size: 22px;
+  font-weight: 800;
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 4px;
+}
+
+.public-feed-subtitle {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0;
+}
+
 /* ─── Light Mode ───────────────────────────────────────── */
 body.light-mode .empty-feed {
   background: #ffffff;

@@ -36,7 +36,7 @@ const PHOTO_FILTERS = [
   { id: 'vintage', label: 'Vintage', css: 'sepia(0.35) contrast(1.1) brightness(0.95) saturate(1.2)' },
 ];
 
-export default function CreatePost({ onPostCreated, groupId = null, contextLabel = '' }) {
+export default function CreatePost({ onPostCreated, groupId = null, contextLabel = '', isPublic = false }) {
   const [content, setContent] = useState('');
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState('');
@@ -351,6 +351,7 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
         imageUrl: selectedGif ? selectedGif.url : undefined,
         allowShare,
         groupId,
+        isPublic,
         metadata: Object.keys(metadata).length > 0 ? metadata : undefined
       });
 

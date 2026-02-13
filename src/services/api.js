@@ -204,6 +204,21 @@ export async function getPosts(options = {}) {
   return response.json();
 }
 
+export async function getPublicPosts(options = {}) {
+  const { limit, offset } = options || {};
+  const token = localStorage.getItem('token');
+  const params = new URLSearchParams();
+  if (limit !== undefined && limit !== null) params.set('limit', String(limit));
+  if (offset !== undefined && offset !== null) params.set('offset', String(offset));
+  const url = params.toString() ? `${API_URL}/api/posts/public?${params}` : `${API_URL}/api/posts/public`;
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.json();
+}
+
 export async function createPost(content, imageFile = null, videoUrl = '') {
   const token = localStorage.getItem('token');
 
@@ -216,6 +231,7 @@ export async function createPost(content, imageFile = null, videoUrl = '') {
   let normalizedGroupId = undefined;
 
   let normalizedMetadata = undefined;
+  let normalizedIsPublic = undefined;
 
   if (typeof content === 'object' && content !== null) {
     normalizedContent = content.content || '';
@@ -227,6 +243,7 @@ export async function createPost(content, imageFile = null, videoUrl = '') {
       content.allowShare ?? content.allow_share ?? content.shareable ?? content.is_shareable;
     normalizedGroupId = content.groupId ?? content.group_id;
     normalizedMetadata = content.metadata || undefined;
+    normalizedIsPublic = content.isPublic ?? content.is_public;
   }
 
   const postData = {
@@ -258,6 +275,11 @@ export async function createPost(content, imageFile = null, videoUrl = '') {
 
   if (normalizedMetadata && Object.keys(normalizedMetadata).length > 0) {
     postData.metadata = normalizedMetadata;
+  }
+
+  if (normalizedIsPublic === true) {
+    postData.isPublic = true;
+    postData.is_public = true;
   }
 
   const response = await fetch(`${API_URL}/api/posts`, {
@@ -1442,6 +1464,7 @@ export default {
   
   // Posts
   getPosts,
+  getPublicPosts,
   getGroupPosts,
   approveGroupPost,
   rejectGroupPost,

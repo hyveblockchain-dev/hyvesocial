@@ -7,6 +7,7 @@ import { useAuth } from './hooks/useAuth';
 const Layout = lazy(() => import('./components/Layout/Layout'));
 const Login = lazy(() => import('./components/Auth/Login'));
 const Feed = lazy(() => import('./components/Feed/Feed'));
+const PublicFeed = lazy(() => import('./components/Feed/PublicFeed'));
 const Profile = lazy(() => import('./components/Profile/Profile'));
 const Friends = lazy(() => import('./components/Friends/Friends'));
 const Notifications = lazy(() => import('./components/Notifications/Notifications'));
@@ -151,6 +152,16 @@ function App() {
                 <PrivateRoute>
                   <Layout>
                     <Moderation />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/public"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <PublicFeed />
                   </Layout>
                 </PrivateRoute>
               }

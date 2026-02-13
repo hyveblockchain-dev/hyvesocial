@@ -9,7 +9,7 @@ import { normalizeNotification } from '../../utils/notifications';
 import {
   IconSearch, IconLogout, IconBell,
   IconFeed, IconUser, IconUsers, IconChat, IconClose,
-  IconGroup, IconDiscover, IconShield, IconMailbox
+  IconGroup, IconDiscover, IconShield, IconMailbox, IconGlobe
 } from '../Icons/Icons';
 import './Layout.css';
 
@@ -880,6 +880,10 @@ export default function Layout({ children }) {
             <Link to="/" className={location.pathname === '/' ? 'nav-item active' : 'nav-item'}>
               <span className="nav-icon"><IconFeed width={20} height={20} /></span>
               <span>Feed</span>
+            </Link>
+            <Link to="/public" className={location.pathname === '/public' ? 'nav-item active' : 'nav-item'}>
+              <span className="nav-icon"><IconGlobe width={20} height={20} /></span>
+              <span>Public Feed</span>
             </Link>
             <Link to="/profile/me" className={location.pathname.startsWith('/profile') ? 'nav-item active' : 'nav-item'}>
               <span className="nav-icon"><IconUser width={20} height={20} /></span>
