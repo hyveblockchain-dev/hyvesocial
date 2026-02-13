@@ -578,16 +578,41 @@ export async function getStories() {
   return response.json();
 }
 
-export async function createStory({ file, mediaType, text }) {
+export async function getPublicStories() {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/stories/public`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    return { stories: [] };
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    return { stories: [] };
+  }
+
+  return response.json();
+}
+
+export async function createStory({ file, mediaType, text, isPublic }) {
   const token = localStorage.getItem('token');
   const base64 = await fileToBase64(file);
+  const storyData = { media: base64, mediaType: mediaType || 'image', text };
+  if (isPublic) {
+    storyData.isPublic = true;
+    storyData.is_public = true;
+  }
   const response = await fetch(`${API_URL}/api/stories`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ media: base64, mediaType: mediaType || 'image', text }),
+    body: JSON.stringify(storyData),
   });
 
   if (!response.ok) {
@@ -1492,6 +1517,7 @@ export default {
   
   // Stories
   getStories,
+  getPublicStories,
   createStory,
   deleteStory,
   
