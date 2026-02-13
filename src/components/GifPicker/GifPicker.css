@@ -161,14 +161,16 @@
 
 /* ── GIF in post ── */
 .post-gif {
-  width: 100%;
-  border-radius: 0;
+  max-width: 360px;
+  border-radius: 10px;
   overflow: hidden;
+  margin: 4px 0;
 }
 
 .post-gif img {
   width: 100%;
   display: block;
+  border-radius: 10px;
 }
 
 /* ── GIF preview in CreatePost ── */
