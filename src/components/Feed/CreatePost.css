@@ -483,20 +483,90 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: none;
-  background: rgba(0,0,0,0.75);
+  border: 2px solid rgba(255,255,255,0.5);
+  background: rgba(0,0,0,0.8);
   color: #fff;
   font-size: 11px;
   cursor: pointer;
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
   padding: 0;
+  z-index: 5;
+  transition: background 0.15s, transform 0.15s;
 }
 
-.photo-overlay:hover .overlay-remove {
+.overlay-remove:hover {
+  background: #ef4444;
+  transform: scale(1.15);
+}
+
+/* ── Overlay List (manage existing overlays) ── */
+.overlay-list {
+  margin-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 10px;
+}
+
+.overlay-list-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted, rgba(255,255,255,0.5));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.overlay-list-item {
   display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.04);
+  margin-bottom: 4px;
+  transition: background 0.15s;
+}
+
+.overlay-list-item:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.overlay-list-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.overlay-list-content {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overlay-list-remove {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.overlay-list-remove:hover {
+  background: #ef4444;
+  color: #fff;
 }
 
 /* ─── Overlay Text Panel ──────────────────────────────── */

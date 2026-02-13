@@ -83,8 +83,8 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
       size: overlayTextSize,
     }]);
     setOverlayTextInput('');
-    setShowOverlayText(false);
-    setLivePreviewPos({ x: 50, y: 50 });
+    // Keep panel open so user can add more lines; reset position for next line
+    setLivePreviewPos({ x: 50, y: 70 });
   }
 
   // ── Add an emoji overlay ──
@@ -583,6 +583,21 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
                     Add Text
                   </button>
                 </div>
+                {/* List of existing overlays with remove buttons */}
+                {overlays.length > 0 && (
+                  <div className="overlay-list">
+                    <div className="overlay-list-title">Added overlays ({overlays.length})</div>
+                    {overlays.map((o, i) => (
+                      <div key={o.id} className="overlay-list-item">
+                        <span className="overlay-list-icon">{o.type === 'text' ? '✏️' : '😀'}</span>
+                        <span className="overlay-list-content" style={o.type === 'text' ? { color: o.color } : {}}>
+                          {o.content.length > 25 ? o.content.slice(0, 25) + '…' : o.content}
+                        </span>
+                        <button type="button" className="overlay-list-remove" onClick={() => removeOverlay(o.id)}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
