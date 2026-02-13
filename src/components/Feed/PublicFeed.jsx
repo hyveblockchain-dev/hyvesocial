@@ -285,11 +285,6 @@ export default function PublicFeed() {
 
   return (
     <div className="feed-container">
-      <div className="public-feed-header">
-        <h2 className="public-feed-title">🌐 Public Feed</h2>
-        <p className="public-feed-subtitle">Posts and stories from everyone on Hyve Social</p>
-      </div>
-
       {/* ── Stories row ── */}
       <div className="stories-row">
         <button className="story-card create-story" onClick={() => setShowStoryModal(true)}>
