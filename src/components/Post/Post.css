@@ -96,6 +96,34 @@
   font-size: 15px;
 }
 
+/* ── @mention links in post content ─────────────────── */
+.mention-link {
+  color: var(--gold-primary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.mention-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+/* ── Tagged users display below content ──────────────── */
+.post-tagged-users {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 0 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+body.light-mode .mention-link {
+  color: #8b6914;
+}
+
 /* ── Styled text background posts ──────────────────────── */
 .post-content.post-content-bg {
   min-height: 180px;

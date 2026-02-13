@@ -103,6 +103,7 @@ export default function Notifications() {
     const events = [
       'notification',
       'new_notification',
+      'post_mention',
       'post_comment',
       'comment',
       'comment_created',
@@ -297,11 +298,13 @@ export default function Notifications() {
               );
             }
 
-            if (['post_comment', 'comment_reply', 'reaction', 'follow', 'notification'].includes(item.type)) {
+            if (['post_comment', 'comment_reply', 'reaction', 'follow', 'post_mention', 'notification'].includes(item.type)) {
               const user = item.user || {};
               const username = user.username || 'Someone';
               const message =
-                item.type === 'post_comment'
+                item.type === 'post_mention'
+                  ? 'tagged you in a post'
+                  : item.type === 'post_comment'
                   ? 'commented on your post'
                   : item.type === 'comment_reply'
                   ? 'replied to your comment'

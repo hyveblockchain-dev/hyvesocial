@@ -173,6 +173,24 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
     return content;
   }
 
+  // Render @username mentions as clickable profile links
+  function renderContentWithMentions(text) {
+    if (!text || typeof text !== 'string') return text;
+    const parts = text.split(/(@\w+)/g);
+    if (parts.length === 1) return text;
+    return parts.map((part, i) => {
+      if (/^@(\w+)$/.test(part)) {
+        const username = part.slice(1);
+        return (
+          <Link key={i} to={`/profile/${encodeURIComponent(username)}`} className="mention-link" onClick={e => e.stopPropagation()}>
+            {part}
+          </Link>
+        );
+      }
+      return part;
+    });
+  }
+
   const reactionOptions = [
     { type: 0, label: 'Like', emoji: '👍' },
     { type: 1, label: 'Love', emoji: '❤️' },
@@ -598,21 +616,48 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
         const meta = typeof post.metadata === 'string' ? (() => { try { return JSON.parse(post.metadata); } catch { return {}; } })() : (post.metadata || {});
         const bgId = meta.textBackground;
         const bgValue = bgId ? TEXT_BG_MAP[bgId] : null;
+        const taggedList = Array.isArray(meta.taggedUsers) ? meta.taggedUsers : [];
         if (bgValue && !post.image_url) {
           const isGradient = bgValue.startsWith('linear-gradient');
           return (
-            <div
-              className="post-content post-content-bg"
-              style={{
-                background: bgValue,
-                color: (bgId === 'gradient-arctic') ? '#0f172a' : '#fff',
-              }}
-            >
-              {normalizeSharedContent(post.content)}
-            </div>
+            <>
+              <div
+                className="post-content post-content-bg"
+                style={{
+                  background: bgValue,
+                  color: (bgId === 'gradient-arctic') ? '#0f172a' : '#fff',
+                }}
+              >
+                {renderContentWithMentions(normalizeSharedContent(post.content))}
+              </div>
+              {taggedList.length > 0 && (
+                <div className="post-tagged-users">
+                  👤 {taggedList.map((t, i) => (
+                    <span key={t.username}>
+                      <Link to={`/profile/${encodeURIComponent(t.username)}`} className="mention-link" onClick={e => e.stopPropagation()}>@{t.username}</Link>
+                      {i < taggedList.length - 1 ? ', ' : ''}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </>
           );
         }
-        return <div className="post-content">{normalizeSharedContent(post.content)}</div>;
+        return (
+          <>
+            <div className="post-content">{renderContentWithMentions(normalizeSharedContent(post.content))}</div>
+            {taggedList.length > 0 && (
+              <div className="post-tagged-users">
+                👤 {taggedList.map((t, i) => (
+                  <span key={t.username}>
+                    <Link to={`/profile/${encodeURIComponent(t.username)}`} className="mention-link" onClick={e => e.stopPropagation()}>@{t.username}</Link>
+                    {i < taggedList.length - 1 ? ', ' : ''}
+                  </span>
+                ))}
+              </div>
+            )}
+          </>
+        );
       })()}
 
       {/* Post image / GIF — with optional CSS filter */}

@@ -63,8 +63,17 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
   // ── GIF state ──
   const [showGifPicker, setShowGifPicker] = useState(false);
   const [selectedGif, setSelectedGif] = useState(null);
+  // ── @mention / tagging state ──
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionResults, setMentionResults] = useState([]);
+  const [showMentionDropdown, setShowMentionDropdown] = useState(false);
+  const [taggedUsers, setTaggedUsers] = useState([]);
+  const [mentionCursorPos, setMentionCursorPos] = useState(0);
+  const [mentionSearching, setMentionSearching] = useState(false);
   const previewRef = useRef(null);
   const fileInputRef = useRef(null);
+  const textareaRef = useRef(null);
+  const mentionSearchTimeout = useRef(null);
   const { user } = useAuth();
   const displayName = user?.username || 'there';
 
@@ -74,6 +83,87 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
 
   const overlayEmojis = ['😀','😂','😍','🥳','😎','🔥','❤️','⭐','💯','👑','🎉','💀','🙏','💪','👀','🤔','✨','🌈','🦋','🐱'];
   const textColors = ['#ffffff','#000000','#f6d365','#ef4444','#3b82f6','#22c55e','#a855f7','#ec4899','#f97316','#06b6d4'];
+
+  // ── @mention detection in textarea ──
+  function handleContentChange(e) {
+    const value = e.target.value;
+    const cursorPos = e.target.selectionStart;
+    setContent(value);
+
+    // Find @mention pattern at cursor position
+    const textBeforeCursor = value.slice(0, cursorPos);
+    const mentionMatch = textBeforeCursor.match(/@(\w{0,30})$/);
+
+    if (mentionMatch) {
+      const query = mentionMatch[1];
+      setMentionQuery(query);
+      setMentionCursorPos(cursorPos);
+      setShowMentionDropdown(true);
+
+      // Search users after at least 1 character
+      if (query.length >= 1) {
+        clearTimeout(mentionSearchTimeout.current);
+        mentionSearchTimeout.current = setTimeout(async () => {
+          setMentionSearching(true);
+          try {
+            const data = await api.searchUsers(query);
+            const users = data.users || data || [];
+            // Filter out current user and already-tagged users
+            const filtered = users.filter(u =>
+              u.username !== user?.username &&
+              !taggedUsers.some(t => t.username === u.username)
+            );
+            setMentionResults(filtered.slice(0, 6));
+          } catch (err) {
+            console.error('Mention search error:', err);
+            setMentionResults([]);
+          } finally {
+            setMentionSearching(false);
+          }
+        }, 300);
+      } else {
+        setMentionResults([]);
+      }
+    } else {
+      setShowMentionDropdown(false);
+      setMentionQuery('');
+      setMentionResults([]);
+    }
+  }
+
+  function selectMention(selectedUser) {
+    const textBeforeCursor = content.slice(0, mentionCursorPos);
+    const mentionStart = textBeforeCursor.lastIndexOf('@');
+    const textAfterCursor = content.slice(mentionCursorPos);
+    const newContent = content.slice(0, mentionStart) + `@${selectedUser.username} ` + textAfterCursor;
+    setContent(newContent);
+
+    // Add to tagged users if not already tagged
+    if (!taggedUsers.some(t => t.username === selectedUser.username)) {
+      setTaggedUsers(prev => [...prev, {
+        username: selectedUser.username,
+        address: selectedUser.address || selectedUser.wallet_address,
+        profileImage: selectedUser.profile_image || selectedUser.profileImage,
+      }]);
+    }
+
+    setShowMentionDropdown(false);
+    setMentionQuery('');
+    setMentionResults([]);
+
+    // Refocus textarea
+    setTimeout(() => {
+      if (textareaRef.current) {
+        const newPos = mentionStart + selectedUser.username.length + 2; // @username + space
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(newPos, newPos);
+      }
+    }, 0);
+  }
+
+  function removeTaggedUser(username) {
+    setTaggedUsers(prev => prev.filter(t => t.username !== username));
+  }
 
   // ── Add a text overlay ──
   function addTextOverlay() {
@@ -244,6 +334,14 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
         metadata.isGif = true;
       }
 
+      // Store tagged users in metadata
+      if (taggedUsers.length > 0) {
+        metadata.taggedUsers = taggedUsers.map(t => ({
+          username: t.username,
+          address: t.address,
+        }));
+      }
+
       const data = await api.createPost({
         content: content.trim(),
         imageFile: uploadImage,
@@ -288,6 +386,9 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
       setOverlayTextInput('');
       setSelectedGif(null);
       setShowGifPicker(false);
+      setTaggedUsers([]);
+      setShowMentionDropdown(false);
+      setMentionResults([]);
       
       // Show success (optional)
       console.log('Post created successfully!');
@@ -324,24 +425,67 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
             style={TEXT_BACKGROUNDS.find(b => b.id === selectedBg)?.style || {}}
           >
             <textarea
+              ref={textareaRef}
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={handleContentChange}
               placeholder="Share your thoughts..."
               rows="4"
               disabled={posting}
               maxLength="300"
               className="textarea-styled"
             />
+            {/* @mention dropdown */}
+            {showMentionDropdown && mentionResults.length > 0 && (
+              <div className="mention-dropdown">
+                {mentionResults.map(u => (
+                  <button key={u.username} type="button" className="mention-option" onClick={() => selectMention(u)}>
+                    <div className="mention-avatar">
+                      {u.profile_image ? <img src={u.profile_image} alt={u.username} /> : u.username?.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="mention-username">@{u.username}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Share your thoughts..."
-            rows="3"
-            disabled={posting}
-            maxLength="5000"
-          />
+          <div className="textarea-mention-wrapper">
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={handleContentChange}
+              placeholder="Share your thoughts..."
+              rows="3"
+              disabled={posting}
+              maxLength="5000"
+            />
+            {/* @mention dropdown */}
+            {showMentionDropdown && mentionResults.length > 0 && (
+              <div className="mention-dropdown">
+                {mentionResults.map(u => (
+                  <button key={u.username} type="button" className="mention-option" onClick={() => selectMention(u)}>
+                    <div className="mention-avatar">
+                      {u.profile_image ? <img src={u.profile_image} alt={u.username} /> : u.username?.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="mention-username">@{u.username}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tagged users display */}
+        {taggedUsers.length > 0 && (
+          <div className="tagged-users-bar">
+            <span className="tagged-label">Tagging:</span>
+            {taggedUsers.map(t => (
+              <span key={t.username} className="tagged-user-chip">
+                @{t.username}
+                <button type="button" onClick={() => removeTaggedUser(t.username)} className="tagged-remove">✕</button>
+              </span>
+            ))}
+          </div>
         )}
 
         {/* Image preview with live filter + draggable overlays */}
@@ -598,6 +742,32 @@ export default function CreatePost({ onPostCreated, groupId = null, contextLabel
               disabled={!!imageFile}
             >
               GIF
+            </button>
+
+            <button
+              type="button"
+              className="option-button"
+              onClick={() => {
+                // Insert @ at cursor position to trigger mention
+                if (textareaRef.current) {
+                  const pos = textareaRef.current.selectionStart || content.length;
+                  const before = content.slice(0, pos);
+                  const after = content.slice(pos);
+                  const needsSpace = before.length > 0 && !before.endsWith(' ') && !before.endsWith('\n');
+                  const newContent = before + (needsSpace ? ' @' : '@') + after;
+                  setContent(newContent);
+                  const newPos = pos + (needsSpace ? 2 : 1);
+                  setMentionCursorPos(newPos);
+                  setShowMentionDropdown(true);
+                  setMentionQuery('');
+                  setTimeout(() => {
+                    textareaRef.current.focus();
+                    textareaRef.current.setSelectionRange(newPos, newPos);
+                  }, 0);
+                }
+              }}
+            >
+              👤 Tag
             </button>
 
             <button

@@ -146,6 +146,8 @@ export default function Layout({ children }) {
 
   function getActivityLabel(item) {
     switch (item.type) {
+      case 'post_mention':
+        return 'tagged you in a post';
       case 'post_comment':
         return 'commented on your post';
       case 'comment_reply':
@@ -274,6 +276,7 @@ export default function Layout({ children }) {
     const events = [
       'notification',
       'new_notification',
+      'post_mention',
       'post_comment',
       'comment',
       'comment_created',

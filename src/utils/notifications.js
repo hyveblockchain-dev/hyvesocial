@@ -4,6 +4,7 @@ function normalizeType(rawType, payload) {
   const value = String(rawType || '').toLowerCase();
   if (value.includes('friend_request')) return 'friend_request';
   if (value.includes('friend_accepted')) return 'friend_accepted';
+  if (value.includes('mention') || value.includes('tagged')) return 'post_mention';
   if (value.includes('reply')) return 'comment_reply';
   if (value.includes('comment')) return 'post_comment';
   if (value.includes('reaction')) return 'reaction';
