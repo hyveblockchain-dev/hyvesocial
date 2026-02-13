@@ -1694,16 +1694,16 @@ body.light-mode .toolbar-btn:hover {
 }
 
 body.light-mode .folder-header {
-  background: rgba(255, 255, 255, 0.92);
+  background: transparent;
   border-color: #94a3b8;
 }
 
 body.light-mode .folder-header h2 {
-  color: #0f172a;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 body.light-mode .message-count {
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* Message list light mode */
