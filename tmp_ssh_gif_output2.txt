@@ -1,0 +1,24 @@
+
+================================================================================
+COMMAND: sudo -u postgres psql -d hyve_social -c "SELECT id, LEFT(image_url, 120) as url_preview, metadata FROM posts WHERE metadata::text LIKE '%isGif%' ORDER BY created_at DESC LIMIT 5;"
+================================================================================
+ id  |                                                       url_preview                                                        |                          metadata                           
+-----+--------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------
+ 115 | https://media0.giphy.com/media/6EDGSznQA5kVCa0DfD/giphy.gif?cid=5d8270d4y47d6dvbfe81o28gny3k9o4ss9u86a3u6rlwub49&ep=v1_g | {"isGif": true, "taggedUsers": [{"username": "HYVE TEST"}]}
+ 102 | https://media1.giphy.com/media/Jale8dlFc4ASs/giphy.gif?cid=5d8270d4j9odhhrsp8azr8a4hyqiy6ncfdjdgbiij7uk7o7b&ep=v1_gifs_s | {"isGif": true}
+(2 rows)
+
+
+
+================================================================================
+COMMAND: sudo -u postgres psql -d hyve_social -c "SELECT id, image_url FROM posts WHERE metadata::text LIKE '%isGif%' ORDER BY created_at DESC LIMIT 3;"
+================================================================================
+ id  |                                                                       image_url                                                                       
+-----+-------------------------------------------------------------------------------------------------------------------------------------------------------
+ 115 | https://media0.giphy.com/media/6EDGSznQA5kVCa0DfD/giphy.gif?cid=5d8270d4y47d6dvbfe81o28gny3k9o4ss9u86a3u6rlwub49&ep=v1_gifs_search&rid=giphy.gif&ct=g
+ 102 | https://media1.giphy.com/media/Jale8dlFc4ASs/giphy.gif?cid=5d8270d4j9odhhrsp8azr8a4hyqiy6ncfdjdgbiij7uk7o7b&ep=v1_gifs_search&rid=giphy.gif&ct=g
+(2 rows)
+
+
+
+Done.

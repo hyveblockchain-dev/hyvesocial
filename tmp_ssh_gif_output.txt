@@ -1,0 +1,14 @@
+
+================================================================================
+COMMAND: psql -U hyve_social -d hyve_social -c "SELECT id, LEFT(image_url, 120) as url_preview, metadata FROM posts WHERE metadata::text LIKE '%isGif%' ORDER BY created_at DESC LIMIT 5;"
+================================================================================
+STDERR: psql: error: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  Peer authentication failed for user "hyve_social"
+
+
+================================================================================
+COMMAND: psql -U hyve_social -d hyve_social -c "SELECT id, image_url FROM posts WHERE metadata::text LIKE '%isGif%' ORDER BY created_at DESC LIMIT 3;"
+================================================================================
+STDERR: psql: error: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  Peer authentication failed for user "hyve_social"
+
+
+Done.

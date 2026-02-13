@@ -90,8 +90,8 @@ export default function GifPicker({ onSelect, onClose }) {
   }
 
   function handleSelect(gif) {
-    // Pass the best quality URL and a smaller preview
-    const url = gif.images?.original?.url || gif.images?.downsized_medium?.url || gif.images?.fixed_height?.url;
+    // Use downsized or fixed_height for reasonable file size (not original which can be 10MB+)
+    const url = gif.images?.downsized_medium?.url || gif.images?.fixed_height?.url || gif.images?.downsized?.url || gif.images?.original?.url;
     const previewUrl = gif.images?.fixed_height_small?.url || gif.images?.fixed_height?.url || url;
     onSelect({ url, previewUrl, title: gif.title || 'GIF' });
   }

@@ -669,9 +669,14 @@ export default function Post({ post, onDelete, onUpdate, onShare, autoOpenCommen
         const overlayItems = Array.isArray(meta.overlays) ? meta.overlays : [];
 
         if (isGif) {
+          // Rewrite giphy.com/media/.../giphy.gif URLs to use smaller fixed_height version
+          let gifUrl = post.image_url;
+          if (/giphy\.com\/media\//i.test(gifUrl) && /\/giphy\.gif/i.test(gifUrl)) {
+            gifUrl = gifUrl.replace('/giphy.gif', '/200.gif');
+          }
           return (
             <div className="post-gif">
-              <img src={post.image_url} alt="GIF" loading="lazy" />
+              <img src={gifUrl} alt="GIF" loading="lazy" />
             </div>
           );
         }
