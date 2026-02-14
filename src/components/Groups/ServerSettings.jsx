@@ -933,8 +933,29 @@ export default function ServerSettings({
             </div>
           )}
 
+          {/* ── Soundboard ── */}
+          {activeSection === 'soundboard' && (
+            <div className="ss-section">
+              <h2>Soundboard</h2>
+              <p className="ss-muted">Upload custom sound reactions that anyone in this server can use. Nitro members will be able to access these sounds in any server on Hyve.</p>
+
+              <div className="ss-soundboard-empty">
+                <div className="ss-soundboard-illustration">
+                  <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+                    <circle cx="60" cy="60" r="50" fill="#2b2d31"/>
+                    <text x="60" y="55" textAnchor="middle" fontSize="48">🎵</text>
+                    <text x="60" y="80" textAnchor="middle" fontSize="14" fill="#b5bac1">♪ ♫ ♬</text>
+                  </svg>
+                </div>
+                <h3 className="ss-soundboard-title">NO SOUNDS</h3>
+                <p className="ss-muted">Get the party started by uploading a sound!</p>
+                <button className="ss-btn-primary" style={{ marginTop: 16 }}>Upload Sound</button>
+              </div>
+            </div>
+          )}
+
           {/* Placeholder tabs */}
-          {['soundboard', 'invites', 'access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
+          {['invites', 'access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
             <div className="ss-section">
               <h2>{NAV_SECTIONS.flatMap(s => s.items).find(i => i.key === activeSection)?.label || activeSection}</h2>
               <p className="ss-muted">This feature is coming soon.</p>
