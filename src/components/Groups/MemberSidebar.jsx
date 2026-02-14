@@ -3,6 +3,8 @@ import api from '../../services/api';
 import socketService from '../../services/socket';
 import './MemberSidebar.css';
 
+const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%235865f2'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' dominant-baseline='middle' fill='white' font-size='18' font-family='sans-serif'%3E%3F%3C/text%3E%3C/svg%3E";
+
 export default function MemberSidebar({ groupId, user, isAdmin, isOwner, onMemberClick }) {
   const [members, setMembers] = useState([]);
   const [onlineUsernames, setOnlineUsernames] = useState([]);
@@ -75,10 +77,10 @@ export default function MemberSidebar({ groupId, user, isAdmin, isOwner, onMembe
       >
         <div className="member-avatar-wrap">
           <img
-            src={m.profile_image || '/default-avatar.png'}
+            src={m.profile_image || DEFAULT_AVATAR}
             alt=""
             className="member-avatar"
-            onError={(e) => { e.target.src = '/default-avatar.png'; }}
+            onError={(e) => { if (e.target.src !== DEFAULT_AVATAR) e.target.src = DEFAULT_AVATAR; }}
           />
           <span className={`member-status-dot${online ? ' online' : ' offline'}`} />
         </div>
