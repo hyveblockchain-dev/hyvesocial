@@ -1650,8 +1650,64 @@ export default function ServerSettings({
             </div>
           )}
 
+          {/* Server Template */}
+          {activeSection === 'template' && (() => {
+            return (
+              <div className="ss-section">
+                <h2>Server Template</h2>
+                <p className="ss-muted" style={{ marginBottom: 4 }}>A server template is an easy way to share your server setup and help anyone create a server instantly.</p>
+                <p className="ss-muted" style={{ marginBottom: 20 }}>When someone uses your server template link, they create a new server pre-filled with the same channels, roles, permissions, and settings as yours.</p>
+
+                <div className="ss-template-info-box">
+                  <div className="ss-template-info-col">
+                    <span className="ss-template-info-heading">TEMPLATES WILL COPY:</span>
+                    <div className="ss-template-info-row">
+                      <span className="ss-template-dot green">✔</span>
+                      <span>Channels and channel topics</span>
+                    </div>
+                    <div className="ss-template-info-row">
+                      <span className="ss-template-dot green">✔</span>
+                      <span>Roles and permissions</span>
+                    </div>
+                    <div className="ss-template-info-row">
+                      <span className="ss-template-dot green">✔</span>
+                      <span>Default server settings</span>
+                    </div>
+                  </div>
+                  <div className="ss-template-info-col">
+                    <span className="ss-template-info-heading">TEMPLATES WILL NOT COPY:</span>
+                    <div className="ss-template-info-row">
+                      <span className="ss-template-dot red">✖</span>
+                      <span>Messages or any content</span>
+                    </div>
+                    <div className="ss-template-info-row">
+                      <span className="ss-template-dot red">✖</span>
+                      <span>Members or bots</span>
+                    </div>
+                    <div className="ss-template-info-row">
+                      <span className="ss-template-dot red">✖</span>
+                      <span>Your server icon, Boosts, or other perks</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ss-field-group" style={{ marginTop: 24 }}>
+                  <label className="ss-field-label">Template Title <span style={{ color: '#ed4245' }}>*</span></label>
+                  <input className="ss-input" placeholder="Who is this server for? E.g. School Club, Artists Community" />
+                </div>
+
+                <div className="ss-field-group" style={{ marginTop: 16 }}>
+                  <label className="ss-field-label">Template Description</label>
+                  <textarea className="ss-textarea" rows={4} placeholder="What can people do in this server?" />
+                </div>
+
+                <button className="ss-btn-primary" style={{ marginTop: 20 }}>Generate Template</button>
+              </div>
+            );
+          })()}
+
           {/* Placeholder tabs */}
-          {['appDirectory', 'template'].includes(activeSection) && (
+          {activeSection === 'appDirectory' && (
             <div className="ss-section">
               <h2>{NAV_SECTIONS.flatMap(s => s.items).find(i => i.key === activeSection)?.label || activeSection}</h2>
               <p className="ss-muted">This feature is coming soon.</p>
