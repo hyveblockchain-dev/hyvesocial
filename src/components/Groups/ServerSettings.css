@@ -1676,6 +1676,121 @@
 }
 .ss-access-chip:hover { background: #32353b; color: #f2f3f5; }
 
+/* ── Integrations ── */
+.ss-integ-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #2b2d31;
+  border: 1px solid #3f4147;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 8px;
+}
+.ss-integ-row-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ss-integ-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1e1f22;
+  border-radius: 50%;
+}
+.ss-integ-title {
+  display: block;
+  color: #f2f3f5;
+  font-size: 14px;
+  font-weight: 600;
+}
+.ss-integ-sub {
+  display: block;
+  color: #b5bac1;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.ss-integ-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f2f3f5;
+  margin: 24px 0 12px;
+}
+
+.ss-integ-bot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #2b2d31;
+  border: 1px solid #3f4147;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 8px;
+}
+.ss-integ-bot-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.ss-integ-bot-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.ss-integ-bot-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ss-integ-bot-name {
+  color: #f2f3f5;
+  font-size: 14px;
+  font-weight: 600;
+}
+.ss-integ-bot-meta {
+  color: #b5bac1;
+  font-size: 12px;
+  margin-top: 2px;
+}
+.ss-integ-bot-online {
+  color: #3ba55c;
+  font-size: 10px;
+}
+.ss-integ-bot-tags {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.ss-integ-bot-tag {
+  background: #1e1f22;
+  color: #b5bac1;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.ss-integ-bot-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.ss-integ-manage {
+  color: #b5bac1;
+  font-size: 13px;
+  cursor: pointer;
+}
+.ss-integ-manage:hover { color: #f2f3f5; }
+
 /* ══════════════════════════════════════════════════════════
    LIGHT MODE
    ══════════════════════════════════════════════════════════ */
@@ -1790,6 +1905,15 @@
 .light-mode .ss-access-rule-input::placeholder { color: #87898c; }
 .light-mode .ss-access-chip { background: #f2f3f5; border-color: #e3e5e8; color: #4e5058; }
 .light-mode .ss-access-chip:hover { background: #e3e5e8; color: #060607; }
+.light-mode .ss-integ-row { background: #f2f3f5; border-color: #e3e5e8; }
+.light-mode .ss-integ-icon { background: #e3e5e8; }
+.light-mode .ss-integ-title { color: #060607; }
+.light-mode .ss-integ-sub { color: #4e5058; }
+.light-mode .ss-integ-section-title { color: #060607; }
+.light-mode .ss-integ-bot-row { background: #f2f3f5; border-color: #e3e5e8; }
+.light-mode .ss-integ-bot-name { color: #060607; }
+.light-mode .ss-integ-bot-meta { color: #4e5058; }
+.light-mode .ss-integ-bot-tag { background: #e3e5e8; color: #4e5058; }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {

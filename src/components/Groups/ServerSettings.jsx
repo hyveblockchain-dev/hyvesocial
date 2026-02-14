@@ -1253,8 +1253,72 @@ export default function ServerSettings({
             </div>
           )}
 
+          {/* ── Integrations ── */}
+          {activeSection === 'integrations' && (
+            <div className="ss-section">
+              <h2>Integrations</h2>
+              <p className="ss-muted" style={{ maxWidth: 600 }}>Customize your server with integrations. Manage webhooks, followed channels, and apps, as well as Twitch and YouTube settings for creators. <span style={{ color: '#00a8fc', cursor: 'pointer' }}>Learn more about managing integrations.</span></p>
+
+              {/* Webhooks row */}
+              <div className="ss-integ-row">
+                <div className="ss-integ-row-left">
+                  <div className="ss-integ-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#b5bac1"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                  </div>
+                  <div>
+                    <span className="ss-integ-title">Webhooks</span>
+                    <span className="ss-integ-sub">0 webhooks</span>
+                  </div>
+                </div>
+                <button className="ss-btn-create-role">Create Webhook</button>
+              </div>
+
+              {/* Channels Followed row */}
+              <div className="ss-integ-row">
+                <div className="ss-integ-row-left">
+                  <div className="ss-integ-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#b5bac1"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+                  </div>
+                  <div>
+                    <span className="ss-integ-title">Channels Followed</span>
+                    <span className="ss-integ-sub">0 channels</span>
+                  </div>
+                </div>
+                <button className="ss-btn-secondary" style={{ fontWeight: 600 }}>Learn More</button>
+              </div>
+
+              {/* Bots and Apps */}
+              <h3 className="ss-integ-section-title">Bots and Apps</h3>
+              {[
+                { name: 'YAGPDB.xyz', color: '#e91e63', date: 'Dec 24, 2025', icon: '🤖' },
+                { name: 'Invite Tracker', color: '#3ba55c', date: 'Dec 26, 2025', icon: '➕' },
+                { name: 'ProBot ✨', color: '#5865f2', date: 'Dec 26, 2025', icon: '🅿️' },
+              ].map((bot, i) => (
+                <div key={i} className="ss-integ-bot-row">
+                  <div className="ss-integ-bot-left">
+                    <div className="ss-integ-bot-avatar" style={{ background: bot.color }}>{bot.icon}</div>
+                    <div className="ss-integ-bot-info">
+                      <span className="ss-integ-bot-name">{bot.name}</span>
+                      <span className="ss-integ-bot-meta">
+                        <span className="ss-integ-bot-online">●</span> Added on {bot.date} by {members.find(m => m.role === 'owner')?.username || 'owner'}
+                      </span>
+                      <div className="ss-integ-bot-tags">
+                        <span className="ss-integ-bot-tag">✓ Verified Bot</span>
+                        <span className="ss-integ-bot-tag">⌘ Commands</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="ss-integ-bot-actions">
+                    <span className="ss-integ-manage">Manage</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#b5bac1"><path d="M10 6l6 6-6 6z"/></svg>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Placeholder tabs */}
-          {['integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
+          {['appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
             <div className="ss-section">
               <h2>{NAV_SECTIONS.flatMap(s => s.items).find(i => i.key === activeSection)?.label || activeSection}</h2>
               <p className="ss-muted">This feature is coming soon.</p>
