@@ -1211,15 +1211,15 @@
 /* ═══════════════════════════════════════
    Responsive — Mobile
    ═══════════════════════════════════════ */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   /* Message layout */
   .channel-msg {
-    padding-left: 52px;
+    padding-left: 56px;
     padding-right: 10px;
     min-height: 44px;
   }
   .channel-msg-avatar {
-    left: 8px;
+    left: 10px;
     width: 34px;
     height: 34px;
   }
@@ -1365,6 +1365,88 @@
     width: 100%;
     max-width: 100%;
     border-radius: 0;
+  }
+
+  /* ── Batch 3 mobile-responsive ── */
+  .channel-emoji-autocomplete {
+    left: 8px;
+    right: 8px;
+    bottom: 60px;
+    max-height: 200px;
+  }
+  .channel-schedule-modal {
+    left: 8px;
+    right: 8px;
+    bottom: 60px;
+  }
+  .channel-file-preview {
+    max-width: 100%;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .channel-edit-history-modal {
+    width: calc(100vw - 24px);
+    max-width: 100vw;
+  }
+  .channel-everyone-warning-modal {
+    width: calc(100vw - 24px);
+    max-width: 100vw;
+    padding: 20px;
+  }
+
+  /* Thread panel → full overlay on mobile */
+  .channel-thread-panel {
+    position: fixed;
+    inset: 48px 0 0;
+    width: 100vw;
+    min-width: 100vw;
+    z-index: 180;
+    border-left: none;
+  }
+
+  /* Reply ping toggle */
+  .channel-reply-ping-toggle {
+    font-size: 11px;
+  }
+
+  /* Emoji picker */
+  .channel-emoji-picker {
+    right: 8px;
+    bottom: 56px;
+    width: calc(100vw - 16px);
+    max-width: 352px;
+  }
+
+  /* GIF picker wrap */
+  .channel-gif-picker-wrap {
+    right: 8px;
+    width: calc(100vw - 16px);
+    max-width: 420px;
+    bottom: 56px;
+  }
+
+  /* Mention dropdown */
+  .channel-mention-dropdown {
+    left: 8px;
+    right: 8px;
+    bottom: 60px;
+  }
+
+  /* Action buttons — always show on mobile */
+  .channel-msg-actions {
+    position: static;
+    opacity: 1;
+    pointer-events: all;
+    margin-top: 4px;
+    box-shadow: none;
+    border: none;
+    background: transparent;
+    justify-content: flex-start;
+    gap: 2px;
+  }
+  .channel-msg-actions button {
+    font-size: 14px;
+    padding: 4px 6px;
   }
 }
 
@@ -1981,3 +2063,80 @@ body.compact-mode .channel-msg-header { gap: 6px; }
 .light-mode .channel-file-preview { background: #f2f3f5; border-color: #e3e5e8; }
 .light-mode .channel-file-size { color: #5c5e66; }
 .light-mode .msg-code-lang { background: rgba(0,0,0,.08); color: #5c5e66; }
+/* ══════════════════════════════════════════════════════════
+   DESKTOP UI POLISH
+   ══════════════════════════════════════════════════════════ */
+
+/* Smoother message hover */
+.channel-msg {
+  transition: background 0.08s ease;
+}
+
+/* Input field polish */
+.channel-input {
+  transition: box-shadow 0.15s;
+}
+.channel-input:focus {
+  box-shadow: 0 0 0 1px rgba(88, 101, 242, 0.3);
+}
+
+/* Message actions smoother reveal */
+.channel-msg-actions {
+  transition: opacity 0.12s ease;
+}
+
+/* Emoji autocomplete polish */
+.channel-emoji-autocomplete {
+  animation: slideUp 0.15s ease;
+}
+.channel-emoji-ac-item {
+  transition: background 0.08s;
+}
+
+/* Schedule modal animation */
+.channel-schedule-modal {
+  animation: slideUp 0.15s ease;
+}
+
+/* Edit history modal polish */
+.channel-edit-history-modal {
+  animation: fadeInScale 0.2s ease;
+}
+
+/* File preview hover */
+.channel-file-preview {
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.channel-file-preview:hover {
+  border-color: #5865f2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Code block hover */
+.msg-code-block {
+  transition: border-color 0.15s;
+}
+.msg-code-block:hover {
+  border-color: #4f545c;
+}
+
+/* Reaction badge active state */
+.channel-reaction-badge.active {
+  border-color: #5865f2;
+  background: rgba(88, 101, 242, 0.15);
+}
+
+/* Reply bar animation */
+.channel-reply-bar {
+  animation: slideUp 0.15s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar polish on messages */
+.channel-messages {
+  scrollbar-gutter: stable;
+}

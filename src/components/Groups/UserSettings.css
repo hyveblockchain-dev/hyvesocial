@@ -499,7 +499,7 @@ body.light-mode .us-theme-btn:hover { border-color: #5865f2; color: #313338; }
 body.light-mode .us-theme-btn.active { color: #313338; }
 
 /* ═══ Responsive ═══ */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .us-sidebar {
     width: 180px;
     min-width: 180px;

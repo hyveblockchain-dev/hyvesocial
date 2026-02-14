@@ -385,7 +385,7 @@
 }
 
 /* ========== RESPONSIVE ========== */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .groups-header {
     padding: 18px;
     border-radius: 16px;

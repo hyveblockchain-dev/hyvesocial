@@ -230,13 +230,13 @@ export default function GroupDetail() {
   };
 
   // ── Mobile responsive state ──
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
   const [mobileSidebar, setMobileSidebar] = useState(false);
   const [mobileMembers, setMobileMembers] = useState(false);
   const touchStartRef = useRef(null);
 
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 768px)');
+    const mq = window.matchMedia('(max-width: 1024px)');
     const handler = (e) => {
       setIsMobile(e.matches);
       if (!e.matches) { setMobileSidebar(false); setMobileMembers(false); }
