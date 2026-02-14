@@ -8,6 +8,11 @@
   z-index: 10000;
   display: flex;
   background: #313338;
+  animation: ss-fadeIn 0.15s ease;
+}
+@keyframes ss-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .ss-layout {
@@ -18,18 +23,18 @@
 
 /* ── Sidebar ── */
 .ss-sidebar {
-  width: 220px;
-  min-width: 220px;
+  flex: 1 0 auto;
   background: #2b2d31;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #1e1f22;
+  align-items: flex-end;
 }
 
 .ss-sidebar-scroll {
+  width: 210px;
   flex: 1;
   overflow-y: auto;
-  padding: 60px 8px 20px 20px;
+  padding: 60px 6px 20px 20px;
   scrollbar-width: thin;
   scrollbar-color: #1a1b1e transparent;
 }
@@ -101,7 +106,8 @@
 
 /* ── Content ── */
 .ss-content {
-  flex: 1;
+  flex: 1 1 800px;
+  max-width: 740px;
   overflow-y: auto;
   padding: 60px 40px 40px 40px;
   position: relative;
@@ -111,21 +117,23 @@
 .ss-content::-webkit-scrollbar { width: 6px; }
 .ss-content::-webkit-scrollbar-thumb { background: #1a1b1e; border-radius: 3px; }
 
+.ss-close-area {
+  flex: 0 0 60px;
+  padding-top: 60px;
+}
+
 .ss-close-btn {
-  position: fixed;
-  top: 16px;
-  right: 24px;
   background: none;
-  border: 1px solid #72767d;
+  border: 2px solid #72767d;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #72767d;
+  color: #b5bac1;
   transition: color 0.15s, border-color 0.15s;
   z-index: 10;
 }
@@ -180,17 +188,18 @@
 /* ── Server Profile layout ── */
 .ss-profile-layout {
   display: flex;
-  gap: 40px;
+  gap: 32px;
 }
 
 .ss-profile-main {
   flex: 1;
   min-width: 0;
+  max-width: 560px;
 }
 
 .ss-profile-preview {
   flex-shrink: 0;
-  width: 200px;
+  width: 180px;
   position: sticky;
   top: 0;
   align-self: flex-start;
@@ -365,17 +374,18 @@
 
 /* Banner swatches */
 .ss-banner-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
   gap: 8px;
 }
 .ss-banner-swatch {
-  width: 56px;
-  height: 40px;
-  border-radius: 6px;
+  width: 100%;
+  aspect-ratio: 1.6;
+  border-radius: 8px;
   cursor: pointer;
-  border: 2px solid transparent;
+  border: 3px solid transparent;
   transition: border-color 0.15s, transform 0.1s;
+  box-sizing: border-box;
 }
 .ss-banner-swatch:hover { transform: scale(1.05); }
 .ss-banner-swatch.active { border-color: #5865f2; }
@@ -384,26 +394,33 @@
 .ss-traits-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 10px;
 }
 .ss-trait-input {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: #1e1f22;
-  border-radius: 4px;
-  padding: 6px 10px;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid #4e5058;
+  border-radius: 8px;
+  padding: 10px 14px;
+  transition: border-color 0.15s;
+}
+.ss-trait-input:focus-within {
+  border-color: #5865f2;
 }
 .ss-trait-emoji {
-  font-size: 16px;
+  font-size: 18px;
   cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.5;
 }
 .ss-trait-input input {
   flex: 1;
   background: none;
   border: none;
   color: #dbdee1;
-  font-size: 13px;
+  font-size: 14px;
   outline: none;
   min-width: 0;
 }
@@ -413,9 +430,11 @@
   display: flex;
   align-items: center;
   background: #1e1f22;
+  border: 1px solid #4e5058;
   border-radius: 4px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   position: relative;
+  cursor: pointer;
 }
 .ss-game-search input {
   flex: 1;
@@ -424,6 +443,7 @@
   color: #dbdee1;
   font-size: 14px;
   outline: none;
+  cursor: pointer;
 }
 .ss-game-search input::placeholder { color: #72767d; }
 .ss-game-search svg {
@@ -518,7 +538,7 @@
    LIGHT MODE
    ══════════════════════════════════════════════════════════ */
 .light-mode .ss-overlay { background: #f2f3f5; }
-.light-mode .ss-sidebar { background: #e3e5e8; border-right-color: #c4c9ce; }
+.light-mode .ss-sidebar { background: #e3e5e8; }
 .light-mode .ss-nav-server-name { color: #5c5e66; }
 .light-mode .ss-nav-category { color: #5c5e66; }
 .light-mode .ss-nav-item { color: #4e5058; }
@@ -543,17 +563,20 @@
 .light-mode .ss-role-name { color: #060607; }
 .light-mode .ss-close-btn { color: #5c5e66; border-color: #c4c9ce; }
 .light-mode .ss-close-btn:hover { color: #060607; border-color: #060607; }
-.light-mode .ss-trait-input { background: #e3e5e8; }
+.light-mode .ss-trait-input { background: transparent; border-color: #c4c9ce; }
 .light-mode .ss-trait-input input { color: #313338; }
-.light-mode .ss-game-search { background: #e3e5e8; }
+.light-mode .ss-game-search { background: #e3e5e8; border-color: #c4c9ce; }
 .light-mode .ss-game-search input { color: #313338; }
 .light-mode .ss-member-row:hover { background: rgba(116, 124, 134, 0.15); }
 .light-mode .ss-role-row:hover { background: rgba(116, 124, 134, 0.15); }
 
 /* ── Responsive ── */
-@media (max-width: 768px) {
-  .ss-sidebar { width: 180px; min-width: 180px; }
-  .ss-content { padding: 60px 20px 20px; }
+@media (max-width: 900px) {
+  .ss-sidebar-scroll { width: 180px; }
+  .ss-content { padding: 60px 20px 20px; max-width: 100%; }
   .ss-profile-layout { flex-direction: column-reverse; }
+  .ss-profile-main { max-width: 100%; }
   .ss-profile-preview { width: 100%; position: static; }
+  .ss-close-area { flex: 0 0 40px; }
+  .ss-banner-grid { grid-template-columns: repeat(4, 1fr); }
 }

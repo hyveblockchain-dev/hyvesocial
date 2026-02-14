@@ -21,7 +21,7 @@ const BANNER_GRADIENTS = [
 ];
 
 const NAV_SECTIONS = [
-  { category: null, items: [{ key: 'profile', label: 'Server Profile' }] },
+  { category: null, items: [{ key: 'profile', label: 'Server Profile' }, { key: 'serverTag', label: 'Server Tag' }] },
   { category: null, items: [
     { key: 'engagement', label: 'Engagement' },
     { key: 'boostPerks', label: 'Boost Perks' },
@@ -208,11 +208,6 @@ export default function ServerSettings({
 
         {/* Content */}
         <div className="ss-content">
-          <button className="ss-close-btn" onClick={onClose}>
-            <span className="ss-close-x">✕</span>
-            <span className="ss-close-label">ESC</span>
-          </button>
-
           {notice && (
             <div className="ss-notice" onClick={() => setNotice('')}>{notice}</div>
           )}
@@ -298,8 +293,8 @@ export default function ServerSettings({
                     <label className="ss-label">Games</label>
                     <p className="ss-hint">What games does your server play?</p>
                     <div className="ss-game-search">
-                      <input type="text" placeholder="Search for a game..." />
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="#72767d"><path d="M7 10l5 5 5-5H7z"/></svg>
+                      <input type="text" placeholder="Search for a game..." readOnly />
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#72767d" strokeWidth="2" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                   </div>
 
@@ -424,12 +419,20 @@ export default function ServerSettings({
           )}
 
           {/* Placeholder tabs */}
-          {['engagement', 'boostPerks', 'emoji', 'stickers', 'soundboard', 'invites', 'access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
+          {['engagement', 'boostPerks', 'serverTag', 'emoji', 'stickers', 'soundboard', 'invites', 'access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
             <div className="ss-section">
               <h2>{NAV_SECTIONS.flatMap(s => s.items).find(i => i.key === activeSection)?.label || activeSection}</h2>
               <p className="ss-muted">This feature is coming soon.</p>
             </div>
           )}
+        </div>
+
+        {/* Close area */}
+        <div className="ss-close-area">
+          <button className="ss-close-btn" onClick={onClose}>
+            <span className="ss-close-x">✕</span>
+            <span className="ss-close-label">ESC</span>
+          </button>
         </div>
       </div>
     </div>
