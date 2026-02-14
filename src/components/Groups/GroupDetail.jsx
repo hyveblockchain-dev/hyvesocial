@@ -101,6 +101,13 @@ export default function GroupDetail() {
   const [dmSelectedUser, setDmSelectedUser] = useState(null);
   const [dmSearchQuery, setDmSearchQuery] = useState('');
 
+  // ── Select Friends modal state ──
+  const [showSelectFriends, setShowSelectFriends] = useState(false);
+  const [selectFriendsSearch, setSelectFriendsSearch] = useState('');
+  const [selectFriendsList, setSelectFriendsList] = useState([]);
+  const [selectFriendsLoading, setSelectFriendsLoading] = useState(false);
+  const [selectFriendsSelected, setSelectFriendsSelected] = useState(new Set());
+
   const myUsername = (user?.username || '').toLowerCase();
 
   // Close server dropdown on click outside
@@ -376,6 +383,60 @@ export default function GroupDetail() {
   useEffect(() => {
     if (dmMode) loadDmConversations();
   }, [dmMode, loadDmConversations]);
+
+  // ── Load friends for Select Friends modal ──
+  useEffect(() => {
+    if (!showSelectFriends) return;
+    (async () => {
+      setSelectFriendsLoading(true);
+      try {
+        const data = await (api.getFriends ? api.getFriends() : Promise.resolve({ friends: [] }));
+        const friends = Array.isArray(data?.friends) ? data.friends : [];
+        const myHandle = (user?.username || '').toLowerCase();
+        setSelectFriendsList(
+          friends
+            .filter((f) => {
+              const h = (f.username || f.name || '').toLowerCase();
+              return h && h !== myHandle;
+            })
+            .map((f) => ({
+              username: f.username || f.name || '',
+              profile_image: f.profile_image || f.profileImage || '',
+            }))
+        );
+      } catch { setSelectFriendsList([]); }
+      finally { setSelectFriendsLoading(false); }
+    })();
+  }, [showSelectFriends, user]);
+
+  function handleOpenSelectFriends() {
+    setShowSelectFriends(true);
+    setSelectFriendsSearch('');
+    setSelectFriendsSelected(new Set());
+  }
+
+  function toggleSelectFriend(username) {
+    setSelectFriendsSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(username)) next.delete(username);
+      else next.add(username);
+      return next;
+    });
+  }
+
+  function handleCreateDm() {
+    const selected = [...selectFriendsSelected];
+    if (selected.length === 0) return;
+    // Start DM with first selected friend
+    const friend = selectFriendsList.find((f) => f.username === selected[0]);
+    setDmSelectedUser({
+      username: friend?.username || selected[0],
+      profileImage: friend?.profile_image || '',
+    });
+    setShowSelectFriends(false);
+    // Refresh conversations list
+    loadDmConversations();
+  }
 
   // ── Initial load ──
   useEffect(() => {
@@ -850,7 +911,7 @@ export default function GroupDetail() {
 
           <div className="discord-dm-header">
             <span>DIRECT MESSAGES</span>
-            <button className="discord-dm-add" title="Create DM" onClick={() => {}}>+</button>
+            <button className="discord-dm-add" title="Create DM" onClick={handleOpenSelectFriends}>+</button>
           </div>
 
           <div className="discord-dm-list">
@@ -1588,6 +1649,73 @@ export default function GroupDetail() {
                 }
               }}
             />
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* ── Select Friends Modal ── */}
+    {showSelectFriends && (
+      <div className="dm-select-friends-overlay" onClick={() => setShowSelectFriends(false)}>
+        <div className="dm-select-friends-modal" onClick={(e) => e.stopPropagation()}>
+          <button className="dm-select-friends-close" onClick={() => setShowSelectFriends(false)}>✕</button>
+          <div className="dm-select-friends-header">
+            <h2>Select Friends</h2>
+            <p>You can add {Math.max(0, 10 - selectFriendsSelected.size)} more friends.</p>
+          </div>
+          <div className="dm-select-friends-search">
+            <input
+              type="text"
+              placeholder="Type the username of a friend"
+              value={selectFriendsSearch}
+              onChange={(e) => setSelectFriendsSearch(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div className="dm-select-friends-list">
+            {selectFriendsLoading ? (
+              <div className="dm-select-friends-empty">Loading friends...</div>
+            ) : selectFriendsList.length === 0 ? (
+              <div className="dm-select-friends-empty">No friends found. Add some friends first!</div>
+            ) : (
+              selectFriendsList
+                .filter((f) => !selectFriendsSearch.trim() || f.username.toLowerCase().includes(selectFriendsSearch.toLowerCase()))
+                .map((friend) => {
+                  const isChecked = selectFriendsSelected.has(friend.username);
+                  return (
+                    <button
+                      key={friend.username}
+                      className={`dm-select-friends-item${isChecked ? ' selected' : ''}`}
+                      onClick={() => toggleSelectFriend(friend.username)}
+                    >
+                      <div className="dm-select-friends-item-left">
+                        <div className="dm-select-friends-avatar">
+                          {friend.profile_image
+                            ? <img src={friend.profile_image} alt="" onError={(e) => { e.target.src = '/default-avatar.png'; }} />
+                            : <div className="dm-select-friends-letter">{(friend.username || '?')[0].toUpperCase()}</div>}
+                        </div>
+                        <div className="dm-select-friends-info">
+                          <span className="dm-select-friends-name">{friend.username}</span>
+                          <span className="dm-select-friends-handle">{friend.username.toLowerCase()}</span>
+                        </div>
+                      </div>
+                      <div className={`dm-select-friends-check${isChecked ? ' checked' : ''}`}>
+                        {isChecked && <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>}
+                      </div>
+                    </button>
+                  );
+                })
+            )}
+          </div>
+          <div className="dm-select-friends-actions">
+            <button className="dm-select-friends-cancel" onClick={() => setShowSelectFriends(false)}>Cancel</button>
+            <button
+              className="dm-select-friends-create"
+              onClick={handleCreateDm}
+              disabled={selectFriendsSelected.size === 0}
+            >
+              Create DM
+            </button>
           </div>
         </div>
       </div>
