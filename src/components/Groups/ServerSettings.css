@@ -854,6 +854,70 @@
   font-size: 13px;
 }
 
+/* ── Emoji ── */
+.ss-emoji-section {
+  margin-bottom: 8px;
+}
+
+.ss-emoji-table {
+  margin-top: 12px;
+  border: 1px solid #3f4147;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ss-emoji-table-header {
+  display: grid;
+  grid-template-columns: 60px 1fr 1fr;
+  padding: 8px 16px;
+  background: #2b2d31;
+  border-bottom: 1px solid #3f4147;
+  color: #b5bac1;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.ss-emoji-table-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 1fr;
+  padding: 8px 16px;
+  align-items: center;
+  border-bottom: 1px solid #3f4147;
+  transition: background 0.1s;
+}
+.ss-emoji-table-row:last-child {
+  border-bottom: none;
+}
+.ss-emoji-table-row:hover {
+  background: rgba(79, 84, 92, 0.2);
+}
+
+.ss-emoji-col-img {
+  display: flex;
+  align-items: center;
+}
+.ss-emoji-col-name {
+  color: #dbdee1;
+  font-size: 14px;
+}
+.ss-emoji-col-by {
+  color: #b5bac1;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+}
+
+.ss-emoji-empty {
+  padding: 24px;
+  text-align: center;
+  color: #72767d;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
 /* Member list */
 .ss-member-list {
   display: flex;
@@ -991,6 +1055,13 @@
 .light-mode .ss-boost-preview-card { background: #e3e5e8; }
 .light-mode .ss-boost-preview-name { color: #060607; }
 .light-mode .ss-boost-preview-progress { background: rgba(244, 127, 255, 0.06); }
+.light-mode .ss-emoji-table { border-color: #e3e5e8; }
+.light-mode .ss-emoji-table-header { background: #f2f3f5; border-bottom-color: #e3e5e8; color: #4e5058; }
+.light-mode .ss-emoji-table-row { border-bottom-color: #e3e5e8; }
+.light-mode .ss-emoji-table-row:hover { background: rgba(116, 124, 134, 0.1); }
+.light-mode .ss-emoji-col-name { color: #313338; }
+.light-mode .ss-emoji-col-by { color: #4e5058; }
+.light-mode .ss-emoji-empty { color: #87898c; }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {

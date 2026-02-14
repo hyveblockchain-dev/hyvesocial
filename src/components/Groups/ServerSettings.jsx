@@ -801,8 +801,59 @@ export default function ServerSettings({
             </div>
           )}
 
+          {/* ── Emoji ── */}
+          {activeSection === 'emoji' && (
+            <div className="ss-section">
+              <h2>Emoji</h2>
+              <p className="ss-subtitle">Add up to 50 custom emoji that anyone can use in this server. Animated GIF emoji may be used by members with Discord Nitro.</p>
+
+              <button className="ss-btn-green" style={{ marginBottom: 16 }}>Upload Emoji</button>
+
+              <p className="ss-hint" style={{ marginBottom: 24 }}>If you want to upload multiple emojis or skip the editor, drag and drop the file(s) onto this page. The emojis will be named using the file name.</p>
+
+              {/* Static Emoji */}
+              <div className="ss-emoji-section">
+                <h3 className="ss-subsection-title">Emoji</h3>
+                <p className="ss-hint">48 slots available</p>
+
+                <div className="ss-emoji-table">
+                  <div className="ss-emoji-table-header">
+                    <span className="ss-emoji-col-img">Image</span>
+                    <span className="ss-emoji-col-name">Name</span>
+                    <span className="ss-emoji-col-by">Uploaded By</span>
+                  </div>
+                  <div className="ss-emoji-table-row">
+                    <span className="ss-emoji-col-img"><span style={{ fontSize: 28 }}>😎</span></span>
+                    <span className="ss-emoji-col-name">HYVE2</span>
+                    <span className="ss-emoji-col-by">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#5865f2" style={{ marginRight: 4 }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2a7.2 7.2 0 01-6-3.22c.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08a7.2 7.2 0 01-6 3.22z"/></svg>
+                      tion45
+                    </span>
+                  </div>
+                  <div className="ss-emoji-table-row">
+                    <span className="ss-emoji-col-img"><span style={{ fontSize: 28 }}>😄</span></span>
+                    <span className="ss-emoji-col-name">HYVE</span>
+                    <span className="ss-emoji-col-by">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#5865f2" style={{ marginRight: 4 }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2a7.2 7.2 0 01-6-3.22c.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08a7.2 7.2 0 01-6 3.22z"/></svg>
+                      tion45
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Animated Emoji */}
+              <div className="ss-emoji-section" style={{ marginTop: 32 }}>
+                <h3 className="ss-subsection-title">Animated Emoji</h3>
+                <p className="ss-hint">50 slots available</p>
+                <div className="ss-emoji-table">
+                  <div className="ss-emoji-empty">NONE</div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Placeholder tabs */}
-          {['emoji', 'stickers', 'soundboard', 'invites', 'access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
+          {['stickers', 'soundboard', 'invites', 'access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
             <div className="ss-section">
               <h2>{NAV_SECTIONS.flatMap(s => s.items).find(i => i.key === activeSection)?.label || activeSection}</h2>
               <p className="ss-muted">This feature is coming soon.</p>
