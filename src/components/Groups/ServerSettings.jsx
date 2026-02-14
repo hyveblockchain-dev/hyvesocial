@@ -588,9 +588,54 @@ export default function ServerSettings({
           {/* ── Audit Log ── */}
           {activeSection === 'auditLog' && (
             <div className="ss-section">
-              <h2>Audit Log</h2>
-              <p className="ss-subtitle">Review recent server activity</p>
-              <p className="ss-muted">Audit log feature coming soon.</p>
+              <div className="ss-audit-header">
+                <h2>Audit Log</h2>
+                <div className="ss-audit-filters">
+                  <div className="ss-audit-filter">
+                    <span className="ss-audit-filter-label">Filter by User</span>
+                    <select className="ss-select">
+                      <option>All Users</option>
+                      {members.map((m, i) => (
+                        <option key={i} value={m.username}>{m.username}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="ss-audit-filter">
+                    <span className="ss-audit-filter-label">Filter by Action</span>
+                    <select className="ss-select">
+                      <option>All Actions</option>
+                      <option>Channel Create</option>
+                      <option>Channel Update</option>
+                      <option>Channel Delete</option>
+                      <option>Role Create</option>
+                      <option>Role Update</option>
+                      <option>Role Delete</option>
+                      <option>Member Kick</option>
+                      <option>Member Ban</option>
+                      <option>Member Unban</option>
+                      <option>Message Delete</option>
+                      <option>Message Pin</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ss-audit-empty">
+                <div className="ss-audit-illustration">
+                  <svg width="120" height="100" viewBox="0 0 120 100" fill="none">
+                    <rect x="20" y="15" width="60" height="70" rx="6" fill="#2b2d31" stroke="#3f4147" strokeWidth="2"/>
+                    <rect x="40" y="25" width="60" height="70" rx="6" fill="#1e1f22" stroke="#3f4147" strokeWidth="2"/>
+                    <circle cx="55" cy="45" r="4" fill="#3f4147"/>
+                    <circle cx="55" cy="45" r="2" fill="#b5bac1"/>
+                    <rect x="50" y="55" width="40" height="3" rx="1.5" fill="#3f4147"/>
+                    <rect x="50" y="62" width="30" height="3" rx="1.5" fill="#3f4147"/>
+                    <circle cx="85" cy="20" r="6" fill="#3f4147"/>
+                    <text x="85" y="23" textAnchor="middle" fontSize="8" fill="#b5bac1">?</text>
+                  </svg>
+                </div>
+                <h3 className="ss-audit-empty-title">NO LOGS YET</h3>
+                <p className="ss-muted">Once moderators begin moderating, you can moderate the moderation here.</p>
+              </div>
             </div>
           )}
 

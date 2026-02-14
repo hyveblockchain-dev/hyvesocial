@@ -1863,6 +1863,54 @@
 }
 .ss-btn-text-muted:hover { color: #f2f3f5; }
 
+/* ── Audit Log ── */
+.ss-audit-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 20px;
+}
+.ss-audit-filters {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.ss-audit-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ss-audit-filter-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #b5bac1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.ss-audit-filter .ss-select {
+  min-width: 140px;
+}
+
+.ss-audit-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px 60px;
+  text-align: center;
+}
+.ss-audit-illustration {
+  margin-bottom: 20px;
+}
+.ss-audit-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f2f3f5;
+  margin: 0 0 4px;
+  letter-spacing: 0.02em;
+}
+
 /* ══════════════════════════════════════════════════════════
    LIGHT MODE
    ══════════════════════════════════════════════════════════ */
@@ -1991,6 +2039,7 @@
 .light-mode .ss-safety-option-box { background: #f2f3f5; border-color: #e3e5e8; }
 .light-mode .ss-safety-option-title { color: #060607; }
 .light-mode .ss-safety-option-desc { color: #4e5058; }
+.light-mode .ss-audit-empty-title { color: #060607; }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
