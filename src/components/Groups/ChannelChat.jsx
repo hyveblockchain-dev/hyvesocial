@@ -1231,8 +1231,8 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
 
                     {/* Mobile context menu */}
                     {mobileMenuMsgId === msg.id && (
-                      <div className="mobile-msg-context-menu">
-                        <div className="mobile-ctx-backdrop" onClick={() => setMobileMenuMsgId(null)} />
+                      <div className="mobile-msg-context-menu" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()}>
+                        <div className="mobile-ctx-backdrop" onTouchEnd={() => setMobileMenuMsgId(null)} onClick={() => setMobileMenuMsgId(null)} />
                         <div className="mobile-ctx-sheet">
                           <div className="mobile-ctx-reactions">
                             {QUICK_REACTIONS.map((em) => (
