@@ -4782,24 +4782,51 @@
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     width: 72px;
     min-width: 72px;
+    padding: 8px 0;
+    gap: 4px;
+    background: #1e1f22;
   }
   .mobile-sidebar-open .discord-guild-bar {
     transform: translateX(0);
   }
 
-  /* ──── SIDEBAR: slide-in from left, attached to guild bar ──── */
+  /* Guild pills: hide on mobile (they overflow left) */
+  .guild-pill,
+  .guild-icon:not(.guild-active)::before {
+    display: none !important;
+  }
+  /* Active indicator: bottom border instead of pill */
+  .guild-icon.guild-active {
+    box-shadow: 0 0 0 2px #5865f2;
+  }
+  /* Slightly smaller guild icons on mobile */
+  .guild-icon {
+    width: 48px;
+    height: 48px;
+  }
+  .guild-home img {
+    width: 26px;
+    height: 26px;
+  }
+  .guild-separator {
+    width: 32px;
+  }
+
+  /* ──── SIDEBAR: slide-in from left, fills remaining width ──── */
   .discord-sidebar {
     position: fixed;
     left: 72px;
     top: 48px;
     bottom: 0;
-    width: 260px;
-    min-width: 260px;
+    width: calc(100vw - 72px);
+    min-width: 0;
+    max-width: 320px;
     z-index: 210;
-    transform: translateX(calc(-100% - 72px));
+    transform: translateX(calc(-100vw));
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-y: auto;
-    border-right: 1px solid #1e1f22;
+    border-right: none;
+    background: #2b2d31;
   }
   .mobile-sidebar-open .discord-sidebar,
   .mobile-sidebar-open .discord-dm-sidebar {
@@ -4829,7 +4856,8 @@
     right: 0;
     top: 48px;
     bottom: 0;
-    width: 280px;
+    width: 85vw;
+    max-width: 320px;
     z-index: 210;
     background: #2b2d31;
     overflow-y: auto;
@@ -4858,41 +4886,138 @@
     left: 72px;
     top: 48px;
     bottom: 0;
-    width: 260px;
+    width: calc(100vw - 72px);
+    max-width: 320px;
     z-index: 210;
-    transform: translateX(calc(-100% - 72px));
+    transform: translateX(calc(-100vw));
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-y: auto;
+    background: #2b2d31;
+    border-right: none;
   }
 
   /* ──── Touch targets ──── */
   .discord-channel {
-    min-height: 42px;
-    padding: 8px 12px;
-    font-size: 14px;
+    min-height: 44px;
+    padding: 8px 14px 8px 22px;
+    font-size: 15px;
+    border-radius: 6px;
+    margin: 1px 8px;
   }
   .discord-category-header {
-    min-height: 38px;
-    padding: 8px 12px;
+    min-height: 40px;
+    padding: 10px 14px;
+  }
+  .discord-category-name {
+    font-size: 12px;
+    letter-spacing: 0.05em;
   }
   .discord-nav-item {
-    min-height: 42px;
-    padding: 8px 12px;
-    font-size: 14px;
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 15px;
+    border-radius: 6px;
   }
-  .guild-icon {
-    width: 44px;
-    height: 44px;
+  .discord-nav-items {
+    padding: 4px 8px 8px;
   }
-  .guild-home img {
+  .discord-nav-icon {
+    font-size: 18px;
     width: 24px;
-    height: 24px;
   }
 
   /* ──── Server header on mobile ──── */
   .discord-server-header {
+    min-height: 48px;
+    padding: 10px 14px;
+  }
+  .discord-server-name {
+    font-size: 16px;
+  }
+
+  /* ──── User panel mobile ──── */
+  .discord-user-panel {
+    height: 56px;
+    min-height: 56px;
+    padding: 0 12px;
+  }
+  .discord-user-panel-avatar img {
+    width: 36px;
+    height: 36px;
+  }
+  .discord-user-panel-avatar {
+    width: 36px;
+    height: 36px;
+  }
+  .discord-user-panel-name {
+    font-size: 14px;
+  }
+  .discord-user-panel-icons button {
+    padding: 6px 8px;
+    font-size: 18px;
+  }
+
+  /* ──── Sidebar footer mobile ──── */
+  .discord-sidebar-footer {
+    padding: 12px 14px;
+  }
+  .discord-leave-btn {
+    padding: 10px;
+    font-size: 13px;
+  }
+  .discord-view-toggle {
+    font-size: 12px;
+    padding: 4px 0;
+  }
+
+  /* ──── DM items mobile — bigger touch targets ──── */
+  .discord-dm-item {
+    padding: 10px 14px;
+    gap: 14px;
+    min-height: 52px;
+    border-radius: 6px;
+  }
+  .discord-dm-item-avatar,
+  .discord-dm-item-avatar img,
+  .discord-dm-item-letter {
+    width: 40px;
+    height: 40px;
+  }
+  .discord-dm-item-name {
+    font-size: 16px;
+  }
+  .discord-dm-item-preview {
+    font-size: 13px;
+  }
+  .discord-dm-item-status {
+    width: 12px;
+    height: 12px;
+    border-width: 3px;
+  }
+  .discord-dm-nav-item {
     min-height: 44px;
-    padding: 8px 12px;
+    padding: 10px 14px;
+    font-size: 15px;
+    border-radius: 6px;
+  }
+  .discord-dm-search input {
+    padding: 10px 14px;
+    font-size: 15px;
+    border-radius: 6px;
+  }
+  .discord-dm-header {
+    padding: 14px 14px 6px;
+    font-size: 12px;
+  }
+  .discord-dm-add {
+    width: 28px;
+    height: 28px;
+    font-size: 22px;
+  }
+
+  /* ──── Channel hash icon ──── */
+  .discord-channel-hash {
+    font-size: 20px;
   }
 
   /* ──── Modals / Settings full-screen on mobile ──── */
@@ -4972,9 +5097,10 @@
   .discord-topbar-logo span { display: none; }
   .discord-topbar-group-name { max-width: 140px; font-size: 13px; }
 
-  .discord-sidebar { width: 240px; left: 72px; }
-  .discord-dm-sidebar { width: 240px; left: 72px; }
-  .mobile-members-drawer { width: 260px; }
+  /* Sidebar fills remaining width (already calc-based), just cap max-width */
+  .discord-sidebar { max-width: none; }
+  .discord-dm-sidebar { max-width: none; }
+  .mobile-members-drawer { width: 85vw; max-width: none; }
   .discord-join-card { padding: 28px 16px; }
   .discord-join-card h1 { font-size: 20px; }
 }
@@ -4984,11 +5110,12 @@
   .discord-topbar { padding: 0 4px; }
   .discord-topbar-logo-img { width: 22px; height: 22px; }
   .discord-topbar-group-name { max-width: 100px; font-size: 12px; }
-  .discord-sidebar { width: 200px; left: 60px; }
-  .discord-dm-sidebar { width: 200px; left: 60px; }
+  /* Narrower guild bar on tiny phones */
   .discord-guild-bar { width: 60px; min-width: 60px; }
-  .guild-icon { width: 40px; height: 40px; }
-  .mobile-members-drawer { width: 240px; }
+  .discord-sidebar { left: 60px; width: calc(100vw - 60px); }
+  .discord-dm-sidebar { left: 60px; width: calc(100vw - 60px); }
+  .guild-icon { width: 42px; height: 42px; }
+  .mobile-members-drawer { width: 90vw; }
   .discord-join-card { padding: 20px 12px; }
 }
 
