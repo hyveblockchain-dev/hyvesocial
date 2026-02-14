@@ -1763,6 +1763,9 @@
 .discord-dm-layout {
   grid-template-columns: 240px 1fr !important;
 }
+.discord-dm-layout.dmd-fullwidth {
+  grid-template-columns: 1fr !important;
+}
 
 .discord-dm-sidebar {
   display: flex;
@@ -3124,6 +3127,330 @@
 .light-mode .dmf-context-menu { background: #fff; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15); }
 .light-mode .dmf-context-menu button { color: #313338; }
 .light-mode .dmf-context-menu button:hover { background: #5865f2; color: #fff; }
+
+/* ══════════════════════════════════════════════════════════
+   DM DISCOVER PAGE (Discord-style)
+   ══════════════════════════════════════════════════════════ */
+.dmd-container {
+  display: flex;
+  height: 100%;
+  background: #313338;
+}
+
+/* ── Left sidebar ── */
+.dmd-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: #2b2d31;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+  border-right: 1px solid #1f2023;
+}
+.dmd-sidebar-title {
+  color: #f2f3f5;
+  font-size: 18px;
+  font-weight: 800;
+  padding: 8px 16px 16px;
+  margin: 0;
+}
+.dmd-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 8px;
+}
+.dmd-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: none;
+  border: none;
+  color: #b5bac1;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.dmd-sidebar-item:hover { background: #35373c; color: #dbdee1; }
+.dmd-sidebar-item.active { background: #404249; color: #f2f3f5; }
+
+/* ── Main content area ── */
+.dmd-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Top category bar ── */
+.dmd-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid #1f2023;
+  flex-shrink: 0;
+}
+.dmd-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.dmd-topbar-icon {
+  color: #b5bac1;
+  margin-right: 12px;
+}
+.dmd-cat-tab {
+  background: none;
+  border: none;
+  color: #b5bac1;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.dmd-cat-tab:hover { background: #35373c; color: #dbdee1; }
+.dmd-cat-tab.active { background: #404249; color: #f2f3f5; }
+
+.dmd-topbar-right {
+  flex-shrink: 0;
+}
+.dmd-topbar-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.dmd-topbar-search svg {
+  position: absolute;
+  left: 8px;
+  color: #6d6f78;
+  pointer-events: none;
+}
+.dmd-topbar-search input {
+  background: #1e1f22;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px 6px 28px;
+  color: #dbdee1;
+  font-size: 13px;
+  outline: none;
+  width: 180px;
+}
+.dmd-topbar-search input::placeholder { color: #6d6f78; }
+.dmd-topbar-search input:focus { box-shadow: 0 0 0 1px #5865f2; }
+
+/* ── Scrollable body ── */
+.dmd-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+.dmd-scroll::-webkit-scrollbar { width: 8px; }
+.dmd-scroll::-webkit-scrollbar-thumb { background: #1a1b1e; border-radius: 4px; }
+
+/* ── Hero banner ── */
+.dmd-hero {
+  position: relative;
+  background: linear-gradient(135deg, #5865f2 0%, #3a45b0 40%, #2b2d31 100%);
+  padding: 48px 40px;
+  overflow: hidden;
+}
+.dmd-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+}
+.dmd-hero-text {
+  position: relative;
+  z-index: 1;
+}
+.dmd-hero-text h1 {
+  color: #fff;
+  font-size: 28px;
+  font-weight: 900;
+  margin: 0 0 8px;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.dmd-hero-text p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 15px;
+  margin: 0;
+}
+
+/* ── Section ── */
+.dmd-section {
+  padding: 24px 24px 32px;
+}
+.dmd-section-title {
+  color: #f2f3f5;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 16px;
+}
+
+.dmd-loading {
+  text-align: center;
+  color: #949ba4;
+  font-size: 14px;
+  padding: 40px 20px;
+}
+
+/* ── Server card grid ── */
+.dmd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.dmd-card {
+  background: #2b2d31;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+.dmd-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.dmd-card-cover {
+  position: relative;
+  height: 140px;
+  overflow: hidden;
+  background: #1e1f22;
+}
+.dmd-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.dmd-card-cover-fallback {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #5865f2 0%, #3a45b0 100%);
+}
+
+.dmd-card-avatar {
+  position: absolute;
+  bottom: -16px;
+  left: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 4px solid #2b2d31;
+  background: #313338;
+}
+.dmd-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.dmd-card-avatar-letter {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #5865f2;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.dmd-card-body {
+  padding: 24px 16px 14px;
+}
+.dmd-card-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.dmd-card-online-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #23a55a;
+  flex-shrink: 0;
+}
+.dmd-card-name span:last-child {
+  color: #f2f3f5;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dmd-card-desc {
+  color: #949ba4;
+  font-size: 13px;
+  margin: 0 0 10px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.dmd-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.dmd-card-meta-online,
+.dmd-card-meta-members {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #949ba4;
+  font-size: 12px;
+}
+.dmd-meta-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dmd-meta-dot.online { background: #23a55a; }
+.dmd-meta-dot.members { background: #949ba4; }
+
+/* ── DmDiscover light mode ── */
+.light-mode .dmd-container { background: #fff; }
+.light-mode .dmd-sidebar { background: #f2f3f5; border-right-color: #e3e5e8; }
+.light-mode .dmd-sidebar-title { color: #060607; }
+.light-mode .dmd-sidebar-item { color: #4e5058; }
+.light-mode .dmd-sidebar-item:hover { background: #ebedef; color: #060607; }
+.light-mode .dmd-sidebar-item.active { background: #d4d7dc; color: #060607; }
+.light-mode .dmd-topbar { border-bottom-color: #e3e5e8; }
+.light-mode .dmd-topbar-icon { color: #4e5058; }
+.light-mode .dmd-cat-tab { color: #4e5058; }
+.light-mode .dmd-cat-tab:hover { background: #ebedef; color: #060607; }
+.light-mode .dmd-cat-tab.active { background: #e3e5e8; color: #060607; }
+.light-mode .dmd-topbar-search input { background: #e3e5e8; color: #313338; }
+.light-mode .dmd-topbar-search input::placeholder { color: #80848e; }
+.light-mode .dmd-topbar-search svg { color: #80848e; }
+.light-mode .dmd-hero { background: linear-gradient(135deg, #5865f2 0%, #4752c4 40%, #f2f3f5 100%); }
+.light-mode .dmd-section-title { color: #060607; }
+.light-mode .dmd-loading { color: #80848e; }
+.light-mode .dmd-card { background: #f2f3f5; }
+.light-mode .dmd-card:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12); }
+.light-mode .dmd-card-cover { background: #e3e5e8; }
+.light-mode .dmd-card-avatar { border-color: #f2f3f5; background: #fff; }
+.light-mode .dmd-card-name span:last-child { color: #060607; }
+.light-mode .dmd-card-desc { color: #5c5e66; }
+.light-mode .dmd-card-meta-online,
+.light-mode .dmd-card-meta-members { color: #5c5e66; }
 
 /* ══════════════════════════════════════════════════════════
    RESPONSIVE BREAKPOINTS

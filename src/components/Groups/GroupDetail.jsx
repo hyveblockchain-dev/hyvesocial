@@ -12,6 +12,7 @@ import { formatDate, formatDateTime } from '../../utils/date';
 import { IconArrowLeft } from '../Icons/Icons';
 import DmChat from './DmChat';
 import DmFriends from './DmFriends';
+import DmDiscover from './DmDiscover';
 import './GroupDetail.css';
 
 export default function GroupDetail() {
@@ -825,7 +826,7 @@ export default function GroupDetail() {
       <button className="guild-icon guild-add" title="Add a Server" onClick={() => { setShowCreateServerModal(true); setCreateServerStep('main'); }}>
         <span>+</span>
       </button>
-      <button className="guild-icon guild-explore" title="Explore Servers" onClick={() => navigate('/groups')}>
+      <button className="guild-icon guild-explore" title="Explore Servers" onClick={() => { setDmMode(true); setDmSelectedUser(null); setDmView('discover'); }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
       </button>
     </nav>
@@ -892,8 +893,9 @@ export default function GroupDetail() {
 
     {dmMode ? (
       /* ════════ DM MODE LAYOUT ════════ */
-      <div className="discord-server discord-dm-layout">
-        {/* DM sidebar */}
+      <div className={`discord-server discord-dm-layout${dmView === 'discover' ? ' dmd-fullwidth' : ''}`}>
+        {/* DM sidebar (hidden in discover mode) */}
+        {dmView !== 'discover' && (
         <div className="discord-sidebar discord-dm-sidebar">
           <div className="discord-dm-search">
             <input
@@ -974,6 +976,7 @@ export default function GroupDetail() {
             </div>
           </div>
         </div>
+        )}
 
         {/* DM main area */}
         <div className="discord-main discord-dm-main">
@@ -984,6 +987,8 @@ export default function GroupDetail() {
             />
           ) : dmView === 'friends' ? (
             <DmFriends onSelectUser={(u) => { setDmSelectedUser(u); setDmView('conversations'); }} />
+          ) : dmView === 'discover' ? (
+            <DmDiscover onJoinServer={(gid) => { setDmMode(false); navigate(`/groups/${gid}`); }} />
           ) : (
             <div className="discord-dm-welcome">
               <div className="discord-dm-welcome-icon">
