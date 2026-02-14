@@ -1053,7 +1053,12 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
                       <span>{msgDate}</span>
                     </div>
                   )}
-                  <div className={`channel-msg${showHeader ? '' : ' channel-msg-compact'}${isMe ? ' channel-msg-mine' : ''}${bulkSelectMode ? ' bulk-mode' : ''}`}>
+                  <div className={`channel-msg${showHeader ? '' : ' channel-msg-compact'}${isMe ? ' channel-msg-mine' : ''}${bulkSelectMode ? ' bulk-mode' : ''}`}
+                    onTouchStart={() => { longPressTimerRef.current = setTimeout(() => setMobileMenuMsgId(msg.id), 500); }}
+                    onTouchEnd={() => clearTimeout(longPressTimerRef.current)}
+                    onTouchMove={() => clearTimeout(longPressTimerRef.current)}
+                    onTouchCancel={() => clearTimeout(longPressTimerRef.current)}
+                  >
                     {bulkSelectMode && isAdmin && (
                       <label className="channel-bulk-checkbox">
                         <input type="checkbox" checked={bulkSelected.has(msg.id)} onChange={() => toggleBulkSelect(msg.id)} />
@@ -1223,28 +1228,7 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
                         <button title="Bulk Select" onClick={() => { setBulkSelectMode(true); setBulkSelected(new Set([msg.id])); }}>☑️</button>
                       )}
                     </div>
-                    {/* Mobile compact action bar (visible only on mobile via CSS) */}
-                    <div className="channel-msg-actions-mobile">
-                      <div className="mobile-msg-quick-reactions">
-                        {['👍','🔥','❤️','😂'].map((em) => (
-                          <button key={em} className="mobile-quick-react-btn" onClick={() => handleAddReaction(msg.id, em)}>{em}</button>
-                        ))}
-                      </div>
-                      <div className="mobile-msg-action-icons">
-                        <button title="Reply" onClick={() => setReplyTo(msg)}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>
-                        </button>
-                        <button title="Create Thread" onClick={() => openThread(msg)}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M5.43 21a.997.997 0 01-.707-.293.999.999 0 01-.293-.707V16H3a1 1 0 01-1-1V3a1 1 0 011-1h18a1 1 0 011 1v12a1 1 0 01-1 1h-8.96l-5.9 4.86A1 1 0 015.43 21z"/></svg>
-                        </button>
-                        <button title={savedMessageIds.has(msg.id) ? 'Unsave' : 'Save'} onClick={() => handleToggleSave(msg.id)} className={savedMessageIds.has(msg.id) ? 'saved' : ''}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
-                        </button>
-                        <button title="More" className="mobile-msg-more-btn" onClick={() => setMobileMenuMsgId((prev) => prev === msg.id ? null : msg.id)}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
-                        </button>
-                      </div>
-                    </div>
+
                     {/* Mobile context menu */}
                     {mobileMenuMsgId === msg.id && (
                       <div className="mobile-msg-context-menu">

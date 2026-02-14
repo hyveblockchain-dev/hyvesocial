@@ -352,10 +352,7 @@
   z-index: 5;
 }
 
-/* Hide mobile-only actions on desktop */
-.channel-msg-actions-mobile {
-  display: none;
-}
+/* Hide mobile context menu on desktop */
 .mobile-msg-context-menu {
   display: none;
 }
@@ -1445,62 +1442,7 @@
     display: none !important;
   }
 
-  /* Show mobile compact action bar */
-  .channel-msg-actions-mobile {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 6px;
-    gap: 4px;
-  }
-
-  .mobile-msg-quick-reactions {
-    display: flex;
-    gap: 2px;
-  }
-
-  .mobile-quick-react-btn {
-    background: #2b2d31;
-    border: 1px solid #3f4147;
-    border-radius: 8px;
-    padding: 4px 8px;
-    font-size: 18px;
-    cursor: pointer;
-    transition: background 0.1s;
-    line-height: 1;
-  }
-
-  .mobile-quick-react-btn:active {
-    background: #3f4147;
-  }
-
-  .mobile-msg-action-icons {
-    display: flex;
-    gap: 2px;
-  }
-
-  .mobile-msg-action-icons button {
-    background: #2b2d31;
-    border: 1px solid #3f4147;
-    border-radius: 8px;
-    padding: 6px;
-    cursor: pointer;
-    color: #b5bac1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.1s;
-  }
-
-  .mobile-msg-action-icons button:active {
-    background: #3f4147;
-  }
-
-  .mobile-msg-action-icons button.saved {
-    color: #f0b232;
-  }
-
-  /* ── Mobile Context Menu (bottom sheet) ── */
+  /* ── Mobile Context Menu (bottom sheet, triggered by long-press) ── */
   .mobile-msg-context-menu {
     position: fixed;
     inset: 0;
