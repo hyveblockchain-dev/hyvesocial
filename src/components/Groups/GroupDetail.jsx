@@ -154,6 +154,10 @@ export default function GroupDetail() {
   // ── Guild bar (joined groups list) ──
   const [joinedGroups, setJoinedGroups] = useState([]);
 
+  // ── Unread tracking ──
+  const [unreads, setUnreads] = useState({}); // { channelId: { unread_count, mention_count } }
+  const unreadsTimerRef = useRef(null);
+
   // ── DM mode state ──
   const [dmMode, setDmMode] = useState(false);
   const [dmConversations, setDmConversations] = useState([]);
@@ -436,6 +440,24 @@ export default function GroupDetail() {
   useEffect(() => {
     refreshJoinedGroups();
   }, [groupId, refreshJoinedGroups]);
+
+  // ── Fetch unreads for current group ──
+  const refreshUnreads = useCallback(async () => {
+    if (!groupId) return;
+    try {
+      const data = await api.getGroupUnreads(groupId);
+      const map = {};
+      (data?.unreads || []).forEach(u => { map[u.channel_id] = { unread_count: u.unread_count, mention_count: u.mention_count }; });
+      setUnreads(map);
+    } catch { /* ignore */ }
+  }, [groupId]);
+
+  // Poll unreads periodically
+  useEffect(() => {
+    refreshUnreads();
+    unreadsTimerRef.current = setInterval(refreshUnreads, 30000);
+    return () => clearInterval(unreadsTimerRef.current);
+  }, [refreshUnreads]);
 
   // ── Load DM conversations ──
   const loadDmConversations = useCallback(async () => {
@@ -1523,15 +1545,23 @@ export default function GroupDetail() {
                     </div>
                   )
                 )}
-                {!isCollapsed && cat.channels.map((ch) => (
+                {!isCollapsed && cat.channels.map((ch) => {
+                  const chUnread = unreads[ch.id];
+                  const hasUnread = chUnread && chUnread.unread_count > 0;
+                  const hasMention = chUnread && chUnread.mention_count > 0;
+                  return (
                   <div
                     key={ch.id}
-                    className={`discord-channel${selectedChannelId === ch.id && activePanel === 'chat' ? ' active' : ''}${ch.nsfw ? ' nsfw' : ''}`}
-                    onClick={() => { setSelectedChannelId(ch.id); setActivePanel('chat'); }}
+                    className={`discord-channel${selectedChannelId === ch.id && activePanel === 'chat' ? ' active' : ''}${ch.nsfw ? ' nsfw' : ''}${hasUnread ? ' has-unread' : ''}`}
+                    onClick={() => { setSelectedChannelId(ch.id); setActivePanel('chat'); setUnreads(prev => ({ ...prev, [ch.id]: { unread_count: 0, mention_count: 0 } })); }}
                     onContextMenu={(e) => adminEnabled && handleContextMenu(e, 'channel', ch.id, ch)}
                   >
+                    {hasUnread && <div className="discord-channel-unread-pill" />}
                     {channelIcon(ch.type)}
                     <span className="discord-channel-name">{ch.name}</span>
+                    {hasMention && (
+                      <span className="discord-channel-mention-badge">{chUnread.mention_count}</span>
+                    )}
                     {adminEnabled && (
                       <div className="discord-channel-actions-inline">
                         <button className="discord-channel-edit" onClick={(e) => { e.stopPropagation(); openChannelSettings(ch); }} title="Edit channel">
@@ -1540,7 +1570,8 @@ export default function GroupDetail() {
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             );
           })}

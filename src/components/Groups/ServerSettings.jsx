@@ -176,6 +176,36 @@ export default function ServerSettings({
     '#992d22', '#979c9f',
   ];
 
+  // ── Audit log state ──
+  const [auditEntries, setAuditEntries] = useState([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditActionFilter, setAuditActionFilter] = useState('');
+  const [auditUserFilter, setAuditUserFilter] = useState('');
+
+  const loadAuditLog = useCallback(async () => {
+    if (!group?.id) return;
+    setAuditLoading(true);
+    try {
+      const opts = {};
+      if (auditActionFilter) opts.actionType = auditActionFilter;
+      const data = await api.getAuditLog(group.id, opts);
+      let entries = data?.entries || [];
+      if (auditUserFilter) {
+        entries = entries.filter(e => (e.username || '').toLowerCase().includes(auditUserFilter.toLowerCase()));
+      }
+      setAuditEntries(entries);
+    } catch (err) {
+      console.error('Failed to load audit log:', err);
+      setAuditEntries([]);
+    } finally {
+      setAuditLoading(false);
+    }
+  }, [group?.id, auditActionFilter, auditUserFilter]);
+
+  useEffect(() => {
+    if (activeSection === 'auditLog') loadAuditLog();
+  }, [activeSection, loadAuditLog]);
+
   // Load permissions from a role object into state
   const loadRoleForEdit = useCallback((role) => {
     setEditRoleName(role.name || 'new role');
@@ -1096,49 +1126,81 @@ export default function ServerSettings({
                 <div className="ss-audit-filters">
                   <div className="ss-audit-filter">
                     <span className="ss-audit-filter-label">Filter by User</span>
-                    <select className="ss-select">
-                      <option>All Users</option>
-                      {members.map((m, i) => (
-                        <option key={i} value={m.username}>{m.username}</option>
-                      ))}
-                    </select>
+                    <input
+                      type="text"
+                      className="ss-input"
+                      placeholder="Search username..."
+                      value={auditUserFilter}
+                      onChange={(e) => setAuditUserFilter(e.target.value)}
+                      style={{ maxWidth: 200 }}
+                    />
                   </div>
                   <div className="ss-audit-filter">
                     <span className="ss-audit-filter-label">Filter by Action</span>
-                    <select className="ss-select">
-                      <option>All Actions</option>
-                      <option>Channel Create</option>
-                      <option>Channel Update</option>
-                      <option>Channel Delete</option>
-                      <option>Role Create</option>
-                      <option>Role Update</option>
-                      <option>Role Delete</option>
-                      <option>Member Kick</option>
-                      <option>Member Ban</option>
-                      <option>Member Unban</option>
-                      <option>Message Delete</option>
-                      <option>Message Pin</option>
+                    <select className="ss-select" value={auditActionFilter} onChange={(e) => setAuditActionFilter(e.target.value)}>
+                      <option value="">All Actions</option>
+                      <option value="CHANNEL_CREATE">Channel Create</option>
+                      <option value="CHANNEL_UPDATE">Channel Update</option>
+                      <option value="CHANNEL_DELETE">Channel Delete</option>
+                      <option value="ROLE_CREATE">Role Create</option>
+                      <option value="ROLE_UPDATE">Role Update</option>
+                      <option value="ROLE_DELETE">Role Delete</option>
+                      <option value="MEMBER_KICK">Member Kick</option>
+                      <option value="MEMBER_BAN">Member Ban</option>
+                      <option value="MEMBER_UNBAN">Member Unban</option>
+                      <option value="MEMBER_TIMEOUT">Member Timeout</option>
+                      <option value="MESSAGE_DELETE">Message Delete</option>
+                      <option value="MESSAGE_PIN">Message Pin</option>
                     </select>
                   </div>
                 </div>
               </div>
 
-              <div className="ss-audit-empty">
-                <div className="ss-audit-illustration">
-                  <svg width="120" height="100" viewBox="0 0 120 100" fill="none">
-                    <rect x="20" y="15" width="60" height="70" rx="6" fill="#2b2d31" stroke="#3f4147" strokeWidth="2"/>
-                    <rect x="40" y="25" width="60" height="70" rx="6" fill="#1e1f22" stroke="#3f4147" strokeWidth="2"/>
-                    <circle cx="55" cy="45" r="4" fill="#3f4147"/>
-                    <circle cx="55" cy="45" r="2" fill="#b5bac1"/>
-                    <rect x="50" y="55" width="40" height="3" rx="1.5" fill="#3f4147"/>
-                    <rect x="50" y="62" width="30" height="3" rx="1.5" fill="#3f4147"/>
-                    <circle cx="85" cy="20" r="6" fill="#3f4147"/>
-                    <text x="85" y="23" textAnchor="middle" fontSize="8" fill="#b5bac1">?</text>
-                  </svg>
+              {auditLoading ? (
+                <div className="ss-audit-empty"><p>Loading audit log...</p></div>
+              ) : auditEntries.length === 0 ? (
+                <div className="ss-audit-empty">
+                  <div className="ss-audit-illustration">
+                    <svg width="120" height="100" viewBox="0 0 120 100" fill="none">
+                      <rect x="20" y="15" width="60" height="70" rx="6" fill="#2b2d31" stroke="#3f4147" strokeWidth="2"/>
+                      <rect x="40" y="25" width="60" height="70" rx="6" fill="#1e1f22" stroke="#3f4147" strokeWidth="2"/>
+                      <circle cx="55" cy="45" r="4" fill="#3f4147"/>
+                      <circle cx="55" cy="45" r="2" fill="#b5bac1"/>
+                      <rect x="50" y="55" width="40" height="3" rx="1.5" fill="#3f4147"/>
+                      <rect x="50" y="62" width="30" height="3" rx="1.5" fill="#3f4147"/>
+                      <circle cx="85" cy="20" r="6" fill="#3f4147"/>
+                      <text x="85" y="23" textAnchor="middle" fontSize="8" fill="#b5bac1">?</text>
+                    </svg>
+                  </div>
+                  <h3 className="ss-audit-empty-title">NO LOGS YET</h3>
+                  <p className="ss-muted">Once moderators begin moderating, you can moderate the moderation here.</p>
                 </div>
-                <h3 className="ss-audit-empty-title">NO LOGS YET</h3>
-                <p className="ss-muted">Once moderators begin moderating, you can moderate the moderation here.</p>
-              </div>
+              ) : (
+                <div className="ss-audit-list">
+                  {auditEntries.map((entry) => (
+                    <div key={entry.id} className="ss-audit-entry">
+                      <img src={entry.profile_image || '/default-avatar.png'} alt="" className="ss-audit-avatar" onError={(e) => { e.target.src = '/default-avatar.png'; }} />
+                      <div className="ss-audit-entry-body">
+                        <div className="ss-audit-entry-header">
+                          <span className="ss-audit-entry-user">{entry.username || 'Unknown'}</span>
+                          <span className="ss-audit-entry-action">{entry.action_type?.replace(/_/g, ' ')}</span>
+                          {entry.target_type && (
+                            <span className="ss-audit-entry-target"> {entry.target_type}: {entry.target_id}</span>
+                          )}
+                        </div>
+                        <span className="ss-audit-entry-time">{new Date(entry.created_at).toLocaleString()}</span>
+                        {entry.details && Object.keys(entry.details).length > 0 && (
+                          <div className="ss-audit-entry-details">
+                            {Object.entries(entry.details).map(([k, v]) => (
+                              <span key={k} className="ss-audit-detail">{k}: {typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

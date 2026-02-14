@@ -15,6 +15,14 @@ const EMOJI_LIST = [
   '😶','😏','😒','🙄','😬','😮‍💨','🤥','😌','😔','😪',
 ];
 
+const QUICK_REACTIONS = ['👍','❤️','😂','😮','😢','🔥','🎉','💯'];
+
+function extractUrls(text) {
+  if (!text) return [];
+  const urlRegex = /https?:\/\/[^\s<>]+/g;
+  return [...new Set(text.match(urlRegex) || [])];
+}
+
 export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleMembers, showMembers, members = [] }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +37,8 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
   const [showGifPicker, setShowGifPicker] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [reactionPickerMsgId, setReactionPickerMsgId] = useState(null);
   const [lightboxUrl, setLightboxUrl] = useState(null);
   const [showPinnedPanel, setShowPinnedPanel] = useState(false);
@@ -37,12 +47,21 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
   const [mentionQuery, setMentionQuery] = useState(null);
   const [mentionIndex, setMentionIndex] = useState(0);
   const [showJumpToPresent, setShowJumpToPresent] = useState(false);
-  const [userPopup, setUserPopup] = useState(null); // { username, profileImage, role, x, y }
+  const [userPopup, setUserPopup] = useState(null);
+  // Thread state
+  const [activeThread, setActiveThread] = useState(null);
+  const [threadInput, setThreadInput] = useState('');
+  const [threadSending, setThreadSending] = useState(false);
+  // Slowmode state
+  const [slowmodeRemaining, setSlowmodeRemaining] = useState(0);
+  const slowmodeTimerRef = useRef(null);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
+  const threadEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const searchTimeoutRef = useRef(null);
 
   const myUsername = (user?.username || '').toLowerCase();
   const myAddress = (user?.wallet_address || user?.walletAddress || '').toLowerCase();
@@ -78,6 +97,11 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
       const data = await api.getChannelMessages(channel.id, { limit: 50 });
       setMessages(data?.messages || []);
       setHasMore((data?.messages || []).length >= 50);
+      // Acknowledge channel read
+      const msgs = data?.messages || [];
+      if (msgs.length > 0) {
+        api.acknowledgeChannel(channel.id, msgs[msgs.length - 1].id).catch(() => {});
+      }
     } catch (err) {
       console.error('Failed to load messages:', err);
     } finally {
@@ -112,12 +136,33 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
     }
   };
 
+  // Check slowmode status
+  const checkSlowmode = useCallback(async () => {
+    if (!channel?.id || !channel?.slowmode) { setSlowmodeRemaining(0); return; }
+    try {
+      const data = await api.getSlowmodeStatus(channel.id);
+      if (data.remainingSeconds > 0) {
+        setSlowmodeRemaining(data.remainingSeconds);
+        clearInterval(slowmodeTimerRef.current);
+        slowmodeTimerRef.current = setInterval(() => {
+          setSlowmodeRemaining(prev => { if (prev <= 1) { clearInterval(slowmodeTimerRef.current); return 0; } return prev - 1; });
+        }, 1000);
+      }
+    } catch (err) { /* ignore */ }
+  }, [channel?.id, channel?.slowmode]);
+
   useEffect(() => {
     loadMessages();
     setInput('');
     setReplyTo(null);
     setEditingId(null);
-  }, [loadMessages]);
+    setActiveThread(null);
+    setSearchResults(null);
+    setSearchQuery('');
+    setSlowmodeRemaining(0);
+    checkSlowmode();
+    return () => clearInterval(slowmodeTimerRef.current);
+  }, [loadMessages, checkSlowmode]);
 
   // Socket.io real-time
   useEffect(() => {
@@ -128,8 +173,9 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
     const handleNewMessage = (msg) => {
       setMessages((prev) => {
         if (prev.some((m) => m.id === msg.id)) return prev;
-        return [...prev, msg];
+        return [...prev, { ...msg, reactions: msg.reactions || [], thread: msg.thread || null }];
       });
+      api.acknowledgeChannel(channel.id, msg.id).catch(() => {});
     };
 
     const handleDeletedMessage = ({ messageId }) => {
@@ -151,10 +197,25 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
       }, 3000);
     };
 
+    const handleReactionUpdate = ({ messageId, reactions }) => {
+      setMessages((prev) => prev.map((m) => m.id !== messageId ? m : { ...m, reactions: reactions || [] }));
+    };
+
+    const handleThreadCreated = ({ thread, parentMessageId }) => {
+      setMessages((prev) => prev.map((m) => m.id !== parentMessageId ? m : { ...m, thread }));
+    };
+
+    const handleThreadUpdate = ({ threadId, messageCount }) => {
+      setMessages((prev) => prev.map((m) => m.thread?.id !== threadId ? m : { ...m, thread: { ...m.thread, message_count: messageCount } }));
+    };
+
     socketService.socket.on('channel_message', handleNewMessage);
     socketService.socket.on('channel_message_deleted', handleDeletedMessage);
     socketService.socket.on('channel_message_edited', handleEditedMessage);
     socketService.socket.on('channel_typing', handleTyping);
+    socketService.socket.on('channel_reaction_update', handleReactionUpdate);
+    socketService.socket.on('channel_thread_created', handleThreadCreated);
+    socketService.socket.on('channel_thread_update', handleThreadUpdate);
 
     return () => {
       socketService.socket.emit('leave_channel', channel.id);
@@ -162,6 +223,9 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
       socketService.socket.off('channel_message_deleted', handleDeletedMessage);
       socketService.socket.off('channel_message_edited', handleEditedMessage);
       socketService.socket.off('channel_typing', handleTyping);
+      socketService.socket.off('channel_reaction_update', handleReactionUpdate);
+      socketService.socket.off('channel_thread_created', handleThreadCreated);
+      socketService.socket.off('channel_thread_update', handleThreadUpdate);
     };
   }, [channel?.id]);
 
@@ -171,6 +235,13 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  // Auto-scroll thread
+  useEffect(() => {
+    if (threadEndRef.current) {
+      threadEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [activeThread?.messages]);
 
   // Load more (scroll up)
   const loadMore = async () => {
@@ -190,6 +261,7 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || sending) return;
+    if (slowmodeRemaining > 0 && !isAdmin) return;
     setSending(true);
     try {
       await api.sendChannelMessage(channel.id, {
@@ -198,8 +270,19 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
       });
       setInput('');
       setReplyTo(null);
+      if (channel?.slowmode && !isAdmin) {
+        setSlowmodeRemaining(channel.slowmode);
+        clearInterval(slowmodeTimerRef.current);
+        slowmodeTimerRef.current = setInterval(() => {
+          setSlowmodeRemaining(prev => { if (prev <= 1) { clearInterval(slowmodeTimerRef.current); return 0; } return prev - 1; });
+        }, 1000);
+      }
     } catch (err) {
       console.error('Failed to send message:', err);
+      if (err.message?.includes('Slowmode')) {
+        const match = err.message.match(/Wait (\d+)/);
+        if (match) setSlowmodeRemaining(parseInt(match[1]));
+      }
     } finally {
       setSending(false);
       inputRef.current?.focus();
@@ -227,18 +310,13 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
     }
   };
 
-  // File attachment — convert to base64 and send as imageUrl
+  // File attachment — supports images and other files
   const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // Reset file input so same file can be re-selected
     e.target.value = '';
-    if (!file.type.startsWith('image/')) {
-      alert('Only image files are supported.');
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      alert('File must be under 10 MB.');
+    if (file.size > 25 * 1024 * 1024) {
+      alert('File must be under 25 MB.');
       return;
     }
     setSending(true);
@@ -249,15 +327,16 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
+      const content = file.type.startsWith('image/') ? (input.trim() || '') : (input.trim() || `📎 ${file.name}`);
       await api.sendChannelMessage(channel.id, {
-        content: input.trim() || '',
+        content,
         imageUrl: base64,
         replyTo: replyTo?.id || null,
       });
       setInput('');
       setReplyTo(null);
     } catch (err) {
-      console.error('Failed to send image:', err);
+      console.error('Failed to send file:', err);
     } finally {
       setSending(false);
       inputRef.current?.focus();
@@ -290,20 +369,84 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
     inputRef.current?.focus();
   };
 
-  // Add reaction to message (client-side toggle — backend support can be added later)
-  const handleAddReaction = (msgId, emoji) => {
+  // Persistent reaction toggle via API
+  const handleAddReaction = async (msgId, emoji) => {
     setReactionPickerMsgId(null);
-    setMessages((prev) => prev.map((m) => {
-      if (m.id !== msgId) return m;
-      const reactions = [...(m.reactions || [])];
-      const idx = reactions.findIndex((r) => r.emoji === emoji);
-      if (idx >= 0) {
-        reactions[idx] = { ...reactions[idx], count: reactions[idx].count + 1 };
+    try {
+      await api.toggleReaction(channel.id, msgId, emoji);
+    } catch (err) {
+      console.error('Failed to toggle reaction:', err);
+    }
+  };
+
+  // ── Thread functions ──
+  const openThread = async (msg) => {
+    try {
+      const data = await api.getThread(channel.id, msg.id);
+      if (data.thread) {
+        setActiveThread({ thread: data.thread, messages: data.messages || [], parentMsg: msg });
+        if (socketService.socket) socketService.socket.emit('join_thread', data.thread.id);
       } else {
-        reactions.push({ emoji, count: 1 });
+        const createData = await api.createThread(channel.id, msg.id, `Thread: ${(msg.content || '').slice(0, 40)}`);
+        setActiveThread({ thread: createData.thread, messages: [], parentMsg: msg });
+        if (socketService.socket) socketService.socket.emit('join_thread', createData.thread.id);
       }
-      return { ...m, reactions };
-    }));
+    } catch (err) {
+      console.error('Failed to open thread:', err);
+    }
+  };
+
+  const closeThread = () => {
+    if (activeThread?.thread?.id && socketService.socket) socketService.socket.emit('leave_thread', activeThread.thread.id);
+    setActiveThread(null);
+    setThreadInput('');
+  };
+
+  const sendThreadMessage = async () => {
+    if (!threadInput.trim() || threadSending || !activeThread?.thread?.id) return;
+    setThreadSending(true);
+    try {
+      const data = await api.sendThreadMessage(activeThread.thread.id, threadInput.trim());
+      setActiveThread(prev => ({ ...prev, messages: [...(prev.messages || []), data.message] }));
+      setThreadInput('');
+    } catch (err) {
+      console.error('Failed to send thread message:', err);
+    } finally {
+      setThreadSending(false);
+    }
+  };
+
+  // Listen for thread messages via socket
+  useEffect(() => {
+    if (!activeThread?.thread?.id || !socketService.socket) return;
+    const handleThreadMsg = (msg) => {
+      setActiveThread(prev => {
+        if (!prev) return prev;
+        if (prev.messages.some(m => m.id === msg.id)) return prev;
+        return { ...prev, messages: [...prev.messages, msg] };
+      });
+    };
+    socketService.socket.on('thread_message', handleThreadMsg);
+    return () => socketService.socket.off('thread_message', handleThreadMsg);
+  }, [activeThread?.thread?.id]);
+
+  // ── Server-side search ──
+  const handleSearchChange = (query) => {
+    setSearchQuery(query);
+    clearTimeout(searchTimeoutRef.current);
+    if (!query || query.length < 2) { setSearchResults(null); return; }
+    setSearchLoading(true);
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const data = await api.searchGroupMessages(groupId, query, { channelId: channel.id, limit: 25 });
+        setSearchResults(data.results || []);
+      } catch (err) {
+        const filtered = messages.filter(m => m.content?.toLowerCase().includes(query.toLowerCase()));
+        setSearchResults(filtered);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 400);
   };
 
   // Group messages by date
@@ -366,6 +509,52 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
         return <span key={i} className="msg-mention">@{memberMatch.username}</span>;
       return part;
     });
+  }
+
+  // ── Link embed rendering ──
+  function renderLinkEmbeds(text) {
+    const urls = extractUrls(text);
+    if (urls.length === 0) return null;
+    return (
+      <div className="channel-msg-embeds">
+        {urls.slice(0, 3).map((url, i) => {
+          const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+          if (ytMatch) {
+            return (
+              <div key={i} className="channel-embed channel-embed-youtube">
+                <div className="channel-embed-provider">YouTube</div>
+                <a href={url} target="_blank" rel="noopener noreferrer" className="channel-embed-title">{url}</a>
+                <div className="channel-embed-video">
+                  <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope" allowFullScreen style={{ width: '100%', height: 200, border: 'none', borderRadius: 4 }} />
+                </div>
+              </div>
+            );
+          }
+          if (url.includes('twitter.com') || url.includes('x.com')) {
+            return (
+              <div key={i} className="channel-embed channel-embed-twitter">
+                <div className="channel-embed-provider">Twitter / X</div>
+                <a href={url} target="_blank" rel="noopener noreferrer" className="channel-embed-title">{url}</a>
+              </div>
+            );
+          }
+          if (url.includes('github.com')) {
+            const ghParts = url.replace('https://github.com/', '').split('/');
+            return (
+              <div key={i} className="channel-embed channel-embed-github">
+                <div className="channel-embed-provider">GitHub</div>
+                <a href={url} target="_blank" rel="noopener noreferrer" className="channel-embed-title">{ghParts.slice(0, 2).join('/')}</a>
+              </div>
+            );
+          }
+          return (
+            <div key={i} className="channel-embed">
+              <a href={url} target="_blank" rel="noopener noreferrer" className="channel-embed-title">{url}</a>
+            </div>
+          );
+        })}
+      </div>
+    );
   }
 
   // ── @mention autocomplete ──
@@ -453,7 +642,8 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
   }
 
   return (
-    <div className="channel-chat">
+    <div className={`channel-chat${activeThread ? ' has-thread' : ''}`}>
+      <div className="channel-chat-main">
       {/* Channel header */}
       <div className="channel-chat-header">
         <span className="channel-hash">{channel.type === 'voice' ? '🔊' : channel.type === 'announcement' ? '📢' : '#'}</span>
@@ -468,7 +658,7 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
           <button
             className={`channel-header-btn${showSearch ? ' active' : ''}`}
             title="Search"
-            onClick={() => { setShowSearch((p) => !p); setSearchQuery(''); }}
+            onClick={() => { setShowSearch((p) => !p); setSearchQuery(''); setSearchResults(null); }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M21.53 20.47l-3.66-3.66A8.45 8.45 0 0019 13a8 8 0 10-8 8 8.45 8.45 0 003.81-1.13l3.66 3.66a.75.75 0 001.06-1.06zM3.5 13a7.5 7.5 0 117.5 7.5A7.508 7.508 0 013.5 13z"/></svg>
           </button>
@@ -494,17 +684,34 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
         <div className="channel-search-bar">
           <input
             type="text"
-            placeholder="Search messages..."
+            placeholder="Search messages in this channel..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             autoFocus
           />
-          {searchQuery && (
-            <span className="channel-search-count">
-              {messages.filter((m) => m.content?.toLowerCase().includes(searchQuery.toLowerCase())).length} results
-            </span>
+          {searchLoading && <span className="channel-search-count">Searching...</span>}
+          {!searchLoading && searchResults && (
+            <span className="channel-search-count">{searchResults.length} result{searchResults.length !== 1 ? 's' : ''}</span>
           )}
-          <button onClick={() => { setShowSearch(false); setSearchQuery(''); }}>✕</button>
+          <button onClick={() => { setShowSearch(false); setSearchQuery(''); setSearchResults(null); }}>✕</button>
+        </div>
+      )}
+
+      {/* Search results overlay */}
+      {searchResults && searchResults.length > 0 && (
+        <div className="channel-search-results">
+          {searchResults.map(msg => (
+            <div key={msg.id} className="channel-search-result-item">
+              <img src={msg.profile_image || '/default-avatar.png'} alt="" className="channel-search-avatar" onError={(e) => { e.target.src = '/default-avatar.png'; }} />
+              <div className="channel-search-result-body">
+                <div className="channel-search-result-header">
+                  <span className="channel-search-result-user">{msg.username || 'Unknown'}</span>
+                  <span className="channel-search-result-time">{new Date(msg.created_at).toLocaleString()}</span>
+                </div>
+                <div className="channel-search-result-text">{msg.content}</div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -564,8 +771,8 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
           </div>
         ) : (
           (() => {
-            const filtered = searchQuery
-              ? messages.filter((m) => m.content?.toLowerCase().includes(searchQuery.toLowerCase()))
+            const filtered = searchQuery && searchResults
+              ? searchResults
               : messages;
             let lastDate = null;
             return filtered.map((msg, idx, arr) => {
@@ -651,6 +858,8 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
                           onClick={() => setLightboxUrl(msg.image_url)}
                         />
                       )}
+                      {/* Link embeds */}
+                      {renderLinkEmbeds(msg.content)}
                     </div>
                     {/* Reactions */}
                     {msg.reactions && msg.reactions.length > 0 && (
@@ -661,21 +870,33 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
                             <span className="reaction-count">{r.count}</span>
                           </button>
                         ))}
+                        <button className="channel-reaction-add" onClick={() => setReactionPickerMsgId(p => p === msg.id ? null : msg.id)}>
+                          <span>+</span>
+                        </button>
                       </div>
+                    )}
+                    {/* Thread indicator */}
+                    {msg.thread && (
+                      <button className="channel-thread-indicator" onClick={() => openThread(msg)}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5.43 21a.997.997 0 01-.707-.293.999.999 0 01-.293-.707V16H3a1 1 0 01-1-1V3a1 1 0 011-1h18a1 1 0 011 1v12a1 1 0 01-1 1h-8.96l-5.9 4.86A1 1 0 015.43 21z"/></svg>
+                        <span>{msg.thread.message_count} {msg.thread.message_count === 1 ? 'reply' : 'replies'}</span>
+                        <span className="thread-last-reply">Last reply {new Date(msg.thread.last_message_at).toLocaleDateString()}</span>
+                      </button>
                     )}
                     {/* Reaction picker */}
                     {reactionPickerMsgId === msg.id && (
                       <div className="channel-reaction-picker">
-                        {['👍','❤️','😂','😮','😢','🔥','🎉','💯'].map((em) => (
+                        {QUICK_REACTIONS.map((em) => (
                           <button key={em} onClick={() => handleAddReaction(msg.id, em)}>{em}</button>
                         ))}
                         <button onClick={() => setReactionPickerMsgId(null)}>✕</button>
                       </div>
                     )}
                     {/* Actions */}
-                    <div className="channel-msg-actions">
+                      <div className="channel-msg-actions">
                       <button title="Add Reaction" onClick={() => setReactionPickerMsgId((prev) => prev === msg.id ? null : msg.id)}>😊</button>
                       <button title="Reply" onClick={() => setReplyTo(msg)}>↩</button>
+                      <button title="Create Thread" onClick={() => openThread(msg)}>🧵</button>
                       {isAdmin && (
                         <button title={msg.is_pinned ? 'Unpin Message' : 'Pin Message'} onClick={() => handleTogglePin(msg.id)} className={msg.is_pinned ? 'pinned' : ''}>📌</button>
                       )}
@@ -718,11 +939,18 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
         </div>
       )}
 
-      {/* Hidden file input */}
+      {/* Slowmode indicator */}
+      {slowmodeRemaining > 0 && !isAdmin && (
+        <div className="channel-slowmode-bar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+          <span>Slowmode: {slowmodeRemaining}s remaining</span>
+        </div>
+      )}
+
+      {/* Hidden file input — accept all files */}
       <input
         type="file"
         ref={fileInputRef}
-        accept="image/*"
         style={{ display: 'none' }}
         onChange={handleFileSelect}
       />
@@ -777,7 +1005,7 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
           ref={inputRef}
           type="text"
           className="channel-input"
-          placeholder={`Message #${channel.name}`}
+          placeholder={slowmodeRemaining > 0 && !isAdmin ? `Slowmode: wait ${slowmodeRemaining}s` : `Message #${channel.name}`}
           value={input}
           onChange={handleInputChangeWithMentions}
           onKeyDown={(e) => {
@@ -785,7 +1013,7 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
               handleSend(e);
             }
           }}
-          disabled={sending}
+          disabled={sending || (slowmodeRemaining > 0 && !isAdmin)}
         />
         <div className="channel-input-right">
           <button type="button" className={`channel-input-icon${showGifPicker ? ' active' : ''}`} title="GIF" onClick={() => { setShowGifPicker((p) => !p); setShowEmojiPicker(false); }}>GIF</button>
@@ -795,6 +1023,54 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
           )}
         </div>
       </form>
+      </div>{/* end channel-chat-main */}
+
+      {/* Thread panel */}
+      {activeThread && (
+        <div className="channel-thread-panel">
+          <div className="channel-thread-header">
+            <div className="channel-thread-header-info">
+              <h3>Thread</h3>
+              <span className="channel-thread-name">{activeThread.thread.name || 'Thread'}</span>
+            </div>
+            <button className="channel-thread-close" onClick={closeThread}>✕</button>
+          </div>
+          <div className="channel-thread-parent">
+            <img src={activeThread.parentMsg?.profile_image || '/default-avatar.png'} alt="" className="channel-msg-avatar" onError={(e) => { e.target.src = '/default-avatar.png'; }} />
+            <div>
+              <div className="channel-msg-header">
+                <span className="channel-msg-username">{activeThread.parentMsg?.username || 'Unknown'}</span>
+                <span className="channel-msg-time">{new Date(activeThread.parentMsg?.created_at).toLocaleString()}</span>
+              </div>
+              <span className="channel-msg-text">{renderMarkdown(activeThread.parentMsg?.content)}</span>
+              {activeThread.parentMsg?.image_url && <img src={activeThread.parentMsg.image_url} alt="" className="channel-msg-image" onClick={() => setLightboxUrl(activeThread.parentMsg.image_url)} />}
+            </div>
+          </div>
+          <div className="channel-thread-divider">
+            <span>{activeThread.messages.length} {activeThread.messages.length === 1 ? 'reply' : 'replies'}</span>
+          </div>
+          <div className="channel-thread-messages">
+            {activeThread.messages.map((msg) => (
+              <div key={msg.id} className="channel-thread-msg">
+                <img src={msg.profile_image || '/default-avatar.png'} alt="" className="channel-msg-avatar" onError={(e) => { e.target.src = '/default-avatar.png'; }} />
+                <div>
+                  <div className="channel-msg-header">
+                    <span className="channel-msg-username">{msg.username || 'Unknown'}</span>
+                    <span className="channel-msg-time">{new Date(msg.created_at).toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+                  </div>
+                  <span className="channel-msg-text">{renderMarkdown(msg.content)}</span>
+                  {msg.image_url && <img src={msg.image_url} alt="" className="channel-msg-image" onClick={() => setLightboxUrl(msg.image_url)} />}
+                </div>
+              </div>
+            ))}
+            <div ref={threadEndRef} />
+          </div>
+          <form className="channel-thread-input-form" onSubmit={(e) => { e.preventDefault(); sendThreadMessage(); }}>
+            <input type="text" placeholder="Reply in thread..." value={threadInput} onChange={(e) => setThreadInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); sendThreadMessage(); } }} disabled={threadSending} />
+            {threadInput.trim() && <button type="submit" disabled={threadSending}>➤</button>}
+          </form>
+        </div>
+      )}
 
       {/* Image lightbox */}
       {lightboxUrl && (

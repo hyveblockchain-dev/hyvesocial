@@ -1784,6 +1784,147 @@ export async function adminUnbanWallet(walletAddress) {
 }
 
 // ========================================
+// REACTIONS
+// ========================================
+
+export async function toggleReaction(channelId, messageId, emoji) {
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/messages/${messageId}/reactions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ emoji }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to toggle reaction');
+  return data;
+}
+
+export async function getReactions(channelId, messageId) {
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/messages/${messageId}/reactions`);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get reactions');
+  return data;
+}
+
+// ========================================
+// UNREAD TRACKING
+// ========================================
+
+export async function acknowledgeChannel(channelId, lastMessageId) {
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/ack`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ lastMessageId }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to acknowledge');
+  return data;
+}
+
+export async function getGroupUnreads(groupId) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/unreads`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get unreads');
+  return data;
+}
+
+// ========================================
+// SERVER-SIDE SEARCH
+// ========================================
+
+export async function searchGroupMessages(groupId, query, options = {}) {
+  const params = new URLSearchParams({ q: query });
+  if (options.channelId) params.append('channelId', options.channelId);
+  if (options.authorId) params.append('authorId', options.authorId);
+  if (options.limit) params.append('limit', options.limit);
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/search?${params}`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Search failed');
+  return data;
+}
+
+// ========================================
+// THREADS
+// ========================================
+
+export async function createThread(channelId, messageId, name) {
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/messages/${messageId}/threads`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ name }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to create thread');
+  return data;
+}
+
+export async function getThread(channelId, messageId) {
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/messages/${messageId}/threads`);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get thread');
+  return data;
+}
+
+export async function sendThreadMessage(threadId, content, imageUrl) {
+  const response = await fetch(`${API_URL}/api/threads/${threadId}/messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ content, imageUrl }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to send thread message');
+  return data;
+}
+
+// ========================================
+// AUDIT LOG
+// ========================================
+
+export async function getAuditLog(groupId, options = {}) {
+  const params = new URLSearchParams();
+  if (options.limit) params.append('limit', options.limit);
+  if (options.before) params.append('before', options.before);
+  if (options.actionType) params.append('actionType', options.actionType);
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/audit-log?${params}`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get audit log');
+  return data;
+}
+
+// ========================================
+// TIMEOUT MEMBERS
+// ========================================
+
+export async function timeoutMember(groupId, address, duration) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/members/${address}/timeout`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ duration }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to timeout member');
+  return data;
+}
+
+// ========================================
+// SLOWMODE STATUS
+// ========================================
+
+export async function getSlowmodeStatus(channelId) {
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/slowmode-status`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get slowmode status');
+  return data;
+}
+
+// ========================================
 // DEFAULT EXPORT
 // ========================================
 
@@ -1927,4 +2068,29 @@ export default {
   adminCheckBanned,
   adminGetBannedWallets,
   adminUnbanWallet,
+
+  // Reactions
+  toggleReaction,
+  getReactions,
+
+  // Unread Tracking
+  acknowledgeChannel,
+  getGroupUnreads,
+
+  // Server-side Search
+  searchGroupMessages,
+
+  // Threads
+  createThread,
+  getThread,
+  sendThreadMessage,
+
+  // Audit Log
+  getAuditLog,
+
+  // Timeout Members
+  timeoutMember,
+
+  // Slowmode
+  getSlowmodeStatus,
 };
