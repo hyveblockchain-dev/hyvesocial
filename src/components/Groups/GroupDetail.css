@@ -5660,3 +5660,72 @@
 .light-mode .ss-audit-entry-user { color: #060607; }
 .light-mode .ss-audit-detail { background: #e3e5e8; color: #4e5058; }
 .light-mode .ss-audit-entry { border-bottom-color: #e3e5e8; }
+
+/* ═══════════════════════════════════════════════════════════
+   Forum Channel View
+   ═══════════════════════════════════════════════════════════ */
+.discord-forum-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  background: #313338;
+}
+.discord-forum-view .discord-input,
+.discord-forum-view input[type="text"],
+.discord-forum-view textarea {
+  background: #1e1f22;
+  border: 1px solid #3f4147;
+  border-radius: 4px;
+  color: #dbdee1;
+  padding: 8px 10px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.discord-forum-view .discord-input:focus,
+.discord-forum-view input:focus,
+.discord-forum-view textarea:focus {
+  outline: none;
+  border-color: #5865f2;
+}
+.discord-btn-primary {
+  background: #5865f2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+.discord-btn-primary:hover { background: #4752c4; }
+.discord-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.discord-btn-cancel {
+  background: #4e5058;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.discord-btn-cancel:hover { background: #6d6f78; }
+
+/* ServerSettings danger small button */
+.ss-btn-danger-sm {
+  background: #ed4245;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+.ss-btn-danger-sm:hover { background: #c73e40; }
+
+/* Light mode */
+.light-mode .discord-forum-view { background: #fff; }
+.light-mode .discord-forum-view .discord-input,
+.light-mode .discord-forum-view input[type="text"],
+.light-mode .discord-forum-view textarea { background: #ebedef; border-color: #e3e5e8; color: #060607; }

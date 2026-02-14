@@ -1925,6 +1925,341 @@ export async function getSlowmodeStatus(channelId) {
 }
 
 // ========================================
+// POLLS
+// ========================================
+
+export async function createPoll(channelId, question, options, allowMultiple = false, expiresIn = null) {
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/polls`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ question, options, allowMultiple, expiresIn }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to create poll');
+  return data;
+}
+
+export async function votePoll(pollId, optionId) {
+  const response = await fetch(`${API_URL}/api/polls/${pollId}/vote`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ optionId }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to vote');
+  return data;
+}
+
+export async function getPoll(pollId) {
+  const response = await fetch(`${API_URL}/api/polls/${pollId}`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get poll');
+  return data;
+}
+
+// ========================================
+// CUSTOM EMOJI
+// ========================================
+
+export async function uploadEmoji(groupId, name, imageData) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/emoji`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ name, imageData }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to upload emoji');
+  return data;
+}
+
+export async function getServerEmoji(groupId) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/emoji`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get emoji');
+  return data;
+}
+
+export async function deleteEmoji(groupId, emojiId) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/emoji/${emojiId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to delete emoji');
+  return data;
+}
+
+// ========================================
+// INVITE LINKS
+// ========================================
+
+export async function createInvite(groupId, channelId = null, maxUses = 0, maxAge = 604800) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/invites`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ channelId, maxUses, maxAge }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to create invite');
+  return data;
+}
+
+export async function getInvites(groupId) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/invites`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get invites');
+  return data;
+}
+
+export async function deleteInvite(groupId, code) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/invites/${code}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to delete invite');
+  return data;
+}
+
+export async function joinViaInvite(code) {
+  const response = await fetch(`${API_URL}/api/invites/${code}/join`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to join via invite');
+  return data;
+}
+
+// ========================================
+// SCHEDULED EVENTS
+// ========================================
+
+export async function createEvent(groupId, eventData) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/events`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify(eventData),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to create event');
+  return data;
+}
+
+export async function getEvents(groupId) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/events`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get events');
+  return data;
+}
+
+export async function deleteEvent(groupId, eventId) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/events/${eventId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to delete event');
+  return data;
+}
+
+export async function rsvpEvent(eventId) {
+  const response = await fetch(`${API_URL}/api/events/${eventId}/rsvp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to RSVP');
+  return data;
+}
+
+// ========================================
+// CUSTOM STATUS
+// ========================================
+
+export async function updateCustomStatus(text, emoji = null, expiresIn = null) {
+  const response = await fetch(`${API_URL}/api/users/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ text, emoji, expiresIn }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to update status');
+  return data;
+}
+
+export async function getUserStatus(address) {
+  const response = await fetch(`${API_URL}/api/users/${address}/status`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get status');
+  return data;
+}
+
+// ========================================
+// AUTOMOD
+// ========================================
+
+export async function getAutomodRules(groupId) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/automod`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get automod rules');
+  return data;
+}
+
+export async function createAutomodRule(groupId, ruleData) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/automod`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify(ruleData),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to create automod rule');
+  return data;
+}
+
+export async function updateAutomodRule(groupId, ruleId, updates) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/automod/${ruleId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify(updates),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to update automod rule');
+  return data;
+}
+
+export async function deleteAutomodRule(groupId, ruleId) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/automod/${ruleId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to delete automod rule');
+  return data;
+}
+
+// ========================================
+// WELCOME SCREEN
+// ========================================
+
+export async function getWelcomeScreen(groupId) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/welcome-screen`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get welcome screen');
+  return data;
+}
+
+export async function saveWelcomeScreen(groupId, screenData) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/welcome-screen`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify(screenData),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to save welcome screen');
+  return data;
+}
+
+// ========================================
+// FORUM CHANNELS
+// ========================================
+
+export async function getForumPosts(channelId, sort = 'latest') {
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/forum-posts?sort=${sort}`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get forum posts');
+  return data;
+}
+
+export async function createForumPost(channelId, title, content = '', tags = []) {
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/forum-posts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ title, content, tags }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to create forum post');
+  return data;
+}
+
+export async function getForumPostMessages(postId) {
+  const response = await fetch(`${API_URL}/api/forum-posts/${postId}/messages`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get forum messages');
+  return data;
+}
+
+export async function sendForumPostMessage(postId, content, imageUrl = null) {
+  const response = await fetch(`${API_URL}/api/forum-posts/${postId}/messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ content, imageUrl }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to send forum message');
+  return data;
+}
+
+// ========================================
+// CHANNEL REORDER
+// ========================================
+
+export async function reorderChannels(groupId, channels) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/channels/reorder`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ channels }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to reorder channels');
+  return data;
+}
+
+export async function reorderCategories(groupId, categories) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/categories/reorder`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ categories }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to reorder categories');
+  return data;
+}
+
+// ========================================
+// BULK DELETE
+// ========================================
+
+export async function bulkDeleteMessages(channelId, messageIds) {
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/messages/bulk-delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ messageIds }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to bulk delete');
+  return data;
+}
+
+// ========================================
 // DEFAULT EXPORT
 // ========================================
 
@@ -2093,4 +2428,53 @@ export default {
 
   // Slowmode
   getSlowmodeStatus,
+
+  // Polls
+  createPoll,
+  votePoll,
+  getPoll,
+
+  // Custom Emoji
+  uploadEmoji,
+  getServerEmoji,
+  deleteEmoji,
+
+  // Invite Links
+  createInvite,
+  getInvites,
+  deleteInvite,
+  joinViaInvite,
+
+  // Events
+  createEvent,
+  getEvents,
+  deleteEvent,
+  rsvpEvent,
+
+  // Custom Status
+  updateCustomStatus,
+  getUserStatus,
+
+  // AutoMod
+  getAutomodRules,
+  createAutomodRule,
+  updateAutomodRule,
+  deleteAutomodRule,
+
+  // Welcome Screen
+  getWelcomeScreen,
+  saveWelcomeScreen,
+
+  // Forum Channels
+  getForumPosts,
+  createForumPost,
+  getForumPostMessages,
+  sendForumPostMessage,
+
+  // Channel Reorder
+  reorderChannels,
+  reorderCategories,
+
+  // Bulk Delete
+  bulkDeleteMessages,
 };

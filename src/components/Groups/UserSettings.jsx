@@ -6,6 +6,7 @@ import './UserSettings.css';
 const SECTIONS = [
   { key: 'account', label: 'My Account', category: 'User Settings' },
   { key: 'profile', label: 'Edit Profile', category: 'User Settings' },
+  { key: 'status', label: 'Custom Status', category: 'User Settings' },
   { key: 'appearance', label: 'Appearance', category: 'App Settings' },
   { key: 'notifications', label: 'Notifications', category: 'App Settings' },
   { key: 'about', label: 'About', category: 'App Settings' },
@@ -21,6 +22,48 @@ export default function UserSettings({ onClose }) {
   const [lightMode, setLightMode] = useState(() => document.body.classList.contains('light-mode'));
   const avatarInputRef = useRef(null);
   const bannerInputRef = useRef(null);
+
+  // Custom status state
+  const [statusText, setStatusText] = useState('');
+  const [statusEmoji, setStatusEmoji] = useState('😊');
+  const [statusExpiry, setStatusExpiry] = useState('');
+  const [statusLoading, setStatusLoading] = useState(false);
+
+  // Load custom status
+  useEffect(() => {
+    if (activeSection === 'status') {
+      (async () => {
+        setStatusLoading(true);
+        try {
+          const data = await api.getUserStatus(user?.username);
+          setStatusText(data?.custom_status || '');
+          setStatusEmoji(data?.status_emoji || '😊');
+        } catch { }
+        finally { setStatusLoading(false); }
+      })();
+    }
+  }, [activeSection, user?.username]);
+
+  const handleSaveStatus = async () => {
+    setSaving(true);
+    try {
+      await api.updateCustomStatus({ customStatus: statusText, statusEmoji, expiresAt: statusExpiry || null });
+      showNotice('Status updated!');
+    } catch { showNotice('Failed to update status.'); }
+    finally { setSaving(false); }
+  };
+
+  const handleClearStatus = async () => {
+    setSaving(true);
+    try {
+      await api.updateCustomStatus({ customStatus: '', statusEmoji: '', expiresAt: null });
+      setStatusText('');
+      setStatusEmoji('😊');
+      setStatusExpiry('');
+      showNotice('Status cleared!');
+    } catch { showNotice('Failed to clear status.'); }
+    finally { setSaving(false); }
+  };
 
   // Close on Escape
   useEffect(() => {
@@ -249,6 +292,50 @@ export default function UserSettings({ onClose }) {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* ── Custom Status ── */}
+          {activeSection === 'status' && (
+            <div className="us-section">
+              <h2>Custom Status</h2>
+              <p className="us-muted">Set a custom status to let others know what you're up to.</p>
+              {statusLoading ? <p className="us-muted">Loading...</p> : (
+                <div className="us-profile-card">
+                  <div className="us-field-group">
+                    <label>Status Emoji</label>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {['😊', '😎', '🎮', '💻', '🎵', '📚', '🌙', '🔴', '🟡', '🟢', '⏰', '✈️'].map(em => (
+                        <button key={em} onClick={() => setStatusEmoji(em)} style={{ fontSize: 24, padding: '4px 8px', background: statusEmoji === em ? '#5865f2' : '#2b2d31', border: 'none', borderRadius: 6, cursor: 'pointer' }}>{em}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="us-field-group">
+                    <label>Status Text</label>
+                    <input type="text" className="us-input" placeholder="What are you up to?" value={statusText} onChange={e => setStatusText(e.target.value)} maxLength={128} style={{ width: '100%' }} />
+                  </div>
+                  <div className="us-field-group">
+                    <label>Clear After</label>
+                    <select className="us-input" value={statusExpiry} onChange={e => setStatusExpiry(e.target.value)} style={{ width: '100%' }}>
+                      <option value="">Don't clear</option>
+                      <option value="30m">30 minutes</option>
+                      <option value="1h">1 hour</option>
+                      <option value="4h">4 hours</option>
+                      <option value="today">Today</option>
+                    </select>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                    <button className="us-btn-save" onClick={handleSaveStatus} disabled={saving}>{saving ? 'Saving...' : 'Save Status'}</button>
+                    <button className="us-btn-cancel" onClick={handleClearStatus} disabled={saving}>Clear Status</button>
+                  </div>
+                  {statusText && (
+                    <div style={{ marginTop: 16, padding: '10px 14px', background: '#2b2d31', borderRadius: 8 }}>
+                      <span style={{ marginRight: 8 }}>{statusEmoji}</span>
+                      <span style={{ color: '#dbdee1' }}>{statusText}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

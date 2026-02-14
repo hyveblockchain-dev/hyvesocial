@@ -37,6 +37,7 @@ const NAV_SECTIONS = [
     { key: 'roles', label: 'Roles' },
     { key: 'invites', label: 'Invites' },
     { key: 'access', label: 'Access' },
+    { key: 'events', label: 'Events' },
   ]},
   { category: 'APPS', items: [
     { key: 'integrations', label: 'Integrations' },
@@ -47,6 +48,7 @@ const NAV_SECTIONS = [
     { key: 'auditLog', label: 'Audit Log' },
     { key: 'bans', label: 'Bans' },
     { key: 'automod', label: 'AutoMod' },
+    { key: 'welcomeScreen', label: 'Welcome Screen' },
   ]},
 ];
 
@@ -205,6 +207,224 @@ export default function ServerSettings({
   useEffect(() => {
     if (activeSection === 'auditLog') loadAuditLog();
   }, [activeSection, loadAuditLog]);
+
+  // ── Custom Emoji state ──
+  const [serverEmoji, setServerEmoji] = useState([]);
+  const [emojiLoading, setEmojiLoading] = useState(false);
+  const [emojiName, setEmojiName] = useState('');
+  const emojiUploadRef = useRef(null);
+
+  const loadEmoji = useCallback(async () => {
+    if (!group?.id) return;
+    setEmojiLoading(true);
+    try {
+      const data = await api.getServerEmoji(group.id);
+      setServerEmoji(data?.emoji || []);
+    } catch {
+      setServerEmoji([]);
+    } finally { setEmojiLoading(false); }
+  }, [group?.id]);
+
+  useEffect(() => {
+    if (activeSection === 'emoji') loadEmoji();
+  }, [activeSection, loadEmoji]);
+
+  const handleUploadEmoji = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    if (file.size > 256 * 1024) { showNotice('Emoji max 256KB'); return; }
+    const name = emojiName.trim() || file.name.replace(/\.[^.]+$/, '').toLowerCase().replace(/[^a-z0-9_]/g, '');
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        await api.uploadEmoji(group.id, name, reader.result);
+        setEmojiName('');
+        loadEmoji();
+        showNotice('Emoji uploaded!');
+      } catch (err) { showNotice(err.message || 'Upload failed'); }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDeleteEmoji = async (emojiId) => {
+    try {
+      await api.deleteEmoji(group.id, emojiId);
+      loadEmoji();
+    } catch { showNotice('Failed to delete emoji'); }
+  };
+
+  // ── Invite Links state ──
+  const [inviteLinks, setInviteLinks] = useState([]);
+  const [invitesLoading, setInvitesLoading] = useState(false);
+
+  const loadInvites = useCallback(async () => {
+    if (!group?.id) return;
+    setInvitesLoading(true);
+    try {
+      const data = await api.getInvites(group.id);
+      setInviteLinks(data?.invites || []);
+    } catch {
+      setInviteLinks([]);
+    } finally { setInvitesLoading(false); }
+  }, [group?.id]);
+
+  useEffect(() => {
+    if (activeSection === 'invites') loadInvites();
+  }, [activeSection, loadInvites]);
+
+  const handleCreateInviteLink = async () => {
+    try {
+      await api.createInvite(group.id);
+      loadInvites();
+      showNotice('Invite link created!');
+    } catch (err) { showNotice(err.message || 'Failed to create invite'); }
+  };
+
+  const handleDeleteInviteLink = async (code) => {
+    try {
+      await api.deleteInvite(group.id, code);
+      loadInvites();
+    } catch { showNotice('Failed to delete invite'); }
+  };
+
+  // ── Scheduled Events state ──
+  const [events, setEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [showEventCreator, setShowEventCreator] = useState(false);
+  const [eventName, setEventName] = useState('');
+  const [eventDesc, setEventDesc] = useState('');
+  const [eventStart, setEventStart] = useState('');
+  const [eventEnd, setEventEnd] = useState('');
+  const [eventLocation, setEventLocation] = useState('');
+
+  const loadEvents = useCallback(async () => {
+    if (!group?.id) return;
+    setEventsLoading(true);
+    try {
+      const data = await api.getEvents(group.id);
+      setEvents(data?.events || []);
+    } catch {
+      setEvents([]);
+    } finally { setEventsLoading(false); }
+  }, [group?.id]);
+
+  const handleCreateEvent = async () => {
+    if (!eventName.trim() || !eventStart) return;
+    try {
+      await api.createEvent(group.id, { name: eventName, description: eventDesc, startTime: eventStart, endTime: eventEnd || null, location: eventLocation || null });
+      setShowEventCreator(false);
+      setEventName(''); setEventDesc(''); setEventStart(''); setEventEnd(''); setEventLocation('');
+      loadEvents();
+      showNotice('Event created!');
+    } catch (err) { showNotice(err.message || 'Failed to create event'); }
+  };
+
+  const handleDeleteEvent = async (eventId) => {
+    try {
+      await api.deleteEvent(group.id, eventId);
+      loadEvents();
+    } catch { showNotice('Failed to delete event'); }
+  };
+
+  // ── AutoMod state ──
+  const [automodRules, setAutomodRules] = useState([]);
+  const [automodLoading, setAutomodLoading] = useState(false);
+  const [showAutomodSetup, setShowAutomodSetup] = useState(null); // ruleType being set up
+  const [automodWords, setAutomodWords] = useState('');
+  const [automodMaxMentions, setAutomodMaxMentions] = useState(5);
+
+  const loadAutomod = useCallback(async () => {
+    if (!group?.id) return;
+    setAutomodLoading(true);
+    try {
+      const data = await api.getAutomodRules(group.id);
+      setAutomodRules(data?.rules || []);
+    } catch {
+      setAutomodRules([]);
+    } finally { setAutomodLoading(false); }
+  }, [group?.id]);
+
+  useEffect(() => {
+    if (activeSection === 'automod') loadAutomod();
+  }, [activeSection, loadAutomod]);
+
+  const handleCreateAutomodRule = async (ruleType) => {
+    const ruleData = { name: ruleType.replace(/_/g, ' '), ruleType };
+    if (ruleType === 'blocked_words') {
+      ruleData.triggerMetadata = { words: automodWords.split(',').map(w => w.trim()).filter(Boolean) };
+    } else if (ruleType === 'mention_spam') {
+      ruleData.triggerMetadata = { max_mentions: automodMaxMentions };
+    } else if (ruleType === 'spam_links') {
+      ruleData.triggerMetadata = { enabled: true };
+    }
+    ruleData.actions = [{ type: 'block_message' }];
+    try {
+      await api.createAutomodRule(group.id, ruleData);
+      setShowAutomodSetup(null);
+      setAutomodWords('');
+      loadAutomod();
+      showNotice('AutoMod rule created!');
+    } catch (err) { showNotice(err.message || 'Failed to create rule'); }
+  };
+
+  const handleToggleAutomod = async (rule) => {
+    try {
+      await api.updateAutomodRule(group.id, rule.id, { enabled: !rule.enabled });
+      loadAutomod();
+    } catch { showNotice('Failed to toggle rule'); }
+  };
+
+  const handleDeleteAutomod = async (ruleId) => {
+    try {
+      await api.deleteAutomodRule(group.id, ruleId);
+      loadAutomod();
+    } catch { showNotice('Failed to delete rule'); }
+  };
+
+  // ── Welcome Screen state ──
+  const [welcomeScreen, setWelcomeScreen] = useState({ enabled: false, description: '', welcome_channels: [] });
+  const [welcomeLoading, setWelcomeLoading] = useState(false);
+  const [welcomeDesc, setWelcomeDesc] = useState('');
+  const [welcomeEnabled, setWelcomeEnabled] = useState(false);
+  const [welcomeChannelList, setWelcomeChannelList] = useState([]);
+
+  const loadWelcomeScreen = useCallback(async () => {
+    if (!group?.id) return;
+    setWelcomeLoading(true);
+    try {
+      const data = await api.getWelcomeScreen(group.id);
+      setWelcomeScreen(data);
+      setWelcomeEnabled(data.enabled || false);
+      setWelcomeDesc(data.description || '');
+      setWelcomeChannelList(data.welcome_channels || []);
+    } catch { }
+    finally { setWelcomeLoading(false); }
+  }, [group?.id]);
+
+  const handleSaveWelcomeScreen = async () => {
+    try {
+      await api.saveWelcomeScreen(group.id, { enabled: welcomeEnabled, description: welcomeDesc, welcomeChannels: welcomeChannelList });
+      showNotice('Welcome screen saved!');
+    } catch (err) { showNotice(err.message || 'Failed to save'); }
+  };
+
+  const addWelcomeChannel = (ch) => {
+    if (welcomeChannelList.some(wc => wc.channelId === ch.id)) return;
+    setWelcomeChannelList(prev => [...prev, { channelId: ch.id, channelName: ch.name, description: '', emoji: '👋' }]);
+  };
+
+  const removeWelcomeChannel = (chId) => {
+    setWelcomeChannelList(prev => prev.filter(wc => wc.channelId !== chId));
+  };
+
+  useEffect(() => {
+    if (activeSection === 'events') loadEvents();
+  }, [activeSection, loadEvents]);
+
+  useEffect(() => {
+    if (activeSection === 'welcomeScreen') loadWelcomeScreen();
+  }, [activeSection, loadWelcomeScreen]);
 
   // Load permissions from a role object into state
   const loadRoleForEdit = useCallback((role) => {
@@ -1574,49 +1794,46 @@ export default function ServerSettings({
           {activeSection === 'emoji' && (
             <div className="ss-section">
               <h2>Emoji</h2>
-              <p className="ss-subtitle">Add up to 50 custom emoji that anyone can use in this server. Animated GIF emoji may be used by members with Discord Nitro.</p>
+              <p className="ss-subtitle">Add up to 50 custom emoji that anyone can use in this server.</p>
 
-              <button className="ss-btn-green" style={{ marginBottom: 16 }}>Upload Emoji</button>
-
-              <p className="ss-hint" style={{ marginBottom: 24 }}>If you want to upload multiple emojis or skip the editor, drag and drop the file(s) onto this page. The emojis will be named using the file name.</p>
-
-              {/* Static Emoji */}
-              <div className="ss-emoji-section">
-                <h3 className="ss-subsection-title">Emoji</h3>
-                <p className="ss-hint">48 slots available</p>
-
-                <div className="ss-emoji-table">
-                  <div className="ss-emoji-table-header">
-                    <span className="ss-emoji-col-img">Image</span>
-                    <span className="ss-emoji-col-name">Name</span>
-                    <span className="ss-emoji-col-by">Uploaded By</span>
-                  </div>
-                  <div className="ss-emoji-table-row">
-                    <span className="ss-emoji-col-img"><span style={{ fontSize: 28 }}>😎</span></span>
-                    <span className="ss-emoji-col-name">HYVE2</span>
-                    <span className="ss-emoji-col-by">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#5865f2" style={{ marginRight: 4 }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2a7.2 7.2 0 01-6-3.22c.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08a7.2 7.2 0 01-6 3.22z"/></svg>
-                      tion45
-                    </span>
-                  </div>
-                  <div className="ss-emoji-table-row">
-                    <span className="ss-emoji-col-img"><span style={{ fontSize: 28 }}>😄</span></span>
-                    <span className="ss-emoji-col-name">HYVE</span>
-                    <span className="ss-emoji-col-by">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#5865f2" style={{ marginRight: 4 }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2a7.2 7.2 0 01-6-3.22c.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08a7.2 7.2 0 01-6 3.22z"/></svg>
-                      tion45
-                    </span>
-                  </div>
-                </div>
+              <div className="ss-emoji-upload-row" style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16 }}>
+                <input
+                  type="text"
+                  className="ss-input"
+                  placeholder="Emoji name"
+                  value={emojiName}
+                  onChange={e => setEmojiName(e.target.value)}
+                  style={{ width: 180 }}
+                />
+                <input ref={emojiUploadRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUploadEmoji} />
+                <button className="ss-btn-green" onClick={() => emojiUploadRef.current?.click()}>Upload Emoji</button>
               </div>
 
-              {/* Animated Emoji */}
-              <div className="ss-emoji-section" style={{ marginTop: 32 }}>
-                <h3 className="ss-subsection-title">Animated Emoji</h3>
-                <p className="ss-hint">50 slots available</p>
-                <div className="ss-emoji-table">
-                  <div className="ss-emoji-empty">NONE</div>
-                </div>
+              <p className="ss-hint" style={{ marginBottom: 24 }}>Upload images up to 256KB. Name is optional — will use filename if empty.</p>
+
+              <div className="ss-emoji-section">
+                <h3 className="ss-subsection-title">Custom Emoji</h3>
+                <p className="ss-hint">{Math.max(0, 50 - serverEmoji.length)} slots available</p>
+
+                {emojiLoading ? <p className="ss-hint">Loading...</p> : (
+                  <div className="ss-emoji-table">
+                    <div className="ss-emoji-table-header">
+                      <span className="ss-emoji-col-img">Image</span>
+                      <span className="ss-emoji-col-name">Name</span>
+                      <span className="ss-emoji-col-by">Actions</span>
+                    </div>
+                    {serverEmoji.length === 0 && <div className="ss-emoji-empty">No custom emoji yet</div>}
+                    {serverEmoji.map(em => (
+                      <div className="ss-emoji-table-row" key={em.id}>
+                        <span className="ss-emoji-col-img"><img src={em.image_url} alt={em.name} style={{ width: 32, height: 32, objectFit: 'contain' }} /></span>
+                        <span className="ss-emoji-col-name">:{em.name}:</span>
+                        <span className="ss-emoji-col-by">
+                          <button className="ss-btn-danger-sm" onClick={() => handleDeleteEmoji(em.id)} title="Delete">✕</button>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1732,52 +1949,39 @@ export default function ServerSettings({
               <div className="ss-invites-toolbar">
                 <span className="ss-invites-label">ACTIVE INVITE LINKS</span>
                 <div className="ss-invites-actions">
-                  <button className="ss-btn-text-danger">Pause Invites</button>
-                  <button className="ss-btn-create-role">Create invite link</button>
+                  <button className="ss-btn-create-role" onClick={handleCreateInviteLink}>Create invite link</button>
                 </div>
               </div>
 
               {/* Invites table */}
-              <div className="ss-invites-table">
-                <div className="ss-invites-thead">
-                  <div className="ss-invites-th ss-icol-inviter">Inviter</div>
-                  <div className="ss-invites-th ss-icol-code">Invite Code</div>
-                  <div className="ss-invites-th ss-icol-uses">Uses</div>
-                  <div className="ss-invites-th ss-icol-expires">Expires</div>
-                  <div className="ss-invites-th ss-icol-roles">Roles</div>
-                </div>
-                {members.filter(m => m.role === 'owner' || m.role === 'admin').length > 0 ? (
-                  members.filter(m => m.role === 'owner' || m.role === 'admin').map((m, i) => {
-                    const uname = m.username || m.user?.username || 'Unknown';
-                    const avatar = m.profile_image || m.profileImage || '/default-avatar.png';
-                    const code = Math.random().toString(36).substring(2, 10);
-                    const channel = channels?.[i % (channels?.length || 1)]?.name || 'general';
-                    return (
-                      <div key={`invite-${i}`} className="ss-invites-tr">
-                        <div className="ss-invites-td ss-icol-inviter">
-                          <img src={avatar} alt="" className="ss-member-avatar" onError={e => { e.target.src = '/default-avatar.png'; }} />
-                          <div className="ss-invite-user-info">
-                            <span className="ss-member-name">{uname}</span>
-                            <span className="ss-invite-channel">
-                              <span className="ss-invite-badge" style={{ background: '#5865f2' }}>#</span>
-                              <span className="ss-invite-badge" style={{ background: '#3ba55c' }}>●</span>
-                              <span className="ss-invite-channel-name">· {channel}</span>
-                            </span>
-                          </div>
-                        </div>
-                        <div className="ss-invites-td ss-icol-code">{code}</div>
-                        <div className="ss-invites-td ss-icol-uses">{Math.floor(Math.random() * 5)}</div>
-                        <div className="ss-invites-td ss-icol-expires">{`${String(Math.floor(Math.random() * 12 + 1)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`}</div>
-                        <div className="ss-invites-td ss-icol-roles" />
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="ss-invites-tr">
-                    <p className="ss-muted" style={{ padding: '20px 16px' }}>No active invite links.</p>
+              {invitesLoading ? <p className="ss-muted" style={{ padding: 20 }}>Loading...</p> : (
+                <div className="ss-invites-table">
+                  <div className="ss-invites-thead">
+                    <div className="ss-invites-th ss-icol-inviter">Created By</div>
+                    <div className="ss-invites-th ss-icol-code">Invite Code</div>
+                    <div className="ss-invites-th ss-icol-uses">Uses</div>
+                    <div className="ss-invites-th ss-icol-expires">Expires</div>
+                    <div className="ss-invites-th ss-icol-roles">Actions</div>
                   </div>
-                )}
-              </div>
+                  {inviteLinks.length === 0 ? (
+                    <div className="ss-invites-tr">
+                      <p className="ss-muted" style={{ padding: '20px 16px' }}>No active invite links.</p>
+                    </div>
+                  ) : inviteLinks.map(inv => (
+                    <div key={inv.code} className="ss-invites-tr">
+                      <div className="ss-invites-td ss-icol-inviter">
+                        <span className="ss-member-name">{inv.created_by_name || inv.created_by || 'Unknown'}</span>
+                      </div>
+                      <div className="ss-invites-td ss-icol-code" style={{ cursor: 'pointer' }} onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/invite/${inv.code}`); showNotice('Copied!'); }}>{inv.code}</div>
+                      <div className="ss-invites-td ss-icol-uses">{inv.uses || 0}{inv.max_uses ? `/${inv.max_uses}` : ''}</div>
+                      <div className="ss-invites-td ss-icol-expires">{inv.expires_at ? new Date(inv.expires_at).toLocaleDateString() : 'Never'}</div>
+                      <div className="ss-invites-td ss-icol-roles">
+                        <button className="ss-btn-danger-sm" onClick={() => handleDeleteInviteLink(inv.code)} title="Revoke">✕</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -2013,88 +2217,220 @@ export default function ServerSettings({
           {activeSection === 'automod' && (
             <div className="ss-section">
               <h2>AutoMod</h2>
-              <p className="ss-muted" style={{ marginBottom: 4 }}>Give your mods a break while keeping your server safe! Set up filters to moderate content and automate a custom response when they're found, and AutoMod will make it happen.</p>
-              <a href="#" className="ss-link" style={{ fontSize: 13, marginBottom: 24, display: 'inline-block' }}>Learn More</a>
+              <p className="ss-muted" style={{ marginBottom: 4 }}>Give your mods a break while keeping your server safe! Set up filters to moderate content and automate responses.</p>
 
-              <h3 className="ss-automod-heading">Content</h3>
+              <h3 className="ss-automod-heading">Content Filters</h3>
 
-              {/* Block Mention Spam */}
-              <div className="ss-automod-card">
-                <div className="ss-automod-icon" style={{ background: '#5865f2' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M3.02 13.13l1.59-1.59 2.12 2.12 4.24-4.24 1.59 1.59-5.83 5.83zM20 2H4c-1.1 0-2 .9-2 2v16l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2m0 12H5.17L4 15.17V4h16z" fill="#fff"/></svg>
-                </div>
-                <div className="ss-automod-info">
-                  <span className="ss-automod-title">Block Mention Spam</span>
-                  <span className="ss-automod-desc">Block messages with an excessive # of role and user mentions</span>
-                  <div className="ss-automod-tags">
-                    <span className="ss-automod-tag green">● block message</span>
-                    <span className="ss-automod-tag yellow">▲ send alert</span>
-                    <span className="ss-automod-tag red">⏱ timeout member</span>
+              {automodLoading ? <p className="ss-muted">Loading rules...</p> : (
+                <>
+                  {/* Existing rules */}
+                  {automodRules.length > 0 && (
+                    <div style={{ marginBottom: 20 }}>
+                      {automodRules.map(rule => (
+                        <div key={rule.id} className="ss-automod-card">
+                          <div className="ss-automod-icon" style={{ background: rule.enabled ? '#3ba55c' : '#80848e' }}>
+                            {rule.rule_type === 'blocked_words' && <span style={{ fontSize: 18, color: '#fff' }}>🚫</span>}
+                            {rule.rule_type === 'mention_spam' && <span style={{ fontSize: 18, color: '#fff' }}>@</span>}
+                            {rule.rule_type === 'spam_links' && <span style={{ fontSize: 18, color: '#fff' }}>🔗</span>}
+                          </div>
+                          <div className="ss-automod-info">
+                            <span className="ss-automod-title">{rule.name || rule.rule_type}</span>
+                            <span className="ss-automod-desc">
+                              {rule.rule_type === 'blocked_words' && `Blocks: ${(rule.trigger_metadata?.words || []).join(', ') || 'none set'}`}
+                              {rule.rule_type === 'mention_spam' && `Max mentions per message: ${rule.trigger_metadata?.max_mentions || 5}`}
+                              {rule.rule_type === 'spam_links' && 'Blocks suspected spam links'}
+                            </span>
+                            <div className="ss-automod-tags">
+                              <span className={`ss-automod-tag ${rule.enabled ? 'green' : 'red'}`}>{rule.enabled ? '● Enabled' : '○ Disabled'}</span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button className="ss-btn-setup" onClick={() => handleToggleAutomod(rule)}>
+                              {rule.enabled ? 'Disable' : 'Enable'}
+                            </button>
+                            <button className="ss-btn-danger-sm" onClick={() => handleDeleteAutomod(rule.id)}>✕</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Create new rules */}
+                  <h3 className="ss-automod-heading" style={{ marginTop: 16 }}>Add Rules</h3>
+
+                  {/* Block Mention Spam */}
+                  {!automodRules.some(r => r.rule_type === 'mention_spam') && (
+                    <div className="ss-automod-card">
+                      <div className="ss-automod-icon" style={{ background: '#5865f2' }}>
+                        <span style={{ fontSize: 18, color: '#fff' }}>@</span>
+                      </div>
+                      <div className="ss-automod-info">
+                        <span className="ss-automod-title">Block Mention Spam</span>
+                        <span className="ss-automod-desc">Block messages with excessive mentions</span>
+                      </div>
+                      {showAutomodSetup === 'mention_spam' ? (
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <label style={{ color: '#b5bac1', fontSize: 13 }}>Max mentions:</label>
+                          <input type="number" className="ss-input" value={automodMaxMentions} onChange={e => setAutomodMaxMentions(Number(e.target.value))} style={{ width: 60 }} min={1} />
+                          <button className="ss-btn-green" onClick={() => handleCreateAutomodRule('mention_spam')}>Save</button>
+                        </div>
+                      ) : (
+                        <button className="ss-btn-setup" onClick={() => setShowAutomodSetup('mention_spam')}>Set Up</button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Block Spam Links */}
+                  {!automodRules.some(r => r.rule_type === 'spam_links') && (
+                    <div className="ss-automod-card">
+                      <div className="ss-automod-icon" style={{ background: '#80848e' }}>
+                        <span style={{ fontSize: 18, color: '#fff' }}>🔗</span>
+                      </div>
+                      <div className="ss-automod-info">
+                        <span className="ss-automod-title">Block Suspected Spam Links</span>
+                        <span className="ss-automod-desc">Monitor messages for potentially spammy links</span>
+                      </div>
+                      <button className="ss-btn-setup" onClick={() => handleCreateAutomodRule('spam_links')}>Set Up</button>
+                    </div>
+                  )}
+
+                  {/* Block Custom Words */}
+                  <div className="ss-automod-card">
+                    <div className="ss-automod-icon" style={{ background: '#80848e' }}>
+                      <span style={{ fontSize: 18, color: '#fff' }}>🚫</span>
+                    </div>
+                    <div className="ss-automod-info">
+                      <span className="ss-automod-title">Block Custom Words</span>
+                      <span className="ss-automod-desc">Create a filter to block specific words from your server.</span>
+                    </div>
+                    {showAutomodSetup === 'blocked_words' ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 240 }}>
+                        <textarea
+                          className="ss-input"
+                          placeholder="word1, word2, word3..."
+                          value={automodWords}
+                          onChange={e => setAutomodWords(e.target.value)}
+                          rows={2}
+                          style={{ resize: 'vertical' }}
+                        />
+                        <button className="ss-btn-green" onClick={() => handleCreateAutomodRule('blocked_words')}>Create</button>
+                      </div>
+                    ) : (
+                      <button className="ss-btn-setup" onClick={() => setShowAutomodSetup('blocked_words')}>Create</button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── Events ── */}
+          {activeSection === 'events' && (
+            <div className="ss-section">
+              <h2>Scheduled Events</h2>
+              <p className="ss-subtitle">Create and manage events for your community.</p>
+
+              <button className="ss-btn-green" style={{ marginBottom: 20 }} onClick={() => setShowEventCreator(!showEventCreator)}>
+                {showEventCreator ? 'Cancel' : '+ Create Event'}
+              </button>
+
+              {showEventCreator && (
+                <div className="ss-event-creator" style={{ background: '#2b2d31', borderRadius: 8, padding: 16, marginBottom: 20 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <input className="ss-input" placeholder="Event name *" value={eventName} onChange={e => setEventName(e.target.value)} />
+                    <textarea className="ss-input" placeholder="Description (optional)" value={eventDesc} onChange={e => setEventDesc(e.target.value)} rows={2} style={{ resize: 'vertical' }} />
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <div style={{ flex: 1 }}>
+                        <label className="ss-hint" style={{ display: 'block', marginBottom: 4 }}>Start Time *</label>
+                        <input className="ss-input" type="datetime-local" value={eventStart} onChange={e => setEventStart(e.target.value)} style={{ width: '100%' }} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label className="ss-hint" style={{ display: 'block', marginBottom: 4 }}>End Time</label>
+                        <input className="ss-input" type="datetime-local" value={eventEnd} onChange={e => setEventEnd(e.target.value)} style={{ width: '100%' }} />
+                      </div>
+                    </div>
+                    <input className="ss-input" placeholder="Location (optional)" value={eventLocation} onChange={e => setEventLocation(e.target.value)} />
+                    <button className="ss-btn-green" onClick={handleCreateEvent} disabled={!eventName.trim() || !eventStart}>Create Event</button>
                   </div>
                 </div>
-                <button className="ss-btn-setup">Set Up</button>
+              )}
+
+              {eventsLoading ? <p className="ss-muted">Loading events...</p> : events.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: '#b5bac1' }}>
+                  <p style={{ fontSize: 40, marginBottom: 8 }}>📅</p>
+                  <p>No upcoming events</p>
+                </div>
+              ) : (
+                <div className="ss-events-list">
+                  {events.map(ev => (
+                    <div key={ev.id} className="ss-event-card" style={{ background: '#2b2d31', borderRadius: 8, padding: 16, marginBottom: 10 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <h4 style={{ color: '#fff', margin: '0 0 4px' }}>{ev.name}</h4>
+                          {ev.description && <p className="ss-muted" style={{ margin: '0 0 8px' }}>{ev.description}</p>}
+                          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                            <span className="ss-hint">📅 {new Date(ev.start_time).toLocaleString()}</span>
+                            {ev.end_time && <span className="ss-hint">→ {new Date(ev.end_time).toLocaleString()}</span>}
+                            {ev.location && <span className="ss-hint">📍 {ev.location}</span>}
+                          </div>
+                        </div>
+                        <button className="ss-btn-danger-sm" onClick={() => handleDeleteEvent(ev.id)} title="Delete event">✕</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Welcome Screen ── */}
+          {activeSection === 'welcomeScreen' && (
+            <div className="ss-section">
+              <h2>Welcome Screen</h2>
+              <p className="ss-subtitle">Greet new members when they join your server. Show them what your server is about and where to start.</p>
+
+              <div className="ss-toggle-row" style={{ marginBottom: 20 }}>
+                <div>
+                  <span className="ss-toggle-label">Enable Welcome Screen</span>
+                  <p className="ss-muted" style={{ margin: '4px 0 0' }}>Show a welcome screen when new members join</p>
+                </div>
+                <label className="ss-switch">
+                  <input type="checkbox" checked={welcomeEnabled} onChange={() => setWelcomeEnabled(!welcomeEnabled)} />
+                  <span className="ss-slider" />
+                </label>
               </div>
 
-              {/* Block Suspected Spam Content */}
-              <div className="ss-automod-card">
-                <div className="ss-automod-icon" style={{ background: '#80848e' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="10" fill="none" stroke="#fff" strokeWidth="2"/><line x1="4" y1="4" x2="20" y2="20" stroke="#fff" strokeWidth="2"/></svg>
-                </div>
-                <div className="ss-automod-info">
-                  <span className="ss-automod-title">Block Suspected Spam Content</span>
-                  <span className="ss-automod-desc">Monitor messages, Forum posts, and threads for potentially spammy content or activity. (Support for English only)</span>
-                  <div className="ss-automod-tags">
-                    <span className="ss-automod-tag green">● block message</span>
-                    <span className="ss-automod-tag yellow">▲ send alert</span>
+              {welcomeLoading ? <p className="ss-muted">Loading...</p> : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div>
+                    <label className="ss-hint" style={{ display: 'block', marginBottom: 4 }}>Server Description</label>
+                    <textarea className="ss-input" placeholder="Welcome to our server! Here's what we're all about..." value={welcomeDesc} onChange={e => setWelcomeDesc(e.target.value)} rows={3} style={{ width: '100%', resize: 'vertical' }} />
                   </div>
-                </div>
-                <button className="ss-btn-setup">Set Up</button>
-              </div>
 
-              {/* Block Commonly Flagged Words */}
-              <div className="ss-automod-card">
-                <div className="ss-automod-icon" style={{ background: '#80848e' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><rect x="4" y="6" width="16" height="2" rx="1"/><rect x="4" y="11" width="16" height="2" rx="1"/><rect x="4" y="16" width="12" height="2" rx="1"/></svg>
-                </div>
-                <div className="ss-automod-info">
-                  <span className="ss-automod-title">Block Commonly Flagged Words</span>
-                  <span className="ss-automod-desc">Flag messages that contain profanity and more. (Support for English only)</span>
-                  <div className="ss-automod-tags">
-                    <span className="ss-automod-tag green">● block message</span>
-                    <span className="ss-automod-tag yellow">▲ send alert</span>
+                  <div>
+                    <label className="ss-hint" style={{ display: 'block', marginBottom: 8 }}>Welcome Channels</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                      {welcomeChannelList.map(wc => (
+                        <div key={wc.channelId} style={{ background: '#2b2d31', borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span>{wc.emoji || '👋'}</span>
+                          <span style={{ color: '#fff' }}>#{wc.channelName || wc.channelId}</span>
+                          <button className="ss-btn-danger-sm" onClick={() => removeWelcomeChannel(wc.channelId)} style={{ padding: '2px 6px' }}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {(channels || []).filter(ch => !welcomeChannelList.some(wc => wc.channelId === ch.id)).map(ch => (
+                        <button key={ch.id} className="ss-btn-outline" onClick={() => addWelcomeChannel(ch)} style={{ fontSize: 12, padding: '4px 10px' }}>
+                          + #{ch.name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                <button className="ss-btn-setup">Set Up</button>
-              </div>
 
-              {/* Block Custom Words */}
-              <div className="ss-automod-card">
-                <div className="ss-automod-icon" style={{ background: '#80848e' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><rect x="4" y="6" width="16" height="2" rx="1"/><rect x="4" y="11" width="16" height="2" rx="1"/><rect x="4" y="16" width="12" height="2" rx="1"/></svg>
+                  <button className="ss-btn-green" onClick={handleSaveWelcomeScreen}>Save Welcome Screen</button>
                 </div>
-                <div className="ss-automod-info">
-                  <span className="ss-automod-title">Block Custom Words</span>
-                  <span className="ss-automod-desc">Create your own filter to block specific language from your server.</span>
-                  <div className="ss-automod-tags">
-                    <span className="ss-automod-tag green">● block message</span>
-                    <span className="ss-automod-tag yellow">▲ send alert</span>
-                    <span className="ss-automod-tag red">⏱ timeout member</span>
-                  </div>
-                </div>
-                <button className="ss-btn-setup">Create</button>
-              </div>
-
-              {/* Sensitive content filters */}
-              <h3 className="ss-automod-heading" style={{ marginTop: 32 }}>Sensitive content filters</h3>
-              <p className="ss-muted" style={{ marginBottom: 12 }}>Choose if server members can share image-based media detected by Hyve's sensitive content filters. This setting will apply to channels that are not age-restricted. <a href="#" className="ss-link">Learn more</a></p>
-
-              <div className="ss-automod-filter-card">
-                <div className="ss-automod-filter-info">
-                  <span className="ss-automod-filter-label">Filter messages from all members</span>
-                  <span className="ss-automod-filter-desc">All messages will be filtered for sensitive image-based media.</span>
-                </div>
-                <a href="#" className="ss-link">Change</a>
-              </div>
+              )}
             </div>
           )}
 

@@ -175,6 +175,55 @@ export default function GroupDetail() {
 
   const myUsername = (user?.username || '').toLowerCase();
 
+  // ── Forum channel state ──
+  const [forumPosts, setForumPosts] = useState([]);
+  const [forumLoading, setForumLoading] = useState(false);
+  const [showForumCreate, setShowForumCreate] = useState(false);
+  const [forumPostTitle, setForumPostTitle] = useState('');
+  const [forumPostContent, setForumPostContent] = useState('');
+  const [selectedForumPost, setSelectedForumPost] = useState(null);
+  const [forumPostMessages, setForumPostMessages] = useState([]);
+  const [forumMsgInput, setForumMsgInput] = useState('');
+
+  // ── Events sidebar state ──
+  const [sidebarEvents, setSidebarEvents] = useState([]);
+
+  const loadForumPosts = useCallback(async (channelId) => {
+    setForumLoading(true);
+    try {
+      const data = await api.getForumPosts(channelId);
+      setForumPosts(data?.posts || []);
+    } catch { setForumPosts([]); }
+    finally { setForumLoading(false); }
+  }, []);
+
+  const loadForumPostMessages = useCallback(async (postId) => {
+    try {
+      const data = await api.getForumPostMessages(postId);
+      setForumPostMessages(data?.messages || []);
+    } catch { setForumPostMessages([]); }
+  }, []);
+
+  const handleCreateForumPost = async (channelId) => {
+    if (!forumPostTitle.trim()) return;
+    try {
+      await api.createForumPost(channelId, forumPostTitle, forumPostContent);
+      setShowForumCreate(false);
+      setForumPostTitle('');
+      setForumPostContent('');
+      loadForumPosts(channelId);
+    } catch (err) { console.error('Failed to create forum post', err); }
+  };
+
+  const handleSendForumMessage = async (postId) => {
+    if (!forumMsgInput.trim()) return;
+    try {
+      await api.sendForumPostMessage(postId, forumMsgInput);
+      setForumMsgInput('');
+      loadForumPostMessages(postId);
+    } catch (err) { console.error('Failed to send forum message', err); }
+  };
+
   // Close server dropdown on click outside
   useEffect(() => {
     if (!showServerDropdown) return;
@@ -277,6 +326,14 @@ export default function GroupDetail() {
   const selectedChannel = useMemo(() => {
     return channels.find((c) => c.id === selectedChannelId) || null;
   }, [channels, selectedChannelId]);
+
+  // Load forum posts when a forum channel is selected
+  useEffect(() => {
+    if (selectedChannel?.type === 'forum' && selectedChannelId) {
+      loadForumPosts(selectedChannelId);
+      setSelectedForumPost(null);
+    }
+  }, [selectedChannelId, selectedChannel?.type, loadForumPosts]);
 
   const channelsByCategory = useMemo(() => {
     const result = [];
@@ -572,6 +629,11 @@ export default function GroupDetail() {
           await refreshPosts(groupId);
           await refreshChannels(groupId);
           await refreshRoles(groupId);
+          // Load sidebar events
+          try {
+            const evData = await api.getEvents(groupId);
+            setSidebarEvents(evData?.events || []);
+          } catch { setSidebarEvents([]); }
         }
       } catch { setError('Failed to load group.'); }
       finally { setLoading(false); }
@@ -1148,6 +1210,7 @@ export default function GroupDetail() {
   function channelIcon(type) {
     if (type === 'voice') return <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="channel-type-icon"><path d="M11.383 3.07904C11.009 2.92504 10.579 3.01004 10.293 3.29604L6 8.00004H3C2.447 8.00004 2 8.44704 2 9.00004V15C2 15.553 2.447 16 3 16H6L10.293 20.704C10.579 20.99 11.009 21.075 11.383 20.921C11.757 20.767 12 20.404 12 20V4.00004C12 3.59604 11.757 3.23304 11.383 3.07904Z"/><path d="M14 9.00004C14 9.00004 16 10 16 12C16 14 14 15 14 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/><path d="M17 7.00004C17 7.00004 20 9.00004 20 12C20 15 17 17 17 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>;
     if (type === 'announcement') return <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="channel-type-icon"><path d="M3.9 8.26H2V15.2941H3.9V8.26Z"/><path d="M19.1 4V5.12659L4.85 8.26447V18.1176C4.85 18.5496 5.1605 18.9252 5.5851 19.0315L9.0981 19.8999C9.5765 20.0201 10.0595 19.7252 10.172 19.2397L10.7575 16.7088L19.1 18.5765V19.7059C19.1 20.4206 19.6794 21 20.3941 21H21.5765C22.2912 21 22.8706 20.4206 22.8706 19.7059V4.29412C22.8706 3.57943 22.2912 3 21.5765 3H20.3941C19.6794 3 19.1 3.57943 19.1 4.29412V4Z"/></svg>;
+    if (type === 'forum') return <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="channel-type-icon"><path d="M18 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V4C20 2.9 19.1 2 18 2ZM9 4H11V9L10 8.25L9 9V4ZM18 20H6V4H7V13L10 10.75L13 13V4H18V20Z"/></svg>;
     // default: text #
     return <span className="discord-channel-hash">#</span>;
   }
@@ -1611,6 +1674,16 @@ export default function GroupDetail() {
                       </div>
                       <span className={`discord-channel-type-radio${newChannelType === 'announcement' ? ' checked' : ''}`} />
                     </label>
+                    <label className={`discord-channel-type-option${newChannelType === 'forum' ? ' selected' : ''}`} onClick={() => setNewChannelType('forum')}>
+                      <span className="discord-channel-type-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V4C20 2.9 19.1 2 18 2ZM9 4H11V9L10 8.25L9 9V4ZM18 20H6V4H7V13L10 10.75L13 13V4H18V20Z"/></svg>
+                      </span>
+                      <div>
+                        <div className="discord-channel-type-title">Forum</div>
+                        <div className="discord-channel-type-desc">Create organized discussions with posts and replies</div>
+                      </div>
+                      <span className={`discord-channel-type-radio${newChannelType === 'forum' ? ' checked' : ''}`} />
+                    </label>
                   </div>
                   <label className="discord-create-label">CHANNEL NAME</label>
                   <div className="discord-create-channel-name-row">
@@ -1648,6 +1721,20 @@ export default function GroupDetail() {
             </div>
           )}
         </div>
+
+        {/* Events sidebar widget */}
+        {sidebarEvents.length > 0 && (
+          <div className="discord-events-widget" style={{ padding: '8px 10px' }}>
+            <div style={{ color: '#949ba4', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', padding: '4px 6px', letterSpacing: 0.5 }}>Upcoming Events</div>
+            {sidebarEvents.slice(0, 3).map(ev => (
+              <div key={ev.id} style={{ padding: '6px 8px', borderRadius: 4, marginTop: 4, background: '#2b2d31', cursor: 'default' }}>
+                <div style={{ color: '#5865f2', fontSize: 11, fontWeight: 600 }}>{new Date(ev.start_time).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · {new Date(ev.start_time).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</div>
+                <div style={{ color: '#dbdee1', fontSize: 13, fontWeight: 500 }}>{ev.name}</div>
+                {ev.location && <div style={{ color: '#949ba4', fontSize: 11 }}>📍 {ev.location}</div>}
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="discord-nav-divider" />
         <div className="discord-nav-items">
@@ -1713,7 +1800,87 @@ export default function GroupDetail() {
       <div className="discord-main">
         {notice && <div className="discord-notice">{notice}<button onClick={() => setNotice('')}>&#10005;</button></div>}
 
-        {activePanel === 'chat' && (
+        {activePanel === 'chat' && selectedChannel?.type === 'forum' && (
+          <div className="discord-forum-view">
+            <div className="discord-panel-header" style={{ borderBottom: '1px solid #3f4147', padding: '12px 16px' }}>
+              <h2 style={{ margin: 0, fontSize: 16 }}>📋 {selectedChannel.name}</h2>
+              <button className="discord-btn-primary" style={{ marginLeft: 'auto', padding: '6px 14px', fontSize: 13 }} onClick={() => setShowForumCreate(true)}>New Post</button>
+            </div>
+
+            {showForumCreate && (
+              <div style={{ padding: 16, borderBottom: '1px solid #3f4147', background: '#2b2d31' }}>
+                <input className="discord-input" placeholder="Post title *" value={forumPostTitle} onChange={e => setForumPostTitle(e.target.value)} style={{ marginBottom: 8, width: '100%' }} />
+                <textarea className="discord-input" placeholder="Post content (optional)" value={forumPostContent} onChange={e => setForumPostContent(e.target.value)} rows={3} style={{ width: '100%', resize: 'vertical', marginBottom: 8 }} />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="discord-btn-primary" onClick={() => handleCreateForumPost(selectedChannelId)} disabled={!forumPostTitle.trim()}>Create Post</button>
+                  <button className="discord-btn-cancel" onClick={() => { setShowForumCreate(false); setForumPostTitle(''); setForumPostContent(''); }}>Cancel</button>
+                </div>
+              </div>
+            )}
+
+            {selectedForumPost ? (
+              <div className="discord-forum-thread" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div style={{ padding: '12px 16px', borderBottom: '1px solid #3f4147', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button onClick={() => { setSelectedForumPost(null); setForumPostMessages([]); }} style={{ background: 'none', border: 'none', color: '#b5bac1', cursor: 'pointer', fontSize: 16 }}>←</button>
+                  <h3 style={{ margin: 0, fontSize: 15, color: '#fff' }}>{selectedForumPost.title}</h3>
+                  <span style={{ color: '#949ba4', fontSize: 12, marginLeft: 'auto' }}>by {selectedForumPost.created_by_name || 'Unknown'}</span>
+                </div>
+                {selectedForumPost.content && (
+                  <div style={{ padding: '12px 16px', color: '#dbdee1', borderBottom: '1px solid #3f4147' }}>{selectedForumPost.content}</div>
+                )}
+                <div style={{ flex: 1, overflow: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {forumPostMessages.map(msg => (
+                    <div key={msg.id} style={{ display: 'flex', gap: 10 }}>
+                      <img src={msg.profile_image || '/default-avatar.png'} alt="" style={{ width: 32, height: 32, borderRadius: '50%' }} onError={e => { e.target.src = '/default-avatar.png'; }} />
+                      <div>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'baseline' }}>
+                          <span style={{ color: '#fff', fontWeight: 500, fontSize: 14 }}>{msg.username || 'Unknown'}</span>
+                          <span style={{ color: '#949ba4', fontSize: 11 }}>{new Date(msg.created_at).toLocaleString()}</span>
+                        </div>
+                        <div style={{ color: '#dbdee1', fontSize: 14 }}>{msg.content}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ padding: '12px 16px', borderTop: '1px solid #3f4147', display: 'flex', gap: 8 }}>
+                  <input className="discord-input" placeholder="Reply to this post..." value={forumMsgInput} onChange={e => setForumMsgInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendForumMessage(selectedForumPost.id)} style={{ flex: 1 }} />
+                  <button className="discord-btn-primary" onClick={() => handleSendForumMessage(selectedForumPost.id)} disabled={!forumMsgInput.trim()}>Send</button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
+                {forumLoading ? <p className="discord-muted">Loading posts...</p> : forumPosts.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 0', color: '#949ba4' }}>
+                    <p style={{ fontSize: 40 }}>📋</p>
+                    <p>No posts yet. Create the first one!</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {forumPosts.map(post => (
+                      <div key={post.id} className="discord-forum-post-card" onClick={() => { setSelectedForumPost(post); loadForumPostMessages(post.id); }}
+                        style={{ background: '#2b2d31', borderRadius: 8, padding: '12px 16px', cursor: 'pointer', transition: 'background 0.15s' }}
+                        onMouseOver={e => e.currentTarget.style.background = '#32353b'} onMouseOut={e => e.currentTarget.style.background = '#2b2d31'}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div>
+                            <h4 style={{ margin: '0 0 4px', color: '#fff', fontSize: 15 }}>{post.title}</h4>
+                            {post.content && <p style={{ margin: 0, color: '#949ba4', fontSize: 13, maxHeight: 40, overflow: 'hidden' }}>{post.content}</p>}
+                          </div>
+                          <span style={{ color: '#949ba4', fontSize: 11, whiteSpace: 'nowrap' }}>{post.reply_count || 0} replies</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 12, color: '#949ba4' }}>
+                          <span>{post.created_by_name || 'Unknown'}</span>
+                          <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activePanel === 'chat' && selectedChannel?.type !== 'forum' && (
           <ChannelChat
             channel={selectedChannel}
             groupId={groupId}

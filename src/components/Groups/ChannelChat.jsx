@@ -52,6 +52,15 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
   const [activeThread, setActiveThread] = useState(null);
   const [threadInput, setThreadInput] = useState('');
   const [threadSending, setThreadSending] = useState(false);
+  // Poll state
+  const [showPollCreator, setShowPollCreator] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState('');
+  const [pollOptions, setPollOptions] = useState(['', '']);
+  const [pollMultiple, setPollMultiple] = useState(false);
+  const [pollExpiry, setPollExpiry] = useState(0);
+  // Bulk delete state
+  const [bulkSelectMode, setBulkSelectMode] = useState(false);
+  const [bulkSelected, setBulkSelected] = useState(new Set());
   // Slowmode state
   const [slowmodeRemaining, setSlowmodeRemaining] = useState(0);
   const slowmodeTimerRef = useRef(null);
@@ -449,6 +458,82 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
     }, 400);
   };
 
+  // ── Poll creation ──
+  const handleCreatePoll = async () => {
+    const validOpts = pollOptions.filter(o => o.trim());
+    if (!pollQuestion.trim() || validOpts.length < 2) return;
+    try {
+      await api.createPoll(channel.id, pollQuestion.trim(), validOpts.map(label => ({ label })), pollMultiple, pollExpiry || null);
+      setShowPollCreator(false);
+      setPollQuestion('');
+      setPollOptions(['', '']);
+      setPollMultiple(false);
+      setPollExpiry(0);
+    } catch (err) {
+      console.error('Failed to create poll:', err);
+    }
+  };
+
+  // ── Poll voting ──
+  const handleVotePoll = async (pollId, optionId) => {
+    try {
+      const data = await api.votePoll(pollId, optionId);
+      setMessages(prev => prev.map(m => {
+        if (m.poll && m.poll.id === pollId) {
+          return { ...m, poll: { ...m.poll, options: data.options, totalVotes: data.totalVotes } };
+        }
+        return m;
+      }));
+    } catch (err) {
+      console.error('Failed to vote:', err);
+    }
+  };
+
+  // ── Bulk delete ──
+  const handleBulkDelete = async () => {
+    if (bulkSelected.size === 0) return;
+    try {
+      await api.bulkDeleteMessages(channel.id, Array.from(bulkSelected));
+      setMessages(prev => prev.filter(m => !bulkSelected.has(m.id)));
+      setBulkSelected(new Set());
+      setBulkSelectMode(false);
+    } catch (err) {
+      console.error('Bulk delete failed:', err);
+    }
+  };
+
+  const toggleBulkSelect = (msgId) => {
+    setBulkSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(msgId)) next.delete(msgId);
+      else if (next.size < 100) next.add(msgId);
+      return next;
+    });
+  };
+
+  // Listen for poll updates
+  useEffect(() => {
+    if (!socketService.socket || !channel?.id) return;
+    const handlePollUpdate = (data) => {
+      setMessages(prev => prev.map(m => {
+        if (m.poll && m.poll.id === data.pollId) {
+          return { ...m, poll: { ...m.poll, options: data.options, totalVotes: data.totalVotes } };
+        }
+        return m;
+      }));
+    };
+    const handleBulkDeleted = (data) => {
+      const ids = new Set(data.messageIds);
+      setMessages(prev => prev.filter(m => !ids.has(m.id)));
+    };
+    socketService.socket.on('poll_update', handlePollUpdate);
+    socketService.socket.on('messages_bulk_deleted', handleBulkDeleted);
+    return () => {
+      socketService.socket.off('poll_update', handlePollUpdate);
+      socketService.socket.off('messages_bulk_deleted', handleBulkDeleted);
+    };
+  }, [channel?.id]);
+
   // Group messages by date
   const groupedMessages = messages.reduce((groups, msg) => {
     const date = new Date(msg.created_at).toLocaleDateString('en-US', {
@@ -472,7 +557,8 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
   // ── Markdown rendering ──
   function renderMarkdown(text) {
     if (!text) return null;
-    const parts = text.split(/(```[\s\S]*?```|`[^`\n]+`)/g);
+    // Split on code blocks, inline code, and spoiler tags
+    const parts = text.split(/(```[\s\S]*?```|`[^`\n]+`|\|\|[^|]+\|\|)/g);
     return parts.map((part, i) => {
       if (part.startsWith('```') && part.endsWith('```')) {
         const code = part.slice(3, -3).replace(/^\n/, '');
@@ -481,12 +567,15 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
       if (part.startsWith('`') && part.endsWith('`')) {
         return <code key={i} className="msg-inline-code">{part.slice(1, -1)}</code>;
       }
+      if (part.startsWith('||') && part.endsWith('||') && part.length > 4) {
+        return <span key={i} className="msg-spoiler" onClick={(e) => e.currentTarget.classList.toggle('revealed')}>{part.slice(2, -2)}</span>;
+      }
       return <span key={i}>{renderInline(part)}</span>;
     });
   }
 
   function renderInline(text) {
-    const pattern = /(\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|__[^_]+__|https?:\/\/[^\s<>]+|<@([^>]+)>)/g;
+    const pattern = /(\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|__[^_]+__|\|\|[^|]+\|\||https?:\/\/[^\s<>]+|<@([^>]+)>)/g;
     const parts = text.split(pattern);
     return parts.map((part, i) => {
       if (!part) return null;
@@ -498,6 +587,8 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
         return <em key={i}>{part.slice(1, -1)}</em>;
       if (part.startsWith('~~') && part.endsWith('~~'))
         return <del key={i}>{part.slice(2, -2)}</del>;
+      if (part.startsWith('||') && part.endsWith('||') && part.length > 4)
+        return <span key={i} className="msg-spoiler" onClick={(e) => e.currentTarget.classList.toggle('revealed')}>{part.slice(2, -2)}</span>;
       if (/^https?:\/\//.test(part))
         return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="msg-link">{part}</a>;
       // @mention
@@ -800,7 +891,12 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
                       <span>{msgDate}</span>
                     </div>
                   )}
-                  <div className={`channel-msg${showHeader ? '' : ' channel-msg-compact'}${isMe ? ' channel-msg-mine' : ''}`}>
+                  <div className={`channel-msg${showHeader ? '' : ' channel-msg-compact'}${isMe ? ' channel-msg-mine' : ''}${bulkSelectMode ? ' bulk-mode' : ''}`}>
+                    {bulkSelectMode && isAdmin && (
+                      <label className="channel-bulk-checkbox">
+                        <input type="checkbox" checked={bulkSelected.has(msg.id)} onChange={() => toggleBulkSelect(msg.id)} />
+                      </label>
+                    )}
                     {showHeader && (
                       <div className="channel-msg-header">
                         <img
@@ -860,6 +956,30 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
                       )}
                       {/* Link embeds */}
                       {renderLinkEmbeds(msg.content)}
+                      {/* Poll embed */}
+                      {msg.poll && (
+                        <div className="channel-poll">
+                          <div className="channel-poll-question">📊 {msg.poll.question}</div>
+                          <div className="channel-poll-options">
+                            {(msg.poll.options || []).map(opt => {
+                              const total = msg.poll.totalVotes || msg.poll.options.reduce((s, o) => s + (o.votes || 0), 0) || 1;
+                              const pct = Math.round(((opt.votes || 0) / total) * 100) || 0;
+                              return (
+                                <button key={opt.id} className={`channel-poll-option${opt.voted ? ' voted' : ''}`} onClick={() => handleVotePoll(msg.poll.id, opt.id)}>
+                                  <div className="channel-poll-bar" style={{ width: `${pct}%` }} />
+                                  <span className="channel-poll-option-label">{opt.emoji && <span>{opt.emoji} </span>}{opt.label}</span>
+                                  <span className="channel-poll-option-pct">{pct}%</span>
+                                  <span className="channel-poll-option-votes">{opt.votes || 0}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <div className="channel-poll-footer">
+                            {msg.poll.totalVotes || msg.poll.options?.reduce((s, o) => s + (o.votes || 0), 0) || 0} votes
+                            {msg.poll.expires_at && <span> · Expires {new Date(msg.poll.expires_at).toLocaleDateString()}</span>}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     {/* Reactions */}
                     {msg.reactions && msg.reactions.length > 0 && (
@@ -905,6 +1025,9 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
                       )}
                       {canDelete && (
                         <button title="Delete" onClick={() => handleDelete(msg.id)}>🗑️</button>
+                      )}
+                      {isAdmin && !bulkSelectMode && (
+                        <button title="Bulk Select" onClick={() => { setBulkSelectMode(true); setBulkSelected(new Set([msg.id])); }}>☑️</button>
                       )}
                     </div>
                   </div>
@@ -998,6 +1121,48 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
         </div>
       )}
 
+      {/* Bulk delete bar */}
+      {bulkSelectMode && (
+        <div className="channel-bulk-bar">
+          <span>{bulkSelected.size} message{bulkSelected.size !== 1 ? 's' : ''} selected</span>
+          <button className="channel-bulk-delete-btn" onClick={handleBulkDelete} disabled={bulkSelected.size === 0}>Delete Selected</button>
+          <button className="channel-bulk-cancel-btn" onClick={() => { setBulkSelectMode(false); setBulkSelected(new Set()); }}>Cancel</button>
+        </div>
+      )}
+
+      {/* Poll creator */}
+      {showPollCreator && (
+        <div className="channel-poll-creator">
+          <div className="channel-poll-creator-header">
+            <h3>Create a Poll</h3>
+            <button onClick={() => setShowPollCreator(false)}>✕</button>
+          </div>
+          <input className="channel-poll-question-input" placeholder="Ask a question..." value={pollQuestion} onChange={(e) => setPollQuestion(e.target.value)} maxLength={300} />
+          <div className="channel-poll-options-list">
+            {pollOptions.map((opt, i) => (
+              <div key={i} className="channel-poll-option-input-row">
+                <input placeholder={`Option ${i + 1}`} value={opt} onChange={(e) => { const next = [...pollOptions]; next[i] = e.target.value; setPollOptions(next); }} maxLength={100} />
+                {pollOptions.length > 2 && <button className="channel-poll-remove-opt" onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))}>✕</button>}
+              </div>
+            ))}
+            {pollOptions.length < 10 && <button className="channel-poll-add-opt" onClick={() => setPollOptions([...pollOptions, ''])}>+ Add Option</button>}
+          </div>
+          <div className="channel-poll-settings">
+            <label><input type="checkbox" checked={pollMultiple} onChange={(e) => setPollMultiple(e.target.checked)} /> Allow multiple answers</label>
+            <select value={pollExpiry} onChange={(e) => setPollExpiry(Number(e.target.value))}>
+              <option value={0}>No expiry</option>
+              <option value={1}>1 hour</option>
+              <option value={4}>4 hours</option>
+              <option value={8}>8 hours</option>
+              <option value={24}>24 hours</option>
+              <option value={72}>3 days</option>
+              <option value={168}>7 days</option>
+            </select>
+          </div>
+          <button className="channel-poll-submit" onClick={handleCreatePoll} disabled={!pollQuestion.trim() || pollOptions.filter(o => o.trim()).length < 2}>Create Poll</button>
+        </div>
+      )}
+
       {/* Input area */}
       <form className="channel-input-form" onSubmit={handleSend}>
         <button type="button" className="channel-input-icon channel-attach-btn" title="Attach file" onClick={() => fileInputRef.current?.click()}>+</button>
@@ -1016,8 +1181,9 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
           disabled={sending || (slowmodeRemaining > 0 && !isAdmin)}
         />
         <div className="channel-input-right">
-          <button type="button" className={`channel-input-icon${showGifPicker ? ' active' : ''}`} title="GIF" onClick={() => { setShowGifPicker((p) => !p); setShowEmojiPicker(false); }}>GIF</button>
-          <button type="button" className={`channel-input-icon${showEmojiPicker ? ' active' : ''}`} title="Emoji" onClick={() => { setShowEmojiPicker((p) => !p); setShowGifPicker(false); }}>😊</button>
+          <button type="button" className={`channel-input-icon${showPollCreator ? ' active' : ''}`} title="Create Poll" onClick={() => { setShowPollCreator((p) => !p); setShowGifPicker(false); setShowEmojiPicker(false); }}>📊</button>
+          <button type="button" className={`channel-input-icon${showGifPicker ? ' active' : ''}`} title="GIF" onClick={() => { setShowGifPicker((p) => !p); setShowEmojiPicker(false); setShowPollCreator(false); }}>GIF</button>
+          <button type="button" className={`channel-input-icon${showEmojiPicker ? ' active' : ''}`} title="Emoji" onClick={() => { setShowEmojiPicker((p) => !p); setShowGifPicker(false); setShowPollCreator(false); }}>😊</button>
           {input.trim() && (
             <button type="submit" className="channel-input-icon channel-send-icon" disabled={sending}>➤</button>
           )}

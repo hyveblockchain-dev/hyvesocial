@@ -539,3 +539,31 @@ body.light-mode .us-theme-btn.active { color: #313338; }
     max-width: unset;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Custom Status
+   ═══════════════════════════════════════════════════════════ */
+.us-muted {
+  color: #949ba4;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.us-input {
+  background: #1e1f22;
+  border: 1px solid #3f4147;
+  border-radius: 4px;
+  color: #dbdee1;
+  padding: 8px 10px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.us-input:focus {
+  outline: none;
+  border-color: #5865f2;
+}
+select.us-input {
+  appearance: auto;
+  cursor: pointer;
+}
+.light-mode .us-muted { color: #4e5058; }
+.light-mode .us-input { background: #ebedef; border-color: #e3e5e8; color: #060607; }
