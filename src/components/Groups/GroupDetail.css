@@ -3257,8 +3257,9 @@
 /* ── Hero banner ── */
 .dmd-hero {
   position: relative;
-  background: linear-gradient(135deg, #5865f2 0%, #3a45b0 40%, #2b2d31 100%);
-  padding: 48px 40px;
+  background: linear-gradient(135deg, #5865f2 0%, #4752c4 50%, #2b2d31 100%);
+  padding: 60px 40px 56px;
+  min-height: 120px;
   overflow: hidden;
 }
 .dmd-hero::before {
@@ -3274,28 +3275,28 @@
 }
 .dmd-hero-text h1 {
   color: #fff;
-  font-size: 28px;
+  font-size: 36px;
   font-weight: 900;
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   line-height: 1.15;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 .dmd-hero-text p {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 15px;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 16px;
   margin: 0;
 }
 
 /* ── Section ── */
 .dmd-section {
-  padding: 24px 24px 32px;
+  padding: 24px 32px 40px;
 }
 .dmd-section-title {
   color: #f2f3f5;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
-  margin: 0 0 16px;
+  margin: 0 0 20px;
 }
 
 .dmd-loading {
@@ -3308,9 +3309,12 @@
 /* ── Server card grid ── */
 .dmd-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
 }
+@media (max-width: 1400px) { .dmd-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1000px) { .dmd-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 650px) { .dmd-grid { grid-template-columns: 1fr; } }
 
 .dmd-card {
   background: #2b2d31;
@@ -3326,7 +3330,7 @@
 
 .dmd-card-cover {
   position: relative;
-  height: 140px;
+  height: 143px;
   overflow: hidden;
   background: #1e1f22;
 }
