@@ -1879,6 +1879,55 @@
 }
 .ss-perm-link:hover { text-decoration: underline; }
 
+/* Save changes bar */
+.ss-role-save-bar {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #111214;
+  border-radius: 6px;
+  margin-top: 16px;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+  z-index: 5;
+}
+.ss-role-save-text {
+  font-size: 14px;
+  color: #dbdee1;
+  font-weight: 500;
+}
+.ss-role-save-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ss-role-save-reset {
+  background: none;
+  border: none;
+  color: #b5bac1;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 12px;
+}
+.ss-role-save-reset:hover { color: #fff; text-decoration: underline; }
+.ss-role-save-btn {
+  background: #248046;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 20px;
+  cursor: pointer;
+}
+.ss-role-save-btn:hover { background: #1a6334; }
+.ss-role-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .ss-badge-sm {
   font-size: 10px;
   font-weight: 700;
@@ -2785,6 +2834,10 @@
 .light-mode .ss-perm-row { border-top-color: #e3e5e8; }
 .light-mode .ss-perm-label { color: #060607; }
 .light-mode .ss-perm-desc { color: #4e5058; }
+.light-mode .ss-role-save-bar { background: #f2f3f5; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+.light-mode .ss-role-save-text { color: #313338; }
+.light-mode .ss-role-save-reset { color: #4e5058; }
+.light-mode .ss-role-save-reset:hover { color: #060607; }
 .light-mode .ss-badge-sm { background: #f2f3f5; color: #4e5058; }
 .light-mode .ss-close-btn { color: #5c5e66; border-color: #c4c9ce; }
 .light-mode .ss-close-btn:hover { color: #060607; border-color: #060607; }

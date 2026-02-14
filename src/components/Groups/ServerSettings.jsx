@@ -68,6 +68,7 @@ export default function ServerSettings({
   onClose,
   onRefreshGroup,
   onRefreshMembers,
+  onRefreshRoles,
   onSavePostingPermission,
   onSaveModeration,
   onApprove,
@@ -125,6 +126,7 @@ export default function ServerSettings({
   const [editRoleHoist, setEditRoleHoist] = useState(false);
   const [editRoleMention, setEditRoleMention] = useState(false);
   const [permSearch, setPermSearch] = useState('');
+  const [roleSaving, setRoleSaving] = useState(false);
   const [rolePerms, setRolePerms] = useState({
     viewChannels: false, manageChannels: false, manageRoles: false,
     createExpressions: false, manageExpressions: false, viewAuditLog: false,
@@ -146,12 +148,106 @@ export default function ServerSettings({
     administrator: false
   });
 
+  const DEFAULT_PERMS = {
+    viewChannels: false, manageChannels: false, manageRoles: false,
+    createExpressions: false, manageExpressions: false, viewAuditLog: false,
+    manageWebhooks: false, manageServer: false,
+    createInvite: false, changeNickname: false, manageNicknames: false,
+    kickMembers: false, banMembers: false, timeoutMembers: false,
+    sendMessages: false, sendMessagesInThreads: false, createPublicThreads: false,
+    createPrivateThreads: false, embedLinks: false, attachFiles: false,
+    addReactions: false, useExternalEmoji: false, useExternalStickers: false,
+    mentionEveryone: false, manageMessages: false, pinMessages: false,
+    bypassSlowmode: false, manageThreads: false, readMessageHistory: false,
+    sendTTS: false, sendVoiceMessages: false, createPolls: false,
+    connect: false, speak: false, video: false, useSoundboard: false,
+    useExternalSounds: false, useVoiceActivity: false, prioritySpeaker: false,
+    muteMembers: false, deafenMembers: false, moveMembers: false,
+    setVoiceStatus: false,
+    useApplicationCommands: false, useActivities: false, useExternalApps: false,
+    createEvents: false, manageEvents: false,
+    administrator: false
+  };
+
   const ROLE_COLORS = [
     '#99aab5', '#1abc9c', '#2ecc71', '#3498db', '#9b59b6', '#e91e63',
     '#f1c40f', '#e67e22', '#e74c3c', '#95a5a6', '#607d8b', '#11806a',
     '#1f8b4c', '#206694', '#71368a', '#ad1457', '#c27c0e', '#a84300',
     '#992d22', '#979c9f',
   ];
+
+  // Load permissions from a role object into state
+  const loadRoleForEdit = useCallback((role) => {
+    setEditRoleName(role.name || 'new role');
+    setEditRoleColor(ROLE_COLORS.indexOf(role.color) !== -1 ? ROLE_COLORS.indexOf(role.color) : 0);
+    setEditRoleTab('display');
+    setEditRoleHoist(role.permissions?.hoist || false);
+    setEditRoleMention(role.permissions?.mentionable || false);
+    setPermSearch('');
+    const perms = { ...DEFAULT_PERMS };
+    if (role.permissions) {
+      Object.keys(perms).forEach(k => {
+        if (role.permissions[k]) perms[k] = true;
+      });
+    }
+    setRolePerms(perms);
+    setEditingRole(role);
+  }, []);
+
+  // Save role (create or update)
+  const handleSaveRole = useCallback(async () => {
+    if (roleSaving) return;
+    setRoleSaving(true);
+    try {
+      const permData = { ...rolePerms, hoist: editRoleHoist, mentionable: editRoleMention };
+      const color = ROLE_COLORS[editRoleColor] || ROLE_COLORS[0];
+      if (editingRole?.isNew) {
+        // Create new role
+        const res = await api.createGroupRole(groupId, {
+          name: editRoleName.trim() || 'new role',
+          color,
+          permissions: permData
+        });
+        if (onRefreshRoles) await onRefreshRoles();
+        // Switch to editing the newly created role
+        if (res?.role) {
+          setEditingRole(res.role);
+        }
+      } else {
+        // Update existing role
+        await api.updateGroupRole(groupId, editingRole.id, {
+          name: editRoleName.trim() || 'role',
+          color,
+          permissions: permData
+        });
+        if (onRefreshRoles) await onRefreshRoles();
+      }
+      setNotice('Role saved successfully!');
+      setTimeout(() => setNotice(''), 2000);
+    } catch (err) {
+      setNotice(err.message || 'Failed to save role');
+    } finally {
+      setRoleSaving(false);
+    }
+  }, [editingRole, editRoleName, editRoleColor, editRoleHoist, editRoleMention, rolePerms, groupId, onRefreshRoles, roleSaving]);
+
+  // Delete role
+  const handleDeleteRoleFromEditor = useCallback(async () => {
+    if (!editingRole || editingRole.isNew || editingRole.id === '__everyone') return;
+    if (!confirm('Delete this role? This cannot be undone.')) return;
+    try {
+      setBusy(true);
+      await api.deleteGroupRole(groupId, editingRole.id);
+      if (onRefreshRoles) await onRefreshRoles();
+      setEditingRole(null);
+      setNotice('Role deleted.');
+      setTimeout(() => setNotice(''), 2000);
+    } catch (err) {
+      setNotice(err.message || 'Failed to delete role');
+    } finally {
+      setBusy(false);
+    }
+  }, [editingRole, groupId, onRefreshRoles, setBusy]);
 
   // Access states
   const [accessMode, setAccessMode] = useState('invite');
@@ -546,12 +642,7 @@ export default function ServerSettings({
                         BACK
                       </button>
                       <button className="ss-role-add-btn" onClick={() => {
-                        setEditRoleName('new role');
-                        setEditRoleColor(0);
-                        setEditRoleTab('display');
-                        setEditRoleHoist(false);
-                        setEditRoleMention(false);
-                        setEditingRole({ id: '__new__' + Date.now(), name: 'new role', color: '#99aab5', isNew: true });
+                        loadRoleForEdit({ id: '__new__' + Date.now(), name: 'new role', color: '#99aab5', isNew: true, permissions: {} });
                       }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
                       </button>
@@ -561,14 +652,7 @@ export default function ServerSettings({
                         <button
                           key={r.id}
                           className={`ss-role-list-item${editingRole?.id === r.id ? ' active' : ''}`}
-                          onClick={() => {
-                            setEditingRole(r);
-                            setEditRoleName(r.name || 'new role');
-                            setEditRoleColor(ROLE_COLORS.indexOf(r.color) !== -1 ? ROLE_COLORS.indexOf(r.color) : 0);
-                            setEditRoleTab('display');
-                            setEditRoleHoist(false);
-                            setEditRoleMention(false);
-                          }}
+                          onClick={() => loadRoleForEdit(r)}
                         >
                           <span className="ss-role-dot" style={{ background: r.color || '#99aab5' }} />
                           <span className="ss-role-list-name">{r.name}</span>
@@ -856,6 +940,23 @@ export default function ServerSettings({
                         <p className="ss-muted" style={{ padding: '24px 0' }}>No members with this role.</p>
                       </div>
                     )}
+
+                    {/* Save changes bar */}
+                    <div className="ss-role-save-bar">
+                      <span className="ss-role-save-text">Careful — you have unsaved changes!</span>
+                      <div className="ss-role-save-actions">
+                        <button className="ss-role-save-reset" onClick={() => {
+                          if (editingRole?.isNew) {
+                            loadRoleForEdit({ id: editingRole.id, name: 'new role', color: '#99aab5', isNew: true, permissions: {} });
+                          } else {
+                            loadRoleForEdit(editingRole);
+                          }
+                        }}>Reset</button>
+                        <button className="ss-role-save-btn" onClick={handleSaveRole} disabled={roleSaving}>
+                          {roleSaving ? 'Saving...' : 'Save Changes'}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
@@ -910,12 +1011,7 @@ export default function ServerSettings({
                   <input type="text" placeholder="Search Roles" value={roleSearch} onChange={e => setRoleSearch(e.target.value)} />
                 </div>
                 <button className="ss-btn-create-role" onClick={() => {
-                  setEditRoleName('new role');
-                  setEditRoleColor(0);
-                  setEditRoleTab('display');
-                  setEditRoleHoist(false);
-                  setEditRoleMention(false);
-                  setEditingRole({ id: '__new__' + Date.now(), name: 'new role', color: '#99aab5', isNew: true });
+                  loadRoleForEdit({ id: '__new__' + Date.now(), name: 'new role', color: '#99aab5', isNew: true, permissions: {} });
                 }}>Create Role</button>
               </div>
 
@@ -938,14 +1034,7 @@ export default function ServerSettings({
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="#b5bac1"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z"/></svg>
                     </div>
                     <div className="ss-roles-col-actions">
-                      <button className="ss-signal-btn" title="Edit" onClick={() => {
-                        setEditRoleName(r.name || 'role');
-                        setEditRoleColor(ROLE_COLORS.indexOf(r.color) !== -1 ? ROLE_COLORS.indexOf(r.color) : 0);
-                        setEditRoleTab('display');
-                        setEditRoleHoist(false);
-                        setEditRoleMention(false);
-                        setEditingRole(r);
-                      }}><svg width="16" height="16" viewBox="0 0 24 24" fill="#b5bac1"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+                      <button className="ss-signal-btn" title="Edit" onClick={() => loadRoleForEdit(r)}><svg width="16" height="16" viewBox="0 0 24 24" fill="#b5bac1"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
                       <button className="ss-signal-btn" title="More"><svg width="16" height="16" viewBox="0 0 24 24" fill="#b5bac1"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
                     </div>
                   </div>

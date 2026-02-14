@@ -1888,6 +1888,7 @@ export default function GroupDetail() {
         onClose={() => setShowServerSettings(false)}
         onRefreshGroup={() => refreshGroup(groupId)}
         onRefreshMembers={() => refreshMembers(groupId)}
+        onRefreshRoles={() => refreshRoles(groupId)}
         onSavePostingPermission={handleSavePostingPermission}
         onSaveModeration={handleSaveModeration}
         onApprove={handleApprove}
