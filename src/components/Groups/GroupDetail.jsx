@@ -8,6 +8,7 @@ import Post from '../Post/Post';
 import ChannelChat from './ChannelChat';
 import MemberSidebar from './MemberSidebar';
 import UserSettings from './UserSettings';
+import ServerSettings from './ServerSettings';
 import { compressImage } from '../../utils/imageCompression';
 import { formatDate, formatDateTime } from '../../utils/date';
 import { IconArrowLeft } from '../Icons/Icons';
@@ -92,6 +93,7 @@ export default function GroupDetail() {
   const [activePanel, setActivePanel] = useState('chat');
   const [showMemberSidebar, setShowMemberSidebar] = useState(true);
   const [showUserSettings, setShowUserSettings] = useState(false);
+  const [showServerSettings, setShowServerSettings] = useState(false);
   const [showServerDropdown, setShowServerDropdown] = useState(false);
   const [showAllChannels, setShowAllChannels] = useState(true);
   const [hideMutedChannels, setHideMutedChannels] = useState(false);
@@ -1151,7 +1153,7 @@ export default function GroupDetail() {
             {adminEnabled && (
               <>
                 <div className="discord-dropdown-sep" />
-                <button onClick={() => { setShowServerDropdown(false); setActivePanel('admin'); }}>
+                <button onClick={() => { setShowServerDropdown(false); setShowServerSettings(true); }}>
                   <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M19.14 12.94a7.07 7.07 0 000-1.88l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96a7.04 7.04 0 00-1.63-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84a.48.48 0 00-.48.41l-.36 2.54c-.59.24-1.13.57-1.63.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87a.48.48 0 00.12.61l2.03 1.58a7.07 7.07 0 000 1.88l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.37 1.04.7 1.63.94l.36 2.54c.05.24.26.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.57 1.63-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 00-.12-.61l-2.03-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z"/></svg>
                   <span>Server Settings</span>
                   <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
@@ -1865,6 +1867,38 @@ export default function GroupDetail() {
 
     {/* ── User Settings Modal ── */}
     {showUserSettings && <UserSettings onClose={() => setShowUserSettings(false)} />}
+
+    {/* ── Server Settings Modal ── */}
+    {showServerSettings && (
+      <ServerSettings
+        group={group}
+        groupId={groupId}
+        members={members}
+        bannedMembers={bannedMembers}
+        requests={requests}
+        customRoles={customRoles}
+        channels={channels}
+        categories={categories}
+        postingPermission={postingPermission}
+        setPostingPermission={setPostingPermission}
+        requirePostApproval={requirePostApproval}
+        setRequirePostApproval={setRequirePostApproval}
+        adminsBypassApproval={adminsBypassApproval}
+        setAdminsBypassApproval={setAdminsBypassApproval}
+        onClose={() => setShowServerSettings(false)}
+        onRefreshGroup={() => refreshGroup(groupId)}
+        onRefreshMembers={() => refreshMembers(groupId)}
+        onSavePostingPermission={handleSavePostingPermission}
+        onSaveModeration={handleSaveModeration}
+        onApprove={handleApprove}
+        onDecline={handleDecline}
+        onUnban={handleUnban}
+        onDeleteGroup={handleDeleteGroup}
+        isOwner={isOwner}
+        busy={busy}
+        setBusy={setBusy}
+      />
+    )}
 
     {/* ── Create Server Modal ── */}
     {showCreateServerModal && (
