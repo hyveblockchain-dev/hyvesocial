@@ -356,15 +356,11 @@
 
 /* ── Server dropdown menu ── */
 .discord-server-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 8px;
-  right: 8px;
-  z-index: 50;
+  position: fixed;
+  z-index: 9999;
   background: #111214;
   border-radius: 4px;
   padding: 6px 8px;
-  margin-top: 4px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.5);
   display: flex;
   flex-direction: column;

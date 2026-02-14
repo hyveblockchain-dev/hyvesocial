@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
@@ -21,6 +22,8 @@ export default function GroupDetail() {
   const { user, socket } = useAuth();
   const coverInputRef = useRef(null);
   const avatarInputRef = useRef(null);
+  const serverHeaderRef = useRef(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
 
   // ── Core state ──
   const [group, setGroup] = useState(null);
@@ -1013,7 +1016,13 @@ export default function GroupDetail() {
     <div className="discord-server">
       {/* ── Left: Channel sidebar ── */}
       <div className="discord-sidebar">
-        <div className="discord-server-header" onClick={() => setShowServerDropdown(p => !p)}>
+        <div className="discord-server-header" ref={serverHeaderRef} onClick={() => {
+          if (!showServerDropdown && serverHeaderRef.current) {
+            const r = serverHeaderRef.current.getBoundingClientRect();
+            setDropdownPos({ top: r.bottom + 4, left: r.left + 8, width: r.width - 16 });
+          }
+          setShowServerDropdown(p => !p);
+        }}>
           <div className="discord-server-avatar">
             {avatarUrl ? <img src={avatarUrl} alt="" /> : groupName.slice(0, 1).toUpperCase()}
           </div>
@@ -1021,9 +1030,9 @@ export default function GroupDetail() {
           <span className={`discord-server-chevron${showServerDropdown ? ' open' : ''}`}>▾</span>
         </div>
 
-        {/* Server dropdown menu */}
-        {showServerDropdown && (
-          <div className="discord-server-dropdown">
+        {/* Server dropdown menu — rendered via portal to escape overflow:hidden */}
+        {showServerDropdown && createPortal(
+          <div className="discord-server-dropdown" style={{ top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width }}>
             {/* Server Boost */}
             <button className="discord-dropdown-boost" onClick={() => { setShowServerDropdown(false); }}>
               <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2Z" fill="#ff73fa"/></svg>
@@ -1122,7 +1131,8 @@ export default function GroupDetail() {
                 </button>
               </>
             )}
-          </div>
+          </div>,
+          document.body
         )}
 
         {!isMember && (
