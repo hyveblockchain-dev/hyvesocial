@@ -303,7 +303,7 @@
   display: grid;
   grid-template-columns: 240px 1fr 240px;
   flex: 1;
-  overflow: hidden;
+  min-height: 0;
   background: #313338;
 }
 
@@ -314,6 +314,7 @@
   background: #2b2d31;
   border-right: 1px solid #1e1f22;
   overflow: visible;
+  min-height: 0;
 }
 
 .discord-server-header {
