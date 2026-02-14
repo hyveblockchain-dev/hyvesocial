@@ -1791,6 +1791,78 @@
 }
 .ss-integ-manage:hover { color: #f2f3f5; }
 
+/* ── Safety Setup ── */
+.ss-beta-badge {
+  background: #5865f2;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.ss-safety-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(88, 101, 242, 0.08);
+  border: 1px solid rgba(88, 101, 242, 0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  color: #dbdee1;
+  font-size: 13px;
+}
+
+.ss-safety-block {
+  margin-bottom: 24px;
+}
+.ss-safety-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f2f3f5;
+  margin: 0;
+}
+
+.ss-safety-option-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #2b2d31;
+  border: 1px solid #3f4147;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.ss-safety-option-title {
+  display: block;
+  color: #f2f3f5;
+  font-size: 14px;
+  font-weight: 600;
+}
+.ss-safety-option-desc {
+  display: block;
+  color: #b5bac1;
+  font-size: 12px;
+  margin-top: 2px;
+}
+.ss-btn-text-muted {
+  background: none;
+  border: none;
+  color: #b5bac1;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+.ss-btn-text-muted:hover { color: #f2f3f5; }
+
 /* ══════════════════════════════════════════════════════════
    LIGHT MODE
    ══════════════════════════════════════════════════════════ */
@@ -1914,6 +1986,11 @@
 .light-mode .ss-integ-bot-name { color: #060607; }
 .light-mode .ss-integ-bot-meta { color: #4e5058; }
 .light-mode .ss-integ-bot-tag { background: #e3e5e8; color: #4e5058; }
+.light-mode .ss-safety-info { background: rgba(88, 101, 242, 0.06); color: #313338; }
+.light-mode .ss-safety-title { color: #060607; }
+.light-mode .ss-safety-option-box { background: #f2f3f5; border-color: #e3e5e8; }
+.light-mode .ss-safety-option-title { color: #060607; }
+.light-mode .ss-safety-option-desc { color: #4e5058; }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {

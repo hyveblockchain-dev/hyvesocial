@@ -121,6 +121,12 @@ export default function ServerSettings({
   const [serverRulesEnabled, setServerRulesEnabled] = useState(false);
   const [accessRules, setAccessRules] = useState(['']);
 
+  // Safety Setup states
+  const [showMembersInChannel, setShowMembersInChannel] = useState(false);
+  const [require2FA, setRequire2FA] = useState(false);
+  const [activityAlerts, setActivityAlerts] = useState(false);
+  const [safetyChannel, setSafetyChannel] = useState('');
+
   const groupName = group?.name || '';
   const avatarUrl = group?.avatar_url || group?.avatar || '';
   const coverUrl = group?.cover_photo || group?.cover_url || '';
@@ -1317,8 +1323,95 @@ export default function ServerSettings({
             </div>
           )}
 
+          {/* ── Safety Setup ── */}
+          {activeSection === 'safetySetup' && (
+            <div className="ss-section">
+              <h2>Safety Setup</h2>
+
+              {/* Show Members In Channel List */}
+              <div className="ss-toggle-row" style={{ marginBottom: 8 }}>
+                <div>
+                  <span className="ss-toggle-label" style={{ fontWeight: 600 }}>Show Members In Channel List <span className="ss-beta-badge">BETA</span></span>
+                  <p className="ss-muted" style={{ margin: '4px 0 0', maxWidth: 600 }}>Enabling this will show the members page in the channel list, allowing you to quickly see who's recently joined your server, and find any users flagged for unusual activity.</p>
+                </div>
+                <label className="ss-switch">
+                  <input type="checkbox" checked={showMembersInChannel} onChange={() => setShowMembersInChannel(!showMembersInChannel)} />
+                  <span className="ss-slider" />
+                </label>
+              </div>
+
+              {/* Community info banner */}
+              <div className="ss-safety-info">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#5865f2" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><text x="12" y="17" textAnchor="middle" fill="#fff" fontSize="14" fontWeight="700">i</text></svg>
+                <span>Becoming a community will automatically enable this experience for you.</span>
+              </div>
+
+              {/* Verification Level */}
+              <div className="ss-safety-block">
+                <h3 className="ss-safety-title">Verification Level</h3>
+                <p className="ss-muted" style={{ margin: '4px 0 12px', maxWidth: 700 }}>Members of the server must meet the following criteria before they can send messages in text channels or initiate a direct message conversation. If a member has an assigned role and server onboarding is not enabled, this does not apply. <strong style={{ color: '#f2f3f5' }}>We recommend setting a verification level for a Community Server.</strong></p>
+                <div className="ss-safety-option-box">
+                  <div>
+                    <span className="ss-safety-option-title">Low</span>
+                    <span className="ss-safety-option-desc">Must have a verified email on their Hyve account.</span>
+                  </div>
+                  <button className="ss-btn-text-muted">Change</button>
+                </div>
+              </div>
+
+              {/* Require 2FA */}
+              <div className="ss-toggle-row" style={{ marginBottom: 24 }}>
+                <div>
+                  <span className="ss-toggle-label" style={{ fontWeight: 600 }}>Require 2FA for moderator actions</span>
+                  <p className="ss-muted" style={{ margin: '4px 0 0', maxWidth: 600 }}>Moderators must have two-factor authentication enabled to ban, kick, or timeout members and delete messages. Only the server owner can change this setting if they have 2FA enabled.</p>
+                </div>
+                <label className="ss-switch">
+                  <input type="checkbox" checked={require2FA} onChange={() => setRequire2FA(!require2FA)} />
+                  <span className="ss-slider" />
+                </label>
+              </div>
+
+              {/* Sensitive content filters */}
+              <div className="ss-safety-block">
+                <h3 className="ss-safety-title">Sensitive content filters</h3>
+                <p className="ss-muted" style={{ margin: '4px 0 12px', maxWidth: 700 }}>Choose if server members can share image-based media detected by Hyve's sensitive content filters. This setting will apply to channels that are not age-restricted. <span style={{ color: '#00a8fc', cursor: 'pointer' }}>Learn more.</span></p>
+                <div className="ss-safety-option-box">
+                  <div>
+                    <span className="ss-safety-option-title">Filter messages from all members</span>
+                    <span className="ss-safety-option-desc">All messages will be filtered for sensitive image-based media.</span>
+                  </div>
+                  <button className="ss-btn-text-muted">Change</button>
+                </div>
+              </div>
+
+              {/* Activity Alerts */}
+              <div className="ss-toggle-row" style={{ marginBottom: 16 }}>
+                <div>
+                  <span className="ss-toggle-label" style={{ fontWeight: 600 }}>Activity Alerts</span>
+                  <p className="ss-muted" style={{ margin: '4px 0 0', maxWidth: 600 }}>Receive notifications for DM or join activity that exceeds usual numbers for your server. Each notification will contain information about the activity, including time period and approximate number of joins or DMs.</p>
+                </div>
+                <label className="ss-switch">
+                  <input type="checkbox" checked={activityAlerts} onChange={() => setActivityAlerts(!activityAlerts)} />
+                  <span className="ss-slider" />
+                </label>
+              </div>
+
+              {/* Safety Notifications Channel */}
+              <div className="ss-safety-block" style={{ borderTop: '1px solid #3f4147', paddingTop: 20 }}>
+                <span className="ss-toggle-label" style={{ fontWeight: 600 }}>Safety Notifications Channel</span>
+                <select className="ss-select" style={{ marginTop: 8 }} value={safetyChannel} onChange={e => setSafetyChannel(e.target.value)}>
+                  <option value="">Select...</option>
+                  {(channels || []).map(ch => (
+                    <option key={ch.id} value={ch.id}>{ch.name}</option>
+                  ))}
+                </select>
+                <p className="ss-muted" style={{ margin: '6px 0 0' }}>Anyone with access to this text channel will be able to see the notifications.</p>
+              </div>
+            </div>
+          )}
+
           {/* Placeholder tabs */}
-          {['appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
+          {['appDirectory', 'automod', 'community', 'template'].includes(activeSection) && (
             <div className="ss-section">
               <h2>{NAV_SECTIONS.flatMap(s => s.items).find(i => i.key === activeSection)?.label || activeSection}</h2>
               <p className="ss-muted">This feature is coming soon.</p>
