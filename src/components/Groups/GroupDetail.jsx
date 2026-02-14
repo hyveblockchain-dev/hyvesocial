@@ -162,6 +162,8 @@ export default function GroupDetail() {
   // ── Unread tracking ──
   const [unreads, setUnreads] = useState({}); // { channelId: { unread_count, mention_count } }
   const unreadsTimerRef = useRef(null);
+  const [totalGroupUnreads, setTotalGroupUnreads] = useState(0);
+  const totalUnreadsTimerRef = useRef(null);
 
   // ── DM mode state ──
   const [dmMode, setDmMode] = useState(false);
@@ -562,6 +564,28 @@ export default function GroupDetail() {
     unreadsTimerRef.current = setInterval(refreshUnreads, 30000);
     return () => clearInterval(unreadsTimerRef.current);
   }, [refreshUnreads]);
+
+  // ── Poll total unreads across ALL joined groups (for Home badge) ──
+  useEffect(() => {
+    if (!joinedGroups.length) { setTotalGroupUnreads(0); return; }
+    const fetchTotal = async () => {
+      try {
+        let total = 0;
+        const results = await Promise.allSettled(
+          joinedGroups.map(g => api.getGroupUnreads(g.id))
+        );
+        results.forEach(r => {
+          if (r.status === 'fulfilled' && r.value?.unreads) {
+            r.value.unreads.forEach(u => { total += (u.unread_count || 0); });
+          }
+        });
+        setTotalGroupUnreads(total);
+      } catch { /* ignore */ }
+    };
+    fetchTotal();
+    totalUnreadsTimerRef.current = setInterval(fetchTotal, 30000);
+    return () => clearInterval(totalUnreadsTimerRef.current);
+  }, [joinedGroups]);
 
   // ── Mark all channels as read ──
   const handleMarkAllRead = async () => {
@@ -2379,11 +2403,16 @@ export default function GroupDetail() {
     {isMobile && (
       <nav className="mobile-bottom-tab-bar">
         <button
-          className={`mobile-tab-item${dmMode && !dmSelectedUser ? ' active' : ''}`}
-          onClick={() => { setDmMode(true); setDmSelectedUser(null); setDmView('friends'); if (mobileSidebar) setMobileSidebar(false); }}
+          className="mobile-tab-item"
+          onClick={() => navigate('/')}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/></svg>
-          <span>Messages</span>
+          <div className="mobile-tab-icon-wrap">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            {totalGroupUnreads > 0 && (
+              <span className="mobile-tab-badge">{totalGroupUnreads > 99 ? '99+' : totalGroupUnreads}</span>
+            )}
+          </div>
+          <span>Home</span>
         </button>
         <button
           className="mobile-tab-item"

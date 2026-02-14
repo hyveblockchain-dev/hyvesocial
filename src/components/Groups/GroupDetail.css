@@ -6391,6 +6391,29 @@
     outline-offset: 1px;
   }
 
+  /* Badge wrapper + badge for Home tab */
+  .mobile-tab-icon-wrap {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .mobile-tab-badge {
+    position: absolute;
+    top: -4px;
+    right: -8px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: #f23f43;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+    pointer-events: none;
+  }
+
   /* Floating Action Button (new DM) */
   .mobile-fab-new-dm {
     position: fixed;
