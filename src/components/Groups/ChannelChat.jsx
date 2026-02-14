@@ -82,6 +82,9 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
   const [scheduledMessages, setScheduledMessages] = useState([]);
   // @everyone warning
   const [everyoneWarning, setEveryoneWarning] = useState(null);
+  // Mobile context menu
+  const [mobileMenuMsgId, setMobileMenuMsgId] = useState(null);
+  const longPressTimerRef = useRef(null);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const threadEndRef = useRef(null);
@@ -1198,8 +1201,8 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
                         <button onClick={() => setReactionPickerMsgId(null)}>✕</button>
                       </div>
                     )}
-                    {/* Actions */}
-                      <div className="channel-msg-actions">
+                    {/* Desktop hover actions (hidden on mobile via CSS) */}
+                    <div className="channel-msg-actions channel-msg-actions-desktop">
                       <button title="Add Reaction" onClick={() => setReactionPickerMsgId((prev) => prev === msg.id ? null : msg.id)}>😊</button>
                       <button title="Reply" onClick={() => setReplyTo(msg)}>↩</button>
                       <button title="Create Thread" onClick={() => openThread(msg)}>🧵</button>
@@ -1220,6 +1223,85 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
                         <button title="Bulk Select" onClick={() => { setBulkSelectMode(true); setBulkSelected(new Set([msg.id])); }}>☑️</button>
                       )}
                     </div>
+                    {/* Mobile compact action bar (visible only on mobile via CSS) */}
+                    <div className="channel-msg-actions-mobile">
+                      <div className="mobile-msg-quick-reactions">
+                        {['👍','🔥','❤️','😂'].map((em) => (
+                          <button key={em} className="mobile-quick-react-btn" onClick={() => handleAddReaction(msg.id, em)}>{em}</button>
+                        ))}
+                      </div>
+                      <div className="mobile-msg-action-icons">
+                        <button title="Reply" onClick={() => setReplyTo(msg)}>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>
+                        </button>
+                        <button title="Create Thread" onClick={() => openThread(msg)}>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M5.43 21a.997.997 0 01-.707-.293.999.999 0 01-.293-.707V16H3a1 1 0 01-1-1V3a1 1 0 011-1h18a1 1 0 011 1v12a1 1 0 01-1 1h-8.96l-5.9 4.86A1 1 0 015.43 21z"/></svg>
+                        </button>
+                        <button title={savedMessageIds.has(msg.id) ? 'Unsave' : 'Save'} onClick={() => handleToggleSave(msg.id)} className={savedMessageIds.has(msg.id) ? 'saved' : ''}>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+                        </button>
+                        <button title="More" className="mobile-msg-more-btn" onClick={() => setMobileMenuMsgId((prev) => prev === msg.id ? null : msg.id)}>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                    {/* Mobile context menu */}
+                    {mobileMenuMsgId === msg.id && (
+                      <div className="mobile-msg-context-menu">
+                        <div className="mobile-ctx-backdrop" onClick={() => setMobileMenuMsgId(null)} />
+                        <div className="mobile-ctx-sheet">
+                          <div className="mobile-ctx-reactions">
+                            {QUICK_REACTIONS.map((em) => (
+                              <button key={em} onClick={() => { handleAddReaction(msg.id, em); setMobileMenuMsgId(null); }}>{em}</button>
+                            ))}
+                          </div>
+                          <button className="mobile-ctx-item" onClick={() => { setReactionPickerMsgId(msg.id); setMobileMenuMsgId(null); }}>
+                            <span>Add Reaction</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+                          </button>
+                          <button className="mobile-ctx-item" onClick={() => { setReplyTo(msg); setMobileMenuMsgId(null); }}>
+                            <span>Reply</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>
+                          </button>
+                          <button className="mobile-ctx-item" onClick={() => { openThread(msg); setMobileMenuMsgId(null); }}>
+                            <span>Create Thread</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M5.43 21a.997.997 0 01-.707-.293.999.999 0 01-.293-.707V16H3a1 1 0 01-1-1V3a1 1 0 011-1h18a1 1 0 011 1v12a1 1 0 01-1 1h-8.96l-5.9 4.86A1 1 0 015.43 21z"/></svg>
+                          </button>
+                          {isAdmin && (
+                            <button className="mobile-ctx-item" onClick={() => { handleTogglePin(msg.id); setMobileMenuMsgId(null); }}>
+                              <span>{msg.is_pinned ? 'Unpin Message' : 'Pin Message'}</span>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
+                            </button>
+                          )}
+                          <button className="mobile-ctx-item" onClick={() => { handleToggleSave(msg.id); setMobileMenuMsgId(null); }}>
+                            <span>{savedMessageIds.has(msg.id) ? 'Unsave Message' : 'Save Message'}</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+                          </button>
+                          {canEdit && (
+                            <button className="mobile-ctx-item" onClick={() => { setEditingId(msg.id); setEditText(msg.content); setMobileMenuMsgId(null); }}>
+                              <span>Edit Message</span>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 000-1.42l-2.34-2.34a1.003 1.003 0 00-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/></svg>
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button className="mobile-ctx-item mobile-ctx-danger" onClick={() => { handleDelete(msg.id); setMobileMenuMsgId(null); }}>
+                              <span>Delete Message</span>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                            </button>
+                          )}
+                          {channel.type === 'announcement' && isAdmin && !msg.published && (
+                            <button className="mobile-ctx-item" onClick={() => { handlePublishAnnouncement(msg.id); setMobileMenuMsgId(null); }}>
+                              <span>Publish Announcement</span>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 11v2h4v-2h-4zm-2 6.61c.96.71 2.21 1.65 3.2 2.39.4-.53.8-1.07 1.2-1.6-.99-.74-2.24-1.68-3.2-2.4-.4.54-.8 1.08-1.2 1.61zM20.4 5.6c-.4-.53-.8-1.07-1.2-1.6-.99.74-2.24 1.68-3.2 2.4.4.53.8 1.07 1.2 1.6.96-.72 2.21-1.65 3.2-2.4zM4 9c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h1l5 3V6L5 9H4zm11.5 3c0-1.33-.58-2.53-1.5-3.35v6.69c.92-.81 1.5-2.01 1.5-3.34z"/></svg>
+                            </button>
+                          )}
+                          <button className="mobile-ctx-item" onClick={() => { navigator.clipboard.writeText(msg.content || ''); setMobileMenuMsgId(null); }}>
+                            <span>Copy Text</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
