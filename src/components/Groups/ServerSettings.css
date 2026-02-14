@@ -1475,6 +1475,102 @@
   border-radius: 8px;
 }
 
+/* ── Invites ── */
+.ss-invites-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.ss-invites-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #b5bac1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.ss-invites-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ss-btn-text-danger {
+  background: none;
+  border: none;
+  color: #ed4245;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.ss-btn-text-danger:hover { background: rgba(237, 66, 69, 0.1); }
+
+.ss-invites-table {
+  border-top: 1px solid #3f4147;
+}
+.ss-invites-thead {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+}
+.ss-invites-th {
+  font-size: 11px;
+  font-weight: 700;
+  color: #b5bac1;
+  text-transform: capitalize;
+}
+.ss-invites-tr {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-top: 1px solid #2b2d31;
+  transition: background 0.1s;
+}
+.ss-invites-tr:hover { background: rgba(79, 84, 92, 0.15); }
+.ss-invites-td {
+  font-size: 13px;
+  color: #b5bac1;
+}
+
+.ss-icol-inviter { flex: 1.5; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ss-icol-code { flex: 1; }
+.ss-icol-uses { flex: 0.5; text-align: center; }
+.ss-icol-expires { flex: 0.8; }
+.ss-icol-roles { flex: 0.5; }
+
+.ss-invite-user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ss-invite-channel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+.ss-invite-badge {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.ss-invite-channel-name {
+  font-size: 12px;
+  color: #b5bac1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ══════════════════════════════════════════════════════════
    LIGHT MODE
    ══════════════════════════════════════════════════════════ */
@@ -1574,6 +1670,11 @@
 .light-mode .ss-sticker-timeline-dot { background: #c4c9ce; border-color: #fff; }
 .light-mode .ss-soundboard-title { color: #060607; }
 .light-mode .ss-soundboard-illustration circle { fill: #e3e5e8; }
+.light-mode .ss-invites-table { border-top-color: #e3e5e8; }
+.light-mode .ss-invites-tr { border-top-color: #e3e5e8; }
+.light-mode .ss-invites-tr:hover { background: rgba(116, 124, 134, 0.1); }
+.light-mode .ss-invites-td { color: #4e5058; }
+.light-mode .ss-invite-channel-name { color: #4e5058; }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {

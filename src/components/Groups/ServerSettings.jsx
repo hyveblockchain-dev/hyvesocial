@@ -1112,8 +1112,66 @@ export default function ServerSettings({
             </div>
           )}
 
+          {/* ── Invites ── */}
+          {activeSection === 'invites' && (
+            <div className="ss-section">
+              <h2>Invites</h2>
+
+              {/* Toolbar */}
+              <div className="ss-invites-toolbar">
+                <span className="ss-invites-label">ACTIVE INVITE LINKS</span>
+                <div className="ss-invites-actions">
+                  <button className="ss-btn-text-danger">Pause Invites</button>
+                  <button className="ss-btn-create-role">Create invite link</button>
+                </div>
+              </div>
+
+              {/* Invites table */}
+              <div className="ss-invites-table">
+                <div className="ss-invites-thead">
+                  <div className="ss-invites-th ss-icol-inviter">Inviter</div>
+                  <div className="ss-invites-th ss-icol-code">Invite Code</div>
+                  <div className="ss-invites-th ss-icol-uses">Uses</div>
+                  <div className="ss-invites-th ss-icol-expires">Expires</div>
+                  <div className="ss-invites-th ss-icol-roles">Roles</div>
+                </div>
+                {members.filter(m => m.role === 'owner' || m.role === 'admin').length > 0 ? (
+                  members.filter(m => m.role === 'owner' || m.role === 'admin').map((m, i) => {
+                    const uname = m.username || m.user?.username || 'Unknown';
+                    const avatar = m.profile_image || m.profileImage || '/default-avatar.png';
+                    const code = Math.random().toString(36).substring(2, 10);
+                    const channel = channels?.[i % (channels?.length || 1)]?.name || 'general';
+                    return (
+                      <div key={`invite-${i}`} className="ss-invites-tr">
+                        <div className="ss-invites-td ss-icol-inviter">
+                          <img src={avatar} alt="" className="ss-member-avatar" onError={e => { e.target.src = '/default-avatar.png'; }} />
+                          <div className="ss-invite-user-info">
+                            <span className="ss-member-name">{uname}</span>
+                            <span className="ss-invite-channel">
+                              <span className="ss-invite-badge" style={{ background: '#5865f2' }}>#</span>
+                              <span className="ss-invite-badge" style={{ background: '#3ba55c' }}>●</span>
+                              <span className="ss-invite-channel-name">· {channel}</span>
+                            </span>
+                          </div>
+                        </div>
+                        <div className="ss-invites-td ss-icol-code">{code}</div>
+                        <div className="ss-invites-td ss-icol-uses">{Math.floor(Math.random() * 5)}</div>
+                        <div className="ss-invites-td ss-icol-expires">{`${String(Math.floor(Math.random() * 12 + 1)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`}</div>
+                        <div className="ss-invites-td ss-icol-roles" />
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="ss-invites-tr">
+                    <p className="ss-muted" style={{ padding: '20px 16px' }}>No active invite links.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Placeholder tabs */}
-          {['invites', 'access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
+          {['access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
             <div className="ss-section">
               <h2>{NAV_SECTIONS.flatMap(s => s.items).find(i => i.key === activeSection)?.label || activeSection}</h2>
               <p className="ss-muted">This feature is coming soon.</p>
