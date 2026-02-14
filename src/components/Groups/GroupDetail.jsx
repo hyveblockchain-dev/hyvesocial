@@ -10,7 +10,7 @@ import UserSettings from './UserSettings';
 import { compressImage } from '../../utils/imageCompression';
 import { formatDate, formatDateTime } from '../../utils/date';
 import { IconArrowLeft } from '../Icons/Icons';
-import ChatWindow from '../Chat/ChatWindow';
+import DmChat from './DmChat';
 import './GroupDetail.css';
 
 export default function GroupDetail() {
@@ -915,9 +915,9 @@ export default function GroupDetail() {
         {/* DM main area */}
         <div className="discord-main discord-dm-main">
           {dmSelectedUser ? (
-            <ChatWindow
-              conversation={dmSelectedUser}
-              onClose={() => setDmSelectedUser(null)}
+            <DmChat
+              selectedUser={dmSelectedUser}
+              onBack={() => setDmSelectedUser(null)}
             />
           ) : (
             <div className="discord-dm-welcome">
