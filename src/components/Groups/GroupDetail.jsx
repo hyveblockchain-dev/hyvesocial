@@ -314,16 +314,17 @@ export default function GroupDetail() {
   }, [groupId]);
 
   // ── Fetch all joined groups for guild bar ──
-  useEffect(() => {
-    async function loadJoinedGroups() {
-      try {
-        const data = await api.getGroups();
-        const all = data?.groups || [];
-        setJoinedGroups(all.filter((g) => g.is_member));
-      } catch { setJoinedGroups([]); }
-    }
-    loadJoinedGroups();
+  const refreshJoinedGroups = useCallback(async () => {
+    try {
+      const data = await api.getGroups();
+      const all = data?.groups || [];
+      setJoinedGroups(all.filter((g) => g.is_member));
+    } catch { setJoinedGroups([]); }
   }, []);
+
+  useEffect(() => {
+    refreshJoinedGroups();
+  }, [groupId, refreshJoinedGroups]);
 
   // ── Initial load ──
   useEffect(() => {
@@ -553,8 +554,8 @@ export default function GroupDetail() {
       else {
         setShowCreateServerModal(false);
         setCreateServerName(''); setCreateServerDesc(''); setCreateServerPrivacy('public');
+        await refreshJoinedGroups();
         if (data?.group?.id) navigate(`/groups/${data.group.id}`);
-        else { const joined = await api.getGroups(); setJoinedGroups((joined?.groups || []).filter((g) => g.is_member)); }
       }
     } catch (err) { setNotice('Failed to create server.'); }
     finally { setCreateServerBusy(false); }
