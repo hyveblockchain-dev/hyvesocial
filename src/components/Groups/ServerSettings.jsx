@@ -91,6 +91,17 @@ export default function ServerSettings({
   const [selectedBadgeColor, setSelectedBadgeColor] = useState(0);
   const [showAllBadges, setShowAllBadges] = useState(false);
 
+  // Engagement states
+  const [sysWelcome, setSysWelcome] = useState(false);
+  const [sysSticker, setSysSticker] = useState(false);
+  const [sysBoost, setSysBoost] = useState(true);
+  const [sysTips, setSysTips] = useState(true);
+  const [activityFeed, setActivityFeed] = useState(true);
+  const [defaultNotif, setDefaultNotif] = useState('all');
+  const [inactiveChannel, setInactiveChannel] = useState('none');
+  const [inactiveTimeout, setInactiveTimeout] = useState('5min');
+  const [serverWidget, setServerWidget] = useState(false);
+
   const groupName = group?.name || '';
   const avatarUrl = group?.avatar_url || group?.avatar || '';
   const coverUrl = group?.cover_photo || group?.cover_url || '';
@@ -561,8 +572,129 @@ export default function ServerSettings({
             </div>
           )}
 
+          {/* ── Engagement ── */}
+          {activeSection === 'engagement' && (
+            <div className="ss-section">
+              <h2>Engagement</h2>
+              <p className="ss-subtitle">Manage settings that help keep your server active.</p>
+
+              {/* System Messages */}
+              <div className="ss-subsection">
+                <h3 className="ss-subsection-title">System Messages</h3>
+                <p className="ss-hint" style={{ marginBottom: 16 }}>Configure system event messages sent to your server.</p>
+
+                <div className="ss-toggle-row" style={{ marginBottom: 14 }}>
+                  <span className="ss-toggle-label">Send a random welcome message when someone joins this server.</span>
+                  <button className={`notif-toggle${sysWelcome ? ' active' : ''}`} onClick={() => setSysWelcome(!sysWelcome)}><span className="notif-toggle-knob" /></button>
+                </div>
+                <div className="ss-toggle-row" style={{ marginBottom: 14 }}>
+                  <span className="ss-toggle-label">Prompt members to reply to welcome messages with a sticker.</span>
+                  <button className={`notif-toggle${sysSticker ? ' active' : ''}`} onClick={() => setSysSticker(!sysSticker)}><span className="notif-toggle-knob" /></button>
+                </div>
+                <div className="ss-toggle-row" style={{ marginBottom: 14 }}>
+                  <span className="ss-toggle-label">Send a message when someone boosts this server.</span>
+                  <button className={`notif-toggle${sysBoost ? ' active' : ''}`} onClick={() => setSysBoost(!sysBoost)}><span className="notif-toggle-knob" /></button>
+                </div>
+                <div className="ss-toggle-row" style={{ marginBottom: 14 }}>
+                  <span className="ss-toggle-label"><strong>Send helpful tips</strong> for server setup.</span>
+                  <button className={`notif-toggle${sysTips ? ' active' : ''}`} onClick={() => setSysTips(!sysTips)}><span className="notif-toggle-knob" /></button>
+                </div>
+
+                <div className="ss-toggle-row" style={{ marginBottom: 8 }}>
+                  <div>
+                    <span className="ss-toggle-label" style={{ fontWeight: 600 }}>System Messages Channel</span>
+                    <p className="ss-hint" style={{ margin: '2px 0 0' }}>This is the channel we send system event messages to.</p>
+                  </div>
+                  <div className="ss-channel-selector">
+                    <span className="ss-channel-pill">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#b5bac1"><path d="M5.88 21l1.54-5.22L3 12l6.18-.5L12 6l2.82 5.5L21 12l-4.42 3.78L18.12 21 12 17.77 5.88 21z"/></svg>
+                    </span>
+                    <select className="ss-select-inline" defaultValue="general">
+                      {channels.map(ch => (
+                        <option key={ch.id} value={ch.name}># {ch.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ss-divider" />
+
+              {/* Activity Feed Settings */}
+              <div className="ss-subsection">
+                <h3 className="ss-subsection-title">Activity Feed Settings</h3>
+                <p className="ss-hint" style={{ marginBottom: 16 }}>Shows a feed of activity from games and connected apps in this server.</p>
+                <div className="ss-toggle-row">
+                  <span className="ss-toggle-label" style={{ fontWeight: 600 }}>Display Activity Feed in this server</span>
+                  <button className={`notif-toggle${activityFeed ? ' active' : ''}`} onClick={() => setActivityFeed(!activityFeed)}><span className="notif-toggle-knob" /></button>
+                </div>
+              </div>
+
+              <div className="ss-divider" />
+
+              {/* Default Notification Settings */}
+              <div className="ss-subsection">
+                <h3 className="ss-subsection-title">Default Notification Settings</h3>
+                <p className="ss-hint" style={{ marginBottom: 16 }}>This will determine whether members who have not explicitly set their notification settings receive a notification for every message sent in this server or not.</p>
+
+                <label className="ss-radio-row">
+                  <input type="radio" name="defaultNotif" checked={defaultNotif === 'all'} onChange={() => setDefaultNotif('all')} />
+                  <span className="ss-radio-custom" />
+                  <span>All Messages</span>
+                </label>
+                <label className="ss-radio-row">
+                  <input type="radio" name="defaultNotif" checked={defaultNotif === 'mentions'} onChange={() => setDefaultNotif('mentions')} />
+                  <span className="ss-radio-custom" />
+                  <span>Only @mentions</span>
+                </label>
+                <p className="ss-hint" style={{ marginTop: 4 }}>We highly recommend setting this to only @mentions for a Community Server.</p>
+              </div>
+
+              <div className="ss-divider" />
+
+              {/* Inactive Channel & Timeout */}
+              <div className="ss-subsection">
+                <div className="ss-inline-fields">
+                  <div className="ss-inline-field">
+                    <label className="ss-label">Inactive Channel</label>
+                    <select className="ss-select" value={inactiveChannel} onChange={(e) => setInactiveChannel(e.target.value)}>
+                      <option value="none">No Inactive Channel</option>
+                      {channels.map(ch => (
+                        <option key={ch.id} value={ch.name}># {ch.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="ss-inline-field">
+                    <label className="ss-label">Inactive Timeout</label>
+                    <select className="ss-select" value={inactiveTimeout} onChange={(e) => setInactiveTimeout(e.target.value)}>
+                      <option value="1min">1 minute</option>
+                      <option value="5min">5 minutes</option>
+                      <option value="15min">15 minutes</option>
+                      <option value="30min">30 minutes</option>
+                      <option value="1hr">1 hour</option>
+                    </select>
+                  </div>
+                </div>
+                <p className="ss-hint" style={{ marginTop: 8 }}>Automatically move members to this channel and mute them when they have been idle for longer than the inactive timeout. This does not affect browsers.</p>
+              </div>
+
+              <div className="ss-divider" />
+
+              {/* Server Widget */}
+              <div className="ss-subsection">
+                <h3 className="ss-subsection-title">Server Widget</h3>
+                <p className="ss-hint" style={{ marginBottom: 16 }}>Embed an HTML widget on your website to display your online members, voice channels, and invite link.</p>
+                <div className="ss-toggle-row">
+                  <span className="ss-toggle-label" style={{ fontWeight: 600 }}>Enable Server Widget</span>
+                  <button className={`notif-toggle${serverWidget ? ' active' : ''}`} onClick={() => setServerWidget(!serverWidget)}><span className="notif-toggle-knob" /></button>
+                </div>
+                <p className="ss-hint" style={{ marginTop: 8 }}>By enabling the widget, your server profile will be visible to others outside of this server. You can control Profile privacy in Server Settings &gt; Profile.</p>
+              </div>
+            </div>
+          )}
+
           {/* Placeholder tabs */}
-          {['engagement', 'boostPerks', 'emoji', 'stickers', 'soundboard', 'invites', 'access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
+          {['boostPerks', 'emoji', 'stickers', 'soundboard', 'invites', 'access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
             <div className="ss-section">
               <h2>{NAV_SECTIONS.flatMap(s => s.items).find(i => i.key === activeSection)?.label || activeSection}</h2>
               <p className="ss-muted">This feature is coming soon.</p>
