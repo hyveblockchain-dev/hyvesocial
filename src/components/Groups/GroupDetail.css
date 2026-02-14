@@ -324,6 +324,21 @@
   border-bottom: 1px solid #1e1f22;
   min-height: 48px;
   flex-shrink: 0;
+  cursor: pointer;
+  transition: background 0.12s;
+  position: relative;
+}
+.discord-server-header:hover {
+  background: rgba(79, 84, 92, 0.3);
+}
+.discord-server-chevron {
+  color: #b5bac1;
+  font-size: 12px;
+  margin-left: auto;
+  transition: transform 0.2s;
+}
+.discord-server-chevron.open {
+  transform: rotate(180deg);
 }
 .discord-back-arrow {
   background: none;
@@ -337,6 +352,64 @@
   transition: background 0.15s, color 0.15s;
 }
 .discord-back-arrow:hover { background: #35373c; color: #fff; }
+
+/* ── Server dropdown menu ── */
+.discord-server-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: #111214;
+  border-radius: 0 0 4px 4px;
+  padding: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: dropdown-in 0.12s ease;
+}
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.discord-server-dropdown button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: #b5bac1;
+  font-size: 13px;
+  padding: 7px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s, color 0.1s;
+}
+.discord-server-dropdown button:hover {
+  background: #5865f2;
+  color: #fff;
+}
+.discord-server-dropdown .dropdown-icon {
+  width: 18px;
+  text-align: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.discord-dropdown-sep {
+  height: 1px;
+  background: #2b2d31;
+  margin: 4px 6px;
+}
+.discord-dropdown-danger {
+  color: #ed4245 !important;
+}
+.discord-dropdown-danger:hover {
+  background: #ed4245 !important;
+  color: #fff !important;
+}
 .discord-server-avatar {
   width: 32px; height: 32px;
   border-radius: 10px;
@@ -470,6 +543,48 @@
 }
 .discord-channel:hover .discord-channel-delete { opacity: 1; }
 .discord-channel-delete:hover { color: #ed4245; }
+
+/* ── Channel inline actions (edit + delete) ── */
+.discord-channel-actions-inline {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.discord-channel:hover .discord-channel-actions-inline { opacity: 1; }
+.discord-channel-edit {
+  background: none;
+  border: none;
+  color: #80848e;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: color 0.12s;
+}
+.discord-channel-edit:hover { color: #f2f3f5; }
+
+/* ── Channel edit form (inline) ── */
+.discord-channel-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 12px 4px 20px;
+  margin: 2px 8px;
+}
+.discord-channel-edit-form input {
+  background: #1e1f22;
+  border: 1px solid #3f4147;
+  border-radius: 3px;
+  color: #f2f3f5;
+  padding: 4px 8px;
+  font-size: 12px;
+  outline: none;
+}
+.discord-channel-edit-form input:focus {
+  border-color: #5865f2;
+}
 
 /* ── Create channel / category forms ── */
 .discord-channel-actions {
@@ -1173,6 +1288,13 @@
 .light-mode .discord-tiny-btn:hover { background: #d7d8dc; }
 .light-mode .discord-tiny-btn.danger { background: #ed4245; color: #fff; }
 .light-mode .discord-back-arrow:hover { background: #e3e5e8; }
+.light-mode .discord-server-dropdown { background: #fff; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+.light-mode .discord-server-dropdown button { color: #4e5058; }
+.light-mode .discord-server-dropdown button:hover { background: #5865f2; color: #fff; }
+.light-mode .discord-dropdown-sep { background: #e3e5e8; }
+.light-mode .discord-server-chevron { color: #5c5e66; }
+.light-mode .discord-server-header:hover { background: rgba(116,124,134,.15); }
+.light-mode .discord-channel-edit-form input { background: #fff; border-color: #e3e5e8; color: #060607; }
 .light-mode .discord-cover-preview { background-color: #f2f3f5; border-color: #e3e5e8; }
 .light-mode .discord-avatar-preview { border-color: #e3e5e8; }
 .light-mode .discord-admin-section { border-bottom-color: #e3e5e8; }

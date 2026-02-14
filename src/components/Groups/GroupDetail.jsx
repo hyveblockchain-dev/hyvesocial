@@ -67,6 +67,10 @@ export default function GroupDetail() {
   const [activePanel, setActivePanel] = useState('chat');
   const [showMemberSidebar, setShowMemberSidebar] = useState(true);
   const [showUserSettings, setShowUserSettings] = useState(false);
+  const [showServerDropdown, setShowServerDropdown] = useState(false);
+  const [editingChannelId, setEditingChannelId] = useState(null);
+  const [editChannelName, setEditChannelName] = useState('');
+  const [editChannelTopic, setEditChannelTopic] = useState('');
 
   // ── Role management state ──
   const [customRoles, setCustomRoles] = useState([]);
@@ -78,6 +82,18 @@ export default function GroupDetail() {
   const [joinedGroups, setJoinedGroups] = useState([]);
 
   const myUsername = (user?.username || '').toLowerCase();
+
+  // Close server dropdown on click outside
+  useEffect(() => {
+    if (!showServerDropdown) return;
+    const handler = (e) => {
+      if (!e.target.closest('.discord-server-header') && !e.target.closest('.discord-server-dropdown')) {
+        setShowServerDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showServerDropdown]);
 
   // ── Computed values ──
   const isOwner = useMemo(() => {
@@ -566,6 +582,20 @@ export default function GroupDetail() {
     });
   }
 
+  async function handleEditChannel() {
+    if (!editingChannelId || !editChannelName.trim()) return;
+    try {
+      setBusy(true);
+      await api.updateChannel(groupId, editingChannelId, {
+        name: editChannelName.trim(),
+        topic: editChannelTopic.trim() || null,
+      });
+      setEditingChannelId(null);
+      await refreshChannels(groupId);
+    } catch (err) { setNotice(err.message); }
+    finally { setBusy(false); }
+  }
+
   // ── Top navbar (rendered outside Layout) ──
   const topBar = (
     <header className="discord-topbar">
@@ -670,15 +700,52 @@ export default function GroupDetail() {
     <div className="discord-server">
       {/* ── Left: Channel sidebar ── */}
       <div className="discord-sidebar">
-        <div className="discord-server-header">
-          <button className="discord-back-arrow" onClick={() => navigate('/groups')} title="Back to Groups">
-            <IconArrowLeft size={16} />
-          </button>
+        <div className="discord-server-header" onClick={() => setShowServerDropdown(p => !p)}>
           <div className="discord-server-avatar">
             {avatarUrl ? <img src={avatarUrl} alt="" /> : groupName.slice(0, 1).toUpperCase()}
           </div>
           <div className="discord-server-name">{groupName}</div>
+          <span className={`discord-server-chevron${showServerDropdown ? ' open' : ''}`}>▾</span>
         </div>
+
+        {/* Server dropdown menu */}
+        {showServerDropdown && (
+          <div className="discord-server-dropdown">
+            <button onClick={() => { setShowServerDropdown(false); setActivePanel('about'); }}>
+              <span className="dropdown-icon">ℹ️</span> Server Info
+            </button>
+            {isMember && (
+              <button onClick={() => { setShowServerDropdown(false); setActivePanel('about'); }}>
+                <span className="dropdown-icon">✉️</span> Invite People
+              </button>
+            )}
+            {adminEnabled && (
+              <>
+                <div className="discord-dropdown-sep" />
+                <button onClick={() => { setShowServerDropdown(false); setActivePanel('admin'); }}>
+                  <span className="dropdown-icon">⚙️</span> Server Settings
+                </button>
+                <button onClick={() => { setShowServerDropdown(false); setShowCreateChannel(true); }}>
+                  <span className="dropdown-icon">#</span> Create Channel
+                </button>
+                <button onClick={() => { setShowServerDropdown(false); setShowCreateCategory(true); }}>
+                  <span className="dropdown-icon">📁</span> Create Category
+                </button>
+                <button onClick={() => { setShowServerDropdown(false); setActivePanel('roles'); }}>
+                  <span className="dropdown-icon">🏷️</span> Manage Roles
+                </button>
+              </>
+            )}
+            {isMember && !isOwner && (
+              <>
+                <div className="discord-dropdown-sep" />
+                <button className="discord-dropdown-danger" onClick={() => { setShowServerDropdown(false); handleLeave(); }}>
+                  <span className="dropdown-icon">🚪</span> Leave Server
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         {!isMember && (
           <div className="discord-sidebar-join">
@@ -703,17 +770,44 @@ export default function GroupDetail() {
                   </div>
                 )}
                 {!isCollapsed && cat.channels.map((ch) => (
-                  <div
-                    key={ch.id}
-                    className={`discord-channel${selectedChannelId === ch.id && activePanel === 'chat' ? ' active' : ''}`}
-                    onClick={() => { setSelectedChannelId(ch.id); setActivePanel('chat'); }}
-                  >
-                    <span className="discord-channel-hash">#</span>
-                    <span className="discord-channel-name">{ch.name}</span>
-                    {adminEnabled && channels.length > 1 && (
-                      <button className="discord-channel-delete" onClick={(e) => { e.stopPropagation(); handleDeleteChannel(ch.id); }} title="Delete channel">&#10005;</button>
-                    )}
-                  </div>
+                  editingChannelId === ch.id ? (
+                    <div key={ch.id} className="discord-channel-edit-form">
+                      <input
+                        type="text"
+                        value={editChannelName}
+                        onChange={(e) => setEditChannelName(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '-'))}
+                        placeholder="channel-name"
+                        autoFocus
+                      />
+                      <input
+                        type="text"
+                        value={editChannelTopic}
+                        onChange={(e) => setEditChannelTopic(e.target.value)}
+                        placeholder="Channel topic (optional)"
+                      />
+                      <div className="discord-create-btns">
+                        <button onClick={handleEditChannel} disabled={busy || !editChannelName.trim()}>Save</button>
+                        <button onClick={() => setEditingChannelId(null)}>Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      key={ch.id}
+                      className={`discord-channel${selectedChannelId === ch.id && activePanel === 'chat' ? ' active' : ''}`}
+                      onClick={() => { setSelectedChannelId(ch.id); setActivePanel('chat'); }}
+                    >
+                      <span className="discord-channel-hash">#</span>
+                      <span className="discord-channel-name">{ch.name}</span>
+                      {adminEnabled && (
+                        <div className="discord-channel-actions-inline">
+                          <button className="discord-channel-edit" onClick={(e) => { e.stopPropagation(); setEditingChannelId(ch.id); setEditChannelName(ch.name); setEditChannelTopic(ch.topic || ''); }} title="Edit channel">✏️</button>
+                          {channels.length > 1 && (
+                            <button className="discord-channel-delete" onClick={(e) => { e.stopPropagation(); handleDeleteChannel(ch.id); }} title="Delete channel">✕</button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )
                 ))}
               </div>
             );
@@ -800,7 +894,15 @@ export default function GroupDetail() {
             <span className="discord-user-panel-status">Online</span>
           </div>
           <div className="discord-user-panel-icons">
-            <button title="Settings" onClick={() => setShowUserSettings(true)}>⚙</button>
+            <button title="Mute" className="discord-user-mic">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a4 4 0 014 4v5a4 4 0 01-8 0V6a4 4 0 014-4zm-6 9a1 1 0 012 0 6 6 0 0012 0 1 1 0 012 0 8 8 0 01-7 7.93V21h3a1 1 0 010 2H9a1 1 0 010-2h3v-2.07A8 8 0 016 11z"/></svg>
+            </button>
+            <button title="Deafen" className="discord-user-deafen">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12v4.5C2 18.43 3.57 20 5.5 20h1a1 1 0 001-1v-6a1 1 0 00-1-1h-.84A8.001 8.001 0 0112 4a8.001 8.001 0 016.34 8H17.5a1 1 0 00-1 1v6a1 1 0 001 1h1c1.93 0 3.5-1.57 3.5-3.5V12c0-5.52-4.48-10-10-10z"/></svg>
+            </button>
+            <button title="User Settings" onClick={() => setShowUserSettings(true)}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96a7.04 7.04 0 00-1.62-.94L14.4 3.05a.47.47 0 00-.48-.41h-3.84a.47.47 0 00-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94L5.24 5.62a.49.49 0 00-.59.22L2.73 9.16a.49.49 0 00.12.61l2.03 1.58c-.05.3-.07.63-.07.94 0 .32.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 00-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.611 3.611 0 0112 15.6z"/></svg>
+            </button>
           </div>
         </div>
       </div>
@@ -817,6 +919,7 @@ export default function GroupDetail() {
             isAdmin={adminEnabled}
             onToggleMembers={() => setShowMemberSidebar((p) => !p)}
             showMembers={showMemberSidebar}
+            members={members}
           />
         )}
 
