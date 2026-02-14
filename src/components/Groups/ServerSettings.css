@@ -1541,7 +1541,6 @@
   flex: 1;
   min-width: 0;
   padding: 60px 24px 24px;
-  overflow-y: auto;
 }
 .ss-role-editor-top {
   display: flex;
