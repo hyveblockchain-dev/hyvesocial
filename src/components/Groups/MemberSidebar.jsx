@@ -89,15 +89,6 @@ export default function MemberSidebar({ groupId, user, isAdmin, isOwner, onMembe
           >
             {m.username || 'Unknown'}
           </span>
-          {roles.length > 0 && (
-            <div className="member-roles-badges">
-              {roles.map((r) => (
-                <span key={r.id} className="role-badge" style={{ backgroundColor: r.color + '33', color: r.color, borderColor: r.color }}>
-                  {r.name}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     );
