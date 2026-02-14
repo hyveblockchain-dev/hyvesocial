@@ -81,6 +81,15 @@ export default function GroupDetail() {
   // ── Member popup state ──
   const [memberPopup, setMemberPopup] = useState(null);
 
+  // ── Create Server modal state ──
+  const [showCreateServerModal, setShowCreateServerModal] = useState(false);
+  const [createServerStep, setCreateServerStep] = useState('main'); // 'main' | 'form' | 'join'
+  const [createServerName, setCreateServerName] = useState('');
+  const [createServerDesc, setCreateServerDesc] = useState('');
+  const [createServerPrivacy, setCreateServerPrivacy] = useState('public');
+  const [createServerBusy, setCreateServerBusy] = useState(false);
+  const [joinServerCode, setJoinServerCode] = useState('');
+
   // ── Guild bar (joined groups list) ──
   const [joinedGroups, setJoinedGroups] = useState([]);
 
@@ -524,6 +533,49 @@ export default function GroupDetail() {
     try { setBusy(true); setNotice(''); const data = await api.updateGroup(groupId, { pinnedPostId: null }); if (data?.error) { setNotice(data.error); return; } await refreshGroup(groupId); await refreshPosts(groupId); setNotice('Post unpinned.'); } catch { setNotice('Failed to unpin post.'); } finally { setBusy(false); }
   }
 
+  // ── Create Server handler ──
+  async function handleCreateServer() {
+    if (!createServerName.trim()) return;
+    try {
+      setCreateServerBusy(true);
+      const coverPool = [
+        'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80',
+      ];
+      const data = await api.createGroup({
+        name: createServerName.trim(),
+        description: createServerDesc.trim(),
+        privacy: createServerPrivacy,
+        coverImage: coverPool[Math.floor(Math.random() * coverPool.length)],
+      });
+      if (data?.error) { setNotice(data.error); }
+      else {
+        setShowCreateServerModal(false);
+        setCreateServerName(''); setCreateServerDesc(''); setCreateServerPrivacy('public');
+        if (data?.group?.id) navigate(`/groups/${data.group.id}`);
+        else { const joined = await api.getGroups(); setJoinedGroups((joined?.groups || []).filter((g) => g.is_member)); }
+      }
+    } catch (err) { setNotice('Failed to create server.'); }
+    finally { setCreateServerBusy(false); }
+  }
+
+  async function handleJoinServerByCode() {
+    if (!joinServerCode.trim()) return;
+    try {
+      setCreateServerBusy(true);
+      const gid = joinServerCode.trim();
+      const data = await api.joinGroup(gid);
+      if (data?.error) { setNotice(data.error); }
+      else {
+        setShowCreateServerModal(false);
+        setJoinServerCode('');
+        navigate(`/groups/${gid}`);
+      }
+    } catch { setNotice('Failed to join server.'); }
+    finally { setCreateServerBusy(false); }
+  }
+
   // ── Channel handlers ──
   async function handleCreateChannel() {
     if (!newChannelName.trim()) return;
@@ -653,9 +705,12 @@ export default function GroupDetail() {
         );
       })}
       <div className="guild-separator" />
-      <Link to="/groups" className="guild-icon guild-add" title="Explore Groups">
+      <button className="guild-icon guild-add" title="Add a Server" onClick={() => { setShowCreateServerModal(true); setCreateServerStep('main'); }}>
         <span>+</span>
-      </Link>
+      </button>
+      <button className="guild-icon guild-explore" title="Explore Servers" onClick={() => navigate('/groups')}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+      </button>
     </nav>
   );
 
@@ -1375,6 +1430,141 @@ export default function GroupDetail() {
 
     {/* ── User Settings Modal ── */}
     {showUserSettings && <UserSettings onClose={() => setShowUserSettings(false)} />}
+
+    {/* ── Create Server Modal ── */}
+    {showCreateServerModal && (
+      <div className="discord-create-modal-overlay" onClick={() => setShowCreateServerModal(false)}>
+        <div className="discord-create-modal" onClick={(e) => e.stopPropagation()}>
+          <button className="discord-create-modal-close" onClick={() => setShowCreateServerModal(false)}>✕</button>
+
+          {createServerStep === 'main' && (
+            <>
+              <div className="discord-create-modal-header">
+                <h2>Create Your Server</h2>
+                <p>Your server is where you and your friends hang out. Make yours and start talking.</p>
+              </div>
+              <div className="discord-create-modal-options">
+                <button className="discord-create-modal-option" onClick={() => setCreateServerStep('form')}>
+                  <div className="discord-create-modal-option-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+                  </div>
+                  <span>Create My Own</span>
+                  <span className="discord-create-modal-arrow">›</span>
+                </button>
+                <div className="discord-create-modal-label">START FROM A TEMPLATE</div>
+                <button className="discord-create-modal-option" onClick={() => setCreateServerStep('form')}>
+                  <div className="discord-create-modal-option-icon" style={{color: '#5865f2'}}>🎮</div>
+                  <span>Gaming</span>
+                  <span className="discord-create-modal-arrow">›</span>
+                </button>
+                <button className="discord-create-modal-option" onClick={() => setCreateServerStep('form')}>
+                  <div className="discord-create-modal-option-icon" style={{color: '#eb459e'}}>💜</div>
+                  <span>Friends</span>
+                  <span className="discord-create-modal-arrow">›</span>
+                </button>
+                <button className="discord-create-modal-option" onClick={() => setCreateServerStep('form')}>
+                  <div className="discord-create-modal-option-icon" style={{color: '#fee75c'}}>📚</div>
+                  <span>Study Group</span>
+                  <span className="discord-create-modal-arrow">›</span>
+                </button>
+                <button className="discord-create-modal-option" onClick={() => setCreateServerStep('form')}>
+                  <div className="discord-create-modal-option-icon" style={{color: '#57f287'}}>🏫</div>
+                  <span>Community</span>
+                  <span className="discord-create-modal-arrow">›</span>
+                </button>
+              </div>
+              <div className="discord-create-modal-footer">
+                <h3>Have an invite already?</h3>
+                <button className="discord-create-modal-join-btn" onClick={() => setCreateServerStep('join')}>
+                  Join a Server
+                </button>
+              </div>
+            </>
+          )}
+
+          {createServerStep === 'form' && (
+            <>
+              <div className="discord-create-modal-header">
+                <h2>Customize Your Server</h2>
+                <p>Give your new server a personality with a name and description. You can always change it later.</p>
+              </div>
+              <div className="discord-create-modal-form">
+                <label>
+                  <span className="discord-create-modal-form-label">SERVER NAME</span>
+                  <input
+                    type="text"
+                    value={createServerName}
+                    onChange={(e) => setCreateServerName(e.target.value)}
+                    placeholder={`${user?.username || 'My'}'s server`}
+                    maxLength={50}
+                    autoFocus
+                  />
+                </label>
+                <label>
+                  <span className="discord-create-modal-form-label">DESCRIPTION</span>
+                  <textarea
+                    value={createServerDesc}
+                    onChange={(e) => setCreateServerDesc(e.target.value)}
+                    placeholder="Tell people what your server is about"
+                    maxLength={160}
+                    rows={3}
+                  />
+                </label>
+                <label>
+                  <span className="discord-create-modal-form-label">PRIVACY</span>
+                  <select value={createServerPrivacy} onChange={(e) => setCreateServerPrivacy(e.target.value)}>
+                    <option value="public">Public</option>
+                    <option value="private">Private</option>
+                  </select>
+                </label>
+                <p className="discord-create-modal-hint">By creating a server, you agree to the community guidelines.</p>
+              </div>
+              <div className="discord-create-modal-actions">
+                <button className="discord-create-modal-back" onClick={() => setCreateServerStep('main')}>Back</button>
+                <button
+                  className="discord-create-modal-submit"
+                  onClick={handleCreateServer}
+                  disabled={createServerBusy || !createServerName.trim()}
+                >
+                  {createServerBusy ? 'Creating...' : 'Create'}
+                </button>
+              </div>
+            </>
+          )}
+
+          {createServerStep === 'join' && (
+            <>
+              <div className="discord-create-modal-header">
+                <h2>Join a Server</h2>
+                <p>Enter a server ID below to join an existing server.</p>
+              </div>
+              <div className="discord-create-modal-form">
+                <label>
+                  <span className="discord-create-modal-form-label">SERVER ID</span>
+                  <input
+                    type="text"
+                    value={joinServerCode}
+                    onChange={(e) => setJoinServerCode(e.target.value)}
+                    placeholder="Enter a server ID"
+                    autoFocus
+                  />
+                </label>
+              </div>
+              <div className="discord-create-modal-actions">
+                <button className="discord-create-modal-back" onClick={() => setCreateServerStep('main')}>Back</button>
+                <button
+                  className="discord-create-modal-submit"
+                  onClick={handleJoinServerByCode}
+                  disabled={createServerBusy || !joinServerCode.trim()}
+                >
+                  {createServerBusy ? 'Joining...' : 'Join Server'}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    )}
     </div>
   );
 }
