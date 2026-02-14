@@ -905,6 +905,81 @@
   color: #80848e !important;
 }
 
+/* Pinned message items */
+.channel-pinned-msg {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid #3f4147;
+  position: relative;
+}
+.channel-pinned-msg:last-child { border-bottom: none; }
+
+.channel-pinned-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.channel-pinned-msg-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.channel-pinned-msg-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.channel-pinned-username {
+  color: #f2f3f5;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.channel-pinned-time {
+  color: #72767d;
+  font-size: 12px;
+}
+
+.channel-pinned-msg-text {
+  color: #dbdee1;
+  font-size: 14px;
+  word-break: break-word;
+}
+
+.channel-pinned-msg-image {
+  max-width: 200px;
+  max-height: 150px;
+  border-radius: 4px;
+  margin-top: 6px;
+}
+
+.channel-pinned-unpin {
+  background: none;
+  border: none;
+  color: #b5bac1;
+  cursor: pointer;
+  padding: 4px;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.channel-pinned-msg:hover .channel-pinned-unpin { opacity: 1; }
+.channel-pinned-unpin:hover { color: #f23f43; background: rgba(242,63,67,0.1); }
+
+/* Pin button active state */
+.channel-msg-actions button.pinned {
+  color: #f0b232 !important;
+}
+
 /* ═══════════════════════════════════════
    Image lightbox
    ═══════════════════════════════════════ */
@@ -1114,6 +1189,9 @@
 .light-mode .channel-pinned-panel { background: #fff; border-color: #e3e5e8; }
 .light-mode .channel-pinned-header { border-bottom-color: #e3e5e8; color: #060607; }
 .light-mode .channel-pinned-empty p { color: #4e5058; }
+.light-mode .channel-pinned-msg { border-bottom-color: #e3e5e8; }
+.light-mode .channel-pinned-username { color: #060607; }
+.light-mode .channel-pinned-msg-text { color: #313338; }
 .light-mode .channel-user-popup { background: #fff; }
 .light-mode .channel-user-popup-avatar { border-color: #fff; }
 .light-mode .channel-user-popup-status-dot { border-color: #fff; }

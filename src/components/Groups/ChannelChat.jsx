@@ -32,6 +32,8 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
   const [reactionPickerMsgId, setReactionPickerMsgId] = useState(null);
   const [lightboxUrl, setLightboxUrl] = useState(null);
   const [showPinnedPanel, setShowPinnedPanel] = useState(false);
+  const [pinnedMessages, setPinnedMessages] = useState([]);
+  const [pinnedLoading, setPinnedLoading] = useState(false);
   const [mentionQuery, setMentionQuery] = useState(null);
   const [mentionIndex, setMentionIndex] = useState(0);
   const [showJumpToPresent, setShowJumpToPresent] = useState(false);
@@ -82,6 +84,33 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
       setLoading(false);
     }
   }, [channel?.id]);
+
+  // Load pinned messages
+  const loadPinnedMessages = useCallback(async () => {
+    if (!channel?.id) return;
+    setPinnedLoading(true);
+    try {
+      const data = await api.getPinnedMessages(channel.id);
+      setPinnedMessages(data?.pins || []);
+    } catch (err) {
+      console.error('Failed to load pinned messages:', err);
+    } finally {
+      setPinnedLoading(false);
+    }
+  }, [channel?.id]);
+
+  // Toggle pin on a message
+  const handleTogglePin = async (messageId) => {
+    try {
+      const data = await api.togglePinMessage(channel.id, messageId);
+      // Update the message in the list
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, is_pinned: data.pinned } : m));
+      // Refresh pinned panel if open
+      if (showPinnedPanel) loadPinnedMessages();
+    } catch (err) {
+      console.error('Failed to pin/unpin:', err);
+    }
+  };
 
   useEffect(() => {
     loadMessages();
@@ -427,7 +456,7 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
     <div className="channel-chat">
       {/* Channel header */}
       <div className="channel-chat-header">
-        <span className="channel-hash">#</span>
+        <span className="channel-hash">{channel.type === 'voice' ? '🔊' : channel.type === 'announcement' ? '📢' : '#'}</span>
         <span className="channel-chat-name">{channel.name}</span>
         {channel.topic && (
           <>
@@ -446,7 +475,7 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
           <button
             className={`channel-header-btn${showPinnedPanel ? ' active' : ''}`}
             title="Pinned Messages"
-            onClick={() => setShowPinnedPanel(p => !p)}
+            onClick={() => { const next = !showPinnedPanel; setShowPinnedPanel(next); if (next) loadPinnedMessages(); }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12l-4.2-3.78-.01-.01a.72.72 0 00-.49-.21c-.44 0-.72.36-.72.72v2.28H5.35c-.09 0-.37 0-.37.37v1.26c0 .09 0 .37.37.37h11.23v2.28c0 .2.06.39.22.52a.72.72 0 001-.03L22 12z"/></svg>
           </button>
@@ -487,11 +516,34 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
             <button onClick={() => setShowPinnedPanel(false)}>✕</button>
           </div>
           <div className="channel-pinned-body">
-            <div className="channel-pinned-empty">
-              <span>📌</span>
-              <p>No pinned messages in this channel yet.</p>
-              <p className="channel-pinned-hint">Pin important messages so they're easy to find.</p>
-            </div>
+            {pinnedLoading ? (
+              <div className="channel-pinned-empty"><p>Loading...</p></div>
+            ) : pinnedMessages.length === 0 ? (
+              <div className="channel-pinned-empty">
+                <span>📌</span>
+                <p>No pinned messages in this channel yet.</p>
+                <p className="channel-pinned-hint">Pin important messages so they're easy to find.</p>
+              </div>
+            ) : (
+              pinnedMessages.map((pin) => (
+                <div key={pin.id} className="channel-pinned-msg">
+                  <img src={pin.profile_image || '/default-avatar.png'} alt="" className="channel-pinned-avatar" onError={(e) => { e.target.src = '/default-avatar.png'; }} />
+                  <div className="channel-pinned-msg-body">
+                    <div className="channel-pinned-msg-header">
+                      <span className="channel-pinned-username">{pin.username || 'Unknown'}</span>
+                      <span className="channel-pinned-time">{new Date(pin.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div className="channel-pinned-msg-text">{pin.content}</div>
+                    {pin.image_url && <img src={pin.image_url} alt="" className="channel-pinned-msg-image" />}
+                  </div>
+                  {isAdmin && (
+                    <button className="channel-pinned-unpin" title="Unpin" onClick={() => handleTogglePin(pin.id)}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"/></svg>
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
@@ -624,6 +676,9 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
                     <div className="channel-msg-actions">
                       <button title="Add Reaction" onClick={() => setReactionPickerMsgId((prev) => prev === msg.id ? null : msg.id)}>😊</button>
                       <button title="Reply" onClick={() => setReplyTo(msg)}>↩</button>
+                      {isAdmin && (
+                        <button title={msg.is_pinned ? 'Unpin Message' : 'Pin Message'} onClick={() => handleTogglePin(msg.id)} className={msg.is_pinned ? 'pinned' : ''}>📌</button>
+                      )}
                       {canEdit && (
                         <button title="Edit" onClick={() => { setEditingId(msg.id); setEditText(msg.content); }}>✏️</button>
                       )}

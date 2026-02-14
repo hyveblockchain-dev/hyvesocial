@@ -1152,6 +1152,38 @@ export async function deleteCategory(groupId, catId) {
   return data;
 }
 
+export async function updateCategory(groupId, catId, updates) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/categories/${catId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify(updates)
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to update category');
+  return data;
+}
+
+export async function getPinnedMessages(channelId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/pins`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) return { pins: [] };
+  return response.json();
+}
+
+export async function togglePinMessage(channelId, messageId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/messages/${messageId}/pin`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to pin/unpin message');
+  return data;
+}
+
 export async function getChannelMessages(channelId, { limit, before } = {}) {
   const token = localStorage.getItem('token');
   const params = new URLSearchParams();

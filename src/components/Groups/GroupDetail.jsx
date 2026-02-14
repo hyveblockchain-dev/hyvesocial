@@ -101,6 +101,24 @@ export default function GroupDetail() {
   const [editChannelName, setEditChannelName] = useState('');
   const [editChannelTopic, setEditChannelTopic] = useState('');
 
+  // ── Channel settings modal state ──
+  const [channelSettingsOpen, setChannelSettingsOpen] = useState(null); // channel object or null
+  const [channelSettingsTab, setChannelSettingsTab] = useState('overview'); // 'overview' | 'permissions'
+  const [csName, setCsName] = useState('');
+  const [csTopic, setCsTopic] = useState('');
+  const [csNsfw, setCsNsfw] = useState(false);
+  const [csSlowmode, setCsSlowmode] = useState(0);
+  const [csCategory, setCsCategory] = useState('');
+
+  // ── Create channel modal state ──
+  const [newChannelType, setNewChannelType] = useState('text');
+
+  // ── Category rename state ──
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
+  const [editCategoryName, setEditCategoryName] = useState('');
+
+  // ── Context menu state ──
+  const [contextMenu, setContextMenu] = useState(null); // { type: 'channel'|'category', id, x, y, data }
   // ── Role management state ──
   const [customRoles, setCustomRoles] = useState([]);
   const [showCreateRole, setShowCreateRole] = useState(false);
@@ -791,8 +809,8 @@ export default function GroupDetail() {
     if (!newChannelName.trim()) return;
     try {
       setBusy(true);
-      await api.createChannel(groupId, { name: newChannelName.trim(), categoryId: newChannelCategory || null });
-      setNewChannelName(''); setNewChannelCategory(''); setShowCreateChannel(false);
+      await api.createChannel(groupId, { name: newChannelName.trim(), categoryId: newChannelCategory || null, type: newChannelType || 'text' });
+      setNewChannelName(''); setNewChannelCategory(''); setNewChannelType('text'); setShowCreateChannel(false);
       await refreshChannels(groupId);
     } catch (err) { setNotice(err.message); }
     finally { setBusy(false); }
@@ -829,6 +847,78 @@ export default function GroupDetail() {
     } catch (err) { setNotice(err.message); }
     finally { setBusy(false); }
   }
+
+  // ── Channel settings modal save ──
+  async function handleSaveChannelSettings() {
+    if (!channelSettingsOpen) return;
+    try {
+      setBusy(true);
+      await api.updateChannel(groupId, channelSettingsOpen.id, {
+        name: csName.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-'),
+        topic: csTopic.trim() || null,
+        nsfw: csNsfw,
+        slowmode: csSlowmode,
+        categoryId: csCategory || null,
+      });
+      setChannelSettingsOpen(null);
+      await refreshChannels(groupId);
+    } catch (err) { setNotice(err.message); }
+    finally { setBusy(false); }
+  }
+
+  function openChannelSettings(ch) {
+    setChannelSettingsOpen(ch);
+    setChannelSettingsTab('overview');
+    setCsName(ch.name || '');
+    setCsTopic(ch.topic || '');
+    setCsNsfw(!!ch.nsfw);
+    setCsSlowmode(ch.slowmode || 0);
+    setCsCategory(ch.category_id || '');
+  }
+
+  // ── Category rename ──
+  async function handleRenameCategory(catId) {
+    if (!editCategoryName.trim()) return;
+    try {
+      setBusy(true);
+      await api.updateCategory(groupId, catId, { name: editCategoryName.trim() });
+      setEditingCategoryId(null);
+      setEditCategoryName('');
+      await refreshChannels(groupId);
+    } catch (err) { setNotice(err.message); }
+    finally { setBusy(false); }
+  }
+
+  // ── Clone channel ──
+  async function handleCloneChannel(ch) {
+    try {
+      setBusy(true);
+      await api.createChannel(groupId, {
+        name: ch.name + '-clone',
+        categoryId: ch.category_id || null,
+        topic: ch.topic || '',
+        type: ch.type || 'text',
+      });
+      await refreshChannels(groupId);
+      setNotice('Channel cloned!');
+    } catch (err) { setNotice(err.message); }
+    finally { setBusy(false); }
+  }
+
+  // ── Context menu handler ──
+  function handleContextMenu(e, type, id, data) {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({ type, id, x: e.clientX, y: e.clientY, data });
+  }
+
+  // Close context menu on click anywhere
+  useEffect(() => {
+    if (!contextMenu) return;
+    const handler = () => setContextMenu(null);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [contextMenu]);
 
   async function handleCreateRole() {
     if (!newRoleName.trim()) return;
@@ -871,6 +961,14 @@ export default function GroupDetail() {
       await refreshChannels(groupId);
     } catch (err) { setNotice(err.message); }
     finally { setBusy(false); }
+  }
+
+  // Channel type icon helper
+  function channelIcon(type) {
+    if (type === 'voice') return <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="channel-type-icon"><path d="M11.383 3.07904C11.009 2.92504 10.579 3.01004 10.293 3.29604L6 8.00004H3C2.447 8.00004 2 8.44704 2 9.00004V15C2 15.553 2.447 16 3 16H6L10.293 20.704C10.579 20.99 11.009 21.075 11.383 20.921C11.757 20.767 12 20.404 12 20V4.00004C12 3.59604 11.757 3.23304 11.383 3.07904Z"/><path d="M14 9.00004C14 9.00004 16 10 16 12C16 14 14 15 14 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/><path d="M17 7.00004C17 7.00004 20 9.00004 20 12C20 15 17 17 17 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>;
+    if (type === 'announcement') return <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="channel-type-icon"><path d="M3.9 8.26H2V15.2941H3.9V8.26Z"/><path d="M19.1 4V5.12659L4.85 8.26447V18.1176C4.85 18.5496 5.1605 18.9252 5.5851 19.0315L9.0981 19.8999C9.5765 20.0201 10.0595 19.7252 10.172 19.2397L10.7575 16.7088L19.1 18.5765V19.7059C19.1 20.4206 19.6794 21 20.3941 21H21.5765C22.2912 21 22.8706 20.4206 22.8706 19.7059V4.29412C22.8706 3.57943 22.2912 3 21.5765 3H20.3941C19.6794 3 19.1 3.57943 19.1 4.29412V4Z"/></svg>;
+    // default: text #
+    return <span className="discord-channel-hash">#</span>;
   }
 
   // ── Top navbar (rendered outside Layout) ──
@@ -1238,53 +1336,51 @@ export default function GroupDetail() {
             return (
               <div key={cat.id || 'uncategorized'} className="discord-category">
                 {cat.name && (
-                  <div className="discord-category-header" onClick={() => toggleCategory(cat.id)}>
-                    <span className={`discord-category-arrow${isCollapsed ? ' collapsed' : ''}`}>&#9660;</span>
-                    <span className="discord-category-name">{cat.name.toUpperCase()}</span>
-                    {adminEnabled && (
-                      <button className="discord-category-delete" onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat.id); }} title="Delete category">&#10005;</button>
-                    )}
-                  </div>
-                )}
-                {!isCollapsed && cat.channels.map((ch) => (
-                  editingChannelId === ch.id ? (
-                    <div key={ch.id} className="discord-channel-edit-form">
+                  editingCategoryId === cat.id ? (
+                    <div className="discord-category-header discord-category-editing">
                       <input
                         type="text"
-                        value={editChannelName}
-                        onChange={(e) => setEditChannelName(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '-'))}
-                        placeholder="channel-name"
+                        value={editCategoryName}
+                        onChange={(e) => setEditCategoryName(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleRenameCategory(cat.id); if (e.key === 'Escape') setEditingCategoryId(null); }}
+                        onBlur={() => { if (editCategoryName.trim()) handleRenameCategory(cat.id); else setEditingCategoryId(null); }}
+                        className="discord-category-rename-input"
                         autoFocus
                       />
-                      <input
-                        type="text"
-                        value={editChannelTopic}
-                        onChange={(e) => setEditChannelTopic(e.target.value)}
-                        placeholder="Channel topic (optional)"
-                      />
-                      <div className="discord-create-btns">
-                        <button onClick={handleEditChannel} disabled={busy || !editChannelName.trim()}>Save</button>
-                        <button onClick={() => setEditingChannelId(null)}>Cancel</button>
-                      </div>
                     </div>
                   ) : (
                     <div
-                      key={ch.id}
-                      className={`discord-channel${selectedChannelId === ch.id && activePanel === 'chat' ? ' active' : ''}`}
-                      onClick={() => { setSelectedChannelId(ch.id); setActivePanel('chat'); }}
+                      className="discord-category-header"
+                      onClick={() => toggleCategory(cat.id)}
+                      onContextMenu={(e) => adminEnabled && handleContextMenu(e, 'category', cat.id, cat)}
                     >
-                      <span className="discord-channel-hash">#</span>
-                      <span className="discord-channel-name">{ch.name}</span>
+                      <span className={`discord-category-arrow${isCollapsed ? ' collapsed' : ''}`}>&#9660;</span>
+                      <span className="discord-category-name">{cat.name.toUpperCase()}</span>
                       {adminEnabled && (
-                        <div className="discord-channel-actions-inline">
-                          <button className="discord-channel-edit" onClick={(e) => { e.stopPropagation(); setEditingChannelId(ch.id); setEditChannelName(ch.name); setEditChannelTopic(ch.topic || ''); }} title="Edit channel">✏️</button>
-                          {channels.length > 1 && (
-                            <button className="discord-channel-delete" onClick={(e) => { e.stopPropagation(); handleDeleteChannel(ch.id); }} title="Delete channel">✕</button>
-                          )}
-                        </div>
+                        <button className="discord-category-add" onClick={(e) => { e.stopPropagation(); setNewChannelCategory(String(cat.id)); setShowCreateChannel(true); }} title="Create Channel">
+                          <svg width="14" height="14" viewBox="0 0 18 18" fill="currentColor"><path d="M15 9.5H9.5V15H8.5V9.5H3V8.5H8.5V3H9.5V8.5H15V9.5Z"/></svg>
+                        </button>
                       )}
                     </div>
                   )
+                )}
+                {!isCollapsed && cat.channels.map((ch) => (
+                  <div
+                    key={ch.id}
+                    className={`discord-channel${selectedChannelId === ch.id && activePanel === 'chat' ? ' active' : ''}${ch.nsfw ? ' nsfw' : ''}`}
+                    onClick={() => { setSelectedChannelId(ch.id); setActivePanel('chat'); }}
+                    onContextMenu={(e) => adminEnabled && handleContextMenu(e, 'channel', ch.id, ch)}
+                  >
+                    {channelIcon(ch.type)}
+                    <span className="discord-channel-name">{ch.name}</span>
+                    {adminEnabled && (
+                      <div className="discord-channel-actions-inline">
+                        <button className="discord-channel-edit" onClick={(e) => { e.stopPropagation(); openChannelSettings(ch); }} title="Edit channel">
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M14 7.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0zM7.5 2.5A5 5 0 002.5 7.5a5 5 0 005 5 5 5 0 005-5 5 5 0 00-5-5z"/><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96a7.04 7.04 0 00-1.62-.94L14.4 3.05a.47.47 0 00-.48-.41h-3.84a.47.47 0 00-.48.41l-.36 2.54a7 7 0 00-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.73 9.16a.49.49 0 00.12.61l2.03 1.58c-.05.3-.07.63-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12a3.611 3.611 0 01-3.6 3.6z" transform="scale(0.58) translate(1,1)"/></svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             );
@@ -1293,17 +1389,56 @@ export default function GroupDetail() {
           {adminEnabled && (
             <div className="discord-channel-actions">
               {showCreateChannel ? (
-                <div className="discord-create-form">
-                  <input type="text" placeholder="channel-name" value={newChannelName} onChange={(e) => setNewChannelName(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '-'))} onKeyDown={(e) => e.key === 'Enter' && handleCreateChannel()} autoFocus />
+                <div className="discord-create-form discord-create-channel-modal">
+                  <h4>Create Channel</h4>
+                  <label className="discord-create-label">CHANNEL TYPE</label>
+                  <div className="discord-channel-type-picker">
+                    <label className={`discord-channel-type-option${newChannelType === 'text' ? ' selected' : ''}`} onClick={() => setNewChannelType('text')}>
+                      <span className="discord-channel-type-icon">#</span>
+                      <div>
+                        <div className="discord-channel-type-title">Text</div>
+                        <div className="discord-channel-type-desc">Send messages, images, GIFs, emoji, opinions, and puns</div>
+                      </div>
+                      <span className={`discord-channel-type-radio${newChannelType === 'text' ? ' checked' : ''}`} />
+                    </label>
+                    <label className={`discord-channel-type-option${newChannelType === 'voice' ? ' selected' : ''}`} onClick={() => setNewChannelType('voice')}>
+                      <span className="discord-channel-type-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11.383 3.07904C11.009 2.92504 10.579 3.01004 10.293 3.29604L6 8.00004H3C2.447 8.00004 2 8.44704 2 9.00004V15C2 15.553 2.447 16 3 16H6L10.293 20.704C10.579 20.99 11.009 21.075 11.383 20.921C11.757 20.767 12 20.404 12 20V4.00004C12 3.59604 11.757 3.23304 11.383 3.07904Z"/></svg>
+                      </span>
+                      <div>
+                        <div className="discord-channel-type-title">Voice</div>
+                        <div className="discord-channel-type-desc">Hang out together with voice, video, and screen share</div>
+                      </div>
+                      <span className={`discord-channel-type-radio${newChannelType === 'voice' ? ' checked' : ''}`} />
+                    </label>
+                    <label className={`discord-channel-type-option${newChannelType === 'announcement' ? ' selected' : ''}`} onClick={() => setNewChannelType('announcement')}>
+                      <span className="discord-channel-type-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3.9 8.26H2V15.2941H3.9V8.26Z"/><path d="M19.1 4V5.12659L4.85 8.26447V18.1176C4.85 18.5496 5.1605 18.9252 5.5851 19.0315L9.0981 19.8999C9.5765 20.0201 10.0595 19.7252 10.172 19.2397L10.7575 16.7088L19.1 18.5765V19.7059C19.1 20.4206 19.6794 21 20.3941 21H21.5765C22.2912 21 22.8706 20.4206 22.8706 19.7059V4.29412C22.8706 3.57943 22.2912 3 21.5765 3H20.3941C19.6794 3 19.1 3.57943 19.1 4.29412V4Z"/></svg>
+                      </span>
+                      <div>
+                        <div className="discord-channel-type-title">Announcement</div>
+                        <div className="discord-channel-type-desc">Important updates for people in and out of the server</div>
+                      </div>
+                      <span className={`discord-channel-type-radio${newChannelType === 'announcement' ? ' checked' : ''}`} />
+                    </label>
+                  </div>
+                  <label className="discord-create-label">CHANNEL NAME</label>
+                  <div className="discord-create-channel-name-row">
+                    {channelIcon(newChannelType)}
+                    <input type="text" placeholder="new-channel" value={newChannelName} onChange={(e) => setNewChannelName(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '-'))} onKeyDown={(e) => e.key === 'Enter' && handleCreateChannel()} autoFocus />
+                  </div>
                   {categories.length > 0 && (
-                    <select value={newChannelCategory} onChange={(e) => setNewChannelCategory(e.target.value)}>
-                      <option value="">No category</option>
-                      {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
+                    <>
+                      <label className="discord-create-label">CATEGORY</label>
+                      <select value={newChannelCategory} onChange={(e) => setNewChannelCategory(e.target.value)}>
+                        <option value="">No category</option>
+                        {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </>
                   )}
                   <div className="discord-create-btns">
-                    <button onClick={handleCreateChannel} disabled={busy || !newChannelName.trim()}>Create</button>
-                    <button onClick={() => setShowCreateChannel(false)}>Cancel</button>
+                    <button onClick={handleCreateChannel} disabled={busy || !newChannelName.trim()}>Create Channel</button>
+                    <button onClick={() => { setShowCreateChannel(false); setNewChannelType('text'); }}>Cancel</button>
                   </div>
                 </div>
               ) : (
@@ -2322,6 +2457,155 @@ export default function GroupDetail() {
             <p className="invite-modal-expire">Your invite link expires in 7 days.</p>
           </div>
         </div>
+      </div>,
+      document.body
+    )}
+
+    {/* ── Channel Settings Modal ── */}
+    {channelSettingsOpen && createPortal(
+      <div className="discord-modal-overlay" onClick={() => setChannelSettingsOpen(null)}>
+        <div className="discord-channel-settings" onClick={(e) => e.stopPropagation()}>
+          <div className="discord-cs-sidebar">
+            <div className="discord-cs-sidebar-header">{csName || 'Channel'}</div>
+            <button className={`discord-cs-sidebar-item${channelSettingsTab === 'overview' ? ' active' : ''}`} onClick={() => setChannelSettingsTab('overview')}>Overview</button>
+            <button className={`discord-cs-sidebar-item${channelSettingsTab === 'permissions' ? ' active' : ''}`} onClick={() => setChannelSettingsTab('permissions')}>Permissions</button>
+            <div className="discord-cs-sidebar-sep" />
+            <button className="discord-cs-sidebar-item danger" onClick={() => { handleDeleteChannel(channelSettingsOpen.id); setChannelSettingsOpen(null); }}>Delete Channel</button>
+          </div>
+          <div className="discord-cs-main">
+            <div className="discord-cs-header">
+              <h2>{channelSettingsTab === 'overview' ? 'Overview' : 'Permissions'}</h2>
+              <button className="discord-cs-close" onClick={() => setChannelSettingsOpen(null)}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"/></svg>
+              </button>
+            </div>
+
+            {channelSettingsTab === 'overview' && (
+              <div className="discord-cs-body">
+                <div className="discord-cs-field">
+                  <label>CHANNEL NAME</label>
+                  <div className="discord-cs-name-input">
+                    {channelIcon(channelSettingsOpen.type)}
+                    <input type="text" value={csName} onChange={(e) => setCsName(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '-'))} />
+                  </div>
+                </div>
+                <div className="discord-cs-field">
+                  <label>CHANNEL TOPIC</label>
+                  <textarea value={csTopic} onChange={(e) => setCsTopic(e.target.value)} placeholder="Let everyone know how to use this channel!" maxLength={1024} rows={3} />
+                  <span className="discord-cs-charcount">{csTopic.length}/1024</span>
+                </div>
+                {categories.length > 0 && (
+                  <div className="discord-cs-field">
+                    <label>CATEGORY</label>
+                    <select value={csCategory} onChange={(e) => setCsCategory(e.target.value)}>
+                      <option value="">No category</option>
+                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                )}
+                <div className="discord-cs-field">
+                  <div className="discord-cs-toggle-row">
+                    <div>
+                      <label>NSFW Channel</label>
+                      <p className="discord-cs-field-desc">Users will need to confirm their age to view this channel</p>
+                    </div>
+                    <button className={`discord-cs-toggle${csNsfw ? ' active' : ''}`} onClick={() => setCsNsfw(p => !p)}>
+                      <span className="discord-cs-toggle-knob" />
+                    </button>
+                  </div>
+                </div>
+                <div className="discord-cs-field">
+                  <label>SLOWMODE</label>
+                  <p className="discord-cs-field-desc">Limit how frequently members can send messages in this channel</p>
+                  <select value={csSlowmode} onChange={(e) => setCsSlowmode(Number(e.target.value))}>
+                    <option value={0}>Off</option>
+                    <option value={5}>5s</option>
+                    <option value={10}>10s</option>
+                    <option value={15}>15s</option>
+                    <option value={30}>30s</option>
+                    <option value={60}>1m</option>
+                    <option value={120}>2m</option>
+                    <option value={300}>5m</option>
+                    <option value={600}>10m</option>
+                    <option value={900}>15m</option>
+                    <option value={1800}>30m</option>
+                    <option value={3600}>1h</option>
+                    <option value={7200}>2h</option>
+                    <option value={21600}>6h</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {channelSettingsTab === 'permissions' && (
+              <div className="discord-cs-body">
+                <div className="discord-cs-perms-info">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                  <p>Channel permission overrides allow you to customize which roles and members can see and interact with this channel.</p>
+                </div>
+                <div className="discord-cs-perms-placeholder">
+                  <p>Permission overrides coming soon. For now, channel permissions follow Server Settings.</p>
+                </div>
+              </div>
+            )}
+
+            <div className="discord-cs-footer">
+              <button className="discord-cs-cancel" onClick={() => setChannelSettingsOpen(null)}>Cancel</button>
+              <button className="discord-cs-save" onClick={handleSaveChannelSettings} disabled={busy || !csName.trim()}>Save Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+
+    {/* ── Right-click Context Menu ── */}
+    {contextMenu && createPortal(
+      <div className="discord-context-menu" style={{ top: contextMenu.y, left: contextMenu.x }}>
+        {contextMenu.type === 'channel' && (
+          <>
+            <button onClick={() => { openChannelSettings(contextMenu.data); setContextMenu(null); }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              Edit Channel
+            </button>
+            <button onClick={() => { handleCloneChannel(contextMenu.data); setContextMenu(null); }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+              Clone Channel
+            </button>
+            <div className="discord-context-sep" />
+            <button className="discord-context-danger" onClick={() => { handleDeleteChannel(contextMenu.id); setContextMenu(null); }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              Delete Channel
+            </button>
+            <div className="discord-context-sep" />
+            <button onClick={() => { navigator.clipboard.writeText(String(contextMenu.id)); setContextMenu(null); setNotice('Channel ID copied!'); }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+              Copy Channel ID
+            </button>
+          </>
+        )}
+        {contextMenu.type === 'category' && (
+          <>
+            <button onClick={() => { setEditingCategoryId(contextMenu.id); setEditCategoryName(contextMenu.data.name); setContextMenu(null); }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              Edit Category
+            </button>
+            <button onClick={() => { setNewChannelCategory(String(contextMenu.id)); setShowCreateChannel(true); setContextMenu(null); }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              Create Channel
+            </button>
+            <div className="discord-context-sep" />
+            <button className="discord-context-danger" onClick={() => { handleDeleteCategory(contextMenu.id); setContextMenu(null); }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              Delete Category
+            </button>
+            <div className="discord-context-sep" />
+            <button onClick={() => { navigator.clipboard.writeText(String(contextMenu.id)); setContextMenu(null); setNotice('Category ID copied!'); }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+              Copy Category ID
+            </button>
+          </>
+        )}
       </div>,
       document.body
     )}
