@@ -109,6 +109,12 @@ export default function ServerSettings({
   const [showChannelMembers, setShowChannelMembers] = useState(false);
   const [memberSearch, setMemberSearch] = useState('');
 
+  // Roles states
+  const [roleSearch, setRoleSearch] = useState('');
+  const [rolesNoticeOpen, setRolesNoticeOpen] = useState(true);
+  const [rolePermPin, setRolePermPin] = useState(true);
+  const [rolePermBypass, setRolePermBypass] = useState(true);
+
   const groupName = group?.name || '';
   const avatarUrl = group?.avatar_url || group?.avatar || '';
   const coverUrl = group?.cover_photo || group?.cover_url || '';
@@ -460,22 +466,89 @@ export default function ServerSettings({
           );})()}
 
           {/* ── Roles ── */}
-          {activeSection === 'roles' && (
+          {activeSection === 'roles' && (() => {
+            const filteredRoles = customRoles.filter(r => {
+              if (!roleSearch) return true;
+              return (r.name || '').toLowerCase().includes(roleSearch.toLowerCase());
+            });
+            return (
             <div className="ss-section">
               <h2>Roles</h2>
-              <p className="ss-subtitle">Manage server roles and permissions</p>
-              <div className="ss-role-list">
-                {customRoles.map((r) => (
-                  <div key={r.id} className="ss-role-row">
-                    <span className="ss-role-dot" style={{ background: r.color || '#99aab5' }} />
-                    <span className="ss-role-name">{r.name}</span>
-                    <span className="ss-role-count">{r.member_count || 0} members</span>
+              <p className="ss-subtitle">Use roles to group your server members and assign permissions.</p>
+
+              {/* Permission change notice */}
+              <div className="ss-roles-notice">
+                <div className="ss-roles-notice-header" onClick={() => setRolesNoticeOpen(!rolesNoticeOpen)}>
+                  <div className="ss-roles-notice-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#f0b232"><circle cx="12" cy="12" r="10"/><text x="12" y="17" textAnchor="middle" fill="#000" fontSize="14" fontWeight="700">!</text></svg>
+                    <span>There are upcoming changes to messaging permissions</span>
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#b5bac1" style={{ transform: rolesNoticeOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}><path d="M7 10l5 5 5-5z"/></svg>
+                </div>
+                {rolesNoticeOpen && (
+                  <div className="ss-roles-notice-body">
+                    <p>Historically, Pin Messages and Bypass Slowmode were controlled by permissions intended for moderators, such as <strong>Manage Messages</strong> and <strong>Manage Channels</strong>. However, these permissions grant access to more destructive actions, such as deleting other people's messages. As such, we are adding two new permissions to more granularly control access:</p>
+                    <p><strong>Pin Messages:</strong> Pin messages in channels<br/><strong>Bypass Slowmode:</strong> Send messages without slowmode restrictions</p>
+                    <div className="ss-roles-notice-transition">
+                      <p><strong>Transition Timeline:</strong><br/>Until February 23, 2026: If a user has either the old required permissions or the new permission, they will be able to perform the action.<br/>After February 23, 2026: Users will <strong>need one of the granular permissions</strong> to perform these actions. The older permissions, such as <strong>Manage Messages</strong>, will no longer grant access.</p>
+                    </div>
+                    <p style={{ marginTop: 12 }}>Automatically update your role permissions below:</p>
+                    <label className="ss-roles-checkbox"><input type="checkbox" checked={rolePermPin} onChange={() => setRolePermPin(!rolePermPin)} /><span>Grant Pin Messages to all users and roles that currently have Manage Messages</span></label>
+                    <label className="ss-roles-checkbox"><input type="checkbox" checked={rolePermBypass} onChange={() => setRolePermBypass(!rolePermBypass)} /><span>Grant Bypass Slowmode to all users and roles that currently have Manage Messages or Manage Channel</span></label>
+                    <button className="ss-btn-primary" style={{ marginTop: 12 }}>Apply</button>
+                  </div>
+                )}
+              </div>
+
+              {/* Default Permissions */}
+              <div className="ss-roles-default">
+                <div className="ss-roles-default-left">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#b5bac1"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z"/></svg>
+                  <div>
+                    <span className="ss-roles-default-title">Default Permissions</span>
+                    <span className="ss-roles-default-sub">@everyone · applies to all server members</span>
+                  </div>
+                </div>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#b5bac1"><path d="M10 6l6 6-6 6z"/></svg>
+              </div>
+
+              {/* Search + Create */}
+              <div className="ss-roles-toolbar">
+                <div className="ss-members-search">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#b5bac1"><path d="M21.7 20.3l-4.5-4.5A7.5 7.5 0 1 0 3 10.5a7.5 7.5 0 0 0 12.3 5.7l4.5 4.5a1 1 0 0 0 1.4-1.4zM5 10.5a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0z"/></svg>
+                  <input type="text" placeholder="Search Roles" value={roleSearch} onChange={e => setRoleSearch(e.target.value)} />
+                </div>
+                <button className="ss-btn-create-role">Create Role</button>
+              </div>
+
+              <p className="ss-muted" style={{ margin: '8px 0 16px', fontSize: 12 }}>Members use the color of the highest role they have on this list. Drag roles to reorder them. <span style={{ color: '#00a8fc', cursor: 'pointer' }}>Need help with permissions?</span></p>
+
+              {/* Roles table */}
+              <div className="ss-roles-table">
+                <div className="ss-roles-table-header">
+                  <span className="ss-roles-col-name">ROLES — {customRoles.length}</span>
+                  <span className="ss-roles-col-members">MEMBERS</span>
+                </div>
+                {filteredRoles.map((r) => (
+                  <div key={r.id} className="ss-roles-table-row">
+                    <div className="ss-roles-col-name">
+                      <span className="ss-role-dot" style={{ background: r.color || '#99aab5' }} />
+                      <span className="ss-role-name">{r.name}</span>
+                    </div>
+                    <div className="ss-roles-col-members">
+                      <span className="ss-role-count">{r.member_count || 0}</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#b5bac1"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z"/></svg>
+                    </div>
+                    <div className="ss-roles-col-actions">
+                      <button className="ss-signal-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="#b5bac1"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+                      <button className="ss-signal-btn" title="More"><svg width="16" height="16" viewBox="0 0 24 24" fill="#b5bac1"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
+                    </div>
                   </div>
                 ))}
-                {customRoles.length === 0 && <p className="ss-muted">No custom roles yet.</p>}
+                {filteredRoles.length === 0 && <div className="ss-roles-table-row"><p className="ss-muted" style={{ padding: '16px 0' }}>No roles found.</p></div>}
               </div>
             </div>
-          )}
+          );})()}
 
           {/* ── Bans ── */}
           {activeSection === 'bans' && (
