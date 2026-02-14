@@ -3,6 +3,11 @@ import { API_URL } from '../utils/env';
 
 let friendsByAddressSupported = true;
 
+// Helper to get auth token
+function getToken() {
+  return localStorage.getItem('token');
+}
+
 // Helper function to convert file to base64
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
