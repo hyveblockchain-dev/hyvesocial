@@ -124,6 +124,27 @@ export default function ServerSettings({
   const [editRoleTab, setEditRoleTab] = useState('display');
   const [editRoleHoist, setEditRoleHoist] = useState(false);
   const [editRoleMention, setEditRoleMention] = useState(false);
+  const [permSearch, setPermSearch] = useState('');
+  const [rolePerms, setRolePerms] = useState({
+    viewChannels: false, manageChannels: false, manageRoles: false,
+    createExpressions: false, manageExpressions: false, viewAuditLog: false,
+    manageWebhooks: false, manageServer: false,
+    createInvite: false, changeNickname: false, manageNicknames: false,
+    kickMembers: false, banMembers: false, timeoutMembers: false,
+    sendMessages: false, sendMessagesInThreads: false, createPublicThreads: false,
+    createPrivateThreads: false, embedLinks: false, attachFiles: false,
+    addReactions: false, useExternalEmoji: false, useExternalStickers: false,
+    mentionEveryone: false, manageMessages: false, pinMessages: false,
+    bypassSlowmode: false, manageThreads: false, readMessageHistory: false,
+    sendTTS: false, sendVoiceMessages: false, createPolls: false,
+    connect: false, speak: false, video: false, useSoundboard: false,
+    useExternalSounds: false, useVoiceActivity: false, prioritySpeaker: false,
+    muteMembers: false, deafenMembers: false, moveMembers: false,
+    setVoiceStatus: false,
+    useApplicationCommands: false, useActivities: false, useExternalApps: false,
+    createEvents: false, manageEvents: false,
+    administrator: false
+  });
 
   const ROLE_COLORS = [
     '#99aab5', '#1abc9c', '#2ecc71', '#3498db', '#9b59b6', '#e91e63',
@@ -714,12 +735,113 @@ export default function ServerSettings({
                       </div>
                     )}
 
-                    {/* Permissions tab placeholder */}
-                    {editRoleTab === 'permissions' && (
+                    {/* Permissions tab */}
+                    {editRoleTab === 'permissions' && (() => {
+                      const PERM_SECTIONS = [
+                        { heading: 'General Server Permissions', showClear: true, perms: [
+                          { key: 'viewChannels', label: 'View Channels', desc: 'Allows members to view channels by default (excluding private channels).' },
+                          { key: 'manageChannels', label: 'Manage Channels', desc: 'Allows members to create, edit, or delete channels.', warn: 'This permission will soon stop granting the ability to bypass slowmode.' },
+                          { key: 'manageRoles', label: 'Manage Roles', desc: 'Allows members to create new roles and edit or delete roles lower than their highest role. Also allows members to change permissions of individual channels that they have access to.' },
+                          { key: 'createExpressions', label: 'Create Expressions', desc: 'Allows members to add custom emoji, stickers, and sounds in this server.' },
+                          { key: 'manageExpressions', label: 'Manage Expressions', desc: 'Allows members to edit or remove custom emoji, stickers, and sounds in this server.' },
+                          { key: 'viewAuditLog', label: 'View Audit Log', desc: 'Allows members to view a record of who made which changes in this server.' },
+                          { key: 'manageWebhooks', label: 'Manage Webhooks', desc: 'Allows members to create, edit, or delete webhooks, which can post messages from other apps or sites into this server.' },
+                          { key: 'manageServer', label: 'Manage Server', desc: "Allows members to change this server's name, switch regions, view all invites, add apps to this server and create and update AutoMod rules." },
+                        ]},
+                        { heading: 'Membership Permissions', perms: [
+                          { key: 'createInvite', label: 'Create Invite', desc: 'Allows members to invite new people to this server.' },
+                          { key: 'changeNickname', label: 'Change Nickname', desc: 'Allows members to change their own nickname, a custom name for just this server.' },
+                          { key: 'manageNicknames', label: 'Manage Nicknames', desc: 'Allows members to change the nicknames of other members.' },
+                          { key: 'kickMembers', label: 'Kick, Approve, and Reject Members', desc: 'Kick will remove other members from this server. Kicked members will be able to rejoin if they have another invite. If the server enables Member Requirements, this permission enables the ability to approve or reject members who request to join.' },
+                          { key: 'banMembers', label: 'Ban Members', desc: 'Allows members to permanently ban and delete the message history of other members from this server.' },
+                          { key: 'timeoutMembers', label: 'Timeout Members', desc: 'When you put a user in timeout they will not be able to send messages in chat, reply within threads, react to messages, or speak in voice or Stage channels.' },
+                        ]},
+                        { heading: 'Text Channel Permissions', perms: [
+                          { key: 'sendMessages', label: 'Send Messages and Create Posts', desc: 'Allows members to send messages in text channels and create posts in forum channels.' },
+                          { key: 'sendMessagesInThreads', label: 'Send Messages in Threads and Posts', desc: 'Allows members to send messages in threads and in posts on forum channels.' },
+                          { key: 'createPublicThreads', label: 'Create Public Threads', desc: 'Allows members to create threads that everyone in a channel can view.' },
+                          { key: 'createPrivateThreads', label: 'Create Private Threads', desc: 'Allows members to create invite-only threads.' },
+                          { key: 'embedLinks', label: 'Embed Links', desc: 'Allows links that members share to show embedded content in text channels.' },
+                          { key: 'attachFiles', label: 'Attach Files', desc: 'Allows members to upload files or media in text channels.' },
+                          { key: 'addReactions', label: 'Add Reactions', desc: 'Allows members to add new emoji reactions to a message. If this permission is disabled, members can still react using any existing reactions on a message.' },
+                          { key: 'useExternalEmoji', label: 'Use External Emoji', desc: "Allows members to use emoji from other servers, if they're a Discord Nitro member." },
+                          { key: 'useExternalStickers', label: 'Use External Stickers', desc: "Allows members to use stickers from other servers, if they're a Discord Nitro member." },
+                          { key: 'mentionEveryone', label: 'Mention @everyone, @here, and All Roles', desc: 'Allows members to use @everyone (everyone in the server) or @here (only online members in that channel). They can also @mention all roles, even if the role\'s "Allow anyone to mention this role" permission is disabled.' },
+                          { key: 'manageMessages', label: 'Manage Messages', desc: 'Allows members to delete or remove embeds from messages by other members.', warn: 'This permission will soon stop granting the ability to pin messages or bypass slowmode.' },
+                          { key: 'pinMessages', label: 'Pin Messages', desc: 'Allows members to pin or unpin any message.' },
+                          { key: 'bypassSlowmode', label: 'Bypass Slowmode', desc: 'Allows members to send messages without being affected by slowmode.' },
+                          { key: 'manageThreads', label: 'Manage Threads and Posts', desc: 'Allows members to rename, delete, close, and turn on slow mode for threads and posts. They can also view private threads.', warn: 'This permission will soon stop granting the ability to bypass slowmode.' },
+                          { key: 'readMessageHistory', label: 'Read Message History', desc: 'Allows members to read previous messages sent in channels. If this permission is disabled, members only see messages sent when they are online. This does not fully apply to threads and forum posts.' },
+                          { key: 'sendTTS', label: 'Send Text-to-Speech Messages', desc: 'Allows members to send text-to-speech messages by starting a message with /tts. These messages can be heard by anyone focused on the channel.' },
+                          { key: 'sendVoiceMessages', label: 'Send Voice Messages', desc: 'Allows members to send voice messages.' },
+                          { key: 'createPolls', label: 'Create Polls', desc: 'Allows members to create polls.' },
+                        ]},
+                        { heading: 'Voice Channel Permissions', perms: [
+                          { key: 'connect', label: 'Connect', desc: 'Allows members to join voice channels and hear others.' },
+                          { key: 'speak', label: 'Speak', desc: 'Allows members to talk in voice channels. If this permission is disabled, members are default-muted until somebody with the "Mute Members" permission un-mutes them.' },
+                          { key: 'video', label: 'Video', desc: 'Allows members to share their video, screen share, or stream a game in this server.' },
+                          { key: 'useSoundboard', label: 'Use Soundboard', desc: 'Allows members to send sounds from server soundboard.', link: 'Learn more' },
+                          { key: 'useExternalSounds', label: 'Use External Sounds', desc: "Allows members to use sounds from other servers, if they're a Discord Nitro member." },
+                          { key: 'useVoiceActivity', label: 'Use Voice Activity', desc: 'Allows members to speak in voice channels by simply talking. If this permission is disabled, members are required to use Push-to-Talk. Good for controlling background noise or noisy members.' },
+                          { key: 'prioritySpeaker', label: 'Priority Speaker', desc: 'Allows members to be more easily heard in voice channels. When activated, the volume of others without this permission will be automatically lowered. Priority Speaker is activated by using the Push to Talk (Priority) keybind.' },
+                          { key: 'muteMembers', label: 'Mute Members', desc: 'Allows members to mute other members in voice channels for everyone.' },
+                          { key: 'deafenMembers', label: 'Deafen Members', desc: 'Allows members to deafen other members in voice channels, which means they won\'t be able to speak or hear others.' },
+                          { key: 'moveMembers', label: 'Move Members', desc: 'Allows members to disconnect or move other members between voice channels that the member with this permission has access to.' },
+                          { key: 'setVoiceStatus', label: 'Set Voice Channel Status', desc: 'Allows members to create and edit voice channel status.' },
+                        ]},
+                        { heading: 'Apps Permissions', perms: [
+                          { key: 'useApplicationCommands', label: 'Use Application Commands', desc: 'Allows members to use commands from applications, including slash commands and context menu commands.' },
+                          { key: 'useActivities', label: 'Use Activities', desc: 'Allows members to use Activities.' },
+                          { key: 'useExternalApps', label: 'Use External Apps', desc: 'Allows apps that members have added to their account to post messages. When disabled, the messages will be private.' },
+                        ]},
+                        { heading: 'Events Permissions', perms: [
+                          { key: 'createEvents', label: 'Create Events', desc: 'Allows members to create events.' },
+                          { key: 'manageEvents', label: 'Manage Events', desc: 'Allows members to edit and cancel events.' },
+                        ]},
+                        { heading: 'Advanced Permissions', perms: [
+                          { key: 'administrator', label: 'Administrator', desc: 'Members with this permission will have every permission and will also bypass all channel specific permissions or restrictions (for example, these members would get access to all private channels). This is a dangerous permission to grant.' },
+                        ]},
+                      ];
+                      const q = permSearch.toLowerCase();
+                      return (
                       <div className="ss-role-editor-body">
-                        <p className="ss-muted" style={{ padding: '24px 0' }}>Permissions editor coming soon.</p>
+                        <div className="ss-perm-search-wrap">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="#b5bac1"><path d="M21.71 20.29l-5.4-5.4A7.92 7.92 0 0018 10a8 8 0 10-8 8 7.92 7.92 0 004.89-1.69l5.4 5.4a1 1 0 001.42-1.42zM4 10a6 6 0 116 6 6 6 0 01-6-6z"/></svg>
+                          <input className="ss-perm-search" placeholder="Search permissions" value={permSearch} onChange={e => setPermSearch(e.target.value)} />
+                        </div>
+                        {PERM_SECTIONS.map(section => {
+                          const filtered = section.perms.filter(p => !q || p.label.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q));
+                          if (filtered.length === 0) return null;
+                          return (
+                            <div className="ss-perm-section" key={section.heading}>
+                              <div className="ss-perm-section-header">
+                                <h3>{section.heading}</h3>
+                                {section.showClear && <button className="ss-perm-clear" onClick={() => setRolePerms(prev => { const n = { ...prev }; Object.keys(n).forEach(k => n[k] = false); return n; })}>Clear permissions</button>}
+                              </div>
+                              {filtered.map(p => (
+                                <div className="ss-perm-row" key={p.key}>
+                                  <div className="ss-perm-info">
+                                    <span className="ss-perm-label">{p.label}</span>
+                                    <span className="ss-perm-desc">{p.desc}</span>
+                                    {p.warn && (
+                                      <div className="ss-perm-warn">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#f0b132"><path d="M12 2L1 21h22L12 2zm0 4l7.53 13H4.47L12 6zm-1 5v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>
+                                        <span>{p.warn}</span>
+                                      </div>
+                                    )}
+                                    {p.link && <a className="ss-perm-link" href="#">{p.link}</a>}
+                                  </div>
+                                  <label className="ss-toggle">
+                                    <input type="checkbox" checked={rolePerms[p.key]} onChange={() => setRolePerms(prev => ({ ...prev, [p.key]: !prev[p.key] }))} />
+                                    <span className="ss-toggle-slider" />
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })}
                       </div>
-                    )}
+                    );})()}
 
                     {/* Links tab placeholder */}
                     {editRoleTab === 'links' && (
