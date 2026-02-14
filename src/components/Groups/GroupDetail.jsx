@@ -60,6 +60,13 @@ export default function GroupDetail() {
   const [inviteSent, setInviteSent] = useState(new Set());
   const inviteTimerRef = useRef(null);
 
+  // ── Invite modal state ──
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteFriends, setInviteFriends] = useState([]);
+  const [inviteModalSearch, setInviteModalSearch] = useState('');
+  const [inviteLinkCopied, setInviteLinkCopied] = useState(false);
+  const [inviteModalSent, setInviteModalSent] = useState(new Set());
+
   // ── Discord channel state ──
   const [channels, setChannels] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -559,6 +566,36 @@ export default function GroupDetail() {
     }, 350);
   }
 
+  // ── Open invite modal ──
+  async function openInviteModal() {
+    setShowInviteModal(true);
+    setInviteModalSearch('');
+    setInviteLinkCopied(false);
+    setInviteModalSent(new Set());
+    try {
+      const data = await api.getFriends();
+      const list = Array.isArray(data) ? data : (data?.friends || []);
+      // Filter out users who are already members
+      const memberSet = new Set(members.map(m => (m.username || '').toLowerCase()));
+      setInviteFriends(list.filter(f => !memberSet.has((f.username || '').toLowerCase())));
+    } catch { setInviteFriends([]); }
+  }
+
+  async function handleInviteModalSend(username) {
+    try {
+      const data = await api.inviteToGroup(groupId, username);
+      if (data?.error) return;
+      setInviteModalSent(prev => new Set(prev).add(username.toLowerCase()));
+    } catch {}
+  }
+
+  function handleCopyInviteLink() {
+    const link = `${window.location.origin}/groups/${groupId}`;
+    navigator.clipboard.writeText(link);
+    setInviteLinkCopied(true);
+    setTimeout(() => setInviteLinkCopied(false), 2000);
+  }
+
   async function handleInviteUser(username) {
     try {
       setBusy(true); setNotice('');
@@ -1042,7 +1079,7 @@ export default function GroupDetail() {
 
             {/* Invite People */}
             {isMember && (
-              <button onClick={() => { setShowServerDropdown(false); setActivePanel('about'); }}>
+              <button onClick={() => { setShowServerDropdown(false); openInviteModal(); }}>
                 <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11h-4V7a1 1 0 00-2 0v4h-4a1 1 0 000 2h4v4a1 1 0 002 0v-4h4a1 1 0 000-2zM9 12a5 5 0 100-10 5 5 0 000 10zM1.5 21a7.5 7.5 0 0115 0H1.5z"/></svg>
                 <span>Invite People</span>
                 <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
@@ -1950,6 +1987,82 @@ export default function GroupDetail() {
           )}
         </div>
       </div>
+    )}
+    {/* ── Invite Friends Modal ── */}
+    {showInviteModal && createPortal(
+      <div className="invite-modal-overlay" onClick={() => setShowInviteModal(false)}>
+        <div className="invite-modal" onClick={e => e.stopPropagation()}>
+          <button className="invite-modal-close" onClick={() => setShowInviteModal(false)}>✕</button>
+          <div className="invite-modal-header">
+            <h2>Invite friends to {groupName}</h2>
+            {selectedChannel && (
+              <p className="invite-modal-channel">
+                Recipients will land in <span className="invite-modal-channel-tag"># {selectedChannel.name}</span>
+              </p>
+            )}
+          </div>
+          <div className="invite-modal-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#b5bac1"><path d="M21.71 20.29l-5.4-5.4A7.92 7.92 0 0018 10a8 8 0 10-8 8 7.92 7.92 0 004.89-1.69l5.4 5.4a1 1 0 001.42-1.42zM4 10a6 6 0 1112 0 6 6 0 01-12 0z"/></svg>
+            <input
+              type="text"
+              placeholder="Search for friends"
+              value={inviteModalSearch}
+              onChange={e => setInviteModalSearch(e.target.value)}
+              autoFocus
+            />
+          </div>
+          {group?.privacy === 'private' && (
+            <div className="invite-modal-notice">
+              <span className="invite-modal-notice-dot">●</span>
+              This channel is private, only select members and roles can view this channel.
+            </div>
+          )}
+          <div className="invite-modal-list">
+            {inviteFriends
+              .filter(f => {
+                if (!inviteModalSearch.trim()) return true;
+                const q = inviteModalSearch.toLowerCase();
+                return (f.username || '').toLowerCase().includes(q) || (f.display_name || '').toLowerCase().includes(q);
+              })
+              .map(f => {
+                const uname = f.username || '';
+                const displayName = f.display_name || f.displayName || uname;
+                const avatar = f.profile_image || f.profileImage || '/default-avatar.png';
+                const sent = inviteModalSent.has(uname.toLowerCase());
+                return (
+                  <div key={uname} className="invite-modal-row">
+                    <img src={avatar} alt="" className="invite-modal-avatar" onError={e => { e.target.src = '/default-avatar.png'; }} />
+                    <div className="invite-modal-user-info">
+                      <span className="invite-modal-displayname">{displayName}</span>
+                      <span className="invite-modal-username">{uname}</span>
+                    </div>
+                    <button
+                      className={`invite-modal-send${sent ? ' sent' : ''}`}
+                      onClick={() => handleInviteModalSend(uname)}
+                      disabled={sent}
+                    >
+                      {sent ? 'Sent!' : 'Send Link'}
+                    </button>
+                  </div>
+                );
+              })}
+            {inviteFriends.length === 0 && (
+              <div className="invite-modal-empty">No friends to invite</div>
+            )}
+          </div>
+          <div className="invite-modal-footer">
+            <p className="invite-modal-footer-label">Or, send a server invite link to a friend</p>
+            <div className="invite-modal-link-row">
+              <input type="text" readOnly value={`${window.location.origin}/groups/${groupId}`} />
+              <button className={`invite-modal-copy${inviteLinkCopied ? ' copied' : ''}`} onClick={handleCopyInviteLink}>
+                {inviteLinkCopied ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+            <p className="invite-modal-expire">Your invite link expires in 7 days.</p>
+          </div>
+        </div>
+      </div>,
+      document.body
     )}
     </div>
   );
