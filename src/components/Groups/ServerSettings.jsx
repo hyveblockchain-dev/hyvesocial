@@ -130,6 +130,9 @@ export default function ServerSettings({
   // Bans states
   const [banSearch, setBanSearch] = useState('');
 
+  // Delete modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   const groupName = group?.name || '';
   const avatarUrl = group?.avatar_url || group?.avatar || '';
   const coverUrl = group?.cover_photo || group?.cover_url || '';
@@ -240,7 +243,7 @@ export default function ServerSettings({
               Server Template
             </button>
             {isOwner && (
-              <button className="ss-nav-item ss-nav-danger" onClick={() => setActiveSection('delete')}>
+              <button className="ss-nav-item ss-nav-danger" onClick={() => setShowDeleteModal(true)}>
                 Delete Server
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 'auto' }}>
                   <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
@@ -663,18 +666,7 @@ export default function ServerSettings({
             </div>
           )}
 
-          {/* ── Delete Server ── */}
-          {activeSection === 'delete' && isOwner && (
-            <div className="ss-section">
-              <h2>Delete Server</h2>
-              <p className="ss-subtitle">Permanently delete this server and all its data. This action cannot be undone.</p>
-              <div className="ss-danger-zone">
-                <button className="ss-btn-danger" onClick={onDeleteGroup} disabled={busy}>
-                  {busy ? 'Deleting...' : 'Delete Server'}
-                </button>
-              </div>
-            </div>
-          )}
+
 
           {/* ── Server Tag ── */}
           {activeSection === 'serverTag' && (
@@ -1723,6 +1715,23 @@ export default function ServerSettings({
           </button>
         </div>
       </div>
+
+      {/* Delete Server Modal */}
+      {showDeleteModal && (
+        <div className="ss-delete-overlay" onClick={() => setShowDeleteModal(false)}>
+          <div className="ss-delete-modal" onClick={e => e.stopPropagation()}>
+            <button className="ss-delete-modal-close" onClick={() => setShowDeleteModal(false)}>✕</button>
+            <h2 className="ss-delete-modal-title">Delete '{groupName}'</h2>
+            <p className="ss-delete-modal-desc">Are you sure you want to delete <strong>{groupName}</strong>? This action cannot be undone.</p>
+            <div className="ss-delete-modal-actions">
+              <button className="ss-delete-modal-cancel" onClick={() => setShowDeleteModal(false)}>Cancel</button>
+              <button className="ss-delete-modal-confirm" onClick={() => { setShowDeleteModal(false); onDeleteGroup(); }} disabled={busy}>
+                {busy ? 'Deleting...' : 'Delete Server'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
