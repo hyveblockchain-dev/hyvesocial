@@ -27,7 +27,7 @@ export default function DmChat({ selectedUser, onBack }) {
   const [showGifPicker, setShowGifPicker] = useState(false);
   const [expandedGif, setExpandedGif] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showProfilePanel, setShowProfilePanel] = useState(true);
+  const [showProfilePanel, setShowProfilePanel] = useState(() => window.innerWidth > 1024);
   const [profileData, setProfileData] = useState(null);
 
   // New feature state
@@ -473,6 +473,11 @@ export default function DmChat({ selectedUser, onBack }) {
       {/* ── Header ── */}
       <div className="dm-chat-header">
         <div className="dm-chat-header-left">
+          {onBack && (
+            <button className="dm-header-back" onClick={onBack} title="Back">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            </button>
+          )}
           <span className="dm-chat-header-at">@</span>
           <span className="dm-chat-header-name">{targetDisplay}</span>
         </div>
@@ -522,7 +527,7 @@ export default function DmChat({ selectedUser, onBack }) {
         </div>
       )}
 
-      <div className="dm-chat-body">
+      <div className={`dm-chat-body${showProfilePanel ? ' profile-open' : ''}`}>
         {/* ── Messages ── */}
         <div className="dm-chat-messages" ref={messagesContainerRef} onScroll={handleScroll}>
           {loading ? (
@@ -726,6 +731,10 @@ export default function DmChat({ selectedUser, onBack }) {
         {/* ── Profile panel ── */}
         {showProfilePanel && (
           <div className="dm-profile-panel">
+            <button className="dm-profile-close-mobile" onClick={() => setShowProfilePanel(false)}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+              Back
+            </button>
             <div className="dm-profile-banner" />
             <div className="dm-profile-avatar-wrap">
               <img
@@ -749,7 +758,7 @@ export default function DmChat({ selectedUser, onBack }) {
               {memberSince && (
                 <div className="dm-profile-section">
                   <h4>Member Since</h4>
-                  <p>{new Date(memberSince).toLocaleDateString('en-US', { month: 'Short', day: 'numeric', year: 'numeric' })}</p>
+                  <p>{new Date(memberSince).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                 </div>
               )}
               <div className="dm-profile-mutual">
