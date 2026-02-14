@@ -117,6 +117,21 @@ export default function ServerSettings({
   const [rolePermPin, setRolePermPin] = useState(true);
   const [rolePermBypass, setRolePermBypass] = useState(true);
 
+  // Role editor states
+  const [editingRole, setEditingRole] = useState(null); // null = list view, object = editor view
+  const [editRoleName, setEditRoleName] = useState('new role');
+  const [editRoleColor, setEditRoleColor] = useState(0);
+  const [editRoleTab, setEditRoleTab] = useState('display');
+  const [editRoleHoist, setEditRoleHoist] = useState(false);
+  const [editRoleMention, setEditRoleMention] = useState(false);
+
+  const ROLE_COLORS = [
+    '#99aab5', '#1abc9c', '#2ecc71', '#3498db', '#9b59b6', '#e91e63',
+    '#f1c40f', '#e67e22', '#e74c3c', '#95a5a6', '#607d8b', '#11806a',
+    '#1f8b4c', '#206694', '#71368a', '#ad1457', '#c27c0e', '#a84300',
+    '#992d22', '#979c9f',
+  ];
+
   // Access states
   const [accessMode, setAccessMode] = useState('invite');
   const [ageRestricted, setAgeRestricted] = useState(false);
@@ -493,6 +508,238 @@ export default function ServerSettings({
               if (!roleSearch) return true;
               return (r.name || '').toLowerCase().includes(roleSearch.toLowerCase());
             });
+
+            // All roles list for the editor sidebar
+            const allRolesForList = [...customRoles, { id: '__everyone', name: '@everyone', color: '#99aab5' }];
+            const selectedColor = ROLE_COLORS[editRoleColor] || ROLE_COLORS[0];
+
+            // ── Role Editor View ──
+            if (editingRole) {
+              return (
+                <div className="ss-role-editor-layout">
+                  {/* Left: Role list sidebar */}
+                  <div className="ss-role-list-panel">
+                    <div className="ss-role-list-header">
+                      <button className="ss-role-back-btn" onClick={() => setEditingRole(null)}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                        BACK
+                      </button>
+                      <button className="ss-role-add-btn" onClick={() => {
+                        setEditRoleName('new role');
+                        setEditRoleColor(0);
+                        setEditRoleTab('display');
+                        setEditRoleHoist(false);
+                        setEditRoleMention(false);
+                        setEditingRole({ id: '__new__' + Date.now(), name: 'new role', color: '#99aab5', isNew: true });
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                      </button>
+                    </div>
+                    <div className="ss-role-list-items">
+                      {allRolesForList.map((r) => (
+                        <button
+                          key={r.id}
+                          className={`ss-role-list-item${editingRole?.id === r.id ? ' active' : ''}`}
+                          onClick={() => {
+                            setEditingRole(r);
+                            setEditRoleName(r.name || 'new role');
+                            setEditRoleColor(ROLE_COLORS.indexOf(r.color) !== -1 ? ROLE_COLORS.indexOf(r.color) : 0);
+                            setEditRoleTab('display');
+                            setEditRoleHoist(false);
+                            setEditRoleMention(false);
+                          }}
+                        >
+                          <span className="ss-role-dot" style={{ background: r.color || '#99aab5' }} />
+                          <span className="ss-role-list-name">{r.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Right: Role editor panel */}
+                  <div className="ss-role-editor-panel">
+                    <div className="ss-role-editor-top">
+                      <h3 className="ss-role-editor-title">EDIT ROLE — {editRoleName.toUpperCase()}</h3>
+                      <button className="ss-signal-btn" title="More options">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#b5bac1"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                      </button>
+                    </div>
+
+                    {/* Editor tabs */}
+                    <div className="ss-role-editor-tabs">
+                      {['display', 'permissions', 'links', 'members'].map(t => (
+                        <button
+                          key={t}
+                          className={`ss-role-editor-tab${editRoleTab === t ? ' active' : ''}`}
+                          onClick={() => setEditRoleTab(t)}
+                        >
+                          {t === 'members' ? 'Manage Members (0)' : t.charAt(0).toUpperCase() + t.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Display tab content */}
+                    {editRoleTab === 'display' && (
+                      <div className="ss-role-editor-body">
+                        {/* Role name */}
+                        <div className="ss-field-group">
+                          <label className="ss-field-label">Role name <span style={{ color: '#ed4245' }}>*</span></label>
+                          <input className="ss-input" value={editRoleName} onChange={e => setEditRoleName(e.target.value)} />
+                        </div>
+
+                        {/* Role Style */}
+                        <div className="ss-field-group" style={{ marginTop: 20 }}>
+                          <label className="ss-field-label">Role Style</label>
+                          <div className="ss-role-style-grid">
+                            <div className="ss-role-style-card active">
+                              <div className="ss-role-style-preview" style={{ background: '#2b2d31' }}>
+                                <div className="ss-role-style-msg">
+                                  <div className="ss-role-style-avatar" />
+                                  <div>
+                                    <span style={{ color: selectedColor, fontWeight: 600, fontSize: 13 }}>Wumpus</span>
+                                    <span style={{ color: '#b5bac1', fontSize: 11, marginLeft: 4 }}>rocks a...</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <span className="ss-role-style-label">Solid</span>
+                            </div>
+                            {['Gradient', 'Sequential', 'Holographic'].map((s) => (
+                              <div key={s} className="ss-role-style-card locked">
+                                <div className="ss-role-style-preview" style={{ background: '#2b2d31', opacity: 0.4 }}>
+                                  <div className="ss-role-style-msg">
+                                    <div className="ss-role-style-avatar" />
+                                    <div>
+                                      <span style={{ color: '#b5bac1', fontWeight: 600, fontSize: 13 }}>Wumpus</span>
+                                      <span style={{ color: '#b5bac1', fontSize: 11, marginLeft: 4 }}>rocks a...</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <span className="ss-role-style-label">{s}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Boost upsell */}
+                        <div className="ss-role-boost-upsell">
+                          <span>Make certain roles <strong>magical</strong>.</span>
+                          <span style={{ color: '#b5bac1', fontSize: 12 }}>Unlock new role styles with Boosting.</span>
+                          <button className="ss-role-boost-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#f47fff" style={{ marginRight: 4 }}><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61z"/></svg>
+                            Unlock with Boosting
+                          </button>
+                        </div>
+
+                        {/* Role color */}
+                        <div className="ss-field-group" style={{ marginTop: 20 }}>
+                          <label className="ss-field-label">Role color <span style={{ color: '#ed4245' }}>*</span></label>
+                          <p className="ss-muted" style={{ marginBottom: 8, fontSize: 12 }}>Members use the color of the highest role they have on the roles list.</p>
+                          <div className="ss-role-color-grid">
+                            {ROLE_COLORS.map((c, i) => (
+                              <button
+                                key={i}
+                                className={`ss-role-color-swatch${editRoleColor === i ? ' active' : ''}`}
+                                style={{ background: c }}
+                                onClick={() => setEditRoleColor(i)}
+                              >
+                                {editRoleColor === i && (
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                )}
+                                {i === 1 && editRoleColor !== i && (
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Role icon */}
+                        <div className="ss-field-group" style={{ marginTop: 20 }}>
+                          <label className="ss-field-label">Role icon <span className="ss-badge-sm">🔒 LVL.2</span></label>
+                          <p className="ss-muted" style={{ marginBottom: 8, fontSize: 12 }}>Upload an image under 256 KB or pick a custom emoji from this server. We recommend at least 64x64 pixels. Members will see the icon for their highest role if they have multiple roles.</p>
+                          <div className="ss-role-icon-upload">
+                            <div className="ss-role-icon-placeholder">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="#b5bac1"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2M8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                            </div>
+                            <button className="ss-btn-secondary">Choose Image</button>
+                          </div>
+                        </div>
+
+                        {/* Message preview */}
+                        <div className="ss-role-preview-msgs">
+                          {[0, 1, 2, 3].map(i => (
+                            <div key={i} className="ss-role-preview-msg" style={{ background: i === 3 ? `${selectedColor}18` : 'transparent' }}>
+                              <div className="ss-role-preview-avatar" />
+                              <div className="ss-role-preview-content">
+                                <span className="ss-role-preview-name" style={{ color: selectedColor }}>Wumpus</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="#5865f2" style={{ marginLeft: 2 }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                <span className="ss-role-preview-time">8:17 PM</span>
+                              </div>
+                              <span className="ss-role-preview-text">rocks are really old</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Toggle options */}
+                        <div className="ss-role-toggle-row">
+                          <div className="ss-role-toggle-info">
+                            <span className="ss-role-toggle-label">Display role members separately from online members</span>
+                          </div>
+                          <label className="ss-switch">
+                            <input type="checkbox" checked={editRoleHoist} onChange={() => setEditRoleHoist(!editRoleHoist)} />
+                            <span className="ss-slider" />
+                          </label>
+                        </div>
+
+                        <div className="ss-role-toggle-row">
+                          <div className="ss-role-toggle-info">
+                            <span className="ss-role-toggle-label">Allow anyone to @mention this role</span>
+                            <p className="ss-muted" style={{ margin: '4px 0 0', fontSize: 12 }}>Note: Members with the "Mention @everyone, @here, and All Roles" permission will always be able to ping this role.</p>
+                          </div>
+                          <label className="ss-switch">
+                            <input type="checkbox" checked={editRoleMention} onChange={() => setEditRoleMention(!editRoleMention)} />
+                            <span className="ss-slider" />
+                          </label>
+                        </div>
+
+                        {/* View Server As Role */}
+                        <div className="ss-role-view-as">
+                          <h4 className="ss-role-view-as-title">View Server As Role</h4>
+                          <p className="ss-muted" style={{ fontSize: 12, marginBottom: 8 }}>This will let you test what actions this role can take and what channels it can see. Only available to Server Owners and Admins.</p>
+                          <button className="ss-role-view-as-link">
+                            View Server As Role
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 4 }}><path d="M10 6l6 6-6 6z"/></svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Permissions tab placeholder */}
+                    {editRoleTab === 'permissions' && (
+                      <div className="ss-role-editor-body">
+                        <p className="ss-muted" style={{ padding: '24px 0' }}>Permissions editor coming soon.</p>
+                      </div>
+                    )}
+
+                    {/* Links tab placeholder */}
+                    {editRoleTab === 'links' && (
+                      <div className="ss-role-editor-body">
+                        <p className="ss-muted" style={{ padding: '24px 0' }}>Links editor coming soon.</p>
+                      </div>
+                    )}
+
+                    {/* Members tab placeholder */}
+                    {editRoleTab === 'members' && (
+                      <div className="ss-role-editor-body">
+                        <p className="ss-muted" style={{ padding: '24px 0' }}>No members with this role.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+
+            // ── Roles list view (default) ──
             return (
             <div className="ss-section">
               <h2>Roles</h2>
@@ -540,7 +787,14 @@ export default function ServerSettings({
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="#b5bac1"><path d="M21.7 20.3l-4.5-4.5A7.5 7.5 0 1 0 3 10.5a7.5 7.5 0 0 0 12.3 5.7l4.5 4.5a1 1 0 0 0 1.4-1.4zM5 10.5a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0z"/></svg>
                   <input type="text" placeholder="Search Roles" value={roleSearch} onChange={e => setRoleSearch(e.target.value)} />
                 </div>
-                <button className="ss-btn-create-role">Create Role</button>
+                <button className="ss-btn-create-role" onClick={() => {
+                  setEditRoleName('new role');
+                  setEditRoleColor(0);
+                  setEditRoleTab('display');
+                  setEditRoleHoist(false);
+                  setEditRoleMention(false);
+                  setEditingRole({ id: '__new__' + Date.now(), name: 'new role', color: '#99aab5', isNew: true });
+                }}>Create Role</button>
               </div>
 
               <p className="ss-muted" style={{ margin: '8px 0 16px', fontSize: 12 }}>Members use the color of the highest role they have on this list. Drag roles to reorder them. <span style={{ color: '#00a8fc', cursor: 'pointer' }}>Need help with permissions?</span></p>
@@ -562,7 +816,14 @@ export default function ServerSettings({
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="#b5bac1"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z"/></svg>
                     </div>
                     <div className="ss-roles-col-actions">
-                      <button className="ss-signal-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="#b5bac1"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+                      <button className="ss-signal-btn" title="Edit" onClick={() => {
+                        setEditRoleName(r.name || 'role');
+                        setEditRoleColor(ROLE_COLORS.indexOf(r.color) !== -1 ? ROLE_COLORS.indexOf(r.color) : 0);
+                        setEditRoleTab('display');
+                        setEditRoleHoist(false);
+                        setEditRoleMention(false);
+                        setEditingRole(r);
+                      }}><svg width="16" height="16" viewBox="0 0 24 24" fill="#b5bac1"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
                       <button className="ss-signal-btn" title="More"><svg width="16" height="16" viewBox="0 0 24 24" fill="#b5bac1"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
                     </div>
                   </div>
