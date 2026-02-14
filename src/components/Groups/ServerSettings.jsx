@@ -1568,8 +1568,90 @@ export default function ServerSettings({
             </div>
           )}
 
+          {/* Enable Community */}
+          {activeSection === 'community' && (
+            <div className="ss-section">
+              <div className="ss-community-hero">
+                <div className="ss-community-illustration">
+                  {/* Floating server badges */}
+                  <div className="ss-community-badge" style={{ top: '10%', left: '5%' }}>
+                    <span style={{ fontSize: 20 }}>✦</span>
+                  </div>
+                  <div className="ss-community-badge" style={{ top: '5%', left: '25%' }}>
+                    <span className="ss-community-badge-icon" style={{ background: '#43b581' }}>🎮</span>
+                    <span className="ss-community-badge-name">Pokémon GO Paris</span>
+                  </div>
+                  <div className="ss-community-badge" style={{ top: '8%', right: '20%' }}>
+                    <span className="ss-community-badge-icon" style={{ background: '#3776ab' }}>🐍</span>
+                    <span className="ss-community-badge-name">Python</span>
+                  </div>
+                  <div className="ss-community-badge" style={{ top: '40%', left: '8%' }}>
+                    <span className="ss-community-badge-icon" style={{ background: '#5865f2' }}>📖</span>
+                    <span className="ss-community-badge-name">Learn Latin</span>
+                  </div>
+                  <div className="ss-community-badge" style={{ top: '40%', right: '5%' }}>
+                    <span className="ss-community-badge-icon" style={{ background: '#fee75c', color: '#000' }}>⚡</span>
+                    <span className="ss-community-badge-name">r/leagueoflegends</span>
+                  </div>
+                  <div className="ss-community-badge" style={{ top: '60%', left: '18%' }}>
+                    <span className="ss-community-badge-icon" style={{ background: '#ed4245' }}>👟</span>
+                    <span className="ss-community-badge-name">Sneaker Fans</span>
+                  </div>
+                  <div className="ss-community-badge" style={{ top: '60%', right: '12%' }}>
+                    <span className="ss-community-badge-icon" style={{ background: '#57f287' }}>🏰</span>
+                    <span className="ss-community-badge-name">Hogwarts School</span>
+                  </div>
+                  {/* Center house illustration */}
+                  <div className="ss-community-house">
+                    <span style={{ fontSize: 80 }}>🏠</span>
+                  </div>
+                  <div className="ss-community-sparkle" style={{ bottom: '15%', left: '5%' }}>
+                    <span style={{ fontSize: 14, color: '#5865f2' }}>✦✦</span>
+                  </div>
+                  <div className="ss-community-sparkle" style={{ bottom: '25%', right: '30%' }}>
+                    <span style={{ fontSize: 16, color: '#fee75c' }}>✦</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ss-community-cta">
+                <h2 className="ss-community-title">Are you building a Community?</h2>
+                <p className="ss-community-desc">Convert to a Community Server to access additional administrative tools that help you moderate and grow your server. <a href="#" className="ss-link">Learn more.</a></p>
+                <button className="ss-btn-primary ss-community-enable-btn">Enable Community</button>
+              </div>
+
+              <div className="ss-community-info">
+                <p className="ss-community-info-text">Community Servers are larger spaces where people with shared interests can come together. Enabling Community does not make your server visible on Server Discovery. <a href="#" className="ss-link">Learn more here.</a></p>
+              </div>
+
+              <div className="ss-community-features">
+                <div className="ss-community-feature-card">
+                  <div className="ss-community-feature-icon" style={{ background: '#23a55a' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3m-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3m0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5m8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5"/></svg>
+                  </div>
+                  <h4 className="ss-community-feature-title">Grow your community</h4>
+                  <p className="ss-community-feature-desc">Apply to be in <strong>Server Discovery</strong> so more people can find your server directly on Hyve.</p>
+                </div>
+                <div className="ss-community-feature-card">
+                  <div className="ss-community-feature-icon" style={{ background: '#5865f2' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2M9 17H7v-7h2v7m4 0h-2V7h2v10m4 0h-2v-4h2v4"/></svg>
+                  </div>
+                  <h4 className="ss-community-feature-title">Keep members engaged</h4>
+                  <p className="ss-community-feature-desc">Access tools like <strong>Server Insights</strong> 📊 that can better help you moderate and keep your server engaged.</p>
+                </div>
+                <div className="ss-community-feature-card">
+                  <div className="ss-community-feature-icon" style={{ background: '#ed4245' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9"/></svg>
+                  </div>
+                  <h4 className="ss-community-feature-title">Stay informed</h4>
+                  <p className="ss-community-feature-desc">Get direct updates about new features built for communities from Hyve.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Placeholder tabs */}
-          {['appDirectory', 'community', 'template'].includes(activeSection) && (
+          {['appDirectory', 'template'].includes(activeSection) && (
             <div className="ss-section">
               <h2>{NAV_SECTIONS.flatMap(s => s.items).find(i => i.key === activeSection)?.label || activeSection}</h2>
               <p className="ss-muted">This feature is coming soon.</p>
