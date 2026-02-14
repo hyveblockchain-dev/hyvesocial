@@ -71,7 +71,7 @@ export default function MemberSidebar({ groupId, user, isAdmin, isOwner, onMembe
       <div
         key={m.user_address || m.username}
         className={`member-item${online ? ' member-online' : ''}`}
-        onClick={() => onMemberClick?.(m)}
+        onClick={(e) => onMemberClick?.(m, e)}
       >
         <div className="member-avatar-wrap">
           <img

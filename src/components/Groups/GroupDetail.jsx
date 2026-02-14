@@ -78,6 +78,9 @@ export default function GroupDetail() {
   const [newRoleName, setNewRoleName] = useState('');
   const [newRoleColor, setNewRoleColor] = useState('#f0b232');
 
+  // ── Member popup state ──
+  const [memberPopup, setMemberPopup] = useState(null);
+
   // ── Guild bar (joined groups list) ──
   const [joinedGroups, setJoinedGroups] = useState([]);
 
@@ -94,6 +97,18 @@ export default function GroupDetail() {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [showServerDropdown]);
+
+  // Close member popup on click outside
+  useEffect(() => {
+    if (!memberPopup) return;
+    const handler = (e) => {
+      if (!e.target.closest('.discord-member-popup') && !e.target.closest('.member-item')) {
+        setMemberPopup(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [memberPopup]);
 
   // ── Computed values ──
   const isOwner = useMemo(() => {
@@ -1271,13 +1286,92 @@ export default function GroupDetail() {
           user={user}
           isAdmin={adminEnabled}
           isOwner={isOwner}
-          onMemberClick={(m) => {
-            if (m.username) navigate(`/profile/${encodeURIComponent(m.username)}`);
+          onMemberClick={(m, e) => {
+            const rect = e?.currentTarget?.getBoundingClientRect();
+            const roles = typeof m.custom_roles === 'string' ? JSON.parse(m.custom_roles) : (m.custom_roles || []);
+            setMemberPopup({
+              username: m.username || 'Unknown',
+              profileImage: m.profile_image || '/default-avatar.png',
+              role: m.role || null,
+              customRoles: roles,
+              userAddress: m.user_address,
+              joinedAt: m.joined_at,
+              x: rect ? rect.left - 310 : 400,
+              y: rect ? Math.min(rect.top, window.innerHeight - 420) : 200,
+            });
           }}
         />
       )}
     </div>
     </div>
+
+    {/* Member popup card */}
+    {memberPopup && (
+      <div
+        className="discord-member-popup"
+        style={{ top: memberPopup.y, left: memberPopup.x }}
+      >
+        <div className="discord-member-popup-banner" />
+        <div className="discord-member-popup-avatar-wrap">
+          <img
+            src={memberPopup.profileImage}
+            alt=""
+            className="discord-member-popup-avatar"
+            onError={(e) => { e.target.src = '/default-avatar.png'; }}
+          />
+          <span className="discord-member-popup-status-dot" />
+        </div>
+        <div className="discord-member-popup-body">
+          <h3 className="discord-member-popup-name">{memberPopup.username}</h3>
+          <span className="discord-member-popup-handle">{memberPopup.username}</span>
+          <div className="discord-member-popup-divider" />
+          {memberPopup.joinedAt && (
+            <div className="discord-member-popup-section">
+              <h4>Member Since</h4>
+              <p>{new Date(memberPopup.joinedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+            </div>
+          )}
+          <div className="discord-member-popup-section">
+            <h4>Roles</h4>
+            <div className="discord-member-popup-roles">
+              {memberPopup.customRoles && memberPopup.customRoles.length > 0 ? (
+                memberPopup.customRoles.map((r) => (
+                  <span key={r.id || r.name} className="discord-member-popup-role-tag" style={{ borderColor: r.color || '#5865f2' }}>
+                    <span className="discord-role-dot" style={{ background: r.color || '#5865f2' }} />
+                    {r.name}
+                  </span>
+                ))
+              ) : memberPopup.role ? (
+                <span className="discord-member-popup-role-tag">
+                  <span className="discord-role-dot" />
+                  {memberPopup.role}
+                </span>
+              ) : (
+                <span className="discord-member-popup-role-tag">
+                  <span className="discord-role-dot" />
+                  @everyone
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="discord-member-popup-note">
+            <h4>Note</h4>
+            <input type="text" placeholder="Click to add a note" readOnly />
+          </div>
+          <div className="discord-member-popup-msg">
+            <input
+              type="text"
+              placeholder={`Message @${memberPopup.username}`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && e.target.value.trim()) {
+                  setMemberPopup(null);
+                }
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    )}
 
     {/* ── User Settings Modal ── */}
     {showUserSettings && <UserSettings onClose={() => setShowUserSettings(false)} />}
