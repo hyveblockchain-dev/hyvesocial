@@ -6443,6 +6443,22 @@
     padding: 0 8px;
   }
 
+  /* Mobile inline profile view */
+  .discord-mobile-profile-view {
+    flex: 1;
+    overflow-y: auto;
+    background: #313338;
+    padding-bottom: 56px;
+  }
+
+  .discord-mobile-profile-view .profile-container {
+    max-width: 100%;
+    min-height: 100%;
+    padding: 0;
+    margin: 0;
+    background: #313338;
+  }
+
   /* Floating Action Button (new DM) */
   .mobile-fab-new-dm {
     position: fixed;

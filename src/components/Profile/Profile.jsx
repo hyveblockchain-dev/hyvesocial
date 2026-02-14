@@ -9,8 +9,9 @@ import { formatDate } from '../../utils/date';
 import { compressImage } from '../../utils/imageCompression';
 import './Profile.css';
 
-export default function Profile() {
-  const { handle } = useParams();
+export default function Profile({ handle: handleProp } = {}) {
+  const params = useParams();
+  const handle = handleProp || params.handle;
   const navigate = useNavigate();
   const { user, setUser, socket, logout, connectWallet } = useAuth();
   const [profile, setProfile] = useState(null);
