@@ -102,6 +102,9 @@ export default function ServerSettings({
   const [inactiveTimeout, setInactiveTimeout] = useState('5min');
   const [serverWidget, setServerWidget] = useState(false);
 
+  // Boost Perks states
+  const [showBoostBar, setShowBoostBar] = useState(false);
+
   const groupName = group?.name || '';
   const avatarUrl = group?.avatar_url || group?.avatar || '';
   const coverUrl = group?.cover_photo || group?.cover_url || '';
@@ -693,8 +696,113 @@ export default function ServerSettings({
             </div>
           )}
 
+          {/* ── Boost Perks ── */}
+          {activeSection === 'boostPerks' && (
+            <div className="ss-section">
+              <div className="ss-profile-layout">
+                <div className="ss-profile-main">
+                  <h2>Boost Perks</h2>
+
+                  {/* Show Boost progress bar */}
+                  <div className="ss-toggle-row" style={{ marginBottom: 4 }}>
+                    <span className="ss-toggle-label" style={{ fontWeight: 600 }}>Show Boost progress bar</span>
+                    <button className={`notif-toggle${showBoostBar ? ' active' : ''}`} onClick={() => setShowBoostBar(!showBoostBar)}><span className="notif-toggle-knob" /></button>
+                  </div>
+                  <p className="ss-hint" style={{ marginBottom: 28 }}>This progress bar will display in your channel list, attached to your server name (or server banner if you have one set).</p>
+
+                  <div className="ss-divider" />
+
+                  {/* Server Banner Background */}
+                  <div className="ss-boost-perk-row">
+                    <div className="ss-boost-perk-info">
+                      <h3 className="ss-subsection-title">
+                        Server Banner Background
+                        <span className="ss-boost-lvl">🔒 LVL 2</span>
+                      </h3>
+                      <p className="ss-hint">This image will display at the top of your channels list.</p>
+                      <p className="ss-hint">The recommended minimum size is 960x540 and recommended aspect ratio is 16:9. <button className="ss-info-link">Learn more</button>.</p>
+                      <button className="ss-boost-btn" style={{ marginTop: 12 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg>
+                        Unlock with Boosting
+                      </button>
+                    </div>
+                    <div className="ss-boost-perk-preview">
+                      <div className="ss-boost-img-placeholder">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#72767d"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="ss-divider" />
+
+                  {/* Server Invite Background */}
+                  <div className="ss-boost-perk-row">
+                    <div className="ss-boost-perk-info">
+                      <h3 className="ss-subsection-title">
+                        Server Invite Background
+                        <span className="ss-boost-lvl">🔒 LVL 1</span>
+                      </h3>
+                      <p className="ss-hint">This image will display when your server invite is viewed in a browser, as well as in invite confirmation screens and Server Onboarding.</p>
+                      <p className="ss-hint">The recommended minimum size is 1920x1080 and recommended aspect ratio is 16:9. <button className="ss-info-link">Learn more</button></p>
+                      <button className="ss-boost-btn" style={{ marginTop: 12 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg>
+                        Unlock with Boosting
+                      </button>
+                    </div>
+                    <div className="ss-boost-perk-preview">
+                      <div className="ss-boost-img-placeholder">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#72767d"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="ss-divider" />
+
+                  {/* Custom Invite Link */}
+                  <div className="ss-boost-perk-section">
+                    <h3 className="ss-subsection-title">
+                      Custom Invite Link
+                      <span className="ss-boost-lvl">🔒 LVL 3</span>
+                    </h3>
+                    <p className="ss-hint">Bring others to your server easily with your own customized invite link. Heads up though, anyone with the link can join and you'll need at least one text channel that is open to all server members. <button className="ss-info-link">Learn more</button>.</p>
+                    <button className="ss-boost-btn" style={{ marginTop: 12 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg>
+                      Unlock with Boosting
+                    </button>
+                  </div>
+                </div>
+
+                {/* Preview card */}
+                <div className="ss-profile-preview">
+                  <div className="ss-boost-preview-card">
+                    <div className="ss-boost-preview-header">
+                      <div className="ss-boost-preview-banner" style={{ background: 'linear-gradient(135deg, #5865f2, #eb459e)' }}>
+                        <div className="ss-boost-preview-icons">
+                          <span style={{ fontSize: 28 }}>🎮</span>
+                        </div>
+                      </div>
+                      <div className="ss-boost-preview-name">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="#3ba55c"><circle cx="12" cy="12" r="10"/></svg>
+                        {groupName || 'Wumpus & Co'}
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="#72767d"><path d="M7 10l5 5 5-5H7z"/></svg>
+                      </div>
+                    </div>
+                    <div className="ss-boost-preview-progress">
+                      <span className="ss-boost-preview-goal">GOAL: LVL 3</span>
+                      <span className="ss-boost-preview-count">10/14 Boosts &gt;</span>
+                    </div>
+                    <div className="ss-boost-preview-channel">
+                      <span className="ss-boost-preview-cat">▾ TEXT CHANNEL</span>
+                      <span className="ss-boost-preview-ch"># general</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Placeholder tabs */}
-          {['boostPerks', 'emoji', 'stickers', 'soundboard', 'invites', 'access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
+          {['emoji', 'stickers', 'soundboard', 'invites', 'access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
             <div className="ss-section">
               <h2>{NAV_SECTIONS.flatMap(s => s.items).find(i => i.key === activeSection)?.label || activeSection}</h2>
               <p className="ss-muted">This feature is coming soon.</p>

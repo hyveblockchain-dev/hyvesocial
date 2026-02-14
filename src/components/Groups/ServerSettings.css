@@ -747,6 +747,113 @@
   white-space: nowrap;
 }
 
+/* ── Boost Perks ── */
+.ss-boost-lvl {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #f47fff;
+  background: rgba(244, 127, 255, 0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.ss-boost-perk-row {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+.ss-boost-perk-info {
+  flex: 1;
+  min-width: 0;
+}
+.ss-boost-perk-preview {
+  flex-shrink: 0;
+  width: 180px;
+}
+.ss-boost-img-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: #2b2d31;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.ss-boost-perk-section {
+  margin-bottom: 8px;
+}
+
+/* Boost preview card */
+.ss-boost-preview-card {
+  background: #1e1f22;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+.ss-boost-preview-header {
+  position: relative;
+}
+.ss-boost-preview-banner {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.ss-boost-preview-icons {
+  display: flex;
+  gap: 8px;
+}
+.ss-boost-preview-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px 6px;
+  color: #f2f3f5;
+  font-size: 13px;
+  font-weight: 700;
+}
+.ss-boost-preview-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: rgba(244, 127, 255, 0.08);
+  border-left: 3px solid #f47fff;
+}
+.ss-boost-preview-goal {
+  color: #f47fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.ss-boost-preview-count {
+  color: #b5bac1;
+  font-size: 10px;
+}
+.ss-boost-preview-channel {
+  padding: 8px 12px 12px;
+}
+.ss-boost-preview-cat {
+  display: block;
+  color: #72767d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
+}
+.ss-boost-preview-ch {
+  color: #b5bac1;
+  font-size: 13px;
+}
+
 /* Member list */
 .ss-member-list {
   display: flex;
@@ -880,6 +987,10 @@
 .light-mode .ss-radio-row { color: #313338; }
 .light-mode .ss-radio-custom { border-color: #c4c9ce; }
 .light-mode .ss-radio-row input[type="radio"]:checked + .ss-radio-custom { box-shadow: inset 0 0 0 3px #fff; }
+.light-mode .ss-boost-img-placeholder { background: #e3e5e8; }
+.light-mode .ss-boost-preview-card { background: #e3e5e8; }
+.light-mode .ss-boost-preview-name { color: #060607; }
+.light-mode .ss-boost-preview-progress { background: rgba(244, 127, 255, 0.06); }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
