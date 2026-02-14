@@ -225,8 +225,8 @@ export default function ServerSettings({
                     className={`ss-nav-item${activeSection === item.key ? ' active' : ''}`}
                     onClick={() => {
                       if (item.key === 'appDirectory') {
-                        onClose();
                         navigate('/discover');
+                        onClose();
                       } else {
                         setActiveSection(item.key);
                       }
