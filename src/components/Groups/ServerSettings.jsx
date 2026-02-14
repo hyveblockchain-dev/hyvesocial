@@ -127,6 +127,9 @@ export default function ServerSettings({
   const [activityAlerts, setActivityAlerts] = useState(false);
   const [safetyChannel, setSafetyChannel] = useState('');
 
+  // Bans states
+  const [banSearch, setBanSearch] = useState('');
+
   const groupName = group?.name || '';
   const avatarUrl = group?.avatar_url || group?.avatar || '';
   const coverUrl = group?.cover_photo || group?.cover_url || '';
@@ -563,27 +566,48 @@ export default function ServerSettings({
           );})()}
 
           {/* ── Bans ── */}
-          {activeSection === 'bans' && (
+          {activeSection === 'bans' && (() => {
+            const filteredBans = bannedMembers.filter(b => {
+              if (!banSearch) return true;
+              const q = banSearch.toLowerCase();
+              const name = (b.username || b.handle || b.member_username || '').toLowerCase();
+              return name.includes(q);
+            });
+            return (
             <div className="ss-section">
-              <h2>Bans</h2>
-              <p className="ss-subtitle">Manage banned members</p>
-              {bannedMembers.length === 0 ? (
-                <p className="ss-muted">No banned members.</p>
-              ) : (
-                <div className="ss-member-list">
-                  {bannedMembers.map((b, i) => {
-                    const banName = b.username || b.handle || b.member_username || '';
-                    return (
-                      <div key={`${banName}-${i}`} className="ss-member-row">
-                        <span className="ss-member-name">{banName || 'Banned member'}</span>
-                        <button className="ss-btn-small" onClick={() => banName && onUnban(banName)} disabled={busy}>Unban</button>
-                      </div>
-                    );
-                  })}
+              <h2>Server Ban List</h2>
+              <p className="ss-muted" style={{ maxWidth: 650 }}>Bans by default are by account and IP. A user can circumvent an IP ban by using a proxy. Ban circumvention can be made very hard by enabling phone verification in <span style={{ color: '#00a8fc', cursor: 'pointer' }}>Moderation</span>.</p>
+
+              {/* Search bar */}
+              <div className="ss-bans-search-row">
+                <div className="ss-members-search" style={{ flex: 1 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#b5bac1"><path d="M21.7 20.3l-4.5-4.5A7.5 7.5 0 1 0 3 10.5a7.5 7.5 0 0 0 12.3 5.7l4.5 4.5a1 1 0 0 0 1.4-1.4zM5 10.5a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0z"/></svg>
+                  <input type="text" placeholder="Search Bans by User Id or Username" value={banSearch} onChange={e => setBanSearch(e.target.value)} />
                 </div>
-              )}
+                <button className="ss-btn-primary">Search</button>
+              </div>
+
+              {/* Ban list */}
+              <div className="ss-bans-list">
+                {filteredBans.map((b, i) => {
+                  const banName = b.username || b.handle || b.member_username || 'Banned member';
+                  const avatar = b.profile_image || b.profileImage || '/default-avatar.png';
+                  return (
+                    <div key={`ban-${i}`} className="ss-bans-row">
+                      <img src={avatar} alt="" className="ss-member-avatar" onError={e => { e.target.src = '/default-avatar.png'; }} />
+                      <span className="ss-member-name">{banName}</span>
+                    </div>
+                  );
+                })}
+                {filteredBans.length === 0 && bannedMembers.length === 0 && (
+                  <p className="ss-muted" style={{ padding: '24px 16px', textAlign: 'center' }}>No banned members.</p>
+                )}
+                {filteredBans.length === 0 && bannedMembers.length > 0 && (
+                  <p className="ss-muted" style={{ padding: '24px 16px', textAlign: 'center' }}>No results found.</p>
+                )}
+              </div>
             </div>
-          )}
+          );})()}
 
           {/* ── Audit Log ── */}
           {activeSection === 'auditLog' && (
