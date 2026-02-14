@@ -313,7 +313,7 @@
   flex-direction: column;
   background: #2b2d31;
   border-right: 1px solid #1e1f22;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .discord-server-header {
