@@ -2963,3 +2963,53 @@
   .ss-close-area { flex: 0 0 40px; }
   .ss-banner-grid { grid-template-columns: repeat(4, 1fr); }
 }
+
+@media (max-width: 768px) {
+  .ss-layout {
+    flex-direction: column;
+    height: 100%;
+  }
+  .ss-sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 50vh;
+    border-right: none;
+    border-bottom: 1px solid #26282c;
+  }
+  .ss-sidebar-scroll {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 8px;
+    gap: 4px;
+    overflow-y: visible;
+    overflow-x: auto;
+  }
+  .ss-sidebar-item {
+    padding: 6px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+    border-radius: 6px;
+  }
+  .ss-sidebar-header {
+    display: none;
+  }
+  .ss-sidebar-sep {
+    display: none;
+  }
+  .ss-content {
+    padding: 16px 12px;
+    max-width: 100%;
+  }
+  .ss-close-area {
+    display: none;
+  }
+  .ss-profile-layout { flex-direction: column-reverse; }
+  .ss-profile-main { max-width: 100%; }
+  .ss-profile-preview { width: 100%; position: static; }
+  .ss-banner-grid { grid-template-columns: repeat(3, 1fr); }
+  .ss-emoji-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .ss-roles-list { max-height: 40vh; }
+  .ss-event-card { flex-direction: column; }
+  .ss-event-card-body { padding: 10px; }
+}

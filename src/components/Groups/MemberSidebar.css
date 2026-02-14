@@ -153,6 +153,31 @@
 /* ═══════════════════════════════════════
    Responsive
    ═══════════════════════════════════════ */
-@media (max-width: 1100px) {
+@media (max-width: 1100px) and (min-width: 769px) {
   .member-sidebar { display: none; }
+}
+
+@media (max-width: 768px) {
+  /* On mobile, member sidebar lives inside .mobile-members-drawer
+     and is always visible when that drawer is open */
+  .member-sidebar {
+    width: 100% !important;
+    border-left: none;
+    height: 100%;
+  }
+  .member-item {
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+  .member-avatar {
+    width: 36px;
+    height: 36px;
+  }
+  .member-name {
+    font-size: 14px;
+  }
+  .member-category-header {
+    padding: 12px 12px 4px;
+    min-height: 36px;
+  }
 }

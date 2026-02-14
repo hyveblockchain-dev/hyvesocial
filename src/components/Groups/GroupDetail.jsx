@@ -224,6 +224,48 @@ export default function GroupDetail() {
     } catch (err) { console.error('Failed to send forum message', err); }
   };
 
+  // ── Mobile responsive state ──
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
+  const [mobileSidebar, setMobileSidebar] = useState(false);
+  const [mobileMembers, setMobileMembers] = useState(false);
+  const touchStartRef = useRef(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handler = (e) => {
+      setIsMobile(e.matches);
+      if (!e.matches) { setMobileSidebar(false); setMobileMembers(false); }
+    };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  // Swipe gestures for mobile
+  const handleTouchStart = useCallback((e) => {
+    if (!isMobile) return;
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
+  }, [isMobile]);
+
+  const handleTouchEnd = useCallback((e) => {
+    if (!isMobile || !touchStartRef.current) return;
+    const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
+    const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+    const dt = Date.now() - touchStartRef.current.time;
+    touchStartRef.current = null;
+    if (dt > 500 || Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 60) return;
+    if (dx > 0 && !mobileSidebar && !mobileMembers) { setMobileSidebar(true); }
+    else if (dx < 0 && mobileSidebar) { setMobileSidebar(false); }
+    else if (dx < 0 && !mobileSidebar && !mobileMembers) { setMobileMembers(true); }
+    else if (dx > 0 && mobileMembers) { setMobileMembers(false); }
+  }, [isMobile, mobileSidebar, mobileMembers]);
+
+  // Close mobile panels when selecting a channel
+  const handleMobileChannelSelect = useCallback((chId) => {
+    setSelectedChannelId(chId);
+    setActivePanel('chat');
+    if (isMobile) setMobileSidebar(false);
+  }, [isMobile]);
+
   // Close server dropdown on click outside
   useEffect(() => {
     if (!showServerDropdown) return;
@@ -1218,9 +1260,15 @@ export default function GroupDetail() {
   // ── Top navbar (rendered outside Layout) ──
   const topBar = (
     <header className="discord-topbar">
+      {/* Mobile hamburger */}
+      {isMobile && (
+        <button className="mobile-hamburger" onClick={() => { setMobileSidebar(s => !s); setMobileMembers(false); }} aria-label="Toggle sidebar">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+      )}
       <Link to="/" className="discord-topbar-logo">
         <img src="/hyvelogo.png" alt="Hyve" className="discord-topbar-logo-img" />
-        <span>Hyve Social</span>
+        {!isMobile && <span>Hyve Social</span>}
       </Link>
       <div className="discord-topbar-center">
         {dmMode && dmView === 'discover' ? (
@@ -1233,8 +1281,14 @@ export default function GroupDetail() {
         ) : null}
       </div>
       <div className="discord-topbar-actions">
-        <Link to="/groups" className="discord-topbar-link">All Groups</Link>
-        <Link to="/" className="discord-topbar-link">Feed</Link>
+        {!isMobile && <Link to="/groups" className="discord-topbar-link">All Groups</Link>}
+        {!isMobile && <Link to="/" className="discord-topbar-link">Feed</Link>}
+        {/* Mobile: members toggle */}
+        {isMobile && !dmMode && (
+          <button className="mobile-members-toggle" onClick={() => { setMobileMembers(m => !m); setMobileSidebar(false); }} aria-label="Toggle members">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 13c-1.2 0-3.07.34-4.5 1-1.43-.67-3.3-1-4.5-1C5.33 13 1 14.08 1 16.25V19h22v-2.75c0-2.17-4.33-3.25-6.5-3.25zm-4 4.5h-10v-1.25c0-.54 2.56-1.75 5-1.75s5 1.21 5 1.75v1.25zm9 0H14v-1.25c0-.46-.2-.86-.52-1.22.88-.3 1.96-.53 3.02-.53 2.44 0 5 1.21 5 1.75v1.25zM7.5 12c1.93 0 3.5-1.57 3.5-3.5S9.43 5 7.5 5 4 6.57 4 8.5 5.57 12 7.5 12zm9 0c1.93 0 3.5-1.57 3.5-3.5S18.43 5 16.5 5 13 6.57 13 8.5s1.57 3.5 3.5 3.5z"/></svg>
+          </button>
+        )}
       </div>
     </header>
   );
@@ -1256,7 +1310,7 @@ export default function GroupDetail() {
             to={`/groups/${g.id}`}
             className={`guild-icon${isActive ? ' guild-active' : ''}`}
             title={g.name}
-            onClick={() => setDmMode(false)}
+            onClick={() => { setDmMode(false); if (isMobile) setMobileSidebar(false); }}
           >
             {avatar
               ? <img src={avatar} alt={g.name} />
@@ -1329,8 +1383,18 @@ export default function GroupDetail() {
     : dmConversations;
 
   return (
-    <div className="discord-fullpage">
+    <div
+      className={`discord-fullpage${isMobile ? ' mobile-layout' : ''}${mobileSidebar ? ' mobile-sidebar-open' : ''}${mobileMembers ? ' mobile-members-open' : ''}`}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       {topBar}
+
+      {/* Mobile overlay backdrop */}
+      {isMobile && (mobileSidebar || mobileMembers) && (
+        <div className="mobile-overlay-backdrop" onClick={() => { setMobileSidebar(false); setMobileMembers(false); }} />
+      )}
+
     <div className="discord-body">
       {guildBar}
 
@@ -1376,7 +1440,7 @@ export default function GroupDetail() {
                     onClick={() => { setDmSelectedUser({
                       username: conv.username,
                       profileImage: conv.profile_image || '',
-                    }); setDmView('conversations'); }}
+                    }); setDmView('conversations'); if (isMobile) setMobileSidebar(false); }}
                   >
                     <div className="discord-dm-item-avatar">
                       {conv.profile_image
@@ -1468,7 +1532,7 @@ export default function GroupDetail() {
             <button className="discord-dropdown-boost" onClick={() => { setShowServerDropdown(false); }}>
               <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2Z" fill="#ff73fa"/></svg>
               <span>Server Boost</span>
-              <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
+              <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
             </button>
 
             {/* Invite People */}
@@ -1476,7 +1540,7 @@ export default function GroupDetail() {
               <button onClick={() => { setShowServerDropdown(false); openInviteModal(); }}>
                 <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11h-4V7a1 1 0 00-2 0v4h-4a1 1 0 000 2h4v4a1 1 0 002 0v-4h4a1 1 0 000-2zM9 12a5 5 0 100-10 5 5 0 000 10zM1.5 21a7.5 7.5 0 0115 0H1.5z"/></svg>
                 <span>Invite People</span>
-                <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
+                <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
               </button>
             )}
 
@@ -1484,7 +1548,7 @@ export default function GroupDetail() {
             <button onClick={() => { setShowServerDropdown(false); }}>
               <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h7v7H4V4zm9 0h7v7h-7V4zm-9 9h7v7H4v-7zm9 0h7v7h-7v-7z"/></svg>
               <span>App Directory</span>
-              <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
+              <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
             </button>
 
             <div className="discord-dropdown-sep" />
@@ -1502,14 +1566,14 @@ export default function GroupDetail() {
             <button onClick={() => { setShowServerDropdown(false); setShowNotifModal(true); }}>
               <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6V10c0-3.07-1.63-5.64-4.5-6.32V3a1.5 1.5 0 00-3 0v.68C7.64 4.36 6 6.92 6 10v6l-2 2v1h16v-1l-2-2z"/></svg>
               <span>Notification Settings</span>
-              <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
+              <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
             </button>
 
             {/* Privacy Settings */}
             <button onClick={() => { setShowServerDropdown(false); }}>
               <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
               <span>Privacy Settings</span>
-              <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
+              <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
             </button>
 
             <div className="discord-dropdown-sep" />
@@ -1518,7 +1582,7 @@ export default function GroupDetail() {
             <button onClick={() => { setShowServerDropdown(false); }}>
               <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
               <span>Edit Per-server Profile</span>
-              <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
+              <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
             </button>
 
             {/* Hide Muted Channels toggle */}
@@ -1536,7 +1600,7 @@ export default function GroupDetail() {
                 <button onClick={() => { setShowServerDropdown(false); setShowServerSettings(true); }}>
                   <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M19.14 12.94a7.07 7.07 0 000-1.88l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96a7.04 7.04 0 00-1.63-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84a.48.48 0 00-.48.41l-.36 2.54c-.59.24-1.13.57-1.63.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87a.48.48 0 00.12.61l2.03 1.58a7.07 7.07 0 000 1.88l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.37 1.04.7 1.63.94l.36 2.54c.05.24.26.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.57 1.63-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 00-.12-.61l-2.03-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z"/></svg>
                   <span>Server Settings</span>
-                  <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
+                  <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
                 </button>
                 <button onClick={() => { setShowServerDropdown(false); setShowCreateChannel(true); }}>
                   <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 9h-2v2a1 1 0 01-2 0v-2H7a1 1 0 010-2h2V7a1 1 0 012 0v2h2a1 1 0 010 2z"/></svg>
@@ -1616,7 +1680,7 @@ export default function GroupDetail() {
                   <div
                     key={ch.id}
                     className={`discord-channel${selectedChannelId === ch.id && activePanel === 'chat' ? ' active' : ''}${ch.nsfw ? ' nsfw' : ''}${hasUnread ? ' has-unread' : ''}`}
-                    onClick={() => { setSelectedChannelId(ch.id); setActivePanel('chat'); setUnreads(prev => ({ ...prev, [ch.id]: { unread_count: 0, mention_count: 0 } })); }}
+                    onClick={() => { setSelectedChannelId(ch.id); setActivePanel('chat'); setUnreads(prev => ({ ...prev, [ch.id]: { unread_count: 0, mention_count: 0 } })); if (isMobile) setMobileSidebar(false); }}
                     onContextMenu={(e) => adminEnabled && handleContextMenu(e, 'channel', ch.id, ch)}
                   >
                     {hasUnread && <div className="discord-channel-unread-pill" />}
@@ -1738,18 +1802,18 @@ export default function GroupDetail() {
 
         <div className="discord-nav-divider" />
         <div className="discord-nav-items">
-          <button className={`discord-nav-item${activePanel === 'discussion' ? ' active' : ''}`} onClick={() => setActivePanel('discussion')}>
+          <button className={`discord-nav-item${activePanel === 'discussion' ? ' active' : ''}`} onClick={() => { setActivePanel('discussion'); if (isMobile) setMobileSidebar(false); }}>
             <span className="discord-nav-icon">&#128221;</span> Discussion
           </button>
-          <button className={`discord-nav-item${activePanel === 'about' ? ' active' : ''}`} onClick={() => setActivePanel('about')}>
+          <button className={`discord-nav-item${activePanel === 'about' ? ' active' : ''}`} onClick={() => { setActivePanel('about'); if (isMobile) setMobileSidebar(false); }}>
             <span className="discord-nav-icon">&#8505;&#65039;</span> About
           </button>
           {adminEnabled && (
             <>
-              <button className={`discord-nav-item${activePanel === 'admin' ? ' active' : ''}`} onClick={() => setActivePanel('admin')}>
+              <button className={`discord-nav-item${activePanel === 'admin' ? ' active' : ''}`} onClick={() => { setActivePanel('admin'); if (isMobile) setMobileSidebar(false); }}>
                 <span className="discord-nav-icon">&#9881;&#65039;</span> Admin
               </button>
-              <button className={`discord-nav-item${activePanel === 'roles' ? ' active' : ''}`} onClick={() => setActivePanel('roles')}>
+              <button className={`discord-nav-item${activePanel === 'roles' ? ' active' : ''}`} onClick={() => { setActivePanel('roles'); if (isMobile) setMobileSidebar(false); }}>
                 <span className="discord-nav-icon">&#127991;&#65039;</span> Roles
               </button>
             </>
@@ -1886,8 +1950,11 @@ export default function GroupDetail() {
             groupId={groupId}
             user={user}
             isAdmin={adminEnabled}
-            onToggleMembers={() => setShowMemberSidebar((p) => !p)}
-            showMembers={showMemberSidebar}
+            onToggleMembers={() => {
+              if (isMobile) { setMobileMembers(p => !p); setMobileSidebar(false); }
+              else setShowMemberSidebar(p => !p);
+            }}
+            showMembers={isMobile ? mobileMembers : showMemberSidebar}
             members={members}
           />
         )}
@@ -2234,7 +2301,8 @@ export default function GroupDetail() {
       </div>
 
       {/* ── Right: Member sidebar ── */}
-      {showMemberSidebar && (
+      {(isMobile ? mobileMembers : showMemberSidebar) && (
+        <div className={isMobile ? 'mobile-members-drawer open' : undefined}>
         <MemberSidebar
           key={memberSidebarKey}
           groupId={groupId}
@@ -2252,11 +2320,12 @@ export default function GroupDetail() {
               customRoles: roles,
               userAddress: m.user_address,
               joinedAt: m.joined_at,
-              x: rect ? rect.left - 310 : 400,
+              x: rect ? (isMobile ? 10 : rect.left - 310) : 400,
               y: rect ? Math.min(rect.top, window.innerHeight - 420) : 200,
             });
           }}
         />
+        </div>
       )}
     </div>
     )}

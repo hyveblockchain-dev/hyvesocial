@@ -4658,80 +4658,290 @@
 /* ══════════════════════════════════════════════════════════
    RESPONSIVE BREAKPOINTS
    ══════════════════════════════════════════════════════════ */
+
+/* Tablet: collapse member sidebar column */
 @media (max-width: 1100px) {
   .discord-server {
-    grid-template-columns: 220px 1fr 0;
+    grid-template-columns: 240px 1fr 0;
   }
   .discord-server > div:last-child {
     display: none;
   }
 }
 
-@media (max-width: 800px) {
-  .discord-topbar {
-    padding: 0 10px;
-    height: 46px;
-    min-height: 46px;
-  }
-  .discord-topbar-logo span { display: none; }
-  .discord-topbar-center { display: none; }
-  .discord-guild-bar { display: none; }
-  .discord-server {
-    grid-template-columns: 1fr;
-    height: auto;
-    flex: 1;
-    overflow-y: auto;
-  }
-  .discord-sidebar {
-    flex-direction: row;
-    flex-wrap: wrap;
-    border-right: none;
-    border-bottom: 1px solid #1e1f22;
-    padding: 6px 8px;
-    gap: 4px;
-  }
-  .discord-server-header {
-    border-bottom: none;
-    padding: 6px 8px;
-    min-height: auto;
-  }
-  .discord-channel-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 0;
-    overflow: visible;
-  }
-  .discord-category { margin-bottom: 0; }
-  .discord-category-header { padding: 4px 8px; }
-  .discord-channel {
-    margin: 0;
-    padding: 4px 10px;
-    font-size: 13px;
-  }
-  .discord-nav-divider { display: none; }
-  .discord-nav-items {
-    display: flex;
-    gap: 4px;
-    padding: 0;
-  }
-  .discord-nav-item { padding: 4px 10px; font-size: 13px; }
-  .discord-sidebar-footer {
-    flex-direction: row;
-    border-top: none;
-    padding: 4px 6px;
-    gap: 8px;
-    align-items: center;
-  }
-  .discord-leave-btn { width: auto; }
-  .discord-channel-actions { padding: 2px 8px; }
-  .discord-main { min-height: 60vh; }
+/* ══════════════════════════════════════════════════════════
+   MOBILE LAYOUT (≤768px)  — Discord-mobile style
+   ══════════════════════════════════════════════════════════ */
+
+/* --- Hamburger button --- */
+.mobile-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #b5bac1;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  margin-right: 4px;
+  -webkit-tap-highlight-color: transparent;
+}
+.mobile-hamburger:hover { background: #2b2d31; color: #f2f3f5; }
+
+/* --- Members toggle (mobile top-right) --- */
+.mobile-members-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #b5bac1;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.mobile-members-toggle:hover { background: #2b2d31; color: #f2f3f5; }
+
+/* --- Overlay backdrop for mobile drawers --- */
+.mobile-overlay-backdrop {
+  display: none;
 }
 
-@media (max-width: 480px) {
+/* --- Mobile members drawer wrapper --- */
+.mobile-members-drawer {
+  display: contents;
+}
+
+@media (max-width: 768px) {
+  /* Show mobile-only buttons */
+  .mobile-hamburger,
+  .mobile-members-toggle {
+    display: flex;
+  }
+
+  /* Topbar adjustments */
+  .discord-topbar {
+    padding: 0 8px;
+    height: 48px;
+    min-height: 48px;
+    gap: 4px;
+  }
+  .discord-topbar-logo {
+    gap: 4px;
+    font-size: 14px;
+  }
+  .discord-topbar-logo-img {
+    width: 26px;
+    height: 26px;
+  }
+  .discord-topbar-center {
+    flex: 1;
+    min-width: 0;
+  }
+  .discord-topbar-group-name {
+    font-size: 13px;
+    max-width: 160px;
+  }
+
+  /* Backdrop */
+  .mobile-overlay-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 200;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ──── GUILD BAR: slide-in from left ──── */
+  .discord-guild-bar {
+    position: fixed;
+    left: 0;
+    top: 48px;
+    bottom: 0;
+    z-index: 210;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 72px;
+    min-width: 72px;
+  }
+  .mobile-sidebar-open .discord-guild-bar {
+    transform: translateX(0);
+  }
+
+  /* ──── SIDEBAR: slide-in from left, attached to guild bar ──── */
+  .discord-sidebar {
+    position: fixed;
+    left: 72px;
+    top: 48px;
+    bottom: 0;
+    width: 260px;
+    z-index: 210;
+    transform: translateX(calc(-100% - 72px));
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    border-right: 1px solid #1e1f22;
+  }
+  .mobile-sidebar-open .discord-sidebar,
+  .mobile-sidebar-open .discord-dm-sidebar {
+    transform: translateX(0);
+  }
+
+  /* ──── MAIN CONTENT: full width ──── */
+  .discord-server {
+    grid-template-columns: 1fr !important;
+    flex: 1;
+    overflow: hidden;
+  }
+  /* Hide sidebar and member column from grid flow on mobile */
+  .discord-server > .discord-sidebar {
+    position: fixed;
+    /* already positioned above */
+  }
+  .discord-main {
+    grid-column: 1 / -1;
+    min-height: 0;
+  }
+
+  /* ──── MEMBER SIDEBAR: slide-in from right ──── */
+  .mobile-members-drawer {
+    display: block;
+    position: fixed;
+    right: 0;
+    top: 48px;
+    bottom: 0;
+    width: 280px;
+    z-index: 210;
+    background: #2b2d31;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 1px solid #1e1f22;
+  }
+  .mobile-members-drawer.open {
+    transform: translateX(0);
+  }
+  /* When member sidebar is shown via the mobile drawer, override its desktop display */
+  .mobile-members-drawer .member-sidebar {
+    display: flex !important;
+    width: 100% !important;
+    position: static;
+    height: 100%;
+    border-left: none;
+  }
+
+  /* ──── DM Layout mobile ──── */
+  .discord-dm-layout {
+    grid-template-columns: 1fr !important;
+  }
+  .discord-dm-sidebar {
+    position: fixed;
+    left: 72px;
+    top: 48px;
+    bottom: 0;
+    width: 260px;
+    z-index: 210;
+    transform: translateX(calc(-100% - 72px));
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+  }
+
+  /* ──── Touch targets ──── */
+  .discord-channel {
+    min-height: 44px;
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+  .discord-category-header {
+    min-height: 40px;
+    padding: 8px 12px;
+  }
+  .discord-nav-item {
+    min-height: 44px;
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+  .guild-icon {
+    width: 44px;
+    height: 44px;
+  }
+  .guild-home img {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* ──── Server header on mobile ──── */
+  .discord-server-header {
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+
+  /* ──── Modals / Settings full-screen on mobile ──── */
+  .discord-modal-overlay .discord-channel-settings,
+  .discord-modal-overlay .discord-category-perms-modal,
+  .discord-modal-overlay .discord-channel-perms-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* ──── About / Admin / Roles panels ──── */
   .discord-about-grid { grid-template-columns: 1fr; }
   .discord-appearance-row { flex-direction: column; }
+
+  /* ──── Server dropdown ──── */
+  .discord-server-dropdown {
+    left: 8px !important;
+    width: calc(100vw - 16px) !important;
+    max-width: 300px;
+  }
+
+  /* ──── Context menus ──── */
+  .discord-context-menu {
+    max-width: calc(100vw - 16px);
+  }
+
+  /* ──── Join screen ──── */
   .discord-join-card { padding: 32px 20px; }
+
+  /* ──── Invite modal ──── */
+  .discord-invite-modal {
+    width: calc(100vw - 32px) !important;
+    max-width: 400px;
+  }
+
+  /* ──── Events sidebar widget ──── */
+  .discord-events-sidebar-widget {
+    display: none;
+  }
+
+  /* ──── Forum layout ──── */
+  .discord-forum-header { flex-direction: column; gap: 8px; }
+  .discord-forum-tags-bar { flex-wrap: wrap; }
+  .discord-forum-grid { grid-template-columns: 1fr; }
+}
+
+/* Extra-small phones */
+@media (max-width: 480px) {
+  .discord-topbar { padding: 0 4px; }
+  .discord-topbar-logo-img { width: 22px; height: 22px; }
+  .discord-topbar-group-name { max-width: 120px; font-size: 12px; }
+  .discord-sidebar { width: 220px; left: 72px; }
+  .discord-dm-sidebar { width: 220px; left: 72px; }
+  .mobile-members-drawer { width: 260px; }
+  .discord-join-card { padding: 24px 16px; }
+  .discord-join-card h1 { font-size: 20px; }
 }
 
 /* ========================================
