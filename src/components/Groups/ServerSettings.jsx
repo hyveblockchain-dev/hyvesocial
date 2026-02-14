@@ -1479,8 +1479,97 @@ export default function ServerSettings({
             </div>
           )}
 
+          {/* AutoMod */}
+          {activeSection === 'automod' && (
+            <div className="ss-section">
+              <h2>AutoMod</h2>
+              <p className="ss-muted" style={{ marginBottom: 4 }}>Give your mods a break while keeping your server safe! Set up filters to moderate content and automate a custom response when they're found, and AutoMod will make it happen.</p>
+              <a href="#" className="ss-link" style={{ fontSize: 13, marginBottom: 24, display: 'inline-block' }}>Learn More</a>
+
+              <h3 className="ss-automod-heading">Content</h3>
+
+              {/* Block Mention Spam */}
+              <div className="ss-automod-card">
+                <div className="ss-automod-icon" style={{ background: '#5865f2' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M3.02 13.13l1.59-1.59 2.12 2.12 4.24-4.24 1.59 1.59-5.83 5.83zM20 2H4c-1.1 0-2 .9-2 2v16l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2m0 12H5.17L4 15.17V4h16z" fill="#fff"/></svg>
+                </div>
+                <div className="ss-automod-info">
+                  <span className="ss-automod-title">Block Mention Spam</span>
+                  <span className="ss-automod-desc">Block messages with an excessive # of role and user mentions</span>
+                  <div className="ss-automod-tags">
+                    <span className="ss-automod-tag green">● block message</span>
+                    <span className="ss-automod-tag yellow">▲ send alert</span>
+                    <span className="ss-automod-tag red">⏱ timeout member</span>
+                  </div>
+                </div>
+                <button className="ss-btn-setup">Set Up</button>
+              </div>
+
+              {/* Block Suspected Spam Content */}
+              <div className="ss-automod-card">
+                <div className="ss-automod-icon" style={{ background: '#80848e' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="10" fill="none" stroke="#fff" strokeWidth="2"/><line x1="4" y1="4" x2="20" y2="20" stroke="#fff" strokeWidth="2"/></svg>
+                </div>
+                <div className="ss-automod-info">
+                  <span className="ss-automod-title">Block Suspected Spam Content</span>
+                  <span className="ss-automod-desc">Monitor messages, Forum posts, and threads for potentially spammy content or activity. (Support for English only)</span>
+                  <div className="ss-automod-tags">
+                    <span className="ss-automod-tag green">● block message</span>
+                    <span className="ss-automod-tag yellow">▲ send alert</span>
+                  </div>
+                </div>
+                <button className="ss-btn-setup">Set Up</button>
+              </div>
+
+              {/* Block Commonly Flagged Words */}
+              <div className="ss-automod-card">
+                <div className="ss-automod-icon" style={{ background: '#80848e' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><rect x="4" y="6" width="16" height="2" rx="1"/><rect x="4" y="11" width="16" height="2" rx="1"/><rect x="4" y="16" width="12" height="2" rx="1"/></svg>
+                </div>
+                <div className="ss-automod-info">
+                  <span className="ss-automod-title">Block Commonly Flagged Words</span>
+                  <span className="ss-automod-desc">Flag messages that contain profanity and more. (Support for English only)</span>
+                  <div className="ss-automod-tags">
+                    <span className="ss-automod-tag green">● block message</span>
+                    <span className="ss-automod-tag yellow">▲ send alert</span>
+                  </div>
+                </div>
+                <button className="ss-btn-setup">Set Up</button>
+              </div>
+
+              {/* Block Custom Words */}
+              <div className="ss-automod-card">
+                <div className="ss-automod-icon" style={{ background: '#80848e' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><rect x="4" y="6" width="16" height="2" rx="1"/><rect x="4" y="11" width="16" height="2" rx="1"/><rect x="4" y="16" width="12" height="2" rx="1"/></svg>
+                </div>
+                <div className="ss-automod-info">
+                  <span className="ss-automod-title">Block Custom Words</span>
+                  <span className="ss-automod-desc">Create your own filter to block specific language from your server.</span>
+                  <div className="ss-automod-tags">
+                    <span className="ss-automod-tag green">● block message</span>
+                    <span className="ss-automod-tag yellow">▲ send alert</span>
+                    <span className="ss-automod-tag red">⏱ timeout member</span>
+                  </div>
+                </div>
+                <button className="ss-btn-setup">Create</button>
+              </div>
+
+              {/* Sensitive content filters */}
+              <h3 className="ss-automod-heading" style={{ marginTop: 32 }}>Sensitive content filters</h3>
+              <p className="ss-muted" style={{ marginBottom: 12 }}>Choose if server members can share image-based media detected by Hyve's sensitive content filters. This setting will apply to channels that are not age-restricted. <a href="#" className="ss-link">Learn more</a></p>
+
+              <div className="ss-automod-filter-card">
+                <div className="ss-automod-filter-info">
+                  <span className="ss-automod-filter-label">Filter messages from all members</span>
+                  <span className="ss-automod-filter-desc">All messages will be filtered for sensitive image-based media.</span>
+                </div>
+                <a href="#" className="ss-link">Change</a>
+              </div>
+            </div>
+          )}
+
           {/* Placeholder tabs */}
-          {['appDirectory', 'automod', 'community', 'template'].includes(activeSection) && (
+          {['appDirectory', 'community', 'template'].includes(activeSection) && (
             <div className="ss-section">
               <h2>{NAV_SECTIONS.flatMap(s => s.items).find(i => i.key === activeSection)?.label || activeSection}</h2>
               <p className="ss-muted">This feature is coming soon.</p>

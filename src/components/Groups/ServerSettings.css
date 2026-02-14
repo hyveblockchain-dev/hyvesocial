@@ -1935,6 +1935,101 @@
 .ss-bans-row:last-child { border-bottom: none; }
 .ss-bans-row:hover { background: rgba(79, 84, 92, 0.15); }
 
+/* ── AutoMod ── */
+.ss-automod-heading {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #b5bac1;
+  margin-bottom: 12px;
+}
+.ss-automod-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: #2b2d31;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.ss-automod-icon {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ss-automod-info {
+  flex: 1;
+  min-width: 0;
+}
+.ss-automod-title {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #f2f3f5;
+  margin-bottom: 2px;
+}
+.ss-automod-desc {
+  display: block;
+  font-size: 14px;
+  color: #b5bac1;
+  margin-bottom: 8px;
+}
+.ss-automod-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ss-automod-tag {
+  font-size: 12px;
+  font-weight: 500;
+  color: #b5bac1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ss-automod-tag.green { color: #23a55a; }
+.ss-automod-tag.yellow { color: #f0b232; }
+.ss-automod-tag.red { color: #f23f43; }
+.ss-btn-setup {
+  background: #5865f2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 7px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  align-self: center;
+}
+.ss-btn-setup:hover { background: #4752c4; }
+.ss-automod-filter-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: #2b2d31;
+  border-radius: 8px;
+  border-left: 3px solid #5865f2;
+}
+.ss-automod-filter-info { flex: 1; min-width: 0; }
+.ss-automod-filter-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f2f3f5;
+  margin-bottom: 2px;
+}
+.ss-automod-filter-desc {
+  display: block;
+  font-size: 13px;
+  color: #b5bac1;
+}
+
 /* ══════════════════════════════════════════════════════════
    LIGHT MODE
    ══════════════════════════════════════════════════════════ */
@@ -2067,6 +2162,17 @@
 .light-mode .ss-bans-list { background: #f2f3f5; border-color: #e3e5e8; }
 .light-mode .ss-bans-row { border-bottom-color: #e3e5e8; }
 .light-mode .ss-bans-row:hover { background: rgba(116, 124, 134, 0.1); }
+.light-mode .ss-automod-heading { color: #5c5e66; }
+.light-mode .ss-automod-card { background: #f2f3f5; }
+.light-mode .ss-automod-title { color: #060607; }
+.light-mode .ss-automod-desc { color: #4e5058; }
+.light-mode .ss-automod-tag { color: #80848e; }
+.light-mode .ss-automod-tag.green { color: #248046; }
+.light-mode .ss-automod-tag.yellow { color: #d4930d; }
+.light-mode .ss-automod-tag.red { color: #da373c; }
+.light-mode .ss-automod-filter-card { background: #f2f3f5; }
+.light-mode .ss-automod-filter-label { color: #060607; }
+.light-mode .ss-automod-filter-desc { color: #4e5058; }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
