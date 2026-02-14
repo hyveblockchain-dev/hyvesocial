@@ -224,12 +224,7 @@ export default function ServerSettings({
                     key={item.key}
                     className={`ss-nav-item${activeSection === item.key ? ' active' : ''}`}
                     onClick={() => {
-                      if (item.key === 'appDirectory') {
-                        navigate('/discover');
-                        onClose();
-                      } else {
-                        setActiveSection(item.key);
-                      }
+                      setActiveSection(item.key);
                     }}
                   >
                     {item.label}
@@ -1707,6 +1702,13 @@ export default function ServerSettings({
             );
           })()}
 
+          {/* App Directory placeholder */}
+          {activeSection === 'appDirectory' && (
+            <div className="ss-section">
+              <h2>App Directory</h2>
+              <p className="ss-muted">This feature is coming soon.</p>
+            </div>
+          )}
 
         </div>
 
