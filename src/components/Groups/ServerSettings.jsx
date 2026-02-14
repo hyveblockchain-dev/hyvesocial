@@ -105,6 +105,10 @@ export default function ServerSettings({
   // Boost Perks states
   const [showBoostBar, setShowBoostBar] = useState(false);
 
+  // Members states
+  const [showChannelMembers, setShowChannelMembers] = useState(false);
+  const [memberSearch, setMemberSearch] = useState('');
+
   const groupName = group?.name || '';
   const avatarUrl = group?.avatar_url || group?.avatar || '';
   const coverUrl = group?.cover_photo || group?.cover_url || '';
@@ -353,26 +357,107 @@ export default function ServerSettings({
           )}
 
           {/* ── Members ── */}
-          {activeSection === 'members' && (
+          {activeSection === 'members' && (() => {
+            const timeAgo = (dateStr) => {
+              if (!dateStr) return 'Unknown';
+              const d = new Date(dateStr);
+              if (isNaN(d)) return 'Unknown';
+              const diff = Date.now() - d.getTime();
+              const mins = Math.floor(diff / 60000);
+              if (mins < 60) return `${mins} minute${mins !== 1 ? 's' : ''} ago`;
+              const hrs = Math.floor(mins / 60);
+              if (hrs < 24) return `${hrs} hour${hrs !== 1 ? 's' : ''} ago`;
+              const days = Math.floor(hrs / 24);
+              if (days < 30) return `${days} day${days !== 1 ? 's' : ''} ago`;
+              const months = Math.floor(days / 30);
+              if (months < 12) return `${months} month${months !== 1 ? 's' : ''} ago`;
+              const years = Math.floor(months / 12);
+              return `${years} year${years !== 1 ? 's' : ''} ago`;
+            };
+            const filteredMembers = members.filter(m => {
+              if (!memberSearch) return true;
+              const q = memberSearch.toLowerCase();
+              return (m.username || '').toLowerCase().includes(q) || (m.handle || '').toLowerCase().includes(q);
+            });
+            return (
             <div className="ss-section">
-              <h2>Members</h2>
-              <p className="ss-subtitle">{memberCount} members in this server</p>
-              <div className="ss-member-list">
-                {members.map((m, i) => {
+              <h2>Server Members</h2>
+
+              {/* Show Members In Channel List toggle */}
+              <div className="ss-toggle-row" style={{ marginBottom: 24 }}>
+                <div>
+                  <span className="ss-toggle-label" style={{ color: '#00a8fc', fontWeight: 600 }}>Show Members In Channel List</span>
+                  <p className="ss-muted" style={{ margin: '4px 0 0', maxWidth: 600 }}>Enabling this will show the members page in the channel list, allowing you to quickly see who's recently joined your server, and find any users flagged for unusual activity.</p>
+                </div>
+                <label className="ss-switch">
+                  <input type="checkbox" checked={showChannelMembers} onChange={() => setShowChannelMembers(!showChannelMembers)} />
+                  <span className="ss-slider" />
+                </label>
+              </div>
+
+              {/* Recent Members header */}
+              <div className="ss-members-toolbar">
+                <h3 className="ss-members-toolbar-title">Recent Members</h3>
+                <div className="ss-members-toolbar-actions">
+                  <div className="ss-members-search">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#b5bac1"><path d="M21.7 20.3l-4.5-4.5A7.5 7.5 0 1 0 3 10.5a7.5 7.5 0 0 0 12.3 5.7l4.5 4.5a1 1 0 0 0 1.4-1.4zM5 10.5a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0z"/></svg>
+                    <input type="text" placeholder="Search by username or id" value={memberSearch} onChange={e => setMemberSearch(e.target.value)} />
+                  </div>
+                  <button className="ss-btn-secondary"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: 4 }}><path d="M3 6h18M3 12h12M3 18h6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"/></svg> Sort</button>
+                  <button className="ss-btn-danger-sm">Prune</button>
+                </div>
+              </div>
+
+              {/* Members table */}
+              <div className="ss-members-table">
+                <div className="ss-members-thead">
+                  <div className="ss-members-th ss-mcol-check"><input type="checkbox" disabled /></div>
+                  <div className="ss-members-th ss-mcol-name">NAME</div>
+                  <div className="ss-members-th ss-mcol-since">MEMBER SINCE</div>
+                  <div className="ss-members-th ss-mcol-joined">JOINED HYVE</div>
+                  <div className="ss-members-th ss-mcol-method">JOIN METHOD</div>
+                  <div className="ss-members-th ss-mcol-roles">ROLES</div>
+                  <div className="ss-members-th ss-mcol-signals">SIGNALS</div>
+                </div>
+                {filteredMembers.map((m, i) => {
                   const uname = m.username || m.user?.username || '';
+                  const handle = m.handle || uname;
                   const role = m.role || 'member';
                   const avatar = m.profile_image || m.profileImage || '/default-avatar.png';
+                  const memberSince = timeAgo(m.joined_at);
+                  const joinedHyve = timeAgo(m.created_at || m.user_created_at);
+                  const roleColor = role === 'owner' ? '#f0b232' : role === 'admin' ? '#5865f2' : '#3ba55c';
+                  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
                   return (
-                    <div key={`${uname}-${i}`} className="ss-member-row">
-                      <img src={avatar} alt="" className="ss-member-avatar" onError={e => { e.target.src = '/default-avatar.png'; }} />
-                      <span className="ss-member-name">{uname}</span>
-                      <span className={`ss-member-role ${role}`}>{role}</span>
+                    <div key={`${uname}-${i}`} className="ss-members-tr">
+                      <div className="ss-members-td ss-mcol-check"><input type="checkbox" /></div>
+                      <div className="ss-members-td ss-mcol-name">
+                        <img src={avatar} alt="" className="ss-member-avatar" onError={e => { e.target.src = '/default-avatar.png'; }} />
+                        <div className="ss-member-identity">
+                          <span className="ss-member-name">{uname}</span>
+                          <span className="ss-member-handle">{handle}</span>
+                        </div>
+                      </div>
+                      <div className="ss-members-td ss-mcol-since">{memberSince}</div>
+                      <div className="ss-members-td ss-mcol-joined">{joinedHyve}</div>
+                      <div className="ss-members-td ss-mcol-method">
+                        <span className="ss-method-icon">🔗</span>
+                      </div>
+                      <div className="ss-members-td ss-mcol-roles">
+                        <span className="ss-role-pill" style={{ background: roleColor }}>{roleLabel}</span>
+                        {role !== 'member' && <span className="ss-role-extra">+1</span>}
+                      </div>
+                      <div className="ss-members-td ss-mcol-signals">
+                        <button className="ss-signal-btn" title="View profile"><svg width="16" height="16" viewBox="0 0 24 24" fill="#b5bac1"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z"/></svg></button>
+                        <button className="ss-signal-btn" title="More"><svg width="16" height="16" viewBox="0 0 24 24" fill="#b5bac1"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
+                      </div>
                     </div>
                   );
                 })}
               </div>
+              <p className="ss-members-footer">Showing <span className="ss-members-footer-link">{filteredMembers.length} members</span></p>
             </div>
-          )}
+          );})()}
 
           {/* ── Roles ── */}
           {activeSection === 'roles' && (
