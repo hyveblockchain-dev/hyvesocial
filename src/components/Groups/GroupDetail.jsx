@@ -171,10 +171,10 @@ export default function GroupDetail() {
   const handlePopupAssignRole = useCallback(async (roleId) => {
     if (!memberPopup) return;
     try {
-      await api.assignMemberRole(groupId, memberPopup.userAddress, roleId);
+      await api.assignMemberRole(groupId, memberPopup.username, roleId);
       // Re-fetch member data to update popup roles
       const data = await api.getMembersWithRoles(groupId);
-      const updated = (data?.members || []).find(m => m.user_address === memberPopup.userAddress);
+      const updated = (data?.members || []).find(m => (m.username || '').toLowerCase() === (memberPopup.username || '').toLowerCase());
       if (updated) {
         const roles = typeof updated.custom_roles === 'string' ? JSON.parse(updated.custom_roles) : (updated.custom_roles || []);
         setMemberPopup(prev => ({ ...prev, customRoles: roles }));
@@ -190,7 +190,7 @@ export default function GroupDetail() {
   const handlePopupRemoveRole = useCallback(async (roleId) => {
     if (!memberPopup) return;
     try {
-      await api.removeMemberRole(groupId, memberPopup.userAddress, roleId);
+      await api.removeMemberRole(groupId, memberPopup.username, roleId);
       setMemberPopup(prev => ({
         ...prev,
         customRoles: (prev.customRoles || []).filter(r => r.id !== roleId)
