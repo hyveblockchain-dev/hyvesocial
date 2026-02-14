@@ -918,6 +918,175 @@
   letter-spacing: 0.05em;
 }
 
+/* ── Stickers ── */
+.ss-sticker-banner {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.ss-sticker-banner-bg {
+  background: linear-gradient(135deg, #5865f2 0%, #eb459e 100%);
+  padding: 28px 32px;
+  position: relative;
+}
+.ss-sticker-banner-content {
+  text-align: center;
+  color: #fff;
+}
+.ss-sticker-banner-content h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+.ss-sticker-banner-content p {
+  font-size: 14px;
+  margin: 0 0 16px;
+  opacity: 0.9;
+  line-height: 1.4;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.ss-sticker-banner-btns {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.ss-btn-outline {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ss-btn-outline:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ss-sticker-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  color: #f2f3f5;
+  font-size: 14px;
+}
+.ss-sticker-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.ss-sticker-tier {
+  background: #2b2d31;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.ss-sticker-tier-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.ss-sticker-tier-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ss-sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.ss-sticker-slot {
+  background: #1e1f22;
+  border-radius: 8px;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #3f4147;
+}
+
+/* Sticker level timeline */
+.ss-sticker-timeline {
+  position: relative;
+  padding-left: 24px;
+  margin-top: 16px;
+}
+.ss-sticker-timeline::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3f4147;
+}
+
+.ss-sticker-level {
+  position: relative;
+  margin-bottom: 16px;
+}
+.ss-sticker-timeline-dot {
+  position: absolute;
+  left: -24px;
+  top: 18px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #3f4147;
+  border: 2px solid #313338;
+  z-index: 1;
+}
+
+.ss-sticker-level-card {
+  background: #2b2d31;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.ss-sticker-level-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #3f4147;
+}
+.ss-sticker-level-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f2f3f5;
+  font-size: 14px;
+  font-weight: 600;
+}
+.ss-sticker-level-boosts {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #72767d;
+  font-size: 13px;
+}
+.ss-sticker-level-body {
+  padding: 24px 16px;
+  text-align: center;
+}
+.ss-sticker-level-slots {
+  color: #f47fff;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 8px 0 12px;
+}
+
 /* Member list */
 .ss-member-list {
   display: flex;
@@ -1062,6 +1231,15 @@
 .light-mode .ss-emoji-col-name { color: #313338; }
 .light-mode .ss-emoji-col-by { color: #4e5058; }
 .light-mode .ss-emoji-empty { color: #87898c; }
+.light-mode .ss-sticker-notice { color: #313338; }
+.light-mode .ss-sticker-tier { background: #f2f3f5; }
+.light-mode .ss-sticker-slot { background: #e3e5e8; border-color: #c4c9ce; }
+.light-mode .ss-sticker-level-card { background: #f2f3f5; }
+.light-mode .ss-sticker-level-header { border-bottom-color: #e3e5e8; }
+.light-mode .ss-sticker-level-title { color: #060607; }
+.light-mode .ss-sticker-level-boosts { color: #87898c; }
+.light-mode .ss-sticker-timeline::before { background: #c4c9ce; }
+.light-mode .ss-sticker-timeline-dot { background: #c4c9ce; border-color: #fff; }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {

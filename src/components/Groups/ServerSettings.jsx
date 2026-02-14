@@ -852,8 +852,89 @@ export default function ServerSettings({
             </div>
           )}
 
+          {/* ── Stickers ── */}
+          {activeSection === 'stickers' && (
+            <div className="ss-section">
+              <h2>Stickers</h2>
+
+              {/* Get Boosted banner */}
+              <div className="ss-sticker-banner">
+                <div className="ss-sticker-banner-bg">
+                  <div className="ss-sticker-banner-content">
+                    <h3>Get Boosted</h3>
+                    <p>Enjoy more stickers and other perks by boosting your server to Level 1. Each Level unlocks more sticker slots and new benefits for everyone.</p>
+                    <div className="ss-sticker-banner-btns">
+                      <button className="ss-btn-outline">Boost Server</button>
+                      <button className="ss-btn-outline">Learn More</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* No Server Boost notice */}
+              <div className="ss-sticker-notice">
+                <span className="ss-sticker-dot" style={{ background: '#ed4245' }} />
+                <div>
+                  <strong>No Server Boost</strong>
+                  <p className="ss-hint" style={{ margin: 0 }}>No one has bestowed Boosts to this server yet. See if any members would kindly bless your server for server-wide Boost Perks!</p>
+                </div>
+              </div>
+
+              {/* Free Slots */}
+              <div className="ss-sticker-tier">
+                <div className="ss-sticker-tier-header">
+                  <div className="ss-sticker-tier-left">
+                    <span className="ss-sticker-dot" style={{ background: '#f47fff' }} />
+                    <div>
+                      <strong style={{ color: '#f2f3f5' }}>Free Slots</strong>
+                      <p className="ss-hint" style={{ margin: 0 }}>5 of 5 slots available</p>
+                    </div>
+                  </div>
+                  <button className="ss-btn-green" style={{ fontSize: 12, padding: '6px 14px' }}>Upload Sticker</button>
+                </div>
+                <div className="ss-sticker-grid">
+                  {[0,1,2,3,4].map(i => (
+                    <div key={i} className="ss-sticker-slot">
+                      <span style={{ fontSize: 32, opacity: 0.3 }}>🎟️</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Level tiers with timeline */}
+              <div className="ss-sticker-timeline">
+                {[
+                  { level: 1, boosts: 2, slots: '+10 Sticker Slots', total: '' },
+                  { level: 2, boosts: 7, slots: '+15 Sticker Slots', total: '(30 total)' },
+                  { level: 3, boosts: 14, slots: '+30 Sticker Slots', total: '(60 total)' },
+                ].map((tier) => (
+                  <div key={tier.level} className="ss-sticker-level">
+                    <div className="ss-sticker-timeline-dot" />
+                    <div className="ss-sticker-level-card">
+                      <div className="ss-sticker-level-header">
+                        <div className="ss-sticker-level-title">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="#72767d"><circle cx="12" cy="12" r="10" fill="none" stroke="#72767d" strokeWidth="2"/></svg>
+                          <span>Level {tier.level}</span>
+                        </div>
+                        <div className="ss-sticker-level-boosts">
+                          {tier.boosts} Boosts
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="#72767d"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+                        </div>
+                      </div>
+                      <div className="ss-sticker-level-body">
+                        <span style={{ fontSize: 36, opacity: 0.4 }}>🎟️</span>
+                        <p className="ss-sticker-level-slots">{tier.slots} {tier.total}</p>
+                        <button className="ss-btn-green" style={{ fontSize: 13, padding: '8px 20px' }}>Buy Level</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Placeholder tabs */}
-          {['stickers', 'soundboard', 'invites', 'access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
+          {['soundboard', 'invites', 'access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
             <div className="ss-section">
               <h2>{NAV_SECTIONS.flatMap(s => s.items).find(i => i.key === activeSection)?.label || activeSection}</h2>
               <p className="ss-muted">This feature is coming soon.</p>
