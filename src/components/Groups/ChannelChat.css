@@ -490,6 +490,7 @@
   padding: 0 16px 24px;
   flex-shrink: 0;
   position: relative;
+  background: #313338;
 }
 .channel-attach-btn {
   position: absolute;
@@ -518,6 +519,7 @@
   font-family: inherit;
   outline: none;
   caret-color: #f2f3f5;
+  box-sizing: border-box;
 }
 .channel-input::placeholder {
   color: #6d6f78;
@@ -1155,6 +1157,7 @@
 .light-mode .channel-msg-actions button { color: #4e5058; }
 .light-mode .channel-msg-actions button:hover { background: #e3e5e8; color: #060607; }
 .light-mode .channel-input { background: #ebedef; color: #060607; }
+.light-mode .channel-input-form { background: #fff; }
 .light-mode .channel-input::placeholder { color: #80848e; }
 .light-mode .channel-input-icon { color: #4e5058; }
 .light-mode .channel-input-icon:hover { color: #060607; }
@@ -1220,6 +1223,13 @@
    Thread Panel
    ═══════════════════════════════════════ */
 .channel-chat.has-thread { display: flex; flex-direction: row; }
+.channel-chat-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 .channel-chat.has-thread .channel-chat-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 
 .channel-thread-panel {
