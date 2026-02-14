@@ -115,6 +115,12 @@ export default function ServerSettings({
   const [rolePermPin, setRolePermPin] = useState(true);
   const [rolePermBypass, setRolePermBypass] = useState(true);
 
+  // Access states
+  const [accessMode, setAccessMode] = useState('invite');
+  const [ageRestricted, setAgeRestricted] = useState(false);
+  const [serverRulesEnabled, setServerRulesEnabled] = useState(false);
+  const [accessRules, setAccessRules] = useState(['']);
+
   const groupName = group?.name || '';
   const avatarUrl = group?.avatar_url || group?.avatar || '';
   const coverUrl = group?.cover_photo || group?.cover_url || '';
@@ -1170,8 +1176,85 @@ export default function ServerSettings({
             </div>
           )}
 
+          {/* ── Access ── */}
+          {activeSection === 'access' && (
+            <div className="ss-section">
+              <h2>Access</h2>
+
+              {/* Join method */}
+              <div style={{ marginBottom: 24 }}>
+                <h3 className="ss-access-question">How can people join your server?</h3>
+                <p className="ss-muted" style={{ margin: '4px 0 16px' }}>Keep your server private, or open it up for more people to join. <span style={{ color: '#00a8fc', cursor: 'pointer' }}>Learn More.</span></p>
+
+                <div className="ss-access-cards">
+                  <div className={`ss-access-card ${accessMode === 'invite' ? 'active' : ''}`} onClick={() => setAccessMode('invite')}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#b5bac1"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+                    <span className="ss-access-card-title">Invite Only</span>
+                    <span className="ss-access-card-desc">People can join your server directly with an invite</span>
+                  </div>
+                  <div className={`ss-access-card ${accessMode === 'apply' ? 'active' : ''}`} onClick={() => setAccessMode('apply')}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#b5bac1"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                    <span className="ss-access-card-title">Apply to Join</span>
+                    <span className="ss-access-card-desc">People must submit an application and be approved to join</span>
+                  </div>
+                  <div className={`ss-access-card ${accessMode === 'discover' ? 'active' : ''}`} onClick={() => setAccessMode('discover')}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#b5bac1"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    <span className="ss-access-card-title">Discoverable</span>
+                    <span className="ss-access-card-desc">Anyone can join your server directly through Server Discovery</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Age-Restricted Server */}
+              <div className="ss-toggle-row" style={{ marginBottom: 24 }}>
+                <div>
+                  <span className="ss-toggle-label" style={{ fontWeight: 600 }}>Age-Restricted Server</span>
+                  <p className="ss-muted" style={{ margin: '4px 0 0', maxWidth: 600 }}><span style={{ color: '#00a8fc', cursor: 'pointer' }}>Users</span> will need to confirm they are over the legal age to view the content in this server. <span style={{ color: '#00a8fc', cursor: 'pointer' }}>Learn more.</span></p>
+                </div>
+                <label className="ss-switch">
+                  <input type="checkbox" checked={ageRestricted} onChange={() => setAgeRestricted(!ageRestricted)} />
+                  <span className="ss-slider" />
+                </label>
+              </div>
+
+              {/* Server Rules */}
+              <div className="ss-toggle-row" style={{ marginBottom: 16 }}>
+                <div>
+                  <span className="ss-toggle-label" style={{ fontWeight: 600 }}>Server Rules</span>
+                  <p className="ss-muted" style={{ margin: '4px 0 0', maxWidth: 600 }}>Members must agree to rules before they can chat or interact in the server.</p>
+                </div>
+                <label className="ss-switch">
+                  <input type="checkbox" checked={serverRulesEnabled} onChange={() => setServerRulesEnabled(!serverRulesEnabled)} />
+                  <span className="ss-slider" />
+                </label>
+              </div>
+
+              {/* Rules editor */}
+              <div className="ss-access-rules-box">
+                <span className="ss-access-rules-label">RULES</span>
+                {accessRules.map((rule, i) => (
+                  <input key={i} type="text" className="ss-access-rule-input" placeholder="Enter a rule" value={rule} onChange={e => { const next = [...accessRules]; next[i] = e.target.value; setAccessRules(next); }} />
+                ))}
+                <button className="ss-access-add-rule" onClick={() => setAccessRules([...accessRules, ''])}>+ Add a rule</button>
+              </div>
+
+              {/* Example rules */}
+              <div className="ss-access-examples">
+                <span className="ss-access-rules-label">EXAMPLE RULES</span>
+                <div className="ss-access-example-chips">
+                  <span className="ss-access-chip">Be civil and respectful</span>
+                  <span className="ss-access-chip">No spam or self-promotion</span>
+                  <span className="ss-access-chip">No age-restricted or obscene content</span>
+                </div>
+                <div className="ss-access-example-chips">
+                  <span className="ss-access-chip">Help keep things safe</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Placeholder tabs */}
-          {['access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
+          {['integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
             <div className="ss-section">
               <h2>{NAV_SECTIONS.flatMap(s => s.items).find(i => i.key === activeSection)?.label || activeSection}</h2>
               <p className="ss-muted">This feature is coming soon.</p>

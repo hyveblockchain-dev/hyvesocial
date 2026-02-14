@@ -1571,6 +1571,111 @@
   text-overflow: ellipsis;
 }
 
+/* ── Access ── */
+.ss-access-question {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f2f3f5;
+  margin: 0;
+}
+.ss-access-cards {
+  display: flex;
+  gap: 8px;
+}
+.ss-access-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 12px;
+  border: 1px solid #3f4147;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  gap: 6px;
+}
+.ss-access-card:hover { border-color: #5865f2; }
+.ss-access-card.active {
+  border-color: #5865f2;
+  background: rgba(88, 101, 242, 0.08);
+}
+.ss-access-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f2f3f5;
+  margin-top: 4px;
+}
+.ss-access-card-desc {
+  font-size: 12px;
+  color: #b5bac1;
+  line-height: 1.4;
+}
+
+.ss-access-rules-box {
+  background: #2b2d31;
+  border: 1px solid #3f4147;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.ss-access-rules-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #b5bac1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  display: block;
+  margin-bottom: 10px;
+}
+.ss-access-rule-input {
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #3f4147;
+  color: #dbdee1;
+  font-size: 14px;
+  padding: 10px 0;
+  outline: none;
+  margin-bottom: 4px;
+}
+.ss-access-rule-input::placeholder { color: #72767d; }
+.ss-access-rule-input:focus { border-bottom-color: #5865f2; }
+
+.ss-access-add-rule {
+  background: none;
+  border: none;
+  color: #b5bac1;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 12px 0;
+  width: 100%;
+  text-align: center;
+  transition: color 0.15s;
+}
+.ss-access-add-rule:hover { color: #f2f3f5; }
+
+.ss-access-examples {
+  margin-top: 8px;
+}
+.ss-access-example-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.ss-access-chip {
+  background: #2b2d31;
+  border: 1px solid #3f4147;
+  border-radius: 16px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: #b5bac1;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.ss-access-chip:hover { background: #32353b; color: #f2f3f5; }
+
 /* ══════════════════════════════════════════════════════════
    LIGHT MODE
    ══════════════════════════════════════════════════════════ */
@@ -1675,6 +1780,16 @@
 .light-mode .ss-invites-tr:hover { background: rgba(116, 124, 134, 0.1); }
 .light-mode .ss-invites-td { color: #4e5058; }
 .light-mode .ss-invite-channel-name { color: #4e5058; }
+.light-mode .ss-access-question { color: #060607; }
+.light-mode .ss-access-card { border-color: #c4c9ce; }
+.light-mode .ss-access-card.active { background: rgba(88, 101, 242, 0.06); }
+.light-mode .ss-access-card-title { color: #060607; }
+.light-mode .ss-access-card-desc { color: #4e5058; }
+.light-mode .ss-access-rules-box { background: #f2f3f5; border-color: #e3e5e8; }
+.light-mode .ss-access-rule-input { color: #313338; border-bottom-color: #e3e5e8; }
+.light-mode .ss-access-rule-input::placeholder { color: #87898c; }
+.light-mode .ss-access-chip { background: #f2f3f5; border-color: #e3e5e8; color: #4e5058; }
+.light-mode .ss-access-chip:hover { background: #e3e5e8; color: #060607; }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
