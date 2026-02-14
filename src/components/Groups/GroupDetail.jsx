@@ -10,12 +10,13 @@ import UserSettings from './UserSettings';
 import { compressImage } from '../../utils/imageCompression';
 import { formatDate, formatDateTime } from '../../utils/date';
 import { IconArrowLeft } from '../Icons/Icons';
+import ChatWindow from '../Chat/ChatWindow';
 import './GroupDetail.css';
 
 export default function GroupDetail() {
   const { groupId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, socket } = useAuth();
   const coverInputRef = useRef(null);
   const avatarInputRef = useRef(null);
 
@@ -92,6 +93,13 @@ export default function GroupDetail() {
 
   // ── Guild bar (joined groups list) ──
   const [joinedGroups, setJoinedGroups] = useState([]);
+
+  // ── DM mode state ──
+  const [dmMode, setDmMode] = useState(false);
+  const [dmConversations, setDmConversations] = useState([]);
+  const [dmLoading, setDmLoading] = useState(false);
+  const [dmSelectedUser, setDmSelectedUser] = useState(null);
+  const [dmSearchQuery, setDmSearchQuery] = useState('');
 
   const myUsername = (user?.username || '').toLowerCase();
 
@@ -325,6 +333,49 @@ export default function GroupDetail() {
   useEffect(() => {
     refreshJoinedGroups();
   }, [groupId, refreshJoinedGroups]);
+
+  // ── Load DM conversations ──
+  const loadDmConversations = useCallback(async () => {
+    setDmLoading(true);
+    try {
+      const myHandle = (user?.username || '').toLowerCase();
+      const [friendsData, convoData, blockedData] = await Promise.all([
+        api.getFriends ? api.getFriends() : Promise.resolve({ friends: [] }),
+        api.getConversations ? api.getConversations() : Promise.resolve({ conversations: [] }),
+        api.getBlockedUsers ? api.getBlockedUsers() : Promise.resolve({ blocked: [] }),
+      ]);
+      const blockedList = blockedData?.blocks || blockedData?.blocked || blockedData?.users || blockedData || [];
+      const blockedSet = new Set(
+        (Array.isArray(blockedList) ? blockedList : []).map((b) => (b?.username || b?.user?.username || b?.name || '').toLowerCase()).filter(Boolean)
+      );
+      const friends = Array.isArray(friendsData?.friends) ? friendsData.friends : [];
+      const convos = Array.isArray(convoData?.conversations) ? convoData.conversations : [];
+      const userMap = new Map();
+      for (const f of friends) {
+        const h = (f.username || f.name || '').toLowerCase();
+        if (!h || h === myHandle || blockedSet.has(h)) continue;
+        userMap.set(h, { username: f.username || f.name || h, profile_image: f.profile_image || f.profileImage || '', isFriend: true, hasMessages: false, lastMessageTime: null });
+      }
+      for (const c of convos) {
+        const h = (c.username || c.name || '').toLowerCase();
+        if (!h || h === myHandle || blockedSet.has(h)) continue;
+        const existing = userMap.get(h);
+        if (existing) { existing.hasMessages = true; existing.lastMessageTime = c.last_message_time || c.lastMessageTime || null; }
+        else userMap.set(h, { username: c.username || c.name || h, profile_image: c.profile_image || c.profileImage || '', isFriend: false, hasMessages: true, lastMessageTime: c.last_message_time || c.lastMessageTime || null });
+      }
+      const sorted = [...userMap.values()].sort((a, b) => {
+        if (a.hasMessages !== b.hasMessages) return a.hasMessages ? -1 : 1;
+        if (a.lastMessageTime && b.lastMessageTime) return new Date(b.lastMessageTime) - new Date(a.lastMessageTime);
+        return a.username.localeCompare(b.username);
+      });
+      setDmConversations(sorted);
+    } catch { setDmConversations([]); }
+    finally { setDmLoading(false); }
+  }, [user]);
+
+  useEffect(() => {
+    if (dmMode) loadDmConversations();
+  }, [dmMode, loadDmConversations]);
 
   // ── Initial load ──
   useEffect(() => {
@@ -684,12 +735,13 @@ export default function GroupDetail() {
   // ── Guild icon bar (far-left server list) ──
   const guildBar = (
     <nav className="discord-guild-bar">
-      <Link to="/" className="guild-icon guild-home" title="Home">
+      <button className={`guild-icon guild-home${dmMode ? ' guild-active' : ''}`} title="Direct Messages" onClick={() => { setDmMode(true); setDmSelectedUser(null); }}>
         <img src="/hyvelogo.png" alt="Home" />
-      </Link>
+        {dmMode && <span className="guild-pill" />}
+      </button>
       <div className="guild-separator" />
       {joinedGroups.map((g) => {
-        const isActive = String(g.id) === String(groupId);
+        const isActive = !dmMode && String(g.id) === String(groupId);
         const avatar = g.avatar_image || g.avatarImage;
         return (
           <Link
@@ -697,6 +749,7 @@ export default function GroupDetail() {
             to={`/groups/${g.id}`}
             className={`guild-icon${isActive ? ' guild-active' : ''}`}
             title={g.name}
+            onClick={() => setDmMode(false)}
           >
             {avatar
               ? <img src={avatar} alt={g.name} />
@@ -715,25 +768,25 @@ export default function GroupDetail() {
     </nav>
   );
 
-  // ── Loading / error states ──
-  if (loading) return <div className="discord-fullpage">{topBar}<div className="discord-body">{guildBar}<div className="discord-loading">Loading server...</div></div></div>;
-  if (error) return <div className="discord-fullpage">{topBar}<div className="discord-body">{guildBar}<div className="discord-loading error">{error}</div></div></div>;
-  if (!group) return <div className="discord-fullpage">{topBar}<div className="discord-body">{guildBar}<div className="discord-loading">Group not found.</div></div></div>;
+  // ── Loading / error states (skip if in DM mode) ──
+  if (!dmMode && loading) return <div className="discord-fullpage">{topBar}<div className="discord-body">{guildBar}<div className="discord-loading">Loading server...</div></div></div>;
+  if (!dmMode && error) return <div className="discord-fullpage">{topBar}<div className="discord-body">{guildBar}<div className="discord-loading error">{error}</div></div></div>;
+  if (!dmMode && !group) return <div className="discord-fullpage">{topBar}<div className="discord-body">{guildBar}<div className="discord-loading">Group not found.</div></div></div>;
 
-  const coverUrl = coverPreview || group.cover_image || group.coverImage;
-  const avatarUrl = avatarPreview || group.avatar_image || group.avatarImage;
-  const groupName = group.name || 'Group';
-  const groupDescription = group.description || '';
-  const memberCount = group.member_count || members.length || 1;
-  const privacy = String(group.privacy || 'public').toLowerCase();
+  const coverUrl = coverPreview || group?.cover_image || group?.coverImage || '';
+  const avatarUrl = avatarPreview || group?.avatar_image || group?.avatarImage || '';
+  const groupName = group?.name || 'Group';
+  const groupDescription = group?.description || '';
+  const memberCount = group?.member_count || members.length || 1;
+  const privacy = String(group?.privacy || 'public').toLowerCase();
   const isLocked = privacy === 'private' && !isMember && !isOwner;
   const postingLabel = effectivePostingPermission === 'admins' ? 'Admins can post' : 'Members can post';
-  const createdAtRaw = group.created_at || group.createdAt;
+  const createdAtRaw = group?.created_at || group?.createdAt;
   const createdAt = formatDate(createdAtRaw);
-  const ownerUsernameRaw = group.owner_username || group.ownerUsername || '';
+  const ownerUsernameRaw = group?.owner_username || group?.ownerUsername || '';
 
   // ── Not a member of private group: show join screen ──
-  if (!isMember && privacy === 'private') {
+  if (!dmMode && !isMember && privacy === 'private') {
     return (
       <div className="discord-fullpage">
         {topBar}
@@ -763,11 +816,121 @@ export default function GroupDetail() {
   // ══════════════════════════════════════════════════════════
   // ═══ Main Discord-style 3-column layout ═════════════════
   // ══════════════════════════════════════════════════════════
+
+  const filteredDmConversations = dmSearchQuery.trim()
+    ? dmConversations.filter((c) => c.username.toLowerCase().includes(dmSearchQuery.toLowerCase()))
+    : dmConversations;
+
   return (
     <div className="discord-fullpage">
       {topBar}
     <div className="discord-body">
       {guildBar}
+
+    {dmMode ? (
+      /* ════════ DM MODE LAYOUT ════════ */
+      <div className="discord-server discord-dm-layout">
+        {/* DM sidebar */}
+        <div className="discord-sidebar discord-dm-sidebar">
+          <div className="discord-dm-search">
+            <input
+              type="text"
+              placeholder="Find or start a conversation"
+              value={dmSearchQuery}
+              onChange={(e) => setDmSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="discord-dm-nav">
+            <button className="discord-dm-nav-item" onClick={() => navigate('/friends')}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 13c-1.2 0-3.07.34-4.5 1-1.43-.67-3.3-1-4.5-1C5.33 13 1 14.08 1 16.25V19h22v-2.75c0-2.17-4.33-3.25-6.5-3.25zm-4 4.5h-10v-1.25c0-.54 2.56-1.75 5-1.75s5 1.21 5 1.75v1.25zm9 0H14v-1.25c0-.46-.2-.86-.52-1.22.88-.3 1.96-.53 3.02-.53 2.44 0 5 1.21 5 1.75v1.25zM7.5 12c1.93 0 3.5-1.57 3.5-3.5S9.43 5 7.5 5 4 6.57 4 8.5 5.57 12 7.5 12zm9 0c1.93 0 3.5-1.57 3.5-3.5S18.43 5 16.5 5 13 6.57 13 8.5s1.57 3.5 3.5 3.5z"/></svg>
+              <span>Friends</span>
+            </button>
+          </div>
+
+          <div className="discord-dm-header">
+            <span>DIRECT MESSAGES</span>
+            <button className="discord-dm-add" title="Create DM" onClick={() => {}}>+</button>
+          </div>
+
+          <div className="discord-dm-list">
+            {dmLoading ? (
+              <div className="discord-dm-empty">Loading...</div>
+            ) : filteredDmConversations.length === 0 ? (
+              <div className="discord-dm-empty">{dmSearchQuery ? 'No results' : 'No conversations yet'}</div>
+            ) : (
+              filteredDmConversations.map((conv) => {
+                const isSelected = dmSelectedUser?.username?.toLowerCase() === conv.username.toLowerCase();
+                return (
+                  <button
+                    key={conv.username}
+                    className={`discord-dm-item${isSelected ? ' active' : ''}`}
+                    onClick={() => setDmSelectedUser({
+                      username: conv.username,
+                      profileImage: conv.profile_image || '',
+                    })}
+                  >
+                    <div className="discord-dm-item-avatar">
+                      {conv.profile_image
+                        ? <img src={conv.profile_image} alt="" onError={(e) => { e.target.src = '/default-avatar.png'; }} />
+                        : <div className="discord-dm-item-letter">{(conv.username || '?')[0].toUpperCase()}</div>}
+                      <span className="discord-dm-item-status" />
+                    </div>
+                    <div className="discord-dm-item-info">
+                      <span className="discord-dm-item-name">{conv.username}</span>
+                      <span className="discord-dm-item-preview">
+                        {conv.hasMessages ? 'Tap to continue chat' : conv.isFriend ? 'Friend' : ''}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+
+          {/* User panel (bottom) */}
+          <div className="discord-user-panel">
+            <div className="discord-user-panel-avatar">
+              <img src={user?.profile_image || user?.profileImage || '/default-avatar.png'} alt="" onError={(e) => { e.target.src = '/default-avatar.png'; }} />
+              <span className="discord-user-panel-dot" />
+            </div>
+            <div className="discord-user-panel-info">
+              <span className="discord-user-panel-name">{user?.username || 'Unknown'}</span>
+              <span className="discord-user-panel-status">Online</span>
+            </div>
+            <div className="discord-user-panel-icons">
+              <button title="Mute" className="discord-user-mic">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a4 4 0 014 4v5a4 4 0 01-8 0V6a4 4 0 014-4zm-6 9a1 1 0 012 0 6 6 0 0012 0 1 1 0 012 0 8 8 0 01-7 7.93V21h3a1 1 0 010 2H9a1 1 0 010-2h3v-2.07A8 8 0 016 11z"/></svg>
+              </button>
+              <button title="Deafen" className="discord-user-deafen">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12v4.5C2 18.43 3.57 20 5.5 20h1a1 1 0 001-1v-6a1 1 0 00-1-1h-.84A8.001 8.001 0 0112 4a8.001 8.001 0 016.34 8H17.5a1 1 0 00-1 1v6a1 1 0 001 1h1c1.93 0 3.5-1.57 3.5-3.5V12c0-5.52-4.48-10-10-10z"/></svg>
+              </button>
+              <button title="User Settings" onClick={() => setShowUserSettings(true)}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96a7.04 7.04 0 00-1.62-.94L14.4 3.05a.47.47 0 00-.48-.41h-3.84a.47.47 0 00-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94L5.24 5.62a.49.49 0 00-.59.22L2.73 9.16a.49.49 0 00.12.61l2.03 1.58c-.05.3-.07.63-.07.94 0 .32.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 00-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.611 3.611 0 0112 15.6z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* DM main area */}
+        <div className="discord-main discord-dm-main">
+          {dmSelectedUser ? (
+            <ChatWindow
+              conversation={dmSelectedUser}
+              onClose={() => setDmSelectedUser(null)}
+            />
+          ) : (
+            <div className="discord-dm-welcome">
+              <div className="discord-dm-welcome-icon">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="currentColor" opacity="0.4"><path d="M16.5 13c-1.2 0-3.07.34-4.5 1-1.43-.67-3.3-1-4.5-1C5.33 13 1 14.08 1 16.25V19h22v-2.75c0-2.17-4.33-3.25-6.5-3.25zm-4 4.5h-10v-1.25c0-.54 2.56-1.75 5-1.75s5 1.21 5 1.75v1.25zm9 0H14v-1.25c0-.46-.2-.86-.52-1.22.88-.3 1.96-.53 3.02-.53 2.44 0 5 1.21 5 1.75v1.25zM7.5 12c1.93 0 3.5-1.57 3.5-3.5S9.43 5 7.5 5 4 6.57 4 8.5 5.57 12 7.5 12zm9 0c1.93 0 3.5-1.57 3.5-3.5S18.43 5 16.5 5 13 6.57 13 8.5s1.57 3.5 3.5 3.5z"/></svg>
+              </div>
+              <h2>Select a conversation</h2>
+              <p>Choose a friend from the sidebar to start chatting</p>
+            </div>
+          )}
+        </div>
+      </div>
+    ) : (
     <div className="discord-server">
       {/* ── Left: Channel sidebar ── */}
       <div className="discord-sidebar">
@@ -1359,6 +1522,7 @@ export default function GroupDetail() {
         />
       )}
     </div>
+    )}
     </div>
 
     {/* Member popup card */}
