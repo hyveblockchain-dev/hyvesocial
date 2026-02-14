@@ -86,6 +86,11 @@ export default function ServerSettings({
   const coverInputRef = useRef(null);
   const avatarInputRef = useRef(null);
 
+  const [tagName, setTagName] = useState('');
+  const [selectedBadge, setSelectedBadge] = useState(0);
+  const [selectedBadgeColor, setSelectedBadgeColor] = useState(0);
+  const [showAllBadges, setShowAllBadges] = useState(false);
+
   const groupName = group?.name || '';
   const avatarUrl = group?.avatar_url || group?.avatar || '';
   const coverUrl = group?.cover_photo || group?.cover_url || '';
@@ -418,8 +423,146 @@ export default function ServerSettings({
             </div>
           )}
 
+          {/* ── Server Tag ── */}
+          {activeSection === 'serverTag' && (
+            <div className="ss-section">
+              <div className="ss-profile-layout">
+                <div className="ss-profile-main">
+                  <h2>Server Tag</h2>
+                  <p className="ss-subtitle">Create a tag that your server members can display next to their name! Anyone outside your server can view your Server Profile through the Server Tag, and if applications are enabled, they can apply to join.</p>
+
+                  {/* Info banner */}
+                  <div className="ss-info-banner ss-info-blue">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#5865f2" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><text x="12" y="17" textAnchor="middle" fill="#fff" fontSize="14" fontWeight="700">i</text></svg>
+                    <span>Your Server Profile is private. Users will not be able to see it from a Server Tag. <button className="ss-info-link" onClick={() => setActiveSection('profile')}>Edit Setting</button></span>
+                  </div>
+
+                  {/* Unlock button */}
+                  <button className="ss-boost-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg>
+                    Unlock with Boosting
+                  </button>
+
+                  {/* Choose Name */}
+                  <div className="ss-field" style={{ marginTop: 24 }}>
+                    <label className="ss-label">Choose Name</label>
+                    <div className="ss-tag-name-preview">
+                      <div className="ss-tag-name-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#b5bac1"><path d="M5.88 21l1.54-5.22L3 12l6.18-.5L12 6l2.82 5.5L21 12l-4.42 3.78L18.12 21 12 17.77 5.88 21z"/></svg>
+                      </div>
+                      <input
+                        type="text"
+                        className="ss-tag-name-input"
+                        placeholder="WUMP"
+                        value={tagName}
+                        onChange={(e) => setTagName(e.target.value.toUpperCase())}
+                        maxLength={4}
+                      />
+                      <span className="ss-tag-name-hint">You can use 4 characters, numbers and symbols.</span>
+                    </div>
+                  </div>
+
+                  {/* Update warning */}
+                  <div className="ss-info-banner ss-info-green">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#3ba55c" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><text x="12" y="17" textAnchor="middle" fill="#fff" fontSize="14" fontWeight="700">i</text></svg>
+                    <span>Updating your Server Tag will require all of your members to manually reapply the tag to their profile. We do this to prevent abuse. <button className="ss-info-link">Learn More</button></span>
+                  </div>
+
+                  {/* Choose Badge */}
+                  <div className="ss-field" style={{ marginTop: 24 }}>
+                    <label className="ss-label" style={{ fontSize: 14 }}>Choose Badge</label>
+                    <div className="ss-badge-grid">
+                      {['🍃', '⚒️', '🌸', '🔥', '☁️', '😊', '🌙', '⚡', '✨', '🤖'].slice(0, showAllBadges ? 10 : 10).map((emoji, i) => (
+                        <button
+                          key={i}
+                          className={`ss-badge-cell${selectedBadge === i ? ' active' : ''}`}
+                          onClick={() => setSelectedBadge(i)}
+                        >
+                          <span style={{ fontSize: 24 }}>{emoji}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {!showAllBadges && (
+                      <button className="ss-show-all-btn" onClick={() => setShowAllBadges(true)}>
+                        Show all badges <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M4 6l4 4 4-4"/></svg>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Choose Color */}
+                  <div className="ss-field">
+                    <label className="ss-label" style={{ fontSize: 14 }}>Choose Color</label>
+                    <div className="ss-badge-grid">
+                      {[
+                        '#57f287', '#fee75c', '#ed4245', '#eb459e', '#5865f2',
+                        '#3ba55c', '#faa61a', '#f47b67', '#e882c7', '#7289da',
+                        '#2d7d46', '#d09215', '#a12d2f', '#ad357a', '#4752c4',
+                      ].map((color, i) => (
+                        <button
+                          key={i}
+                          className={`ss-badge-cell ss-color-cell${selectedBadgeColor === i ? ' active' : ''}`}
+                          onClick={() => setSelectedBadgeColor(i)}
+                        >
+                          <span style={{ fontSize: 22, filter: `drop-shadow(0 0 0 ${color})`, color }}>
+                            {['🍃', '⚒️', '🌸', '🔥', '☁️', '😊', '🌙', '⚡', '✨', '🤖'][selectedBadge]}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Preview chat */}
+                <div className="ss-profile-preview ss-tag-preview">
+                  <div className="ss-tag-chat-preview">
+                    <div className="ss-tag-msg">
+                      <div className="ss-tag-msg-avatar" style={{ background: '#5865f2' }}>O</div>
+                      <div className="ss-tag-msg-body">
+                        <span className="ss-tag-msg-name" style={{ color: '#57f287' }}>Olivia</span>
+                        <span className="ss-tag-msg-text">anyone down for aram</span>
+                      </div>
+                    </div>
+                    <div className="ss-tag-msg">
+                      <div className="ss-tag-msg-avatar" style={{ background: '#faa61a' }}>K</div>
+                      <div className="ss-tag-msg-body">
+                        <span className="ss-tag-msg-name" style={{ color: '#faa61a' }}>Kongo</span>
+                        <span className="ss-tag-msg-text">count me in</span>
+                      </div>
+                    </div>
+                    <div className="ss-tag-msg">
+                      <div className="ss-tag-msg-avatar" style={{ background: '#eb459e' }}>L</div>
+                      <div className="ss-tag-msg-body">
+                        <span className="ss-tag-msg-name">
+                          <span style={{ color: '#eb459e' }}>Lily</span>
+                          <span className="ss-tag-badge" style={{ background: '#5865f2' }}>
+                            ✦ {tagName || 'WUMP'}
+                          </span>
+                        </span>
+                        <span className="ss-tag-msg-text">check out my tag!</span>
+                      </div>
+                    </div>
+                    <div className="ss-tag-msg">
+                      <div className="ss-tag-msg-avatar" style={{ background: '#3ba55c' }}>S</div>
+                      <div className="ss-tag-msg-body">
+                        <span className="ss-tag-msg-name" style={{ color: '#3ba55c' }}>Sergio</span>
+                        <span className="ss-tag-msg-text">woah how did you get that</span>
+                      </div>
+                    </div>
+                    <div className="ss-tag-msg">
+                      <div className="ss-tag-msg-avatar" style={{ background: '#eb459e' }}>L</div>
+                      <div className="ss-tag-msg-body">
+                        <span className="ss-tag-msg-name" style={{ color: '#eb459e' }}>Lily</span>
+                        <span className="ss-tag-msg-text">anyone here can get it!</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Placeholder tabs */}
-          {['engagement', 'boostPerks', 'serverTag', 'emoji', 'stickers', 'soundboard', 'invites', 'access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
+          {['engagement', 'boostPerks', 'emoji', 'stickers', 'soundboard', 'invites', 'access', 'integrations', 'appDirectory', 'safetySetup', 'automod', 'community', 'template'].includes(activeSection) && (
             <div className="ss-section">
               <h2>{NAV_SECTIONS.flatMap(s => s.items).find(i => i.key === activeSection)?.label || activeSection}</h2>
               <p className="ss-muted">This feature is coming soon.</p>
