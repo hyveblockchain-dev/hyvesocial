@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { formatDateTime } from '../../utils/date';
@@ -78,6 +79,7 @@ export default function ServerSettings({
   setBusy,
 }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('profile');
   const [serverName, setServerName] = useState(group?.name || '');
   const [serverDesc, setServerDesc] = useState(group?.description || '');
@@ -221,7 +223,14 @@ export default function ServerSettings({
                   <button
                     key={item.key}
                     className={`ss-nav-item${activeSection === item.key ? ' active' : ''}`}
-                    onClick={() => setActiveSection(item.key)}
+                    onClick={() => {
+                      if (item.key === 'appDirectory') {
+                        onClose();
+                        navigate('/discover');
+                      } else {
+                        setActiveSection(item.key);
+                      }
+                    }}
                   >
                     {item.label}
                     {item.external && (
@@ -1698,13 +1707,7 @@ export default function ServerSettings({
             );
           })()}
 
-          {/* Placeholder tabs */}
-          {activeSection === 'appDirectory' && (
-            <div className="ss-section">
-              <h2>{NAV_SECTIONS.flatMap(s => s.items).find(i => i.key === activeSection)?.label || activeSection}</h2>
-              <p className="ss-muted">This feature is coming soon.</p>
-            </div>
-          )}
+
         </div>
 
         {/* Close area */}
