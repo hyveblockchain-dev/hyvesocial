@@ -5268,3 +5268,304 @@
 .channel-msg-actions button.pinned {
   color: #f0b232 !important;
 }
+
+/* ========================================
+   Permission Overrides UI
+   ======================================== */
+
+/* Permissions body layout */
+.discord-cs-perms-body {
+  gap: 12px !important;
+}
+
+/* Role selector bar */
+.perm-roles-bar {
+  background: #2b2d31;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.perm-roles-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.perm-roles-list-vertical {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.perm-role-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #1e1f22;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: #b5bac1;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.perm-role-chip:hover {
+  background: #35373c;
+  color: #dbdee1;
+}
+.perm-role-chip.active {
+  background: #404249;
+  border-color: #5865f2;
+  color: #f2f3f5;
+}
+
+.perm-role-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.perm-role-remove {
+  margin-left: 4px;
+  font-size: 16px;
+  color: #72767d;
+  cursor: pointer;
+  line-height: 1;
+}
+.perm-role-remove:hover {
+  color: #f23f43;
+}
+
+/* Add role button */
+.perm-add-role-wrap {
+  position: relative;
+}
+
+.perm-add-role-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #5865f2;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.perm-add-role-btn:hover {
+  background: #4752c4;
+}
+
+.perm-add-role-btn-v {
+  background: none;
+  border: 1px dashed #72767d;
+  color: #b5bac1;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  text-align: center;
+  transition: all 0.15s;
+}
+.perm-add-role-btn-v:hover {
+  border-color: #5865f2;
+  color: #5865f2;
+}
+
+/* Add role dropdown */
+.perm-add-role-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  min-width: 200px;
+  background: #111214;
+  border-radius: 4px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.24);
+  z-index: 100;
+  padding: 8px;
+  animation: fadeInContext 0.1s ease;
+}
+
+.perm-add-role-dropdown input {
+  width: 100%;
+  background: #1e1f22;
+  border: none;
+  border-radius: 3px;
+  color: #dbdee1;
+  padding: 8px;
+  font-size: 13px;
+  margin-bottom: 6px;
+  box-sizing: border-box;
+}
+.perm-add-role-dropdown input:focus {
+  outline: none;
+  box-shadow: 0 0 0 1px #5865f2;
+}
+
+.perm-add-role-list {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.perm-add-role-list button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  background: none;
+  border: none;
+  color: #b5bac1;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 3px;
+  text-align: left;
+}
+.perm-add-role-list button:hover {
+  background: #5865f2;
+  color: #fff;
+}
+
+.perm-add-role-empty {
+  color: #72767d;
+  font-size: 12px;
+  text-align: center;
+  padding: 8px;
+}
+
+/* Permission toggle list */
+.perm-toggle-list {
+  flex: 1;
+}
+
+.perm-no-selection {
+  color: #72767d;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.perm-selected-header {
+  padding: 8px 0;
+  color: #b5bac1;
+  font-size: 14px;
+  border-bottom: 1px solid #3f4147;
+  margin-bottom: 12px;
+}
+.perm-selected-header strong {
+  color: #f2f3f5;
+}
+
+.perm-section {
+  margin-bottom: 20px;
+}
+
+.perm-section-heading {
+  color: #b5bac1;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 0 0 8px;
+}
+
+.perm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(79, 84, 92, 0.3);
+  gap: 16px;
+}
+.perm-row:last-child {
+  border-bottom: none;
+}
+
+.perm-row-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.perm-row-label {
+  display: block;
+  color: #f2f3f5;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.perm-row-desc {
+  display: block;
+  color: #72767d;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* Three-state toggle: Deny / Inherit / Allow */
+.perm-tri-toggle {
+  display: flex;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid #3f4147;
+}
+
+.perm-tri-btn {
+  width: 36px;
+  height: 32px;
+  border: none;
+  background: #2b2d31;
+  color: #72767d;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.perm-tri-btn:not(:last-child) {
+  border-right: 1px solid #3f4147;
+}
+.perm-tri-btn:hover {
+  background: #35373c;
+  color: #b5bac1;
+}
+
+.perm-tri-btn.deny.active {
+  background: #f23f43;
+  color: #fff;
+}
+
+.perm-tri-btn.inherit.active {
+  background: #4f545c;
+  color: #fff;
+}
+
+.perm-tri-btn.allow.active {
+  background: #23a559;
+  color: #fff;
+}
+
+/* Save bar at bottom of permissions */
+.perm-save-bar {
+  padding: 16px 0 4px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Category permissions modal sizing */
+.discord-cat-perms-modal {
+  width: 900px;
+  height: 650px;
+}
+.discord-cat-perms-modal .discord-cs-sidebar {
+  width: 240px;
+  min-width: 240px;
+  padding-top: 20px;
+}

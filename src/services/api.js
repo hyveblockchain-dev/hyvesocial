@@ -1184,6 +1184,26 @@ export async function togglePinMessage(channelId, messageId) {
   return data;
 }
 
+export async function getChannelPermissions(groupId, channelId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/channels/${channelId}/permissions`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get permissions');
+  return data;
+}
+
+export async function getCategoryPermissions(groupId, catId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/categories/${catId}/permissions`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get permissions');
+  return data;
+}
+
 export async function getChannelMessages(channelId, { limit, before } = {}) {
   const token = localStorage.getItem('token');
   const params = new URLSearchParams();

@@ -119,6 +119,17 @@ export default function GroupDetail() {
 
   // ── Context menu state ──
   const [contextMenu, setContextMenu] = useState(null); // { type: 'channel'|'category', id, x, y, data }
+
+  // ── Permission override state ──
+  const [permOverrides, setPermOverrides] = useState([]); // array of { id, type:'role'|'member', allow:[], deny:[] }
+  const [permSelectedId, setPermSelectedId] = useState('everyone'); // selected role/member id
+  const [permAddingRole, setPermAddingRole] = useState(false);
+  const [permSearch, setPermSearch] = useState('');
+  const [catPermOverrides, setCatPermOverrides] = useState([]);
+  const [catPermSelectedId, setCatPermSelectedId] = useState('everyone');
+  const [editingCatPermsId, setEditingCatPermsId] = useState(null); // category id being edited
+  const [showCatPermsModal, setShowCatPermsModal] = useState(false);
+
   // ── Role management state ──
   const [customRoles, setCustomRoles] = useState([]);
   const [showCreateRole, setShowCreateRole] = useState(false);
@@ -874,6 +885,124 @@ export default function GroupDetail() {
     setCsNsfw(!!ch.nsfw);
     setCsSlowmode(ch.slowmode || 0);
     setCsCategory(ch.category_id || '');
+    // Load existing permission overrides
+    loadChannelPermOverrides(ch);
+  }
+
+  async function loadChannelPermOverrides(ch) {
+    try {
+      const data = await api.getChannelPermissions(groupId, ch.id);
+      const overrides = data.channelPermissions?.overrides || [];
+      // Always ensure @everyone entry exists
+      if (!overrides.find(o => o.id === 'everyone')) {
+        overrides.unshift({ id: 'everyone', type: 'role', allow: [], deny: [] });
+      }
+      setPermOverrides(overrides);
+      setPermSelectedId('everyone');
+      setPermAddingRole(false);
+      setPermSearch('');
+    } catch { setPermOverrides([{ id: 'everyone', type: 'role', allow: [], deny: [] }]); }
+  }
+
+  async function loadCatPermOverrides(catId) {
+    try {
+      const data = await api.getCategoryPermissions(groupId, catId);
+      const overrides = data.permissions?.overrides || [];
+      if (!overrides.find(o => o.id === 'everyone')) {
+        overrides.unshift({ id: 'everyone', type: 'role', allow: [], deny: [] });
+      }
+      setCatPermOverrides(overrides);
+      setCatPermSelectedId('everyone');
+    } catch { setCatPermOverrides([{ id: 'everyone', type: 'role', allow: [], deny: [] }]); }
+  }
+
+  function getPermState(overrides, selectedId, permKey) {
+    const ov = overrides.find(o => String(o.id) === String(selectedId));
+    if (!ov) return 'inherit';
+    if ((ov.allow || []).includes(permKey)) return 'allow';
+    if ((ov.deny || []).includes(permKey)) return 'deny';
+    return 'inherit';
+  }
+
+  function cyclePermState(setter, overrides, selectedId, permKey) {
+    setter(prev => {
+      const newOverrides = prev.map(o => ({ ...o, allow: [...(o.allow || [])], deny: [...(o.deny || [])] }));
+      let ov = newOverrides.find(o => String(o.id) === String(selectedId));
+      if (!ov) return prev;
+      const current = getPermState(prev, selectedId, permKey);
+      // Remove from both arrays first
+      ov.allow = ov.allow.filter(p => p !== permKey);
+      ov.deny = ov.deny.filter(p => p !== permKey);
+      // Cycle: inherit -> allow -> deny -> inherit
+      if (current === 'inherit') ov.allow.push(permKey);
+      else if (current === 'allow') ov.deny.push(permKey);
+      // else deny -> inherit (already removed)
+      return newOverrides;
+    });
+  }
+
+  function addRoleOverride(roleId, roleName) {
+    setPermOverrides(prev => {
+      if (prev.find(o => String(o.id) === String(roleId))) return prev;
+      return [...prev, { id: roleId, type: 'role', name: roleName, allow: [], deny: [] }];
+    });
+    setPermSelectedId(String(roleId));
+    setPermAddingRole(false);
+    setPermSearch('');
+  }
+
+  function removeRoleOverride(roleId) {
+    if (roleId === 'everyone') return;
+    setPermOverrides(prev => prev.filter(o => String(o.id) !== String(roleId)));
+    setPermSelectedId('everyone');
+  }
+
+  function addCatRoleOverride(roleId, roleName) {
+    setCatPermOverrides(prev => {
+      if (prev.find(o => String(o.id) === String(roleId))) return prev;
+      return [...prev, { id: roleId, type: 'role', name: roleName, allow: [], deny: [] }];
+    });
+    setCatPermSelectedId(String(roleId));
+  }
+
+  function removeCatRoleOverride(roleId) {
+    if (roleId === 'everyone') return;
+    setCatPermOverrides(prev => prev.filter(o => String(o.id) !== String(roleId)));
+    setCatPermSelectedId('everyone');
+  }
+
+  async function handleSaveChannelPerms() {
+    if (!channelSettingsOpen) return;
+    try {
+      setBusy(true);
+      await api.updateChannel(groupId, channelSettingsOpen.id, {
+        permissions: { overrides: permOverrides }
+      });
+      setNotice('Channel permissions saved!');
+      setTimeout(() => setNotice(''), 2000);
+    } catch (err) { setNotice(err.message); }
+    finally { setBusy(false); }
+  }
+
+  async function handleSaveCatPerms() {
+    if (!editingCatPermsId) return;
+    try {
+      setBusy(true);
+      await api.updateCategory(groupId, editingCatPermsId, {
+        permissions: { overrides: catPermOverrides }
+      });
+      setShowCatPermsModal(false);
+      setEditingCatPermsId(null);
+      setNotice('Category permissions saved!');
+      setTimeout(() => setNotice(''), 2000);
+    } catch (err) { setNotice(err.message); }
+    finally { setBusy(false); }
+  }
+
+  function openCatPerms(cat) {
+    setEditingCatPermsId(cat.id);
+    setShowCatPermsModal(true);
+    loadCatPermOverrides(cat.id);
   }
 
   // ── Category rename ──
@@ -904,6 +1033,36 @@ export default function GroupDetail() {
     } catch (err) { setNotice(err.message); }
     finally { setBusy(false); }
   }
+
+  // ── Permission section definitions (shared by channel & category) ──
+  const CHANNEL_PERM_SECTIONS = [
+    { heading: 'General Channel Permissions', perms: [
+      { key: 'viewChannels', label: 'View Channel', desc: 'Allows members to view this channel' },
+      { key: 'manageChannels', label: 'Manage Channel', desc: 'Allows editing channel name, topic, and settings' },
+      { key: 'manageRoles', label: 'Manage Permissions', desc: 'Allows managing channel-specific permissions' },
+    ]},
+    { heading: 'Text Channel Permissions', perms: [
+      { key: 'sendMessages', label: 'Send Messages', desc: 'Allows members to send messages in this channel' },
+      { key: 'createPublicThreads', label: 'Create Public Threads', desc: 'Allows creating public threads' },
+      { key: 'createPrivateThreads', label: 'Create Private Threads', desc: 'Allows creating private threads' },
+      { key: 'embedLinks', label: 'Embed Links', desc: 'Links sent will be auto-embedded' },
+      { key: 'attachFiles', label: 'Attach Files', desc: 'Allows uploading images and files' },
+      { key: 'addReactions', label: 'Add Reactions', desc: 'Allows adding reactions to messages' },
+      { key: 'useExternalEmoji', label: 'Use External Emoji', desc: 'Allows the use of external emojis' },
+      { key: 'mentionEveryone', label: 'Mention @everyone', desc: 'Allows using @everyone and @here' },
+      { key: 'manageMessages', label: 'Manage Messages', desc: 'Allows deleting and pinning messages from other members' },
+      { key: 'readMessageHistory', label: 'Read Message History', desc: 'Allows reading message history' },
+      { key: 'sendTTS', label: 'Send TTS Messages', desc: 'Allows sending text-to-speech messages' },
+    ]},
+    { heading: 'Voice Channel Permissions', perms: [
+      { key: 'connect', label: 'Connect', desc: 'Allows members to connect to voice channels' },
+      { key: 'speak', label: 'Speak', desc: 'Allows members to speak in voice channels' },
+      { key: 'video', label: 'Video', desc: 'Allows using video in voice channels' },
+      { key: 'muteMembers', label: 'Mute Members', desc: 'Allows muting other members in voice' },
+      { key: 'deafenMembers', label: 'Deafen Members', desc: 'Allows deafening other members in voice' },
+      { key: 'moveMembers', label: 'Move Members', desc: 'Allows moving members between voice channels' },
+    ]},
+  ];
 
   // ── Context menu handler ──
   function handleContextMenu(e, type, id, data) {
@@ -2538,13 +2697,113 @@ export default function GroupDetail() {
             )}
 
             {channelSettingsTab === 'permissions' && (
-              <div className="discord-cs-body">
+              <div className="discord-cs-body discord-cs-perms-body">
                 <div className="discord-cs-perms-info">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-                  <p>Channel permission overrides allow you to customize which roles and members can see and interact with this channel.</p>
+                  <p>Channel permission overrides customize which roles can see and interact with this channel, overriding server-level permissions.</p>
                 </div>
-                <div className="discord-cs-perms-placeholder">
-                  <p>Permission overrides coming soon. For now, channel permissions follow Server Settings.</p>
+
+                {/* Role / member selector bar */}
+                <div className="perm-roles-bar">
+                  <div className="perm-roles-list">
+                    {permOverrides.map(ov => {
+                      const role = ov.id === 'everyone' ? { name: '@everyone', color: '#99aab5' } : customRoles.find(r => String(r.id) === String(ov.id));
+                      return (
+                        <button
+                          key={ov.id}
+                          className={`perm-role-chip${String(permSelectedId) === String(ov.id) ? ' active' : ''}`}
+                          onClick={() => setPermSelectedId(String(ov.id))}
+                          style={role?.color ? { '--role-color': role.color } : {}}
+                        >
+                          <span className="perm-role-dot" style={{ background: role?.color || '#99aab5' }} />
+                          {ov.id === 'everyone' ? '@everyone' : (role?.name || ov.name || 'Unknown')}
+                          {ov.id !== 'everyone' && (
+                            <span className="perm-role-remove" onClick={(e) => { e.stopPropagation(); removeRoleOverride(ov.id); }}>×</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                    <div className="perm-add-role-wrap">
+                      <button className="perm-add-role-btn" onClick={() => setPermAddingRole(p => !p)}>+</button>
+                      {permAddingRole && (
+                        <div className="perm-add-role-dropdown">
+                          <input
+                            type="text"
+                            placeholder="Search roles..."
+                            value={permSearch}
+                            onChange={(e) => setPermSearch(e.target.value)}
+                            autoFocus
+                          />
+                          <div className="perm-add-role-list">
+                            {customRoles
+                              .filter(r => !permOverrides.find(o => String(o.id) === String(r.id)))
+                              .filter(r => !permSearch || r.name.toLowerCase().includes(permSearch.toLowerCase()))
+                              .map(r => (
+                                <button key={r.id} onClick={() => addRoleOverride(r.id, r.name)}>
+                                  <span className="perm-role-dot" style={{ background: r.color || '#99aab5' }} />
+                                  {r.name}
+                                </button>
+                              ))}
+                            {customRoles.filter(r => !permOverrides.find(o => String(o.id) === String(r.id))).length === 0 && (
+                              <div className="perm-add-role-empty">No more roles to add</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Permission toggle list */}
+                <div className="perm-toggle-list">
+                  {(() => {
+                    const selectedOv = permOverrides.find(o => String(o.id) === String(permSelectedId));
+                    const role = permSelectedId === 'everyone' ? { name: '@everyone' } : customRoles.find(r => String(r.id) === String(permSelectedId));
+                    if (!selectedOv) return <div className="perm-no-selection">Select a role to configure permissions</div>;
+                    return (
+                      <>
+                        <div className="perm-selected-header">
+                          <span>Permissions for <strong>{permSelectedId === 'everyone' ? '@everyone' : (role?.name || 'Unknown')}</strong></span>
+                        </div>
+                        {CHANNEL_PERM_SECTIONS.map(section => (
+                          <div className="perm-section" key={section.heading}>
+                            <h4 className="perm-section-heading">{section.heading}</h4>
+                            {section.perms.map(p => {
+                              const state = getPermState(permOverrides, permSelectedId, p.key);
+                              return (
+                                <div className="perm-row" key={p.key}>
+                                  <div className="perm-row-info">
+                                    <span className="perm-row-label">{p.label}</span>
+                                    <span className="perm-row-desc">{p.desc}</span>
+                                  </div>
+                                  <div className="perm-tri-toggle">
+                                    <button
+                                      className={`perm-tri-btn deny${state === 'deny' ? ' active' : ''}`}
+                                      onClick={() => cyclePermState(setPermOverrides, permOverrides, permSelectedId, p.key)}
+                                      title="Deny"
+                                    >✕</button>
+                                    <button
+                                      className={`perm-tri-btn inherit${state === 'inherit' ? ' active' : ''}`}
+                                      onClick={() => cyclePermState(setPermOverrides, permOverrides, permSelectedId, p.key)}
+                                      title="Inherit"
+                                    >/</button>
+                                    <button
+                                      className={`perm-tri-btn allow${state === 'allow' ? ' active' : ''}`}
+                                      onClick={() => cyclePermState(setPermOverrides, permOverrides, permSelectedId, p.key)}
+                                      title="Allow"
+                                    >✓</button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ))}
+                        <div className="perm-save-bar">
+                          <button className="discord-cs-save" onClick={handleSaveChannelPerms} disabled={busy}>Save Permissions</button>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             )}
@@ -2590,6 +2849,10 @@ export default function GroupDetail() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
               Edit Category
             </button>
+            <button onClick={() => { openCatPerms(contextMenu.data); setContextMenu(null); }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+              Edit Permissions
+            </button>
             <button onClick={() => { setNewChannelCategory(String(contextMenu.id)); setShowCreateChannel(true); setContextMenu(null); }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
               Create Channel
@@ -2606,6 +2869,107 @@ export default function GroupDetail() {
             </button>
           </>
         )}
+      </div>,
+      document.body
+    )}
+
+    {/* ── Category Permissions Modal ── */}
+    {showCatPermsModal && editingCatPermsId && createPortal(
+      <div className="discord-modal-overlay" onClick={() => setShowCatPermsModal(false)}>
+        <div className="discord-channel-settings discord-cat-perms-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="discord-cs-sidebar">
+            <div className="discord-cs-sidebar-header">
+              {categories.find(c => c.id === editingCatPermsId)?.name || 'Category'} — Permissions
+            </div>
+            <div className="perm-roles-list perm-roles-list-vertical">
+              {catPermOverrides.map(ov => {
+                const role = ov.id === 'everyone' ? { name: '@everyone', color: '#99aab5' } : customRoles.find(r => String(r.id) === String(ov.id));
+                return (
+                  <button
+                    key={ov.id}
+                    className={`perm-role-chip${String(catPermSelectedId) === String(ov.id) ? ' active' : ''}`}
+                    onClick={() => setCatPermSelectedId(String(ov.id))}
+                  >
+                    <span className="perm-role-dot" style={{ background: role?.color || '#99aab5' }} />
+                    {ov.id === 'everyone' ? '@everyone' : (role?.name || ov.name || 'Unknown')}
+                    {ov.id !== 'everyone' && (
+                      <span className="perm-role-remove" onClick={(e) => { e.stopPropagation(); removeCatRoleOverride(ov.id); }}>×</span>
+                    )}
+                  </button>
+                );
+              })}
+              <button className="perm-add-role-btn-v" onClick={() => {
+                const remaining = customRoles.filter(r => !catPermOverrides.find(o => String(o.id) === String(r.id)));
+                if (remaining.length > 0) addCatRoleOverride(remaining[0].id, remaining[0].name);
+              }}>+ Add Role</button>
+            </div>
+          </div>
+          <div className="discord-cs-main">
+            <div className="discord-cs-header">
+              <h2>Category Permissions</h2>
+              <button className="discord-cs-close" onClick={() => setShowCatPermsModal(false)}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+              </button>
+            </div>
+            <div className="discord-cs-body">
+              <div className="discord-cs-perms-info">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                <p>Category permissions are inherited by all channels within this category, unless the channel has its own overrides.</p>
+              </div>
+              <div className="perm-toggle-list">
+                {(() => {
+                  const selectedOv = catPermOverrides.find(o => String(o.id) === String(catPermSelectedId));
+                  const role = catPermSelectedId === 'everyone' ? { name: '@everyone' } : customRoles.find(r => String(r.id) === String(catPermSelectedId));
+                  if (!selectedOv) return <div className="perm-no-selection">Select a role to configure</div>;
+                  return (
+                    <>
+                      <div className="perm-selected-header">
+                        <span>Permissions for <strong>{catPermSelectedId === 'everyone' ? '@everyone' : (role?.name || 'Unknown')}</strong></span>
+                      </div>
+                      {CHANNEL_PERM_SECTIONS.map(section => (
+                        <div className="perm-section" key={section.heading}>
+                          <h4 className="perm-section-heading">{section.heading}</h4>
+                          {section.perms.map(p => {
+                            const state = getPermState(catPermOverrides, catPermSelectedId, p.key);
+                            return (
+                              <div className="perm-row" key={p.key}>
+                                <div className="perm-row-info">
+                                  <span className="perm-row-label">{p.label}</span>
+                                  <span className="perm-row-desc">{p.desc}</span>
+                                </div>
+                                <div className="perm-tri-toggle">
+                                  <button
+                                    className={`perm-tri-btn deny${state === 'deny' ? ' active' : ''}`}
+                                    onClick={() => cyclePermState(setCatPermOverrides, catPermOverrides, catPermSelectedId, p.key)}
+                                    title="Deny"
+                                  >✕</button>
+                                  <button
+                                    className={`perm-tri-btn inherit${state === 'inherit' ? ' active' : ''}`}
+                                    onClick={() => cyclePermState(setCatPermOverrides, catPermOverrides, catPermSelectedId, p.key)}
+                                    title="Inherit"
+                                  >/</button>
+                                  <button
+                                    className={`perm-tri-btn allow${state === 'allow' ? ' active' : ''}`}
+                                    onClick={() => cyclePermState(setCatPermOverrides, catPermOverrides, catPermSelectedId, p.key)}
+                                    title="Allow"
+                                  >✓</button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+            <div className="discord-cs-footer">
+              <button className="discord-cs-cancel" onClick={() => setShowCatPermsModal(false)}>Cancel</button>
+              <button className="discord-cs-save" onClick={handleSaveCatPerms} disabled={busy}>Save Permissions</button>
+            </div>
+          </div>
+        </div>
       </div>,
       document.body
     )}
