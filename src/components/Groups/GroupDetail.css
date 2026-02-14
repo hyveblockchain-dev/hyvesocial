@@ -357,12 +357,13 @@
 .discord-server-dropdown {
   position: absolute;
   top: 100%;
-  left: 0;
-  right: 0;
+  left: 8px;
+  right: 8px;
   z-index: 50;
   background: #111214;
-  border-radius: 0 0 4px 4px;
-  padding: 6px;
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin-top: 4px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.5);
   display: flex;
   flex-direction: column;
@@ -382,7 +383,7 @@
   border: none;
   color: #b5bac1;
   font-size: 13px;
-  padding: 7px 10px;
+  padding: 7px 8px;
   border-radius: 3px;
   cursor: pointer;
   text-align: left;
@@ -392,22 +393,84 @@
   background: #5865f2;
   color: #fff;
 }
+.discord-server-dropdown button:hover .dropdown-icon {
+  color: #fff;
+}
+.discord-server-dropdown button:hover .dropdown-arrow {
+  color: #fff;
+}
+.discord-server-dropdown button:hover .dropdown-toggle.active {
+  background: #3ba55c;
+}
+.discord-server-dropdown button span {
+  flex: 1;
+  min-width: 0;
+}
 .discord-server-dropdown .dropdown-icon {
   width: 18px;
-  text-align: center;
-  font-size: 14px;
+  height: 18px;
   flex-shrink: 0;
+  color: #b5bac1;
+}
+.discord-server-dropdown .dropdown-arrow {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  color: #b5bac1;
+  margin-left: auto;
+}
+/* Toggle switch */
+.dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  width: 28px;
+  height: 16px;
+  background: #72767d;
+  border-radius: 8px;
+  position: relative;
+  flex-shrink: 0;
+  margin-left: auto;
+  transition: background 0.2s;
+}
+.dropdown-toggle.active {
+  background: #3ba55c;
+}
+.dropdown-toggle-knob {
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: left 0.2s;
+}
+.dropdown-toggle.active .dropdown-toggle-knob {
+  left: 14px;
+}
+/* Boost item */
+.discord-dropdown-boost .dropdown-icon path {
+  fill: #ff73fa;
+}
+.discord-dropdown-boost:hover .dropdown-icon path {
+  fill: #fff;
 }
 .discord-dropdown-sep {
   height: 1px;
   background: #2b2d31;
-  margin: 4px 6px;
+  margin: 4px 0;
 }
 .discord-dropdown-danger {
   color: #ed4245 !important;
 }
+.discord-dropdown-danger .dropdown-icon {
+  color: #ed4245 !important;
+}
 .discord-dropdown-danger:hover {
   background: #ed4245 !important;
+  color: #fff !important;
+}
+.discord-dropdown-danger:hover .dropdown-icon {
   color: #fff !important;
 }
 .discord-server-avatar {
@@ -1696,7 +1759,12 @@
 .light-mode .discord-server-dropdown { background: #fff; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
 .light-mode .discord-server-dropdown button { color: #4e5058; }
 .light-mode .discord-server-dropdown button:hover { background: #5865f2; color: #fff; }
+.light-mode .discord-server-dropdown .dropdown-icon { color: #4e5058; }
+.light-mode .discord-server-dropdown button:hover .dropdown-icon { color: #fff; }
+.light-mode .discord-server-dropdown .dropdown-arrow { color: #4e5058; }
 .light-mode .discord-dropdown-sep { background: #e3e5e8; }
+.light-mode .dropdown-toggle { background: #c4c9ce; }
+.light-mode .dropdown-toggle.active { background: #3ba55c; }
 .light-mode .discord-server-chevron { color: #5c5e66; }
 .light-mode .discord-server-header:hover { background: rgba(116,124,134,.15); }
 .light-mode .discord-channel-edit-form input { background: #fff; border-color: #e3e5e8; color: #060607; }

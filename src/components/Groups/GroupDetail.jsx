@@ -71,6 +71,8 @@ export default function GroupDetail() {
   const [showMemberSidebar, setShowMemberSidebar] = useState(true);
   const [showUserSettings, setShowUserSettings] = useState(false);
   const [showServerDropdown, setShowServerDropdown] = useState(false);
+  const [showAllChannels, setShowAllChannels] = useState(true);
+  const [hideMutedChannels, setHideMutedChannels] = useState(false);
   const [editingChannelId, setEditingChannelId] = useState(null);
   const [editChannelName, setEditChannelName] = useState('');
   const [editChannelTopic, setEditChannelTopic] = useState('');
@@ -1022,36 +1024,101 @@ export default function GroupDetail() {
         {/* Server dropdown menu */}
         {showServerDropdown && (
           <div className="discord-server-dropdown">
-            <button onClick={() => { setShowServerDropdown(false); setActivePanel('about'); }}>
-              <span className="dropdown-icon">ℹ️</span> Server Info
+            {/* Server Boost */}
+            <button className="discord-dropdown-boost" onClick={() => { setShowServerDropdown(false); }}>
+              <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2Z" fill="#ff73fa"/></svg>
+              <span>Server Boost</span>
+              <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
             </button>
+
+            {/* Invite People */}
             {isMember && (
               <button onClick={() => { setShowServerDropdown(false); setActivePanel('about'); }}>
-                <span className="dropdown-icon">✉️</span> Invite People
+                <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11h-4V7a1 1 0 00-2 0v4h-4a1 1 0 000 2h4v4a1 1 0 002 0v-4h4a1 1 0 000-2zM9 12a5 5 0 100-10 5 5 0 000 10zM1.5 21a7.5 7.5 0 0115 0H1.5z"/></svg>
+                <span>Invite People</span>
+                <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
               </button>
             )}
+
+            {/* App Directory */}
+            <button onClick={() => { setShowServerDropdown(false); }}>
+              <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h7v7H4V4zm9 0h7v7h-7V4zm-9 9h7v7H4v-7zm9 0h7v7h-7v-7z"/></svg>
+              <span>App Directory</span>
+              <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
+            </button>
+
+            <div className="discord-dropdown-sep" />
+
+            {/* Show All Channels toggle */}
+            <button onClick={() => setShowAllChannels(p => !p)}>
+              <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M5 13h14a1 1 0 000-2H5a1 1 0 000 2zm0-6h14a1 1 0 000-2H5a1 1 0 000 2zm0 12h14a1 1 0 000-2H5a1 1 0 000 2z"/></svg>
+              <span>Show All Channels</span>
+              <span className={`dropdown-toggle ${showAllChannels ? 'active' : ''}`}>
+                <span className="dropdown-toggle-knob" />
+              </span>
+            </button>
+
+            {/* Notification Settings */}
+            <button onClick={() => { setShowServerDropdown(false); }}>
+              <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6V10c0-3.07-1.63-5.64-4.5-6.32V3a1.5 1.5 0 00-3 0v.68C7.64 4.36 6 6.92 6 10v6l-2 2v1h16v-1l-2-2z"/></svg>
+              <span>Notification Settings</span>
+              <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
+            </button>
+
+            {/* Privacy Settings */}
+            <button onClick={() => { setShowServerDropdown(false); }}>
+              <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+              <span>Privacy Settings</span>
+              <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
+            </button>
+
+            <div className="discord-dropdown-sep" />
+
+            {/* Edit Per-server Profile */}
+            <button onClick={() => { setShowServerDropdown(false); }}>
+              <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              <span>Edit Per-server Profile</span>
+              <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
+            </button>
+
+            {/* Hide Muted Channels toggle */}
+            <button onClick={() => setHideMutedChannels(p => !p)}>
+              <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M18 9.5a3.5 3.5 0 11-7 0 3.5 3.5 0 017 0zM12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+              <span>Hide Muted Channels</span>
+              <span className={`dropdown-toggle ${hideMutedChannels ? 'active' : ''}`}>
+                <span className="dropdown-toggle-knob" />
+              </span>
+            </button>
+
             {adminEnabled && (
               <>
                 <div className="discord-dropdown-sep" />
                 <button onClick={() => { setShowServerDropdown(false); setActivePanel('admin'); }}>
-                  <span className="dropdown-icon">⚙️</span> Server Settings
+                  <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M19.14 12.94a7.07 7.07 0 000-1.88l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96a7.04 7.04 0 00-1.63-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84a.48.48 0 00-.48.41l-.36 2.54c-.59.24-1.13.57-1.63.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87a.48.48 0 00.12.61l2.03 1.58a7.07 7.07 0 000 1.88l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.37 1.04.7 1.63.94l.36 2.54c.05.24.26.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.57 1.63-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 00-.12-.61l-2.03-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z"/></svg>
+                  <span>Server Settings</span>
+                  <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
                 </button>
                 <button onClick={() => { setShowServerDropdown(false); setShowCreateChannel(true); }}>
-                  <span className="dropdown-icon">#</span> Create Channel
+                  <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 9h-2v2a1 1 0 01-2 0v-2H7a1 1 0 010-2h2V7a1 1 0 012 0v2h2a1 1 0 010 2z"/></svg>
+                  <span>Create Channel</span>
                 </button>
                 <button onClick={() => { setShowServerDropdown(false); setShowCreateCategory(true); }}>
-                  <span className="dropdown-icon">📁</span> Create Category
+                  <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M20 6h-8l-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2zm-6 10H6v-2h8v2zm4-4H6v-2h12v2z"/></svg>
+                  <span>Create Category</span>
                 </button>
                 <button onClick={() => { setShowServerDropdown(false); setActivePanel('roles'); }}>
-                  <span className="dropdown-icon">🏷️</span> Manage Roles
+                  <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2a7.2 7.2 0 01-6-3.22c.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08a7.2 7.2 0 01-6 3.22z"/></svg>
+                  <span>Manage Roles</span>
                 </button>
               </>
             )}
+
             {isMember && !isOwner && (
               <>
                 <div className="discord-dropdown-sep" />
                 <button className="discord-dropdown-danger" onClick={() => { setShowServerDropdown(false); handleLeave(); }}>
-                  <span className="dropdown-icon">🚪</span> Leave Server
+                  <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5a2 2 0 00-2 2v4h2V5h14v14H5v-4H3v4a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"/></svg>
+                  <span>Leave Server</span>
                 </button>
               </>
             )}
