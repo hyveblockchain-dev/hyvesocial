@@ -3272,6 +3272,7 @@
 .dmd-hero-text {
   position: relative;
   z-index: 1;
+  text-align: center;
 }
 .dmd-hero-text h1 {
   color: #fff;
