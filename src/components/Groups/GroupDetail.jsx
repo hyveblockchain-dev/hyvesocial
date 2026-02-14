@@ -67,6 +67,18 @@ export default function GroupDetail() {
   const [inviteLinkCopied, setInviteLinkCopied] = useState(false);
   const [inviteModalSent, setInviteModalSent] = useState(new Set());
 
+  // ── Notification settings modal state ──
+  const [showNotifModal, setShowNotifModal] = useState(false);
+  const [notifMuteServer, setNotifMuteServer] = useState(false);
+  const [notifSetting, setNotifSetting] = useState('mentions'); // 'all' | 'mentions' | 'nothing'
+  const [notifSuppressEveryone, setNotifSuppressEveryone] = useState(false);
+  const [notifSuppressRoles, setNotifSuppressRoles] = useState(false);
+  const [notifSuppressHighlights, setNotifSuppressHighlights] = useState(false);
+  const [notifMuteEvents, setNotifMuteEvents] = useState(false);
+  const [notifMobilePush, setNotifMobilePush] = useState(true);
+  const [notifChannelOverride, setNotifChannelOverride] = useState('');
+  const [notifChannelOverrides, setNotifChannelOverrides] = useState([]);
+
   // ── Discord channel state ──
   const [channels, setChannels] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -1105,7 +1117,7 @@ export default function GroupDetail() {
             </button>
 
             {/* Notification Settings */}
-            <button onClick={() => { setShowServerDropdown(false); }}>
+            <button onClick={() => { setShowServerDropdown(false); setShowNotifModal(true); }}>
               <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6V10c0-3.07-1.63-5.64-4.5-6.32V3a1.5 1.5 0 00-3 0v.68C7.64 4.36 6 6.92 6 10v6l-2 2v1h16v-1l-2-2z"/></svg>
               <span>Notification Settings</span>
               <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
@@ -1988,6 +2000,142 @@ export default function GroupDetail() {
         </div>
       </div>
     )}
+    {/* ── Notification Settings Modal ── */}
+    {showNotifModal && createPortal(
+      <div className="notif-modal-overlay" onClick={() => setShowNotifModal(false)}>
+        <div className="notif-modal" onClick={e => e.stopPropagation()}>
+          <button className="notif-modal-close" onClick={() => setShowNotifModal(false)}>✕</button>
+          <h2 className="notif-modal-title">Notification Settings</h2>
+
+          <div className="notif-modal-body">
+            {/* Mute server */}
+            <div className="notif-modal-row">
+              <div className="notif-modal-row-text">
+                <span className="notif-modal-row-label">Mute {groupName}</span>
+                <span className="notif-modal-row-desc">Muting a server prevents unread indicators and notifications from appearing unless you are mentioned.</span>
+              </div>
+              <button className={`notif-toggle${notifMuteServer ? ' active' : ''}`} onClick={() => setNotifMuteServer(p => !p)}>
+                <span className="notif-toggle-knob" />
+              </button>
+            </div>
+
+            <div className="notif-modal-sep" />
+
+            {/* Server Notification Settings */}
+            <div className="notif-modal-section">
+              <h3>Server Notification Settings</h3>
+              <label className="notif-radio">
+                <input type="radio" name="notif-setting" checked={notifSetting === 'all'} onChange={() => setNotifSetting('all')} />
+                <span className="notif-radio-custom" />
+                <span>All Messages</span>
+              </label>
+              <label className="notif-radio">
+                <input type="radio" name="notif-setting" checked={notifSetting === 'mentions'} onChange={() => setNotifSetting('mentions')} />
+                <span className="notif-radio-custom" />
+                <span>Only @mentions</span>
+              </label>
+              <label className="notif-radio">
+                <input type="radio" name="notif-setting" checked={notifSetting === 'nothing'} onChange={() => setNotifSetting('nothing')} />
+                <span className="notif-radio-custom" />
+                <span>Nothing</span>
+              </label>
+            </div>
+
+            <div className="notif-modal-sep" />
+
+            {/* Toggle rows */}
+            <div className="notif-modal-row">
+              <span className="notif-modal-row-label">Suppress @everyone and @here</span>
+              <button className={`notif-toggle${notifSuppressEveryone ? ' active' : ''}`} onClick={() => setNotifSuppressEveryone(p => !p)}>
+                <span className="notif-toggle-knob" />
+              </button>
+            </div>
+
+            <div className="notif-modal-row">
+              <span className="notif-modal-row-label">Suppress All Role @mentions</span>
+              <button className={`notif-toggle${notifSuppressRoles ? ' active' : ''}`} onClick={() => setNotifSuppressRoles(p => !p)}>
+                <span className="notif-toggle-knob" />
+              </button>
+            </div>
+
+            <div className="notif-modal-row">
+              <div className="notif-modal-row-text">
+                <span className="notif-modal-row-label">Suppress Highlights</span>
+                <span className="notif-modal-row-desc">Highlights provide occasional updates when your friends are chatting in busy servers, and more.</span>
+                <a href="#" className="notif-modal-link" onClick={e => e.preventDefault()}>Learn more about Highlights</a>
+              </div>
+              <button className={`notif-toggle${notifSuppressHighlights ? ' active' : ''}`} onClick={() => setNotifSuppressHighlights(p => !p)}>
+                <span className="notif-toggle-knob" />
+              </button>
+            </div>
+
+            <div className="notif-modal-row">
+              <span className="notif-modal-row-label">Mute New Events</span>
+              <button className={`notif-toggle${notifMuteEvents ? ' active' : ''}`} onClick={() => setNotifMuteEvents(p => !p)}>
+                <span className="notif-toggle-knob" />
+              </button>
+            </div>
+
+            <div className="notif-modal-row">
+              <span className="notif-modal-row-label">Mobile Push Notifications</span>
+              <button className={`notif-toggle${notifMobilePush ? ' active' : ''}`} onClick={() => setNotifMobilePush(p => !p)}>
+                <span className="notif-toggle-knob" />
+              </button>
+            </div>
+
+            <div className="notif-modal-sep" />
+
+            {/* Channel override section */}
+            <div className="notif-modal-section">
+              <h3>Select a channel or category…</h3>
+              <p className="notif-modal-section-desc">Add a channel to override its default notification settings</p>
+              <select
+                className="notif-modal-select"
+                value={notifChannelOverride}
+                onChange={e => setNotifChannelOverride(e.target.value)}
+              >
+                <option value="">Select a channel or category…</option>
+                {categories.map(cat => (
+                  <option key={`cat-${cat.id}`} value={`cat-${cat.id}`}>📁 {cat.name}</option>
+                ))}
+                {channels.map(ch => (
+                  <option key={`ch-${ch.id}`} value={`ch-${ch.id}`}># {ch.name}</option>
+                ))}
+              </select>
+
+              {notifChannelOverrides.length > 0 && (
+                <div className="notif-override-table">
+                  <div className="notif-override-header">
+                    <span>CHANNEL OR CATEGORY</span>
+                    <span>ALL</span>
+                    <span>MENTIONS</span>
+                    <span>NOTHING</span>
+                    <span>MUTE</span>
+                  </div>
+                  {notifChannelOverrides.map(o => (
+                    <div key={o.id} className="notif-override-row">
+                      <span>{o.name}</span>
+                      <input type="radio" name={`ovr-${o.id}`} />
+                      <input type="radio" name={`ovr-${o.id}`} defaultChecked />
+                      <input type="radio" name={`ovr-${o.id}`} />
+                      <input type="checkbox" />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <p className="notif-modal-section-hint">Add a channel to override its default notification settings</p>
+            </div>
+          </div>
+
+          <div className="notif-modal-footer">
+            <button className="notif-modal-done" onClick={() => setShowNotifModal(false)}>Done</button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+
     {/* ── Invite Friends Modal ── */}
     {showInviteModal && createPortal(
       <div className="invite-modal-overlay" onClick={() => setShowInviteModal(false)}>
