@@ -6310,3 +6310,125 @@
 .light-mode .mobile-members-toggle:hover { background: #e3e5e8; color: #060607; }
 .light-mode .mobile-overlay-backdrop { background: rgba(0, 0, 0, 0.4); }
 .light-mode .mobile-members-drawer { background: #f2f3f5; border-left-color: #e3e5e8; }
+
+/* ═══════════════════════════════════════════════════
+   Mobile Bottom Tab Bar (Discord-style)
+   ═══════════════════════════════════════════════════ */
+
+/* Hidden on desktop by default */
+.mobile-bottom-tab-bar {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  /* Hide desktop user panel on mobile */
+  .discord-user-panel {
+    display: none !important;
+  }
+
+  /* Show bottom tab bar on mobile */
+  .mobile-bottom-tab-bar {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: #1e1f22;
+    border-top: 1px solid #2b2d31;
+    z-index: 1200;
+    padding: 0 16px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .mobile-tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: none;
+    border: none;
+    color: #80848e;
+    cursor: pointer;
+    padding: 6px 0;
+    transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-tab-item:hover,
+  .mobile-tab-item:active {
+    color: #dbdee1;
+  }
+
+  .mobile-tab-item.active {
+    color: #fff;
+  }
+
+  .mobile-tab-item span {
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+    margin-top: 1px;
+  }
+
+  .mobile-tab-item svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .mobile-tab-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .mobile-tab-item.active .mobile-tab-avatar {
+    outline: 2px solid #5865f2;
+    outline-offset: 1px;
+  }
+
+  /* Floating Action Button (new DM) */
+  .mobile-fab-new-dm {
+    position: fixed;
+    bottom: 72px;
+    right: 16px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #5865f2;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    z-index: 1201;
+    transition: background 0.15s, transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-fab-new-dm:hover,
+  .mobile-fab-new-dm:active {
+    background: #4752c4;
+    transform: scale(1.05);
+  }
+
+  .mobile-fab-new-dm svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Add bottom padding to discord-body so content doesn't hide behind tab bar */
+  .discord-body {
+    padding-bottom: 56px;
+  }
+
+  /* Adjust DM chat input area to sit above tab bar */
+  .dm-chat-input-bar {
+    bottom: 56px;
+  }
+}
