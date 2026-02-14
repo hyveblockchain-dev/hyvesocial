@@ -109,6 +109,9 @@ export default function GroupDetail() {
 
   // ── Member popup state ──
   const [memberPopup, setMemberPopup] = useState(null);
+  const [popupRolePicker, setPopupRolePicker] = useState(false);
+  const [popupRoleSearch, setPopupRoleSearch] = useState('');
+  const [memberSidebarKey, setMemberSidebarKey] = useState(0);
 
   // ── Create Server modal state ──
   const [showCreateServerModal, setShowCreateServerModal] = useState(false);
@@ -157,11 +160,46 @@ export default function GroupDetail() {
     const handler = (e) => {
       if (!e.target.closest('.discord-member-popup') && !e.target.closest('.member-item')) {
         setMemberPopup(null);
+        setPopupRolePicker(false);
       }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [memberPopup]);
+
+  // Assign a custom role to a member via popup
+  const handlePopupAssignRole = useCallback(async (roleId) => {
+    if (!memberPopup) return;
+    try {
+      await api.assignMemberRole(groupId, memberPopup.userAddress, roleId);
+      // Re-fetch member data to update popup roles
+      const data = await api.getMembersWithRoles(groupId);
+      const updated = (data?.members || []).find(m => m.user_address === memberPopup.userAddress);
+      if (updated) {
+        const roles = typeof updated.custom_roles === 'string' ? JSON.parse(updated.custom_roles) : (updated.custom_roles || []);
+        setMemberPopup(prev => ({ ...prev, customRoles: roles }));
+      }
+      setMemberSidebarKey(k => k + 1);
+      setPopupRolePicker(false);
+    } catch (err) {
+      setNotice(err.message || 'Failed to assign role');
+    }
+  }, [memberPopup, groupId]);
+
+  // Remove a custom role from a member via popup
+  const handlePopupRemoveRole = useCallback(async (roleId) => {
+    if (!memberPopup) return;
+    try {
+      await api.removeMemberRole(groupId, memberPopup.userAddress, roleId);
+      setMemberPopup(prev => ({
+        ...prev,
+        customRoles: (prev.customRoles || []).filter(r => r.id !== roleId)
+      }));
+      setMemberSidebarKey(k => k + 1);
+    } catch (err) {
+      setNotice(err.message || 'Failed to remove role');
+    }
+  }, [memberPopup, groupId]);
 
   // ── Computed values ──
   const isOwner = useMemo(() => {
@@ -1706,6 +1744,7 @@ export default function GroupDetail() {
       {/* ── Right: Member sidebar ── */}
       {showMemberSidebar && (
         <MemberSidebar
+          key={memberSidebarKey}
           groupId={groupId}
           user={user}
           isAdmin={adminEnabled}
@@ -1713,6 +1752,7 @@ export default function GroupDetail() {
           onMemberClick={(m, e) => {
             const rect = e?.currentTarget?.getBoundingClientRect();
             const roles = typeof m.custom_roles === 'string' ? JSON.parse(m.custom_roles) : (m.custom_roles || []);
+            setPopupRolePicker(false);
             setMemberPopup({
               username: m.username || 'Unknown',
               profileImage: m.profile_image || '/default-avatar.png',
@@ -1764,6 +1804,13 @@ export default function GroupDetail() {
                   <span key={r.id || r.name} className="discord-member-popup-role-tag" style={{ borderColor: r.color || '#5865f2' }}>
                     <span className="discord-role-dot" style={{ background: r.color || '#5865f2' }} />
                     {r.name}
+                    {(isOwner || adminEnabled) && (
+                      <button
+                        className="discord-role-remove-btn"
+                        title="Remove role"
+                        onClick={(e) => { e.stopPropagation(); handlePopupRemoveRole(r.id); }}
+                      >×</button>
+                    )}
                   </span>
                 ))
               ) : memberPopup.role ? (
@@ -1776,6 +1823,47 @@ export default function GroupDetail() {
                   <span className="discord-role-dot" />
                   @everyone
                 </span>
+              )}
+              {(isOwner || adminEnabled) && (
+                <div className="discord-role-add-wrap">
+                  <button
+                    className="discord-role-add-btn"
+                    title="Add role"
+                    onClick={() => { setPopupRolePicker(p => !p); setPopupRoleSearch(''); }}
+                  >+</button>
+                  {popupRolePicker && (
+                    <div className="discord-role-picker-dropdown">
+                      <div className="discord-role-picker-header">Add Role</div>
+                      <div className="discord-role-picker-search">
+                        <input
+                          type="text"
+                          placeholder="Role"
+                          autoFocus
+                          value={popupRoleSearch}
+                          onChange={(e) => setPopupRoleSearch(e.target.value)}
+                        />
+                      </div>
+                      <div className="discord-role-picker-list">
+                        {customRoles
+                          .filter(r => !(memberPopup.customRoles || []).some(cr => cr.id === r.id))
+                          .filter(r => !popupRoleSearch || r.name.toLowerCase().includes(popupRoleSearch.toLowerCase()))
+                          .map(r => (
+                            <div
+                              key={r.id}
+                              className="discord-role-picker-item"
+                              onClick={() => handlePopupAssignRole(r.id)}
+                            >
+                              <span className="discord-role-dot" style={{ background: r.color || '#5865f2' }} />
+                              {r.name}
+                            </div>
+                          ))}
+                        {customRoles.filter(r => !(memberPopup.customRoles || []).some(cr => cr.id === r.id)).length === 0 && (
+                          <div className="discord-role-picker-empty">No roles available</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
