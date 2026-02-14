@@ -15,6 +15,7 @@ import { IconArrowLeft } from '../Icons/Icons';
 import DmChat from './DmChat';
 import DmFriends from './DmFriends';
 import DmDiscover from './DmDiscover';
+import Notifications from '../Notifications/Notifications';
 import './GroupDetail.css';
 
 export default function GroupDetail() {
@@ -235,6 +236,7 @@ export default function GroupDetail() {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
   const [mobileSidebar, setMobileSidebar] = useState(false);
   const [mobileMembers, setMobileMembers] = useState(false);
+  const [mobileNotifView, setMobileNotifView] = useState(false);
   const touchStartRef = useRef(null);
 
   useEffect(() => {
@@ -1460,7 +1462,12 @@ export default function GroupDetail() {
     <div className="discord-body">
       {guildBar}
 
-    {dmMode ? (
+    {isMobile && mobileNotifView ? (
+      /* ════════ MOBILE NOTIFICATIONS VIEW ════════ */
+      <div className="discord-server discord-mobile-notif-view">
+        <Notifications />
+      </div>
+    ) : dmMode ? (
       /* ════════ DM MODE LAYOUT ════════ */
       <div className={`discord-server discord-dm-layout${dmView === 'discover' ? ' dmd-fullwidth' : ''}`}>
         {/* DM sidebar (hidden in discover mode) */}
@@ -2404,7 +2411,7 @@ export default function GroupDetail() {
       <nav className="mobile-bottom-tab-bar">
         <button
           className="mobile-tab-item"
-          onClick={() => { setDmMode(true); setDmSelectedUser(null); setDmView('friends'); if (mobileSidebar) setMobileSidebar(false); if (mobileMembers) setMobileMembers(false); }}
+          onClick={() => { setMobileNotifView(false); setDmMode(true); setDmSelectedUser(null); setDmView('friends'); if (mobileSidebar) setMobileSidebar(false); if (mobileMembers) setMobileMembers(false); }}
         >
           <div className="mobile-tab-icon-wrap">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -2415,15 +2422,15 @@ export default function GroupDetail() {
           <span>Home</span>
         </button>
         <button
-          className="mobile-tab-item"
-          onClick={() => navigate('/notifications')}
+          className={`mobile-tab-item${mobileNotifView ? ' active' : ''}`}
+          onClick={() => { setMobileNotifView(true); }}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
           <span>Notifications</span>
         </button>
         <button
           className="mobile-tab-item"
-          onClick={() => navigate(`/profile/${user?.username || ''}`)}
+          onClick={() => { setMobileNotifView(false); navigate(`/profile/${user?.username || ''}`); }}
         >
           <img
             src={user?.profile_image || user?.profileImage || '/default-avatar.png'}

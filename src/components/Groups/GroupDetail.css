@@ -6414,6 +6414,35 @@
     pointer-events: none;
   }
 
+  /* Mobile inline notifications view */
+  .discord-mobile-notif-view {
+    flex: 1;
+    overflow-y: auto;
+    background: #313338;
+    padding-bottom: 56px;
+  }
+
+  .discord-mobile-notif-view .notifications-container {
+    max-width: 100%;
+    min-height: 100%;
+    padding: 0;
+    margin: 0;
+    background: #313338;
+  }
+
+  .discord-mobile-notif-view .notifications-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #313338;
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid #3f4147;
+  }
+
+  .discord-mobile-notif-view .notifications-list {
+    padding: 0 8px;
+  }
+
   /* Floating Action Button (new DM) */
   .mobile-fab-new-dm {
     position: fixed;
