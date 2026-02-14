@@ -50,6 +50,9 @@ const NAV_SECTIONS = [
     { key: 'automod', label: 'AutoMod' },
     { key: 'welcomeScreen', label: 'Welcome Screen' },
   ]},
+  { category: 'ANALYTICS', items: [
+    { key: 'insights', label: 'Server Insights' },
+  ]},
 ];
 
 export default function ServerSettings({
@@ -109,6 +112,10 @@ export default function ServerSettings({
 
   // Boost Perks states
   const [showBoostBar, setShowBoostBar] = useState(false);
+
+  // Insights state
+  const [insights, setInsights] = useState(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
 
   // Members states
   const [showChannelMembers, setShowChannelMembers] = useState(false);
@@ -2577,6 +2584,85 @@ export default function ServerSettings({
             <div className="ss-section">
               <h2>App Directory</h2>
               <p className="ss-muted">This feature is coming soon.</p>
+            </div>
+          )}
+
+          {/* Server Insights */}
+          {activeSection === 'insights' && (
+            <div className="ss-section">
+              <h2>Server Insights</h2>
+              <p className="ss-subtitle">Analytics and activity overview for your server.</p>
+              {!insights && !insightsLoading && (
+                <button className="ss-save-btn" onClick={async () => {
+                  setInsightsLoading(true);
+                  try {
+                    const data = await api.getServerInsights(groupId);
+                    setInsights(data);
+                  } catch (err) { console.error(err); }
+                  finally { setInsightsLoading(false); }
+                }}>Load Insights</button>
+              )}
+              {insightsLoading && <p className="ss-muted">Loading analytics...</p>}
+              {insights && (
+                <div className="ss-insights">
+                  <div className="ss-insights-cards">
+                    <div className="ss-insight-card">
+                      <span className="ss-insight-value">{insights.totalMembers ?? 0}</span>
+                      <span className="ss-insight-label">Total Members</span>
+                    </div>
+                    <div className="ss-insight-card">
+                      <span className="ss-insight-value">{insights.totalMessages ?? 0}</span>
+                      <span className="ss-insight-label">Total Messages</span>
+                    </div>
+                    <div className="ss-insight-card">
+                      <span className="ss-insight-value">{insights.activeMembers ?? 0}</span>
+                      <span className="ss-insight-label">Active (7d)</span>
+                    </div>
+                  </div>
+                  {insights.dailyMessages && insights.dailyMessages.length > 0 && (
+                    <div className="ss-insights-chart">
+                      <h3>Daily Messages (14 days)</h3>
+                      <div className="ss-chart-bars">
+                        {insights.dailyMessages.map((d, i) => {
+                          const max = Math.max(...insights.dailyMessages.map(x => x.count || 0), 1);
+                          return (
+                            <div key={i} className="ss-chart-bar-wrap" title={`${d.date}: ${d.count} messages`}>
+                              <div className="ss-chart-bar" style={{ height: `${((d.count || 0) / max) * 100}%` }} />
+                              <span className="ss-chart-label">{new Date(d.date).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {insights.topChannels && insights.topChannels.length > 0 && (
+                    <div className="ss-insights-table">
+                      <h3>Top Channels</h3>
+                      <table>
+                        <thead><tr><th>Channel</th><th>Messages</th></tr></thead>
+                        <tbody>
+                          {insights.topChannels.map((ch, i) => (
+                            <tr key={i}><td>#{ch.name}</td><td>{ch.message_count}</td></tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                  {insights.topPosters && insights.topPosters.length > 0 && (
+                    <div className="ss-insights-table">
+                      <h3>Top Posters</h3>
+                      <table>
+                        <thead><tr><th>User</th><th>Messages</th></tr></thead>
+                        <tbody>
+                          {insights.topPosters.map((u, i) => (
+                            <tr key={i}><td>{u.username}</td><td>{u.message_count}</td></tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

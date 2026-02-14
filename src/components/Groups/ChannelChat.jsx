@@ -64,6 +64,24 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
   // Slowmode state
   const [slowmodeRemaining, setSlowmodeRemaining] = useState(0);
   const slowmodeTimerRef = useRef(null);
+  // Bookmark state
+  const [savedMessageIds, setSavedMessageIds] = useState(new Set());
+  // Edit history state
+  const [editHistoryMsgId, setEditHistoryMsgId] = useState(null);
+  const [editHistory, setEditHistory] = useState([]);
+  const [editHistoryLoading, setEditHistoryLoading] = useState(false);
+  // Reply ping toggle
+  const [replyPing, setReplyPing] = useState(true);
+  // Emoji autocomplete (:emoji:)
+  const [emojiQuery, setEmojiQuery] = useState(null);
+  const [emojiIndex, setEmojiIndex] = useState(0);
+  // Scheduled messages
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleContent, setScheduleContent] = useState('');
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduledMessages, setScheduledMessages] = useState([]);
+  // @everyone warning
+  const [everyoneWarning, setEveryoneWarning] = useState(null);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const threadEndRef = useRef(null);
@@ -74,6 +92,19 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
 
   const myUsername = (user?.username || '').toLowerCase();
   const myAddress = (user?.wallet_address || user?.walletAddress || '').toLowerCase();
+
+  // Emoji name map for autocomplete
+  const EMOJI_MAP = [
+    ['grinning','😀'],['joy','😂'],['heart_eyes','😍'],['smiling_hearts','🥰'],['sunglasses','😎'],['thinking','🤔'],
+    ['open_mouth','😮'],['cry','😢'],['angry','😡'],['partying','🥳'],['thumbsup','👍'],['thumbsdown','👎'],
+    ['heart','❤️'],['fire','🔥'],['tada','🎉'],['100','💯'],['check','✅'],['x','❌'],['star','⭐'],['skull','💀'],
+    ['pray','🙏'],['clap','👏'],['handshake','🤝'],['muscle','💪'],['eyes','👀'],['brain','🧠'],['bulb','💡'],
+    ['pin','📌'],['rocket','🚀'],['trophy','🏆'],['wave','👋'],['ok_hand','👌'],['point_up','☝️'],['v','✌️'],
+    ['raised_hands','🙌'],['sparkles','✨'],['zap','⚡'],['warning','⚠️'],['question','❓'],['exclamation','❗'],
+    ['plus1','👍'],['minus1','👎'],['smile','😊'],['wink','😉'],['blush','😊'],['laughing','😆'],['rofl','🤣'],
+    ['sob','😭'],['scream','😱'],['rage','😡'],['poop','💩'],['ghost','👻'],['alien','👽'],['robot','🤖'],
+    ['cat','🐱'],['dog','🐶'],['pizza','🍕'],['beer','🍺'],['coffee','☕'],['rainbow','🌈'],['sun','☀️'],['moon','🌙'],
+  ];
 
   // Close user popup on click outside
   useEffect(() => {
@@ -145,6 +176,85 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
     }
   };
 
+  // ── Bookmark / Save message ──
+  const handleToggleSave = async (msgId) => {
+    try {
+      const data = await api.toggleSaveMessage(channel.id, msgId);
+      setSavedMessageIds(prev => {
+        const next = new Set(prev);
+        if (data.saved) next.add(msgId);
+        else next.delete(msgId);
+        return next;
+      });
+    } catch (err) {
+      console.error('Failed to save/unsave message:', err);
+    }
+  };
+
+  const loadSavedMessageIds = useCallback(async () => {
+    try {
+      const data = await api.getSavedMessages();
+      const ids = new Set((data || []).map(s => s.message_id));
+      setSavedMessageIds(ids);
+    } catch (err) { /* ignore */ }
+  }, []);
+
+  // ── Edit history popup ──
+  const handleShowEditHistory = async (msgId) => {
+    setEditHistoryMsgId(msgId);
+    setEditHistoryLoading(true);
+    try {
+      const data = await api.getEditHistory(channel.id, msgId);
+      setEditHistory(data || []);
+    } catch (err) {
+      console.error('Failed to get edit history:', err);
+      setEditHistory([]);
+    } finally {
+      setEditHistoryLoading(false);
+    }
+  };
+
+  // ── Scheduled messages ──
+  const handleScheduleMessage = async () => {
+    if (!scheduleContent.trim() || !scheduleDate) return;
+    try {
+      await api.scheduleMessage(channel.id, scheduleContent.trim(), scheduleDate);
+      setScheduleContent('');
+      setScheduleDate('');
+      setShowScheduleModal(false);
+      loadScheduledMessages();
+    } catch (err) {
+      console.error('Failed to schedule message:', err);
+    }
+  };
+
+  const loadScheduledMessages = useCallback(async () => {
+    if (!channel?.id) return;
+    try {
+      const data = await api.getScheduledMessages(channel.id);
+      setScheduledMessages(data || []);
+    } catch (err) { /* ignore */ }
+  }, [channel?.id]);
+
+  const handleDeleteScheduled = async (id) => {
+    try {
+      await api.deleteScheduledMessage(id);
+      setScheduledMessages(prev => prev.filter(s => s.id !== id));
+    } catch (err) {
+      console.error('Failed to delete scheduled message:', err);
+    }
+  };
+
+  // ── Publish announcement ──
+  const handlePublishAnnouncement = async (msgId) => {
+    try {
+      await api.publishAnnouncement(channel.id, msgId);
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, published: true } : m));
+    } catch (err) {
+      console.error('Failed to publish announcement:', err);
+    }
+  };
+
   // Check slowmode status
   const checkSlowmode = useCallback(async () => {
     if (!channel?.id || !channel?.slowmode) { setSlowmodeRemaining(0); return; }
@@ -162,6 +272,8 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
 
   useEffect(() => {
     loadMessages();
+    loadSavedMessageIds();
+    loadScheduledMessages();
     setInput('');
     setReplyTo(null);
     setEditingId(null);
@@ -171,7 +283,7 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
     setSlowmodeRemaining(0);
     checkSlowmode();
     return () => clearInterval(slowmodeTimerRef.current);
-  }, [loadMessages, checkSlowmode]);
+  }, [loadMessages, checkSlowmode, loadSavedMessageIds, loadScheduledMessages]);
 
   // Socket.io real-time
   useEffect(() => {
@@ -271,6 +383,12 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
     e.preventDefault();
     if (!input.trim() || sending) return;
     if (slowmodeRemaining > 0 && !isAdmin) return;
+    // Check for @everyone / @here warning
+    if ((input.includes('@everyone') || input.includes('@here')) && !everyoneWarning) {
+      setEveryoneWarning(input.trim());
+      return;
+    }
+    setEveryoneWarning(null);
     setSending(true);
     try {
       await api.sendChannelMessage(channel.id, {
@@ -561,8 +679,16 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
     const parts = text.split(/(```[\s\S]*?```|`[^`\n]+`|\|\|[^|]+\|\|)/g);
     return parts.map((part, i) => {
       if (part.startsWith('```') && part.endsWith('```')) {
-        const code = part.slice(3, -3).replace(/^\n/, '');
-        return <pre key={i} className="msg-code-block"><code>{code}</code></pre>;
+        const inner = part.slice(3, -3);
+        const langMatch = inner.match(/^(\w+)\n/);
+        const lang = langMatch ? langMatch[1] : null;
+        const code = lang ? inner.slice(lang.length + 1) : inner.replace(/^\n/, '');
+        return (
+          <pre key={i} className={`msg-code-block${lang ? ` lang-${lang}` : ''}`}>
+            {lang && <div className="msg-code-lang">{lang}</div>}
+            <code>{code}</code>
+          </pre>
+        );
       }
       if (part.startsWith('`') && part.endsWith('`')) {
         return <code key={i} className="msg-inline-code">{part.slice(1, -1)}</code>;
@@ -702,12 +828,45 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
     } else {
       setMentionQuery(null);
     }
+    // Check for :emoji: autocomplete trigger
+    const colonMatch = textBeforeCursor.match(/:(\w{2,})$/);
+    if (colonMatch) {
+      setEmojiQuery(colonMatch[1]);
+      setEmojiIndex(0);
+    } else {
+      setEmojiQuery(null);
+    }
     // Typing indicator
     if (socketService.socket && channel?.id && user?.username) {
       socketService.socket.emit('typing_channel', { channelId: channel.id, username: user.username });
       clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = setTimeout(() => {}, 2000);
     }
+  }
+
+  // ── Emoji autocomplete results ──
+  const emojiResults = emojiQuery
+    ? EMOJI_MAP.filter(([name]) => name.includes(emojiQuery.toLowerCase())).slice(0, 8)
+    : [];
+
+  function handleEmojiKeyDown(e) {
+    if (emojiQuery && emojiResults.length > 0) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setEmojiIndex(p => (p + 1) % emojiResults.length); return true; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); setEmojiIndex(p => (p - 1 + emojiResults.length) % emojiResults.length); return true; }
+      if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); insertEmojiAutocomplete(emojiResults[emojiIndex]); return true; }
+      if (e.key === 'Escape') { setEmojiQuery(null); return true; }
+    }
+    return false;
+  }
+
+  function insertEmojiAutocomplete([, emoji]) {
+    const colonIdx = input.lastIndexOf(':');
+    if (colonIdx >= 0) {
+      setInput(input.slice(0, colonIdx) + emoji + ' ');
+    }
+    setEmojiQuery(null);
+    setEmojiIndex(0);
+    inputRef.current?.focus();
   }
 
   // ── Scroll tracking for "Jump to Present" ──
@@ -943,17 +1102,44 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
                       ) : (
                         <>
                           <span className="channel-msg-text">{renderMarkdown(msg.content)}</span>
-                          {msg.edited_at && <span className="channel-msg-edited">(edited)</span>}
+                          {msg.edited_at && <span className="channel-msg-edited" onClick={() => handleShowEditHistory(msg.id)} title="Click to view edit history">(edited)</span>}
                         </>
                       )}
-                      {msg.image_url && (
-                        <img
-                          src={msg.image_url}
-                          alt=""
-                          className="channel-msg-image"
-                          onClick={() => setLightboxUrl(msg.image_url)}
-                        />
-                      )}
+                      {msg.image_url && (() => {
+                        const isImage = /\.(jpg|jpeg|png|gif|webp|svg|bmp)/i.test(msg.image_url) || msg.image_url.startsWith('data:image/');
+                        const isVideo = /\.(mp4|webm|mov|avi)/i.test(msg.image_url);
+                        const isAudio = /\.(mp3|wav|ogg|flac|m4a)/i.test(msg.image_url);
+                        if (isVideo) {
+                          return <video src={msg.image_url} controls className="channel-msg-video" style={{ maxWidth: 400, maxHeight: 300, borderRadius: 8 }} />;
+                        }
+                        if (isAudio) {
+                          return (
+                            <div className="channel-file-preview">
+                              <span className="channel-file-icon">🎵</span>
+                              <div className="channel-file-info">
+                                <a href={msg.image_url} target="_blank" rel="noopener noreferrer">{msg.image_url.split('/').pop() || 'Audio file'}</a>
+                                <audio src={msg.image_url} controls style={{ width: '100%', marginTop: 4 }} />
+                              </div>
+                            </div>
+                          );
+                        }
+                        if (isImage) {
+                          return <img src={msg.image_url} alt="" className="channel-msg-image" onClick={() => setLightboxUrl(msg.image_url)} />;
+                        }
+                        // Generic file preview card
+                        const fname = msg.image_url.split('/').pop() || 'File';
+                        const ext = fname.split('.').pop()?.toUpperCase() || 'FILE';
+                        return (
+                          <div className="channel-file-preview">
+                            <span className="channel-file-icon">📄</span>
+                            <div className="channel-file-info">
+                              <a href={msg.image_url} target="_blank" rel="noopener noreferrer" className="channel-file-name">{fname}</a>
+                              <span className="channel-file-size">{ext} file</span>
+                            </div>
+                            <a href={msg.image_url} download className="channel-file-download" title="Download">⬇</a>
+                          </div>
+                        );
+                      })()}
                       {/* Link embeds */}
                       {renderLinkEmbeds(msg.content)}
                       {/* Poll embed */}
@@ -1017,6 +1203,10 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
                       <button title="Add Reaction" onClick={() => setReactionPickerMsgId((prev) => prev === msg.id ? null : msg.id)}>😊</button>
                       <button title="Reply" onClick={() => setReplyTo(msg)}>↩</button>
                       <button title="Create Thread" onClick={() => openThread(msg)}>🧵</button>
+                      <button title={savedMessageIds.has(msg.id) ? 'Unsave Message' : 'Save Message'} onClick={() => handleToggleSave(msg.id)} className={savedMessageIds.has(msg.id) ? 'saved' : ''}>🔖</button>
+                      {channel.type === 'announcement' && isAdmin && !msg.published && (
+                        <button title="Publish Announcement" onClick={() => handlePublishAnnouncement(msg.id)}>📢</button>
+                      )}
                       {isAdmin && (
                         <button title={msg.is_pinned ? 'Unpin Message' : 'Pin Message'} onClick={() => handleTogglePin(msg.id)} className={msg.is_pinned ? 'pinned' : ''}>📌</button>
                       )}
@@ -1058,6 +1248,10 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
       {replyTo && (
         <div className="channel-reply-bar">
           <span>Replying to <strong>{replyTo.username}</strong>: {replyTo.content?.slice(0, 60)}</span>
+          <label className="channel-reply-ping-toggle" title="Toggle mention on reply">
+            <input type="checkbox" checked={replyPing} onChange={(e) => setReplyPing(e.target.checked)} />
+            <span>@ Ping</span>
+          </label>
           <button onClick={() => setReplyTo(null)}>✕</button>
         </div>
       )}
@@ -1174,21 +1368,117 @@ export default function ChannelChat({ channel, groupId, user, isAdmin, onToggleM
           value={input}
           onChange={handleInputChangeWithMentions}
           onKeyDown={(e) => {
-            if (!handleMentionKeyDown(e) && e.key === 'Enter' && !e.shiftKey) {
+            if (!handleMentionKeyDown(e) && !handleEmojiKeyDown(e) && e.key === 'Enter' && !e.shiftKey) {
               handleSend(e);
             }
           }}
           disabled={sending || (slowmodeRemaining > 0 && !isAdmin)}
         />
         <div className="channel-input-right">
-          <button type="button" className={`channel-input-icon${showPollCreator ? ' active' : ''}`} title="Create Poll" onClick={() => { setShowPollCreator((p) => !p); setShowGifPicker(false); setShowEmojiPicker(false); }}>📊</button>
-          <button type="button" className={`channel-input-icon${showGifPicker ? ' active' : ''}`} title="GIF" onClick={() => { setShowGifPicker((p) => !p); setShowEmojiPicker(false); setShowPollCreator(false); }}>GIF</button>
-          <button type="button" className={`channel-input-icon${showEmojiPicker ? ' active' : ''}`} title="Emoji" onClick={() => { setShowEmojiPicker((p) => !p); setShowGifPicker(false); setShowPollCreator(false); }}>😊</button>
+          <button type="button" className={`channel-input-icon${showScheduleModal ? ' active' : ''}`} title="Schedule Message" onClick={() => { setShowScheduleModal(p => !p); setShowPollCreator(false); setShowGifPicker(false); setShowEmojiPicker(false); }}>🕐</button>
+          <button type="button" className={`channel-input-icon${showPollCreator ? ' active' : ''}`} title="Create Poll" onClick={() => { setShowPollCreator((p) => !p); setShowGifPicker(false); setShowEmojiPicker(false); setShowScheduleModal(false); }}>📊</button>
+          <button type="button" className={`channel-input-icon${showGifPicker ? ' active' : ''}`} title="GIF" onClick={() => { setShowGifPicker((p) => !p); setShowEmojiPicker(false); setShowPollCreator(false); setShowScheduleModal(false); }}>GIF</button>
+          <button type="button" className={`channel-input-icon${showEmojiPicker ? ' active' : ''}`} title="Emoji" onClick={() => { setShowEmojiPicker((p) => !p); setShowGifPicker(false); setShowPollCreator(false); setShowScheduleModal(false); }}>😊</button>
           {input.trim() && (
             <button type="submit" className="channel-input-icon channel-send-icon" disabled={sending}>➤</button>
           )}
         </div>
       </form>
+
+      {/* Emoji autocomplete dropdown */}
+      {emojiQuery && emojiResults.length > 0 && (
+        <div className="channel-emoji-autocomplete">
+          {emojiResults.map(([name, em], i) => (
+            <button
+              key={name}
+              className={`channel-emoji-ac-item${i === emojiIndex ? ' active' : ''}`}
+              onClick={() => insertEmojiAutocomplete([name, em])}
+              onMouseEnter={() => setEmojiIndex(i)}
+            >
+              <span className="channel-emoji-ac-emoji">{em}</span>
+              <span className="channel-emoji-ac-name">:{name}:</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Schedule message modal */}
+      {showScheduleModal && (
+        <div className="channel-schedule-modal">
+          <div className="channel-schedule-header">
+            <h3>Schedule a Message</h3>
+            <button onClick={() => setShowScheduleModal(false)}>✕</button>
+          </div>
+          <textarea
+            className="channel-schedule-input"
+            placeholder="Message content..."
+            value={scheduleContent}
+            onChange={(e) => setScheduleContent(e.target.value)}
+            rows={3}
+          />
+          <input
+            type="datetime-local"
+            className="channel-schedule-date"
+            value={scheduleDate}
+            onChange={(e) => setScheduleDate(e.target.value)}
+            min={new Date().toISOString().slice(0, 16)}
+          />
+          <button className="channel-schedule-submit" onClick={handleScheduleMessage} disabled={!scheduleContent.trim() || !scheduleDate}>Schedule</button>
+          {scheduledMessages.length > 0 && (
+            <div className="channel-scheduled-list">
+              <h4>Pending ({scheduledMessages.length})</h4>
+              {scheduledMessages.map(sm => (
+                <div key={sm.id} className="channel-scheduled-item">
+                  <span className="channel-scheduled-content">{sm.content?.slice(0, 60)}</span>
+                  <span className="channel-scheduled-time">{new Date(sm.scheduled_at).toLocaleString()}</span>
+                  <button onClick={() => handleDeleteScheduled(sm.id)}>✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Edit history modal */}
+      {editHistoryMsgId && (
+        <div className="channel-edit-history-overlay" onClick={() => setEditHistoryMsgId(null)}>
+          <div className="channel-edit-history-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="channel-edit-history-header">
+              <h3>Edit History</h3>
+              <button onClick={() => setEditHistoryMsgId(null)}>✕</button>
+            </div>
+            <div className="channel-edit-history-body">
+              {editHistoryLoading ? (
+                <p className="channel-edit-history-loading">Loading...</p>
+              ) : editHistory.length === 0 ? (
+                <p className="channel-edit-history-empty">No edit history available.</p>
+              ) : (
+                editHistory.map((eh, i) => (
+                  <div key={eh.id || i} className="channel-edit-history-entry">
+                    <span className="channel-edit-history-time">{new Date(eh.edited_at).toLocaleString()}</span>
+                    <p className="channel-edit-history-content">{eh.old_content}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* @everyone / @here warning */}
+      {everyoneWarning && (
+        <div className="channel-everyone-warning-overlay" onClick={() => setEveryoneWarning(null)}>
+          <div className="channel-everyone-warning-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>⚠️ Confirm Mention</h3>
+            <p>This message contains <strong>{everyoneWarning.includes('@everyone') ? '@everyone' : '@here'}</strong> which will notify all members in this channel. Are you sure?</p>
+            <div className="channel-everyone-warning-actions">
+              <button className="channel-everyone-confirm" onClick={() => { setEveryoneWarning(null); const fakeEvent = { preventDefault: () => {} }; setSending(true); api.sendChannelMessage(channel.id, { content: everyoneWarning, replyTo: replyTo?.id || null }).then(() => { setInput(''); setReplyTo(null); }).catch(err => console.error(err)).finally(() => setSending(false)); }}>Send Anyway</button>
+              <button className="channel-everyone-cancel" onClick={() => setEveryoneWarning(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       </div>{/* end channel-chat-main */}
 
       {/* Thread panel */}

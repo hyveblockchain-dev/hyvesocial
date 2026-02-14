@@ -7,6 +7,7 @@ const SECTIONS = [
   { key: 'account', label: 'My Account', category: 'User Settings' },
   { key: 'profile', label: 'Edit Profile', category: 'User Settings' },
   { key: 'status', label: 'Custom Status', category: 'User Settings' },
+  { key: 'activity', label: 'Activity Status', category: 'User Settings' },
   { key: 'appearance', label: 'Appearance', category: 'App Settings' },
   { key: 'notifications', label: 'Notifications', category: 'App Settings' },
   { key: 'about', label: 'About', category: 'App Settings' },
@@ -28,6 +29,15 @@ export default function UserSettings({ onClose }) {
   const [statusEmoji, setStatusEmoji] = useState('😊');
   const [statusExpiry, setStatusExpiry] = useState('');
   const [statusLoading, setStatusLoading] = useState(false);
+
+  // Activity status state
+  const [activityType, setActivityType] = useState('');
+  const [activityName, setActivityName] = useState('');
+  const [activityDetails, setActivityDetails] = useState('');
+
+  // User preferences
+  const [compactMode, setCompactMode] = useState(() => localStorage.getItem('hyve-compact') === 'true');
+  const [replyPingDefault, setReplyPingDefault] = useState(true);
 
   // Load custom status
   useEffect(() => {
@@ -363,6 +373,83 @@ export default function UserSettings({ onClose }) {
                     </button>
                   </div>
                 </div>
+                <div className="us-field-group" style={{ marginTop: 16 }}>
+                  <label>Compact Mode</label>
+                  <p className="us-muted" style={{ marginBottom: 8 }}>Reduce spacing between messages for a denser layout.</p>
+                  <button
+                    className={`us-toggle-btn${compactMode ? ' active' : ''}`}
+                    onClick={() => {
+                      const next = !compactMode;
+                      setCompactMode(next);
+                      localStorage.setItem('hyve-compact', next ? 'true' : 'false');
+                      document.body.classList.toggle('compact-mode', next);
+                      api.updateUserPreferences({ compact_mode: next }).catch(() => {});
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', background: compactMode ? '#5865f2' : '#4e5058', border: 'none', borderRadius: 14, color: '#fff', cursor: 'pointer', fontSize: 14 }}
+                  >
+                    <span style={{ width: 20, height: 20, borderRadius: '50%', background: compactMode ? '#fff' : '#80848e', transition: 'all .2s', transform: compactMode ? 'translateX(12px)' : 'translateX(0)' }} />
+                    {compactMode ? 'On' : 'Off'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Activity Status ── */}
+          {activeSection === 'activity' && (
+            <div className="us-section">
+              <h2>Activity Status</h2>
+              <p className="us-muted">Let others see what you're doing.</p>
+              <div className="us-profile-card">
+                <div className="us-field-group">
+                  <label>Activity Type</label>
+                  <select className="us-input" value={activityType} onChange={e => setActivityType(e.target.value)} style={{ width: '100%' }}>
+                    <option value="">None</option>
+                    <option value="playing">Playing</option>
+                    <option value="listening">Listening to</option>
+                    <option value="watching">Watching</option>
+                    <option value="streaming">Streaming</option>
+                    <option value="competing">Competing in</option>
+                  </select>
+                </div>
+                {activityType && (
+                  <>
+                    <div className="us-field-group">
+                      <label>Activity Name</label>
+                      <input type="text" className="us-input" placeholder="e.g. Minecraft" value={activityName} onChange={e => setActivityName(e.target.value)} maxLength={128} style={{ width: '100%' }} />
+                    </div>
+                    <div className="us-field-group">
+                      <label>Details (optional)</label>
+                      <input type="text" className="us-input" placeholder="e.g. Building a castle" value={activityDetails} onChange={e => setActivityDetails(e.target.value)} maxLength={128} style={{ width: '100%' }} />
+                    </div>
+                  </>
+                )}
+                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <button className="us-btn-save" onClick={async () => {
+                    setSaving(true);
+                    try {
+                      await api.updateActivityStatus(activityType || null, activityName || null, activityDetails || null);
+                      showNotice('Activity updated!');
+                    } catch { showNotice('Failed to update activity.'); }
+                    finally { setSaving(false); }
+                  }} disabled={saving}>{saving ? 'Saving...' : 'Save Activity'}</button>
+                  <button className="us-btn-cancel" onClick={async () => {
+                    setSaving(true);
+                    try {
+                      await api.updateActivityStatus(null, null, null);
+                      setActivityType(''); setActivityName(''); setActivityDetails('');
+                      showNotice('Activity cleared!');
+                    } catch { showNotice('Failed to clear activity.'); }
+                    finally { setSaving(false); }
+                  }} disabled={saving}>Clear</button>
+                </div>
+                {activityType && activityName && (
+                  <div style={{ marginTop: 16, padding: '10px 14px', background: '#2b2d31', borderRadius: 8, color: '#dbdee1' }}>
+                    <span style={{ color: '#949ba4', textTransform: 'capitalize' }}>{activityType}</span>{' '}
+                    <strong>{activityName}</strong>
+                    {activityDetails && <span style={{ color: '#949ba4' }}> — {activityDetails}</span>}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -375,6 +462,22 @@ export default function UserSettings({ onClose }) {
                 <div className="us-field-group">
                   <label>Desktop Notifications</label>
                   <p className="us-muted">Browser notifications are managed in your browser settings.</p>
+                </div>
+                <div className="us-field-group">
+                  <label>Reply Ping Default</label>
+                  <p className="us-muted" style={{ marginBottom: 8 }}>When replying to a message, mention the author by default.</p>
+                  <button
+                    className={`us-toggle-btn${replyPingDefault ? ' active' : ''}`}
+                    onClick={() => {
+                      const next = !replyPingDefault;
+                      setReplyPingDefault(next);
+                      api.updateUserPreferences({ reply_ping: next }).catch(() => {});
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', background: replyPingDefault ? '#5865f2' : '#4e5058', border: 'none', borderRadius: 14, color: '#fff', cursor: 'pointer', fontSize: 14 }}
+                  >
+                    <span style={{ width: 20, height: 20, borderRadius: '50%', background: replyPingDefault ? '#fff' : '#80848e', transition: 'all .2s', transform: replyPingDefault ? 'translateX(12px)' : 'translateX(0)' }} />
+                    {replyPingDefault ? 'On' : 'Off'}
+                  </button>
                 </div>
                 <div className="us-field-group">
                   <label>Message Sounds</label>

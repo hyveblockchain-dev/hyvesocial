@@ -80,6 +80,11 @@ export default function GroupDetail() {
   const [notifChannelOverride, setNotifChannelOverride] = useState('');
   const [notifChannelOverrides, setNotifChannelOverrides] = useState([]);
 
+  // ── Nickname & Activity state ──
+  const [showNicknameModal, setShowNicknameModal] = useState(false);
+  const [nicknameInput, setNicknameInput] = useState('');
+  const [nicknames, setNicknames] = useState({});
+
   // ── Discord channel state ──
   const [channels, setChannels] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -557,6 +562,39 @@ export default function GroupDetail() {
     unreadsTimerRef.current = setInterval(refreshUnreads, 30000);
     return () => clearInterval(unreadsTimerRef.current);
   }, [refreshUnreads]);
+
+  // ── Mark all channels as read ──
+  const handleMarkAllRead = async () => {
+    try {
+      await api.markAllChannelsRead(groupId);
+      setUnreads({});
+    } catch (err) {
+      console.error('Failed to mark all read:', err);
+    }
+  };
+
+  // ── Nicknames ──
+  const loadNicknames = useCallback(async () => {
+    if (!groupId) return;
+    try {
+      const data = await api.getNicknames(groupId);
+      const map = {};
+      (data || []).forEach(n => { map[n.user_address] = n.nickname; });
+      setNicknames(map);
+    } catch { /* ignore */ }
+  }, [groupId]);
+
+  useEffect(() => { loadNicknames(); }, [loadNicknames]);
+
+  const handleSaveNickname = async () => {
+    try {
+      await api.setNickname(groupId, nicknameInput.trim() || null);
+      setShowNicknameModal(false);
+      loadNicknames();
+    } catch (err) {
+      console.error('Failed to set nickname:', err);
+    }
+  };
 
   // ── Load DM conversations ──
   const loadDmConversations = useCallback(async () => {
@@ -1579,10 +1617,16 @@ export default function GroupDetail() {
             <div className="discord-dropdown-sep" />
 
             {/* Edit Per-server Profile */}
-            <button onClick={() => { setShowServerDropdown(false); }}>
+            <button onClick={() => { setShowServerDropdown(false); setShowNicknameModal(true); }}>
               <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-              <span>Edit Per-server Profile</span>
+              <span>Edit Server Profile</span>
               <svg className="dropdown-arrow" width="10" height="10" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
+            </button>
+
+            {/* Mark All as Read */}
+            <button onClick={() => { setShowServerDropdown(false); handleMarkAllRead(); }}>
+              <svg className="dropdown-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+              <span>Mark All as Read</span>
             </button>
 
             {/* Hide Muted Channels toggle */}
@@ -3240,6 +3284,37 @@ export default function GroupDetail() {
       </div>,
       document.body
     )}
+
+    {/* Nickname modal */}
+    {showNicknameModal && createPortal(
+      <div className="notif-modal-overlay" onClick={() => setShowNicknameModal(false)}>
+        <div className="notif-modal nickname-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="notif-modal-header">
+            <h2>Edit Server Profile</h2>
+            <button className="notif-modal-close" onClick={() => setShowNicknameModal(false)}>✕</button>
+          </div>
+          <div className="notif-modal-body" style={{ padding: '16px 20px' }}>
+            <label style={{ display: 'block', marginBottom: 8, color: '#b5bac1', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Server Nickname</label>
+            <input
+              type="text"
+              value={nicknameInput}
+              onChange={(e) => setNicknameInput(e.target.value)}
+              placeholder={user?.username || 'Nickname'}
+              maxLength={32}
+              style={{ width: '100%', padding: '10px 12px', background: '#1e1f22', color: '#dbdee1', border: 'none', borderRadius: 4, fontSize: 14 }}
+              autoFocus
+            />
+            <p style={{ color: '#949ba4', fontSize: 12, marginTop: 8 }}>This nickname is only visible within this server.</p>
+          </div>
+          <div className="notif-modal-footer" style={{ padding: '16px 20px', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <button className="notif-modal-done" style={{ background: 'transparent', color: '#dbdee1' }} onClick={() => setShowNicknameModal(false)}>Cancel</button>
+            <button className="notif-modal-done" onClick={handleSaveNickname}>Save</button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+
     </div>
   );
 }

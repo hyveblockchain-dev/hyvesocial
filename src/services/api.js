@@ -2260,6 +2260,190 @@ export async function bulkDeleteMessages(channelId, messageIds) {
 }
 
 // ========================================
+// BOOKMARKS / SAVED MESSAGES
+// ========================================
+
+export async function toggleSaveMessage(channelId, messageId) {
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/messages/${messageId}/save`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to save message');
+  return data;
+}
+
+export async function getSavedMessages() {
+  const response = await fetch(`${API_URL}/api/saved-messages`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get saved messages');
+  return data;
+}
+
+export async function deleteSavedMessage(id) {
+  const response = await fetch(`${API_URL}/api/saved-messages/${id}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to delete saved message');
+  return data;
+}
+
+// ========================================
+// EDIT HISTORY
+// ========================================
+
+export async function getEditHistory(channelId, messageId) {
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/messages/${messageId}/edit-history`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get edit history');
+  return data;
+}
+
+// ========================================
+// SERVER NICKNAMES
+// ========================================
+
+export async function setNickname(groupId, nickname) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/nickname`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ nickname }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to set nickname');
+  return data;
+}
+
+export async function getNicknames(groupId) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/nicknames`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get nicknames');
+  return data;
+}
+
+// ========================================
+// SCHEDULED MESSAGES
+// ========================================
+
+export async function scheduleMessage(channelId, content, scheduledAt) {
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/schedule`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ content, scheduled_at: scheduledAt }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to schedule message');
+  return data;
+}
+
+export async function getScheduledMessages(channelId) {
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/scheduled`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get scheduled messages');
+  return data;
+}
+
+export async function deleteScheduledMessage(id) {
+  const response = await fetch(`${API_URL}/api/scheduled/${id}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to delete scheduled message');
+  return data;
+}
+
+// ========================================
+// ACTIVITY STATUS
+// ========================================
+
+export async function updateActivityStatus(activityType, activityName, activityDetails) {
+  const response = await fetch(`${API_URL}/api/users/activity`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify({ activity_type: activityType, activity_name: activityName, activity_details: activityDetails }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to update activity');
+  return data;
+}
+
+// ========================================
+// SERVER INSIGHTS
+// ========================================
+
+export async function getServerInsights(groupId) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/insights`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get insights');
+  return data;
+}
+
+// ========================================
+// ANNOUNCEMENT PUBLISH
+// ========================================
+
+export async function publishAnnouncement(channelId, messageId) {
+  const response = await fetch(`${API_URL}/api/channels/${channelId}/messages/${messageId}/publish`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to publish announcement');
+  return data;
+}
+
+// ========================================
+// USER PREFERENCES
+// ========================================
+
+export async function updateUserPreferences(prefs) {
+  const response = await fetch(`${API_URL}/api/users/preferences`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+    body: JSON.stringify(prefs),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to update preferences');
+  return data;
+}
+
+export async function getUserPreferences() {
+  const response = await fetch(`${API_URL}/api/users/preferences`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get preferences');
+  return data;
+}
+
+// ========================================
+// MARK ALL READ
+// ========================================
+
+export async function markAllChannelsRead(groupId) {
+  const response = await fetch(`${API_URL}/api/groups/${groupId}/mark-all-read`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to mark all as read');
+  return data;
+}
+
+// ========================================
 // DEFAULT EXPORT
 // ========================================
 
@@ -2477,4 +2661,37 @@ export default {
 
   // Bulk Delete
   bulkDeleteMessages,
+
+  // Bookmarks / Saved Messages
+  toggleSaveMessage,
+  getSavedMessages,
+  deleteSavedMessage,
+
+  // Edit History
+  getEditHistory,
+
+  // Server Nicknames
+  setNickname,
+  getNicknames,
+
+  // Scheduled Messages
+  scheduleMessage,
+  getScheduledMessages,
+  deleteScheduledMessage,
+
+  // Activity Status
+  updateActivityStatus,
+
+  // Server Insights
+  getServerInsights,
+
+  // Announcement Publish
+  publishAnnouncement,
+
+  // User Preferences
+  updateUserPreferences,
+  getUserPreferences,
+
+  // Mark All Read
+  markAllChannelsRead,
 };

@@ -1813,3 +1813,171 @@
 .light-mode .channel-poll-creator input,
 .light-mode .channel-poll-creator select { background: #fff; border-color: #e3e5e8; color: #060607; }
 .light-mode .channel-bulk-bar { background: #5865f2; }
+
+/* ═══ Batch 3 CSS: Bookmarks, Edit History, Scheduled, Emoji AC, File Preview, Code Lang, @everyone warning ═══ */
+
+/* Bookmark/Save button highlight */
+.channel-msg-actions button.saved { color: #f0b232; }
+
+/* Edit history clickable indicator */
+.channel-msg-edited { cursor: pointer; text-decoration: underline dotted; }
+.channel-msg-edited:hover { color: #5865f2; }
+
+/* Reply ping toggle */
+.channel-reply-ping-toggle {
+  display: flex; align-items: center; gap: 4px; margin-left: auto; margin-right: 8px;
+  color: #b5bac1; font-size: 12px; cursor: pointer; user-select: none;
+}
+.channel-reply-ping-toggle input { accent-color: #5865f2; }
+
+/* Emoji autocomplete dropdown */
+.channel-emoji-autocomplete {
+  position: absolute; bottom: 70px; left: 70px; right: 70px;
+  background: #2b2d31; border: 1px solid #1e1f22; border-radius: 8px;
+  max-height: 280px; overflow-y: auto; z-index: 50; box-shadow: 0 4px 16px rgba(0,0,0,.3);
+}
+.channel-emoji-ac-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 14px;
+  background: none; border: none; color: #dbdee1; font-size: 14px; cursor: pointer; text-align: left;
+}
+.channel-emoji-ac-item.active, .channel-emoji-ac-item:hover { background: #35373c; }
+.channel-emoji-ac-emoji { font-size: 22px; }
+.channel-emoji-ac-name { color: #949ba4; }
+
+/* Code block lang label */
+.msg-code-lang {
+  position: absolute; top: 4px; right: 8px; font-size: 11px; color: #949ba4;
+  background: rgba(0,0,0,.3); padding: 1px 6px; border-radius: 3px; font-family: inherit;
+}
+.msg-code-block { position: relative; }
+
+/* File preview card */
+.channel-file-preview {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  background: #2b2d31; border: 1px solid #3f4147; border-radius: 8px;
+  margin-top: 6px; max-width: 420px;
+}
+.channel-file-icon { font-size: 32px; }
+.channel-file-info { flex: 1; min-width: 0; }
+.channel-file-name {
+  display: block; color: #00a8fc; font-size: 14px; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  text-decoration: none;
+}
+.channel-file-name:hover { text-decoration: underline; }
+.channel-file-size { color: #949ba4; font-size: 12px; }
+.channel-file-download {
+  font-size: 20px; text-decoration: none; color: #b5bac1; padding: 4px;
+}
+.channel-file-download:hover { color: #fff; }
+
+/* ── Schedule message modal ── */
+.channel-schedule-modal {
+  position: absolute; bottom: 70px; left: 16px; right: 16px;
+  background: #2b2d31; border: 1px solid #1e1f22; border-radius: 8px;
+  padding: 16px; z-index: 50; box-shadow: 0 4px 16px rgba(0,0,0,.3);
+}
+.channel-schedule-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+}
+.channel-schedule-header h3 { color: #f2f3f5; font-size: 16px; margin: 0; }
+.channel-schedule-header button {
+  background: none; border: none; color: #b5bac1; cursor: pointer; font-size: 18px;
+}
+.channel-schedule-input {
+  width: 100%; padding: 10px 12px; background: #1e1f22; color: #dbdee1;
+  border: none; border-radius: 4px; font-size: 14px; resize: none; margin-bottom: 8px; box-sizing: border-box;
+}
+.channel-schedule-date {
+  width: 100%; padding: 8px 12px; background: #1e1f22; color: #dbdee1;
+  border: none; border-radius: 4px; font-size: 14px; margin-bottom: 12px; box-sizing: border-box;
+}
+.channel-schedule-submit {
+  padding: 8px 20px; background: #5865f2; color: #fff; border: none;
+  border-radius: 4px; font-size: 14px; cursor: pointer;
+}
+.channel-schedule-submit:hover { background: #4752c4; }
+.channel-schedule-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.channel-scheduled-list { margin-top: 16px; border-top: 1px solid #3f4147; padding-top: 12px; }
+.channel-scheduled-list h4 { color: #b5bac1; font-size: 12px; text-transform: uppercase; margin: 0 0 8px; }
+.channel-scheduled-item {
+  display: flex; align-items: center; gap: 8px; padding: 6px 0;
+  font-size: 13px; color: #dbdee1;
+}
+.channel-scheduled-content { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.channel-scheduled-time { color: #949ba4; font-size: 12px; }
+.channel-scheduled-item button {
+  background: none; border: none; color: #ed4245; cursor: pointer; font-size: 14px;
+}
+
+/* ── Edit history modal ── */
+.channel-edit-history-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+}
+.channel-edit-history-modal {
+  background: #313338; border-radius: 8px; width: 480px; max-width: 90vw;
+  max-height: 60vh; display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+.channel-edit-history-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px; border-bottom: 1px solid #3f4147;
+}
+.channel-edit-history-header h3 { margin: 0; color: #f2f3f5; font-size: 18px; }
+.channel-edit-history-header button {
+  background: none; border: none; color: #b5bac1; cursor: pointer; font-size: 20px;
+}
+.channel-edit-history-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+.channel-edit-history-entry {
+  padding: 10px 0; border-bottom: 1px solid #3f4147;
+}
+.channel-edit-history-entry:last-child { border-bottom: none; }
+.channel-edit-history-time { color: #949ba4; font-size: 12px; margin-bottom: 4px; display: block; }
+.channel-edit-history-content { color: #dbdee1; font-size: 14px; margin: 0; white-space: pre-wrap; word-break: break-word; }
+.channel-edit-history-loading, .channel-edit-history-empty { color: #949ba4; text-align: center; padding: 20px; }
+
+/* ── @everyone / @here warning ── */
+.channel-everyone-warning-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+}
+.channel-everyone-warning-modal {
+  background: #313338; border-radius: 8px; padding: 24px; width: 440px; max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+.channel-everyone-warning-modal h3 { margin: 0 0 12px; color: #f2f3f5; font-size: 18px; }
+.channel-everyone-warning-modal p { color: #b5bac1; font-size: 14px; line-height: 1.5; }
+.channel-everyone-warning-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.channel-everyone-confirm {
+  padding: 8px 20px; background: #ed4245; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
+}
+.channel-everyone-confirm:hover { background: #c73e40; }
+.channel-everyone-cancel {
+  padding: 8px 20px; background: transparent; color: #dbdee1; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
+}
+.channel-everyone-cancel:hover { text-decoration: underline; }
+
+/* ── Compact mode ── */
+body.compact-mode .channel-msg { padding: 2px 16px; }
+body.compact-mode .channel-msg-avatar { width: 24px; height: 24px; }
+body.compact-mode .channel-msg-compact { padding: 1px 16px 1px 60px; }
+body.compact-mode .channel-msg-text { font-size: 13px; }
+body.compact-mode .channel-msg-header { gap: 6px; }
+
+/* ── Light mode overrides for batch 3 ── */
+.light-mode .channel-emoji-autocomplete { background: #fff; border-color: #e3e5e8; }
+.light-mode .channel-emoji-ac-item:hover, .light-mode .channel-emoji-ac-item.active { background: #f2f3f5; }
+.light-mode .channel-emoji-ac-item { color: #060607; }
+.light-mode .channel-schedule-modal { background: #fff; border-color: #e3e5e8; }
+.light-mode .channel-schedule-input, .light-mode .channel-schedule-date { background: #f2f3f5; color: #060607; }
+.light-mode .channel-edit-history-modal { background: #fff; }
+.light-mode .channel-edit-history-header { border-color: #e3e5e8; }
+.light-mode .channel-edit-history-header h3 { color: #060607; }
+.light-mode .channel-edit-history-content { color: #313338; }
+.light-mode .channel-edit-history-entry { border-color: #e3e5e8; }
+.light-mode .channel-everyone-warning-modal { background: #fff; }
+.light-mode .channel-everyone-warning-modal h3 { color: #060607; }
+.light-mode .channel-everyone-warning-modal p { color: #4e5058; }
+.light-mode .channel-file-preview { background: #f2f3f5; border-color: #e3e5e8; }
+.light-mode .channel-file-size { color: #5c5e66; }
+.light-mode .msg-code-lang { background: rgba(0,0,0,.08); color: #5c5e66; }
