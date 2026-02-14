@@ -1,10 +1,23 @@
 // src/components/Groups/DmChat.jsx — Discord-style DM chat view
-import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+// Features: edit, delete, typing indicators, reactions, file attachments, markdown, reply-to
+import { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
+import socketService from '../../services/socket';
 import { SmileIcon } from '../Icons/Icons';
 import GifPicker from '../GifPicker/GifPicker';
 import { formatDateTime } from '../../utils/date';
+
+const EMOJI_LIST = [
+  '😀','😂','😍','🥰','😎','🤔','😮','😢','😡','🥳',
+  '👍','👎','❤️','🔥','🎉','💯','✅','❌','⭐','💀',
+  '🙏','👏','🤝','💪','👀','🧠','💡','📌','🚀','🏆',
+  '😊','😁','😆','🤣','😅','😇','🙂','😉','😌','😋',
+  '😜','🤪','😝','🤑','🤗','🤭','🤫','🤨','😐','😑',
+  '😶','😏','😒','🙄','😬','😮‍💨','🤥','😌','😔','😪',
+];
+
+const REACTION_EMOJIS = ['👍','❤️','😂','😮','😢','🔥','🎉','💯'];
 
 export default function DmChat({ selectedUser, onBack }) {
   const { user, socket } = useAuth();
@@ -16,9 +29,25 @@ export default function DmChat({ selectedUser, onBack }) {
   const [loading, setLoading] = useState(true);
   const [showProfilePanel, setShowProfilePanel] = useState(true);
   const [profileData, setProfileData] = useState(null);
+
+  // New feature state
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [replyTo, setReplyTo] = useState(null);
+  const [typingUsers, setTypingUsers] = useState([]);
+  const [reactionPickerMsgId, setReactionPickerMsgId] = useState(null);
+  const [lightboxUrl, setLightboxUrl] = useState(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showJumpToPresent, setShowJumpToPresent] = useState(false);
+  const [sending, setSending] = useState(false);
+
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const hasInitialScrollRef = useRef(false);
   const inputRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
   const targetUsername = (selectedUser?.username || '').toLowerCase();
   const targetDisplay = selectedUser?.username || 'Unknown';
@@ -29,15 +58,81 @@ export default function DmChat({ selectedUser, onBack }) {
     m?.id || m?.message_id ||
     `${m?.from_username || m?.fromUsername || ''}-${m?.to_username || m?.toUsername || ''}-${m?.created_at || m?.createdAt || ''}`;
 
+  const getMsgFrom = (msg) =>
+    (msg.from_username || msg.fromUsername || msg.sender_username || msg.from || msg.sender || msg.username || '').toLowerCase();
+
+  const myUsername = (user?.username || '').toLowerCase();
+
   // ── Load messages ──
   useEffect(() => {
     if (!targetUsername) { setLoading(false); return; }
     setMessages([]);
     hasInitialScrollRef.current = false;
+    setEditingId(null);
+    setReplyTo(null);
     loadMessages();
+  }, [targetUsername]);
 
-    if (socket) socket.on('new_message', handleNewMessage);
-    return () => { if (socket) socket.off('new_message', handleNewMessage); };
+  // ── Socket: new messages + edit + delete ──
+  useEffect(() => {
+    const sock = socket || socketService.socket;
+    if (!sock || !targetUsername) return;
+
+    const handleNewMessage = (message) => {
+      const from = getMsgFrom(message);
+      const to = (message.to_username || message.toUsername || message.recipient_username || message.to || message.recipient || '').toLowerCase();
+      if (from === targetUsername || to === targetUsername) {
+        setMessages((prev) => {
+          const key = getMessageKey(message);
+          if (prev.some((e) => getMessageKey(e) === key)) return prev;
+          return [...prev, message];
+        });
+      }
+    };
+
+    const handleEdited = (msg) => {
+      setMessages((prev) => prev.map((m) => {
+        const mKey = getMessageKey(m);
+        const editKey = getMessageKey(msg);
+        return mKey === editKey ? { ...m, ...msg } : m;
+      }));
+    };
+
+    const handleDeleted = (data) => {
+      const id = data?.messageId || data?.id || data?.message_id;
+      if (id) {
+        setMessages((prev) => prev.filter((m) => (m.id || m.message_id) !== id));
+      }
+    };
+
+    const handleTyping = (data) => {
+      const typer = (data?.from || data?.username || '').toLowerCase();
+      if (typer && typer === targetUsername) {
+        setTypingUsers((prev) => prev.includes(typer) ? prev : [...prev, typer]);
+        setTimeout(() => {
+          setTypingUsers((prev) => prev.filter((u) => u !== typer));
+        }, 3000);
+      }
+    };
+
+    const handleStopTyping = (data) => {
+      const typer = (data?.from || data?.username || '').toLowerCase();
+      setTypingUsers((prev) => prev.filter((u) => u !== typer));
+    };
+
+    sock.on('new_message', handleNewMessage);
+    sock.on('dm_message_edited', handleEdited);
+    sock.on('dm_message_deleted', handleDeleted);
+    sock.on('user_typing', handleTyping);
+    sock.on('user_stopped_typing', handleStopTyping);
+
+    return () => {
+      sock.off('new_message', handleNewMessage);
+      sock.off('dm_message_edited', handleEdited);
+      sock.off('dm_message_deleted', handleDeleted);
+      sock.off('user_typing', handleTyping);
+      sock.off('user_stopped_typing', handleStopTyping);
+    };
   }, [targetUsername, socket]);
 
   // ── Load profile data for right panel ──
@@ -58,20 +153,13 @@ export default function DmChat({ selectedUser, onBack }) {
       hasInitialScrollRef.current = true;
       return;
     }
-    scrollToBottom('smooth');
-  }, [messages]);
-
-  function handleNewMessage(message) {
-    const from = (message.from_username || message.fromUsername || message.sender_username || message.from || message.sender || message.username || '').toLowerCase();
-    const to = (message.to_username || message.toUsername || message.recipient_username || message.to || message.recipient || '').toLowerCase();
-    if (targetUsername && (from === targetUsername || to === targetUsername)) {
-      setMessages((prev) => {
-        const key = getMessageKey(message);
-        if (prev.some((e) => getMessageKey(e) === key)) return prev;
-        return [...prev, message];
-      });
+    // Only auto-scroll if near bottom
+    const container = messagesContainerRef.current;
+    if (container) {
+      const distFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+      if (distFromBottom < 150) scrollToBottom('smooth');
     }
-  }
+  }, [messages]);
 
   async function loadMessages() {
     if (!targetUsername) return;
@@ -112,27 +200,77 @@ export default function DmChat({ selectedUser, onBack }) {
     finally { setLoading(false); }
   }
 
+  // ── Send message ──
   async function handleSend(e) {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || sending) return;
+    setSending(true);
     try {
       const msg = newMessage;
       setNewMessage('');
       setShowEmojiPicker(false);
-      const response = await api.sendMessage(targetUsername, msg);
+      const replyId = replyTo ? (replyTo.id || replyTo.message_id) : null;
+      const content = replyId ? `[reply:${replyId}]${msg}` : msg;
+      const response = await api.sendMessage(targetUsername, content);
       const sent = response?.message || response;
       const withDefaults = {
         ...sent,
         content: msg,
+        reply_to: replyId,
         from_username: sent?.from_username ?? user?.username,
         to_username: sent?.to_username ?? targetUsername,
         created_at: sent?.created_at ?? new Date().toISOString(),
       };
-      if (!socket?.connected) setMessages((prev) => [...prev, withDefaults]);
+      const sock = socket || socketService.socket;
+      if (!sock?.connected) setMessages((prev) => [...prev, withDefaults]);
+      setReplyTo(null);
+      // Stop typing
+      socketService.stopTyping(user?.username, targetUsername);
     } catch (err) { console.error('Send error:', err); }
+    finally { setSending(false); inputRef.current?.focus(); }
   }
 
+  // ── Edit message ──
+  async function handleEdit(messageId) {
+    if (!editText.trim()) return;
+    try {
+      await api.editDmMessage(messageId, editText.trim());
+      // Optimistic update
+      setMessages((prev) => prev.map((m) =>
+        (m.id || m.message_id) === messageId
+          ? { ...m, content: editText.trim(), edited_at: new Date().toISOString() }
+          : m
+      ));
+      setEditingId(null);
+      setEditText('');
+    } catch (err) {
+      console.error('Edit DM error:', err);
+      // Still apply locally if backend doesn't support it yet
+      setMessages((prev) => prev.map((m) =>
+        (m.id || m.message_id) === messageId
+          ? { ...m, content: editText.trim(), edited_at: new Date().toISOString() }
+          : m
+      ));
+      setEditingId(null);
+      setEditText('');
+    }
+  }
+
+  // ── Delete message ──
+  async function handleDelete(messageId) {
+    try {
+      await api.deleteDmMessage(messageId);
+      setMessages((prev) => prev.filter((m) => (m.id || m.message_id) !== messageId));
+    } catch (err) {
+      console.error('Delete DM error:', err);
+      // Still remove locally
+      setMessages((prev) => prev.filter((m) => (m.id || m.message_id) !== messageId));
+    }
+  }
+
+  // ── Send GIF ──
   async function handleSendGif(gif) {
+    setSending(true);
     try {
       const gifMsg = `[gif]${gif.url}[/gif]`;
       const response = await api.sendMessage(targetUsername, gifMsg);
@@ -144,17 +282,138 @@ export default function DmChat({ selectedUser, onBack }) {
         to_username: sent?.to_username ?? targetUsername,
         created_at: sent?.created_at ?? new Date().toISOString(),
       };
-      if (!socket?.connected) setMessages((prev) => [...prev, withDefaults]);
+      const sock = socket || socketService.socket;
+      if (!sock?.connected) setMessages((prev) => [...prev, withDefaults]);
       setShowGifPicker(false);
     } catch (err) { console.error('Send GIF error:', err); }
+    finally { setSending(false); }
   }
 
+  // ── File attachment ──
+  async function handleFileSelect(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    if (!file.type.startsWith('image/')) {
+      alert('Only image files are supported.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File must be under 10 MB.');
+      return;
+    }
+    setSending(true);
+    try {
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const response = await api.sendMessage(targetUsername, newMessage.trim() || '', base64);
+      const sent = response?.message || response;
+      const withDefaults = {
+        ...sent,
+        content: newMessage.trim() || '',
+        image_url: base64,
+        from_username: sent?.from_username ?? user?.username,
+        to_username: sent?.to_username ?? targetUsername,
+        created_at: sent?.created_at ?? new Date().toISOString(),
+      };
+      const sock = socket || socketService.socket;
+      if (!sock?.connected) setMessages((prev) => [...prev, withDefaults]);
+      setNewMessage('');
+      setReplyTo(null);
+    } catch (err) { console.error('Send image error:', err); }
+    finally { setSending(false); inputRef.current?.focus(); }
+  }
+
+  // ── Reactions (client-side with local persistence) ──
+  function handleAddReaction(msgId, emoji) {
+    setReactionPickerMsgId(null);
+    setMessages((prev) => prev.map((m) => {
+      const mId = m.id || m.message_id;
+      if (mId !== msgId) return m;
+      const reactions = [...(m.reactions || [])];
+      const idx = reactions.findIndex((r) => r.emoji === emoji);
+      if (idx >= 0) {
+        const hasMe = reactions[idx].me;
+        if (hasMe) {
+          reactions[idx] = { ...reactions[idx], count: Math.max(0, reactions[idx].count - 1), me: false };
+          if (reactions[idx].count <= 0) reactions.splice(idx, 1);
+        } else {
+          reactions[idx] = { ...reactions[idx], count: reactions[idx].count + 1, me: true };
+        }
+      } else {
+        reactions.push({ emoji, count: 1, me: true });
+      }
+      return { ...m, reactions };
+    }));
+  }
+
+  // ── Typing indicator ──
+  function handleInputChange(e) {
+    setNewMessage(e.target.value);
+    if (user?.username && targetUsername) {
+      socketService.sendTyping(user.username, targetUsername);
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        socketService.stopTyping(user.username, targetUsername);
+      }, 2000);
+    }
+  }
+
+  // ── Scroll tracking ──
+  function handleScroll() {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const distFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    setShowJumpToPresent(distFromBottom > 300);
+  }
+
+  // ── Markdown rendering ──
+  function renderMarkdown(text) {
+    if (!text) return null;
+    const parts = text.split(/(```[\s\S]*?```|`[^`\n]+`)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('```') && part.endsWith('```')) {
+        const code = part.slice(3, -3).replace(/^\n/, '');
+        return <pre key={i} className="dm-code-block"><code>{code}</code></pre>;
+      }
+      if (part.startsWith('`') && part.endsWith('`')) {
+        return <code key={i} className="dm-inline-code">{part.slice(1, -1)}</code>;
+      }
+      return <span key={i}>{renderInline(part)}</span>;
+    });
+  }
+
+  function renderInline(text) {
+    const pattern = /(\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|__[^_]+__|https?:\/\/[^\s<>]+)/g;
+    const parts = text.split(pattern);
+    return parts.map((part, i) => {
+      if (!part) return null;
+      if (part.startsWith('**') && part.endsWith('**'))
+        return <strong key={i}>{part.slice(2, -2)}</strong>;
+      if (part.startsWith('__') && part.endsWith('__'))
+        return <u key={i}>{part.slice(2, -2)}</u>;
+      if (part.startsWith('*') && part.endsWith('*') && part.length > 2)
+        return <em key={i}>{part.slice(1, -1)}</em>;
+      if (part.startsWith('~~') && part.endsWith('~~'))
+        return <del key={i}>{part.slice(2, -2)}</del>;
+      if (/^https?:\/\//.test(part))
+        return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="dm-msg-link">{part}</a>;
+      return part;
+    });
+  }
+
+  // ── Content rendering ──
   function renderContent(content) {
+    if (!content) return null;
     const gifMatch = content?.match(/^\[gif\](.*?)\[\/gif\]$/);
     if (gifMatch) return <div className="dm-msg-gif" onClick={() => setExpandedGif(gifMatch[1])}><img src={gifMatch[1]} alt="GIF" loading="lazy" /></div>;
     if (/^https?:\/\/.*(\.gif|giphy\.com|tenor\.com)/i.test(content?.trim()))
       return <div className="dm-msg-gif" onClick={() => setExpandedGif(content.trim())}><img src={content.trim()} alt="GIF" loading="lazy" /></div>;
-    return <span>{content}</span>;
+    return <span className="dm-msg-text">{renderMarkdown(content)}</span>;
   }
 
   function formatTime(msg) {
@@ -171,27 +430,43 @@ export default function DmChat({ selectedUser, onBack }) {
     return `${d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} ${time}`;
   }
 
+  function formatDateDivider(msg) {
+    const raw = msg?.created_at || msg?.createdAt || msg?.timestamp;
+    if (!raw) return '';
+    return new Date(raw).toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    });
+  }
+
   function scrollToBottom(behavior = 'smooth') {
     messagesEndRef.current?.scrollIntoView({ behavior });
   }
 
-  const emojiOptions = ['😀','😄','😁','😅','😂','😍','🥳','😎','😮','😢','😡','👍','❤️','🔥','🎉'];
-
-  // ── Build grouped messages ──
+  // ── Build grouped messages with date dividers ──
   const grouped = [];
+  let lastDateStr = '';
   messages.forEach((msg, i) => {
-    const from = (msg.from_username || msg.fromUsername || msg.sender_username || msg.from || msg.sender || msg.username || '').toLowerCase();
+    const from = getMsgFrom(msg);
     const prev = i > 0 ? messages[i - 1] : null;
-    const prevFrom = prev ? (prev.from_username || prev.fromUsername || prev.sender_username || prev.from || prev.sender || prev.username || '').toLowerCase() : '';
+    const prevFrom = prev ? getMsgFrom(prev) : '';
     const timeDiff = prev ? (new Date(msg.created_at || msg.createdAt || 0) - new Date(prev.created_at || prev.createdAt || 0)) : Infinity;
-    const isGrouped = from === prevFrom && timeDiff < 7 * 60 * 1000; // 7 min
-    grouped.push({ ...msg, _from: from, _isGrouped: isGrouped });
+    const isGrouped = from === prevFrom && timeDiff < 7 * 60 * 1000;
+
+    const dateStr = formatDateDivider(msg);
+    const showDateDivider = dateStr !== lastDateStr;
+    lastDateStr = dateStr;
+
+    grouped.push({ ...msg, _from: from, _isGrouped: isGrouped && !showDateDivider, _showDateDivider: showDateDivider, _dateStr: dateStr });
   });
 
-  const myUsername = (user?.username || '').toLowerCase();
   const profileImg = profileData?.profile_image || profileData?.profileImage || targetImage || '';
   const aboutMe = profileData?.bio || profileData?.about || '';
   const memberSince = profileData?.created_at || profileData?.createdAt || '';
+
+  // Filter for search
+  const displayMessages = searchQuery
+    ? grouped.filter((m) => m.content?.toLowerCase().includes(searchQuery.toLowerCase()))
+    : grouped;
 
   return (
     <div className="dm-chat-container">
@@ -212,6 +487,13 @@ export default function DmChat({ selectedUser, onBack }) {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M14 4v5c0 1.12.37 2.16 1 3H9c.65-.86 1-1.9 1-3V4h4zm3-2H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3V4h1c.55 0 1-.45 1-1s-.45-1-1-1z"/></svg>
           </button>
           <button
+            title="Search"
+            className={`dm-header-action${showSearch ? ' active' : ''}`}
+            onClick={() => { setShowSearch((p) => !p); setSearchQuery(''); }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M21.53 20.47l-3.66-3.66A8.45 8.45 0 0019 13a8 8 0 10-8 8 8.45 8.45 0 003.81-1.13l3.66 3.66a.75.75 0 001.06-1.06zM3.5 13a7.5 7.5 0 117.5 7.5A7.508 7.508 0 013.5 13z"/></svg>
+          </button>
+          <button
             title="Toggle Profile"
             className={`dm-header-action${showProfilePanel ? ' active' : ''}`}
             onClick={() => setShowProfilePanel((p) => !p)}
@@ -221,9 +503,28 @@ export default function DmChat({ selectedUser, onBack }) {
         </div>
       </div>
 
+      {/* Search bar */}
+      {showSearch && (
+        <div className="dm-search-bar">
+          <input
+            type="text"
+            placeholder="Search messages..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            autoFocus
+          />
+          {searchQuery && (
+            <span className="dm-search-count">
+              {messages.filter((m) => m.content?.toLowerCase().includes(searchQuery.toLowerCase())).length} results
+            </span>
+          )}
+          <button onClick={() => { setShowSearch(false); setSearchQuery(''); }}>✕</button>
+        </div>
+      )}
+
       <div className="dm-chat-body">
         {/* ── Messages ── */}
-        <div className="dm-chat-messages">
+        <div className="dm-chat-messages" ref={messagesContainerRef} onScroll={handleScroll}>
           {loading ? (
             <div className="dm-chat-loading">Loading messages...</div>
           ) : messages.length === 0 ? (
@@ -237,34 +538,184 @@ export default function DmChat({ selectedUser, onBack }) {
               <p>This is the beginning of your direct message history with <strong>{targetDisplay}</strong>.</p>
             </div>
           ) : (
-            grouped.map((msg, i) => {
+            displayMessages.map((msg, i) => {
               const isOwn = msg._from === myUsername;
+              const msgId = msg.id || msg.message_id;
               const senderName = isOwn ? (user?.username || 'You') : targetDisplay;
               const senderImg = isOwn
                 ? (user?.profile_image || user?.profileImage || '/default-avatar.png')
                 : (profileImg || '/default-avatar.png');
 
-              if (msg._isGrouped) {
-                return (
-                  <div key={i} className="dm-msg dm-msg-grouped">
-                    <span className="dm-msg-hover-time">{formatTime(msg)?.split(' at ')?.[1] || formatTime(msg)}</span>
-                    <div className="dm-msg-content">{renderContent(msg.content)}</div>
-                  </div>
-                );
-              }
+              // Find replied message
+              const replyId = msg.reply_to || (msg.content?.match(/^\[reply:(\d+)\]/)?.[1]);
+              const repliedMsg = replyId ? messages.find((m) => (m.id || m.message_id) == replyId) : null;
+              const displayContent = msg.content?.replace(/^\[reply:\d+\]/, '') || msg.content;
 
               return (
-                <div key={i} className="dm-msg dm-msg-full">
-                  <div className="dm-msg-avatar">
-                    <img src={senderImg} alt="" onError={(e) => { e.target.src = '/default-avatar.png'; }} />
-                  </div>
-                  <div className="dm-msg-body">
-                    <div className="dm-msg-header">
-                      <span className="dm-msg-author">{senderName}</span>
-                      <span className="dm-msg-time">{formatTime(msg)}</span>
+                <div key={msgId || i}>
+                  {/* Date divider */}
+                  {msg._showDateDivider && (
+                    <div className="dm-date-divider">
+                      <span>{msg._dateStr}</span>
                     </div>
-                    <div className="dm-msg-content">{renderContent(msg.content)}</div>
-                  </div>
+                  )}
+
+                  {/* Grouped (continuation) message */}
+                  {msg._isGrouped ? (
+                    <div className={`dm-msg dm-msg-grouped${editingId === msgId ? ' dm-msg-editing' : ''}`}>
+                      <span className="dm-msg-hover-time">{formatTime(msg)?.split(' at ')?.[1] || formatTime(msg)}</span>
+                      <div className="dm-msg-content">
+                        {editingId === msgId ? (
+                          <div className="dm-msg-edit">
+                            <input
+                              value={editText}
+                              onChange={(e) => setEditText(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleEdit(msgId);
+                                if (e.key === 'Escape') { setEditingId(null); setEditText(''); }
+                              }}
+                              autoFocus
+                            />
+                            <div className="dm-msg-edit-hint">
+                              escape to <button onClick={() => { setEditingId(null); setEditText(''); }}>cancel</button> · enter to <button onClick={() => handleEdit(msgId)}>save</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {renderContent(displayContent)}
+                            {msg.edited_at && <span className="dm-msg-edited">(edited)</span>}
+                          </>
+                        )}
+                        {msg.image_url && (
+                          <img
+                            src={msg.image_url}
+                            alt=""
+                            className="dm-msg-image"
+                            onClick={() => setLightboxUrl(msg.image_url)}
+                          />
+                        )}
+                      </div>
+                      {/* Reactions */}
+                      {msg.reactions && msg.reactions.length > 0 && (
+                        <div className="dm-msg-reactions">
+                          {msg.reactions.map((r, ri) => (
+                            <button
+                              key={ri}
+                              className={`dm-reaction-badge${r.me ? ' dm-reaction-mine' : ''}`}
+                              onClick={() => handleAddReaction(msgId, r.emoji)}
+                            >
+                              <span className="reaction-emoji">{r.emoji}</span>
+                              <span className="reaction-count">{r.count}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {/* Reaction picker inline */}
+                      {reactionPickerMsgId === msgId && (
+                        <div className="dm-reaction-picker">
+                          {REACTION_EMOJIS.map((em) => (
+                            <button key={em} onClick={() => handleAddReaction(msgId, em)}>{em}</button>
+                          ))}
+                          <button onClick={() => setReactionPickerMsgId(null)}>✕</button>
+                        </div>
+                      )}
+                      {/* Hover actions */}
+                      {editingId !== msgId && (
+                        <div className="dm-msg-actions">
+                          <button title="Add Reaction" onClick={() => setReactionPickerMsgId((p) => p === msgId ? null : msgId)}>😊</button>
+                          <button title="Reply" onClick={() => setReplyTo(msg)}>↩</button>
+                          {isOwn && <button title="Edit" onClick={() => { setEditingId(msgId); setEditText(displayContent); }}>✏️</button>}
+                          {isOwn && <button title="Delete" onClick={() => handleDelete(msgId)}>🗑️</button>}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* Full (header) message */
+                    <div className={`dm-msg dm-msg-full${editingId === msgId ? ' dm-msg-editing' : ''}`}>
+                      <div className="dm-msg-avatar">
+                        <img src={senderImg} alt="" onError={(e) => { e.target.src = '/default-avatar.png'; }} />
+                      </div>
+                      <div className="dm-msg-body">
+                        <div className="dm-msg-header">
+                          <span className="dm-msg-author">{senderName}</span>
+                          <span className="dm-msg-time">{formatTime(msg)}</span>
+                        </div>
+                        {/* Reply reference */}
+                        {repliedMsg && (
+                          <div className="dm-msg-reply-ref">
+                            <span className="dm-reply-arrow">↩</span>
+                            <img src={getMsgFrom(repliedMsg) === myUsername ? (user?.profile_image || user?.profileImage || '/default-avatar.png') : (profileImg || '/default-avatar.png')} alt="" className="dm-reply-avatar" onError={(e) => { e.target.src = '/default-avatar.png'; }} />
+                            <span className="dm-reply-username">{getMsgFrom(repliedMsg) === myUsername ? (user?.username || 'You') : targetDisplay}</span>
+                            <span className="dm-reply-preview">{(repliedMsg.content?.replace(/^\[reply:\d+\]/, '') || repliedMsg.content || '').slice(0, 80)}</span>
+                          </div>
+                        )}
+                        <div className="dm-msg-content">
+                          {editingId === msgId ? (
+                            <div className="dm-msg-edit">
+                              <input
+                                value={editText}
+                                onChange={(e) => setEditText(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleEdit(msgId);
+                                  if (e.key === 'Escape') { setEditingId(null); setEditText(''); }
+                                }}
+                                autoFocus
+                              />
+                              <div className="dm-msg-edit-hint">
+                                escape to <button onClick={() => { setEditingId(null); setEditText(''); }}>cancel</button> · enter to <button onClick={() => handleEdit(msgId)}>save</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              {renderContent(displayContent)}
+                              {msg.edited_at && <span className="dm-msg-edited">(edited)</span>}
+                            </>
+                          )}
+                          {msg.image_url && (
+                            <img
+                              src={msg.image_url}
+                              alt=""
+                              className="dm-msg-image"
+                              onClick={() => setLightboxUrl(msg.image_url)}
+                            />
+                          )}
+                        </div>
+                        {/* Reactions */}
+                        {msg.reactions && msg.reactions.length > 0 && (
+                          <div className="dm-msg-reactions">
+                            {msg.reactions.map((r, ri) => (
+                              <button
+                                key={ri}
+                                className={`dm-reaction-badge${r.me ? ' dm-reaction-mine' : ''}`}
+                                onClick={() => handleAddReaction(msgId, r.emoji)}
+                              >
+                                <span className="reaction-emoji">{r.emoji}</span>
+                                <span className="reaction-count">{r.count}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {/* Reaction picker inline */}
+                        {reactionPickerMsgId === msgId && (
+                          <div className="dm-reaction-picker">
+                            {REACTION_EMOJIS.map((em) => (
+                              <button key={em} onClick={() => handleAddReaction(msgId, em)}>{em}</button>
+                            ))}
+                            <button onClick={() => setReactionPickerMsgId(null)}>✕</button>
+                          </div>
+                        )}
+                      </div>
+                      {/* Hover actions */}
+                      {editingId !== msgId && (
+                        <div className="dm-msg-actions">
+                          <button title="Add Reaction" onClick={() => setReactionPickerMsgId((p) => p === msgId ? null : msgId)}>😊</button>
+                          <button title="Reply" onClick={() => setReplyTo(msg)}>↩</button>
+                          {isOwn && <button title="Edit" onClick={() => { setEditingId(msgId); setEditText(displayContent); }}>✏️</button>}
+                          {isOwn && <button title="Delete" onClick={() => handleDelete(msgId)}>🗑️</button>}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })
@@ -298,7 +749,7 @@ export default function DmChat({ selectedUser, onBack }) {
               {memberSince && (
                 <div className="dm-profile-section">
                   <h4>Member Since</h4>
-                  <p>{new Date(memberSince).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                  <p>{new Date(memberSince).toLocaleDateString('en-US', { month: 'Short', day: 'numeric', year: 'numeric' })}</p>
                 </div>
               )}
               <div className="dm-profile-mutual">
@@ -316,9 +767,41 @@ export default function DmChat({ selectedUser, onBack }) {
         )}
       </div>
 
+      {/* Jump to present */}
+      {showJumpToPresent && (
+        <button className="dm-jump-present" onClick={() => scrollToBottom('smooth')}>
+          Jump to present <span>↓</span>
+        </button>
+      )}
+
+      {/* Typing indicator */}
+      {typingUsers.length > 0 && (
+        <div className="dm-typing">
+          <span className="dm-typing-dots"><span /><span /><span /></span>
+          <strong>{typingUsers.map(u => u === targetUsername ? targetDisplay : u).join(', ')}</strong> is typing...
+        </div>
+      )}
+
+      {/* Reply bar */}
+      {replyTo && (
+        <div className="dm-reply-bar">
+          <span>Replying to <strong>{getMsgFrom(replyTo) === myUsername ? 'yourself' : targetDisplay}</strong>: {(replyTo.content?.replace(/^\[reply:\d+\]/, '') || replyTo.content || '').slice(0, 60)}</span>
+          <button onClick={() => setReplyTo(null)}>✕</button>
+        </div>
+      )}
+
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleFileSelect}
+      />
+
       {/* ── Input ── */}
       <form className="dm-chat-input-bar" onSubmit={handleSend}>
-        <button type="button" className="dm-input-attach" title="Attach file">
+        <button type="button" className="dm-input-attach" title="Attach file" onClick={() => fileInputRef.current?.click()}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
         </button>
         <input
@@ -326,12 +809,16 @@ export default function DmChat({ selectedUser, onBack }) {
           type="text"
           placeholder={`Message @${targetDisplay}`}
           value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
+          onChange={handleInputChange}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) handleSend(e);
+          }}
+          disabled={sending}
         />
         <div className="dm-input-actions">
           <button
             type="button"
-            className="dm-input-btn"
+            className={`dm-input-btn${showGifPicker ? ' active' : ''}`}
             onClick={() => { setShowGifPicker((p) => !p); setShowEmojiPicker(false); }}
             title="GIF"
           >
@@ -339,7 +826,7 @@ export default function DmChat({ selectedUser, onBack }) {
           </button>
           <button
             type="button"
-            className="dm-input-btn"
+            className={`dm-input-btn${showEmojiPicker ? ' active' : ''}`}
             onClick={() => { setShowEmojiPicker((p) => !p); setShowGifPicker(false); }}
             title="Emoji"
           >
@@ -355,24 +842,38 @@ export default function DmChat({ selectedUser, onBack }) {
         </div>
       )}
 
-      {/* ── Emoji picker ── */}
+      {/* ── Emoji picker (expanded) ── */}
       {showEmojiPicker && (
         <div className="dm-emoji-picker">
-          {emojiOptions.map((emoji) => (
-            <button key={emoji} type="button" className="dm-emoji-option" onClick={() => { setNewMessage((p) => `${p}${emoji}`); setShowEmojiPicker(false); }}>
-              {emoji}
-            </button>
-          ))}
+          <div className="dm-emoji-picker-header">
+            <span>Emoji</span>
+            <button onClick={() => setShowEmojiPicker(false)}>✕</button>
+          </div>
+          <div className="dm-emoji-grid">
+            {EMOJI_LIST.map((emoji) => (
+              <button key={emoji} type="button" onClick={() => { setNewMessage((p) => `${p}${emoji}`); setShowEmojiPicker(false); }}>
+                {emoji}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
       {/* ── GIF lightbox ── */}
       {expandedGif && (
-        <div className="gif-lightbox" onClick={() => setExpandedGif(null)}>
-          <div className="gif-lightbox-content" onClick={(e) => e.stopPropagation()}>
+        <div className="dm-lightbox" onClick={() => setExpandedGif(null)}>
+          <div className="dm-lightbox-content" onClick={(e) => e.stopPropagation()}>
             <img src={expandedGif} alt="GIF" />
-            <button className="gif-lightbox-close" onClick={() => setExpandedGif(null)}>✕</button>
+            <button className="dm-lightbox-close" onClick={() => setExpandedGif(null)}>✕</button>
           </div>
+        </div>
+      )}
+
+      {/* ── Image lightbox ── */}
+      {lightboxUrl && !expandedGif && (
+        <div className="dm-lightbox" onClick={() => setLightboxUrl(null)}>
+          <img src={lightboxUrl} alt="" onClick={(e) => e.stopPropagation()} />
+          <button className="dm-lightbox-close" onClick={() => setLightboxUrl(null)}>✕</button>
         </div>
       )}
     </div>

@@ -1577,7 +1577,7 @@ export async function getMessages(address) {
   return response.json();
 }
 
-export async function sendMessage(toAddress, content) {
+export async function sendMessage(toAddress, content, imageUrl) {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_URL}/api/messages`, {
     method: 'POST',
@@ -1585,9 +1585,37 @@ export async function sendMessage(toAddress, content) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ toAddress, content }),
+    body: JSON.stringify({ toAddress, content, imageUrl }),
   });
   return response.json();
+}
+
+export async function editDmMessage(messageId, content) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/messages/${messageId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ content }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to edit message');
+  return data;
+}
+
+export async function deleteDmMessage(messageId) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/api/messages/${messageId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to delete message');
+  return data;
 }
 
 // ========================================
@@ -1828,6 +1856,8 @@ export default {
   getConversations,
   getMessages,
   sendMessage,
+  editDmMessage,
+  deleteDmMessage,
   setPublicKey,
   getUserKey,
   getMyKey,
