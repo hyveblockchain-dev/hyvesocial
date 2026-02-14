@@ -1,3 +1,22 @@
+.discord-member-popup-role-tag {
+  position: relative;
+}
+.discord-role-remove-btn {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  font-size: 15px;
+  margin-left: 4px;
+  cursor: pointer;
+  padding: 0 2px;
+  border-radius: 2px;
+  transition: background 0.13s;
+  position: relative;
+  top: 1px;
+}
+.discord-role-remove-btn:hover {
+  background: #2b2d31;
+}
 /* Discord-style role picker dropdown for member popup */
 .discord-role-add-wrap {
   position: relative;

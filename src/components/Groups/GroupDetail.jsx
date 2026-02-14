@@ -1834,19 +1834,9 @@ export default function GroupDetail() {
                   {popupRolePicker && (
                     <div className="discord-role-picker-dropdown">
                       <div className="discord-role-picker-header">Add Role</div>
-                      <div className="discord-role-picker-search">
-                        <input
-                          type="text"
-                          placeholder="Role"
-                          autoFocus
-                          value={popupRoleSearch}
-                          onChange={(e) => setPopupRoleSearch(e.target.value)}
-                        />
-                      </div>
                       <div className="discord-role-picker-list">
                         {customRoles
                           .filter(r => !(memberPopup.customRoles || []).some(cr => cr.id === r.id))
-                          .filter(r => !popupRoleSearch || r.name.toLowerCase().includes(popupRoleSearch.toLowerCase()))
                           .map(r => (
                             <div
                               key={r.id}
